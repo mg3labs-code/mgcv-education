@@ -17,6 +17,7 @@ const Index = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [className, setClassName] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -41,6 +42,7 @@ const Index = () => {
     setEmail("");
     setPassword("");
     setFullName("");
+    setClassName("");
   }, []);
 
   useEffect(() => {
@@ -57,7 +59,7 @@ const Index = () => {
     try {
       if (authMode === "signup") {
         const selectedRole = loginType === "teacher" ? "teacher" : "student";
-        await signUp(email, password, fullName, selectedRole as any);
+        await signUp(email, password, fullName, selectedRole as any, className);
         toast({ title: "Account created!", description: "You're now signed in." });
       } else {
         await signIn(email, password);
@@ -179,16 +181,27 @@ const Index = () => {
 
             <form onSubmit={handleSubmit}>
               {authMode === "signup" && (
-                <div className="mb-6">
-                  <input
-                    type="text"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    required
-                    placeholder="👤 Enter your full name"
-                    className="w-full py-[18px] px-6 border-none rounded-full bg-white/15 text-white text-base outline-none border-2 border-transparent transition-all placeholder:text-white/60 focus:bg-white/20 focus:border-teal focus:shadow-[0_0_20px_rgba(0,212,170,0.3)]"
-                  />
-                </div>
+                <>
+                  <div className="mb-6">
+                    <input
+                      type="text"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      required
+                      placeholder="👤 Enter your full name"
+                      className="w-full py-[18px] px-6 border-none rounded-full bg-white/15 text-white text-base outline-none border-2 border-transparent transition-all placeholder:text-white/60 focus:bg-white/20 focus:border-teal focus:shadow-[0_0_20px_rgba(0,212,170,0.3)]"
+                    />
+                  </div>
+                  <div className="mb-6">
+                    <input
+                      type="text"
+                      value={className}
+                      onChange={(e) => setClassName(e.target.value)}
+                      placeholder="🏫 Enter your class (e.g. 9th CBSE)"
+                      className="w-full py-[18px] px-6 border-none rounded-full bg-white/15 text-white text-base outline-none border-2 border-transparent transition-all placeholder:text-white/60 focus:bg-white/20 focus:border-teal focus:shadow-[0_0_20px_rgba(0,212,170,0.3)]"
+                    />
+                  </div>
+                </>
               )}
               <div className="mb-6">
                 <input

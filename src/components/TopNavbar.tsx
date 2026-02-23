@@ -47,16 +47,25 @@ const TopNavbar = ({ role }: TopNavbarProps) => {
         {role === "student" && (
           <>
             <button className="text-white cursor-pointer text-base font-medium transition-all py-2.5 px-[18px] rounded-full bg-transparent border-2 border-transparent hover:bg-blue-500/20 hover:border-blue-500/50 hover:-translate-y-0.5">
-              Dashboard
+              Today's Schedule
             </button>
             <button className="text-white cursor-pointer text-base font-medium transition-all py-2.5 px-[18px] rounded-full bg-transparent border-2 border-transparent hover:bg-blue-500/20 hover:border-blue-500/50 hover:-translate-y-0.5">
               Assignments
             </button>
             <button className="text-white cursor-pointer text-base font-medium transition-all py-2.5 px-[18px] rounded-full bg-transparent border-2 border-transparent hover:bg-blue-500/20 hover:border-blue-500/50 hover:-translate-y-0.5">
-              Progress
+              Calendar
             </button>
             <button className="text-white cursor-pointer text-base font-medium transition-all py-2.5 px-[18px] rounded-full bg-transparent border-2 border-transparent hover:bg-blue-500/20 hover:border-blue-500/50 hover:-translate-y-0.5">
-              Settings
+              Progress
+            </button>
+            <button className="bg-gradient-to-br from-blue-500 to-black text-white border-none py-2.5 px-5 rounded-lg cursor-pointer font-medium transition-all hover:-translate-y-0.5 hover:shadow-[0_4px_15px_rgba(66,153,225,0.4)]">
+              Message Bar
+            </button>
+            <button className="bg-gradient-to-br from-blue-500 to-black text-white border-none py-2.5 px-5 rounded-lg cursor-pointer font-medium transition-all hover:-translate-y-0.5 hover:shadow-[0_4px_15px_rgba(66,153,225,0.4)]">
+              Notifications
+            </button>
+            <button className="text-white cursor-pointer text-base font-medium transition-all py-2.5 px-[18px] rounded-full bg-transparent border-2 border-transparent hover:bg-blue-500/20 hover:border-blue-500/50 hover:-translate-y-0.5">
+              Personalisation
             </button>
           </>
         )}

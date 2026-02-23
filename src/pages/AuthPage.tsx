@@ -19,6 +19,7 @@ const AuthPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [className, setClassName] = useState("");
   const [selectedRole, setSelectedRole] = useState<AppRole>("student");
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -31,7 +32,7 @@ const AuthPage = () => {
     setSubmitting(true);
     try {
       if (mode === "signup") {
-        await signUp(email, password, fullName, selectedRole);
+        await signUp(email, password, fullName, selectedRole, className);
         toast({ title: "Account created!", description: "You're now signed in." });
       } else {
         await signIn(email, password);
