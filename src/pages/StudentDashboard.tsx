@@ -221,40 +221,6 @@ const StudentDashboard = () => {
         </section>
       </div>
 
-      {/* Footer */}
-      <footer className="bg-[#1e293b] text-[#cbd5e1] py-12 px-[5%]">
-        <div className="max-w-[1200px] mx-auto grid grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-8">
-          <div>
-            <h3 className="text-white mb-4 text-xl">EduTech</h3>
-            <p className="text-[#94a3b8] leading-relaxed">Revolutionary AI-powered educational platform offering personalized learning experiences with 1:2 mentoring and adaptive teaching methods. Empowering students globally with cutting-edge technology and expert guidance.</p>
-          </div>
-          <div>
-            <h3 className="text-white mb-4 text-xl">Our Services</h3>
-            <div className="flex flex-col gap-2">
-              {["Personal Mentoring", "AI Adaptive Learning", "Progress Analytics", "Skill Development", "Mobile Learning"].map((s) => (
-                <span key={s} className="text-[#94a3b8] hover:text-blue-400 cursor-pointer transition-colors">{s}</span>
-              ))}
-            </div>
-          </div>
-          <div>
-            <h3 className="text-white mb-4 text-xl">Quick Links</h3>
-            <div className="flex flex-col gap-2">
-              {["About Us", "Services", "Success Stories", "Contact", "Terms of Service", "Privacy Policy"].map((s) => (
-                <span key={s} className="text-[#94a3b8] hover:text-blue-400 cursor-pointer transition-colors">{s}</span>
-              ))}
-            </div>
-          </div>
-          <div>
-            <h3 className="text-white mb-4 text-xl">Contact Us</h3>
-            <p className="text-[#94a3b8] leading-relaxed">Global Headquarters<br />New Delhi, India<br />Mumbai • Bangalore • Hyderabad</p>
-            <p className="text-[#94a3b8] mt-2">+91 98765 43210<br />+91 87654 32109</p>
-            <p className="text-[#94a3b8] mt-2">support@edutech.com</p>
-          </div>
-        </div>
-        <div className="border-t border-[#334155] mt-8 pt-6 text-center text-[#64748b]">
-          © 2025 EduTech Platform. All rights reserved. | Revolutionizing Education Through AI
-        </div>
-      </footer>
     </DashboardLayout>
   );
 };
