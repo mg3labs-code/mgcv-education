@@ -3,6 +3,7 @@ import MetricCard from "@/components/MetricCard";
 import SkillBar from "@/components/SkillBar";
 import EpisodeCard from "@/components/EpisodeCard";
 import { Brain, Target, Clock, TrendingUp, CalendarCheck } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const episodes = [
   { id: "ep-1", number: 1, title: "Number Systems — Foundations", duration: "7 min", status: "completed" as const, blocks: 5, completedBlocks: 5 },
@@ -18,11 +19,14 @@ const reviews = [
   { chapter: "Rational Numbers", dueIn: "Tomorrow", type: "Day 21 Mastery" },
 ];
 
-const StudentDashboard = () => (
+const StudentDashboard = () => {
+  const { fullName } = useAuth();
+  const firstName = fullName?.split(" ")[0] || "Student";
+  return (
   <PageLayout role="student">
     <div className="max-w-5xl">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold font-serif text-foreground">Good morning, Arjun</h1>
+        <h1 className="text-2xl font-bold font-serif text-foreground">Good morning, {firstName}</h1>
         <p className="text-muted-foreground mt-1">Class 9 · Mathematics · Chapter 1: Number Systems</p>
       </div>
 
@@ -74,6 +78,7 @@ const StudentDashboard = () => (
       </div>
     </div>
   </PageLayout>
-);
+  );
+};
 
 export default StudentDashboard;

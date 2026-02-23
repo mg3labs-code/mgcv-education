@@ -1,5 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { LucideIcon, LayoutDashboard, BookOpen, BarChart3, Users, Settings, LogOut, GraduationCap } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface NavItem {
   label: string;
@@ -26,17 +27,8 @@ const adminNav: NavItem[] = [
   { label: "Settings", icon: Settings, path: "/admin/settings" },
 ];
 
-const navMap: Record<string, NavItem[]> = {
-  student: studentNav,
-  teacher: teacherNav,
-  admin: adminNav,
-};
-
-const roleLabels: Record<string, string> = {
-  student: "Student",
-  teacher: "Teacher",
-  admin: "Administrator",
-};
+const navMap: Record<string, NavItem[]> = { student: studentNav, teacher: teacherNav, admin: adminNav };
+const roleLabels: Record<string, string> = { student: "Student", teacher: "Teacher", admin: "Administrator" };
 
 interface SideNavProps {
   role: "student" | "teacher" | "admin";
@@ -45,7 +37,13 @@ interface SideNavProps {
 const SideNav = ({ role }: SideNavProps) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { signOut, fullName } = useAuth();
   const items = navMap[role];
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/auth");
+  };
 
   return (
     <aside className="fixed left-0 top-0 bottom-0 w-60 bg-sidebar flex flex-col z-40">
@@ -53,7 +51,9 @@ const SideNav = ({ role }: SideNavProps) => {
         <h1 className="font-serif text-lg font-bold text-sidebar-foreground tracking-tight">
           Elite Thinking
         </h1>
-        <p className="text-xs text-sidebar-foreground/60 mt-0.5">{roleLabels[role]} Portal</p>
+        <p className="text-xs text-sidebar-foreground/60 mt-0.5">
+          {fullName || roleLabels[role]} · {roleLabels[role]}
+        </p>
       </div>
 
       <nav className="flex-1 p-3 space-y-0.5">
@@ -78,11 +78,11 @@ const SideNav = ({ role }: SideNavProps) => {
 
       <div className="p-3 border-t border-sidebar-border">
         <button
-          onClick={() => navigate("/")}
+          onClick={handleSignOut}
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors"
         >
           <LogOut className="h-4 w-4" />
-          Switch Role
+          Sign Out
         </button>
       </div>
     </aside>
