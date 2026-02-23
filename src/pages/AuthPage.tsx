@@ -49,7 +49,7 @@ const AuthPage = () => {
     <div className="min-h-screen bg-background flex items-center justify-center p-6">
       <div className="w-full max-w-md animate-fade-in">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold font-serif text-foreground">Elite Thinking Classroom</h1>
+          <h1 className="text-3xl font-bold font-serif text-foreground">EduTech</h1>
           <p className="text-muted-foreground mt-2">
             {mode === "login" ? "Sign in to continue" : "Create your account"}
           </p>
@@ -144,7 +144,7 @@ const AuthPage = () => {
         </div>
 
         <p className="text-xs text-muted-foreground text-center mt-6">
-          Cognitive Training System · CBSE / ICSE Aligned
+          Educational Technology Platform
         </p>
       </div>
     </div>

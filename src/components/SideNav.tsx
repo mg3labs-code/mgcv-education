@@ -49,7 +49,7 @@ const SideNav = ({ role }: SideNavProps) => {
     <aside className="fixed left-0 top-0 bottom-0 w-60 bg-sidebar flex flex-col z-40">
       <div className="p-5 border-b border-sidebar-border">
         <h1 className="font-serif text-lg font-bold text-sidebar-foreground tracking-tight">
-          Elite Thinking
+          EduTech
         </h1>
         <p className="text-xs text-sidebar-foreground/60 mt-0.5">
           {fullName || roleLabels[role]} · {roleLabels[role]}
