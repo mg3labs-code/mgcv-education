@@ -116,7 +116,7 @@ const nationalHolidays: Record<string, string> = {
   "2026-12-25": "Christmas Day",
 };
 
-interface ScheduleItem {
+export interface ScheduleItem {
   type: "topic" | "practice" | "test" | "holiday" | "assignment";
   title?: string;
   label?: string;
@@ -126,6 +126,9 @@ interface ScheduleItem {
 }
 
 const toKey = (date: Date) => date.toISOString().split("T")[0];
+
+export { toKey, generateSchedule };
+
 
 const topicColorMap: Record<string, string> = {
   intro: "bg-blue-500 hover:bg-blue-600",
@@ -217,7 +220,12 @@ function generateSchedule(): Record<string, ScheduleItem> {
 
 const DAY_HEADERS = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 
-const TeachingCalendar = () => {
+interface TeachingCalendarProps {
+  onSave?: (schedule: Record<string, ScheduleItem>) => void;
+  isSaving?: boolean;
+}
+
+const TeachingCalendar = ({ onSave, isSaving }: TeachingCalendarProps) => {
   const now = new Date();
   const [monthIndex, setMonthIndex] = useState(now.getMonth());
   const [year, setYear] = useState(now.getFullYear());
@@ -330,9 +338,20 @@ const TeachingCalendar = () => {
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
-        <h3 className="text-xl font-semibold text-card-foreground">
-          {monthName} {year}
-        </h3>
+        <div className="flex items-center gap-3">
+          <h3 className="text-xl font-semibold text-card-foreground">
+            {monthName} {year}
+          </h3>
+          {onSave && (
+            <button
+              onClick={() => onSave(schedule)}
+              disabled={isSaving}
+              className="px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white text-sm font-semibold transition-all border-none cursor-pointer"
+            >
+              {isSaving ? "Saving..." : "💾 Save & Publish"}
+            </button>
+          )}
+        </div>
         <button
           onClick={nextMonth}
           className="w-10 h-10 rounded-lg bg-blue-500 hover:bg-blue-600 text-white flex items-center justify-center transition-all hover:-translate-y-0.5 border-none cursor-pointer"
