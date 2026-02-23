@@ -150,6 +150,74 @@ const StudentDashboard = () => {
           </div>
         </section>
       </div>
+
+      {/* Why Choose EduTech Section */}
+      <div className="bg-[#f8f9fa] py-16">
+        <div className="max-w-[1200px] mx-auto px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-[2.5rem] font-bold text-[#2c3e50] mb-4">Why Choose EduTech?</h2>
+            <p className="text-lg text-[#64748b]">Discover the EduTech difference - where modern technology meets personalized education.</p>
+          </div>
+
+          <div className="relative">
+            <div className="absolute left-1/2 top-0 bottom-0 w-[3px] bg-gradient-to-b from-blue-500 via-purple-500 to-emerald-500 hidden md:block" />
+            {[
+              { icon: "★", title: "Convenience at Your Fingertips", desc: "Enjoy hassle-free learning & mentoring. Access your personalized dashboard from anywhere while we handle your educational journey.", color: "#3b82f6" },
+              { icon: "✓", title: "Quality You Can Trust", desc: "Handled with expert care and top-grade AI technology for the best learning experience and academic results.", color: "#8b5cf6" },
+              { icon: "$", title: "Affordable Pricing", desc: "Premium educational technology at competitive rates. Get exceptional value with our comprehensive learning platform and personalized mentoring.", color: "#f59e0b" },
+              { icon: "◆", title: "Personalized Learning Path", desc: "AI-powered adaptive learning that adjusts to your pace and style. Experience customized education designed specifically for your success.", color: "#4ade80" },
+            ].map((item, i) => (
+              <div key={i} className={`flex items-center mb-12 ${i % 2 === 0 ? "md:flex-row" : "md:flex-row-reverse"}`}>
+                <div className={`flex-1 ${i % 2 === 0 ? "md:pr-16 md:text-right" : "md:pl-16 md:text-left"}`}>
+                  <div className="bg-white rounded-2xl p-8 shadow-[0_8px_32px_rgba(0,0,0,0.08)] border-l-4 hover:-translate-y-1 hover:shadow-[0_12px_40px_rgba(0,0,0,0.12)] transition-all" style={{ borderLeftColor: item.color }}>
+                    <h3 className="text-xl font-semibold text-[#2c3e50] mb-3">{item.title}</h3>
+                    <p className="text-[#64748b] leading-relaxed">{item.desc}</p>
+                  </div>
+                </div>
+                <div className="hidden md:flex w-12 h-12 rounded-full items-center justify-center text-white text-xl font-bold z-10 flex-shrink-0" style={{ background: item.color }}>
+                  {item.icon}
+                </div>
+                <div className="flex-1 hidden md:block" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <footer className="bg-[#1e293b] text-[#cbd5e1] py-12 px-[5%]">
+        <div className="max-w-[1200px] mx-auto grid grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-8">
+          <div>
+            <h3 className="text-white mb-4 text-xl">EduTech</h3>
+            <p className="text-[#94a3b8] leading-relaxed">Revolutionary AI-powered educational platform offering personalized learning experiences with 1:2 mentoring and adaptive teaching methods. Empowering students globally with cutting-edge technology and expert guidance.</p>
+          </div>
+          <div>
+            <h3 className="text-white mb-4 text-xl">Our Services</h3>
+            <div className="flex flex-col gap-2">
+              {["Personal Mentoring", "AI Adaptive Learning", "Progress Analytics", "Skill Development", "Mobile Learning"].map((s) => (
+                <span key={s} className="text-[#94a3b8] hover:text-blue-400 cursor-pointer transition-colors">{s}</span>
+              ))}
+            </div>
+          </div>
+          <div>
+            <h3 className="text-white mb-4 text-xl">Quick Links</h3>
+            <div className="flex flex-col gap-2">
+              {["About Us", "Services", "Success Stories", "Contact", "Terms of Service", "Privacy Policy"].map((s) => (
+                <span key={s} className="text-[#94a3b8] hover:text-blue-400 cursor-pointer transition-colors">{s}</span>
+              ))}
+            </div>
+          </div>
+          <div>
+            <h3 className="text-white mb-4 text-xl">Contact Us</h3>
+            <p className="text-[#94a3b8] leading-relaxed">Global Headquarters<br />New Delhi, India<br />Mumbai • Bangalore • Hyderabad</p>
+            <p className="text-[#94a3b8] mt-2">+91 98765 43210<br />+91 87654 32109</p>
+            <p className="text-[#94a3b8] mt-2">support@edutech.com</p>
+          </div>
+        </div>
+        <div className="border-t border-[#334155] mt-8 pt-6 text-center text-[#64748b]">
+          © 2025 EduTech Platform. All rights reserved. | Revolutionizing Education Through AI
+        </div>
+      </footer>
     </DashboardLayout>
   );
 };
