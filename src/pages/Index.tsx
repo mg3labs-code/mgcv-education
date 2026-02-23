@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { GraduationCap, Users, Shield, ArrowRight } from "lucide-react";
+import { useEffect } from "react";
 
 const roles = [
   { id: "student", label: "Student", description: "Access your learning episodes, track skill growth, and build mastery.", icon: GraduationCap, path: "/student" },
@@ -12,19 +13,15 @@ const Index = () => {
   const navigate = useNavigate();
   const { user, role, loading } = useAuth();
 
-  // If authenticated, redirect to their role dashboard
-  if (!loading && user && role) {
-    const rolePath = `/${role}`;
-    navigate(rolePath, { replace: true });
-    return null;
-  }
+  useEffect(() => {
+    if (!loading && user && role) {
+      navigate(`/${role}`, { replace: true });
+    }
+  }, [loading, user, role, navigate]);
 
-  if (!loading && !user) {
-    navigate("/auth", { replace: true });
-    return null;
-  }
+  if (loading) return null;
+  if (user && role) return null;
 
-  // Fallback: show role selection if no role assigned yet
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-8">
       <div className="max-w-2xl w-full text-center mb-12 animate-fade-in">
@@ -38,7 +35,7 @@ const Index = () => {
         {roles.map((r, i) => (
           <button
             key={r.id}
-            onClick={() => navigate(r.path)}
+            onClick={() => navigate("/auth")}
             className="flex items-center gap-5 p-6 rounded-lg border border-border bg-card text-left hover:border-accent hover:shadow-lg transition-all group animate-fade-in"
             style={{ animationDelay: `${i * 100}ms` }}
           >
