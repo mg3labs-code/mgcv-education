@@ -44,6 +44,39 @@ export type Database = {
         }
         Relationships: []
       }
+      teaching_schedules: {
+        Row: {
+          chapters_data: Json
+          class_name: string
+          created_at: string
+          id: string
+          schedule_data: Json
+          subject: string
+          teacher_id: string
+          updated_at: string
+        }
+        Insert: {
+          chapters_data?: Json
+          class_name?: string
+          created_at?: string
+          id?: string
+          schedule_data?: Json
+          subject?: string
+          teacher_id: string
+          updated_at?: string
+        }
+        Update: {
+          chapters_data?: Json
+          class_name?: string
+          created_at?: string
+          id?: string
+          schedule_data?: Json
+          subject?: string
+          teacher_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string

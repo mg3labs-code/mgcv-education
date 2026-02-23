@@ -12,6 +12,7 @@ import LearningEpisode from "./pages/LearningEpisode";
 import TeacherDashboard from "./pages/TeacherDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import StudentOnboarding from "./pages/StudentOnboarding";
+import TeacherSchedule from "./pages/TeacherSchedule";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,6 +34,7 @@ const App = () => (
             <Route path="/student/progress" element={<ProtectedRoute><StudentDashboard /></ProtectedRoute>} />
             <Route path="/teacher" element={<ProtectedRoute><TeacherDashboard /></ProtectedRoute>} />
             <Route path="/teacher/students" element={<ProtectedRoute><TeacherDashboard /></ProtectedRoute>} />
+            <Route path="/teacher/schedule" element={<ProtectedRoute><TeacherSchedule /></ProtectedRoute>} />
             <Route path="/teacher/analytics" element={<ProtectedRoute><TeacherDashboard /></ProtectedRoute>} />
             <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
             <Route path="/admin/schools" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
