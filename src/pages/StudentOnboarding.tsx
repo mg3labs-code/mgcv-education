@@ -1,11 +1,24 @@
 import { useState, useEffect, useRef } from 'react';
-import { Mic, MicOff, Send, User, Bot, Sparkles } from 'lucide-react';
+import { Mic, MicOff, Send, User, Bot, Sparkles, BookOpen, Brain, Zap, Target, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Message {
   type: 'bot' | 'user';
   text: string;
   timestamp: Date;
+}
+
+interface QuestionOption {
+  value: string | number;
+  label: string;
+  emoji: string;
+}
+
+interface RatingItem {
+  key: string;
+  label: string;
 }
 
 interface Question {
@@ -16,8 +29,8 @@ interface Question {
   multiple?: boolean;
   followUp?: (answer: string) => string;
   validation?: (val: string) => boolean;
-  options?: { value: string | number; label: string; emoji: string }[];
-  items?: { key: string; label: string }[];
+  options?: QuestionOption[];
+  items?: RatingItem[];
 }
 
 const questions: Question[] = [
@@ -133,8 +146,44 @@ const questions: Question[] = [
   }
 ];
 
+const episodeTourSteps = [
+  {
+    icon: BookOpen,
+    title: "Concept Introduction",
+    desc: "Each 6–8 min episode starts with a clear theory block explaining the core idea.",
+    color: "from-blue-500 to-cyan-500"
+  },
+  {
+    icon: Brain,
+    title: "Pattern Recognition",
+    desc: "Spot patterns and connections through guided examples and visuals.",
+    color: "from-purple-500 to-pink-500"
+  },
+  {
+    icon: Zap,
+    title: "Active Recall",
+    desc: "Test yourself with quick recall tasks — no peeking at notes!",
+    color: "from-orange-500 to-yellow-500"
+  },
+  {
+    icon: Target,
+    title: "Explain-Back",
+    desc: "Explain what you learned in your own words. AI scores your understanding.",
+    color: "from-green-500 to-emerald-500"
+  },
+  {
+    icon: CheckCircle,
+    title: "Quick Validation",
+    desc: "A short quiz to confirm mastery before moving on. Instant feedback!",
+    color: "from-red-500 to-orange-500"
+  }
+];
+
 const StudentOnboarding = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [phase, setPhase] = useState<'tour' | 'chat'>('tour');
+  const [tourStep, setTourStep] = useState(0);
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentInput, setCurrentInput] = useState('');
   const [isListening, setIsListening] = useState(false);
@@ -142,24 +191,30 @@ const StudentOnboarding = () => {
   const [studentData, setStudentData] = useState<Record<string, unknown>>({});
   const [isTyping, setIsTyping] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [ratingValues, setRatingValues] = useState<Record<string, number>>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
   useEffect(() => {
-    scrollToBottom();
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   useEffect(() => {
-    if (messages.length === 0) {
-      setTimeout(() => {
-        addBotMessage(questions[0].text);
-      }, 1000);
+    if (phase === 'chat' && messages.length === 0) {
+      setTimeout(() => addBotMessage(questions[0].text), 800);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [phase]);
+
+  const markOnboardingComplete = async () => {
+    if (!user) return;
+    // Store completion in localStorage as fallback
+    localStorage.setItem(`onboarding_complete_${user.id}`, 'true');
+  };
+
+  const handleSkip = () => {
+    markOnboardingComplete();
+    navigate('/student');
+  };
 
   const triggerConfetti = () => {
     setShowConfetti(true);
@@ -172,7 +227,7 @@ const StudentOnboarding = () => {
       setTimeout(() => {
         setMessages(prev => [...prev, { type: 'bot', text, timestamp: new Date() }]);
         setIsTyping(false);
-      }, 1500);
+      }, 1200);
     }, delay);
   };
 
@@ -195,6 +250,7 @@ const StudentOnboarding = () => {
         addBotMessage(questions[currentQuestion + 1].text, 1000);
       } else {
         triggerConfetti();
+        markOnboardingComplete();
         addBotMessage("🎉 Awesome! Thanks for sharing all that with me. I now know exactly how to help you learn better! Let's start your personalized learning journey!", 1000);
       }
     }, 2000);
@@ -217,8 +273,7 @@ const StudentOnboarding = () => {
         setIsListening(true);
         recognition.start();
         recognition.onresult = (event: any) => {
-          const transcript = event.results[0][0].transcript;
-          setCurrentInput(transcript);
+          setCurrentInput(event.results[0][0].transcript);
           setIsListening(false);
         };
         recognition.onerror = () => setIsListening(false);
@@ -227,6 +282,103 @@ const StudentOnboarding = () => {
     }
   };
 
+  const handleRatingsSubmit = () => {
+    const question = questions[currentQuestion];
+    if (question.items && Object.keys(ratingValues).length === question.items.length) {
+      handleAnswer(ratingValues);
+      setRatingValues({});
+    }
+  };
+
+  // ─── TOUR PHASE ───
+  if (phase === 'tour') {
+    const step = episodeTourSteps[tourStep];
+    const Icon = step.icon;
+
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-yellow-100 via-orange-100 to-red-100 flex flex-col items-center justify-center p-6 relative overflow-hidden">
+        {/* Animated bg */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute top-10 left-10 w-20 h-20 bg-yellow-300 rounded-full opacity-20 animate-onb-float" />
+          <div className="absolute top-40 right-20 w-16 h-16 bg-orange-300 rounded-full opacity-20 animate-onb-float-delayed" />
+          <div className="absolute bottom-20 left-1/4 w-24 h-24 bg-red-300 rounded-full opacity-20 animate-onb-float" />
+        </div>
+
+        {/* Skip button */}
+        <button
+          onClick={handleSkip}
+          className="absolute top-6 right-6 text-sm text-orange-600 hover:text-orange-800 font-medium z-20 bg-white/60 px-4 py-2 rounded-full backdrop-blur-sm hover:bg-white/80 transition-all"
+        >
+          Skip Tour →
+        </button>
+
+        <div className="relative z-10 max-w-lg w-full">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <h1 className="text-2xl font-bold text-gray-800 mb-2">How Your Episodes Work</h1>
+            <p className="text-orange-600 font-medium">Each episode is 6–8 minutes of focused learning</p>
+            <div className="flex justify-center gap-2 mt-4">
+              {episodeTourSteps.map((_, i) => (
+                <div
+                  key={i}
+                  className={`h-2 rounded-full transition-all duration-500 ${
+                    i === tourStep ? 'w-8 bg-orange-500' : i < tourStep ? 'w-4 bg-orange-300' : 'w-4 bg-orange-200'
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Card */}
+          <div
+            key={tourStep}
+            className="bg-white rounded-3xl shadow-2xl p-8 text-center animate-onb-slide-up"
+          >
+            <div className={`w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br ${step.color} flex items-center justify-center mb-6 shadow-lg`}>
+              <Icon className="text-white" size={36} />
+            </div>
+            <h2 className="text-xl font-bold text-gray-800 mb-3">{step.title}</h2>
+            <p className="text-gray-600 leading-relaxed">{step.desc}</p>
+            <div className="mt-4 text-sm text-gray-400">Block {tourStep + 1} of {episodeTourSteps.length}</div>
+          </div>
+
+          {/* Navigation */}
+          <div className="flex justify-between mt-8">
+            <button
+              onClick={() => setTourStep(Math.max(0, tourStep - 1))}
+              disabled={tourStep === 0}
+              className="px-6 py-3 rounded-full font-semibold text-orange-600 bg-white shadow-md disabled:opacity-30 hover:shadow-lg transition-all"
+            >
+              ← Back
+            </button>
+            <button
+              onClick={() => {
+                if (tourStep < episodeTourSteps.length - 1) {
+                  setTourStep(tourStep + 1);
+                } else {
+                  setPhase('chat');
+                }
+              }}
+              className="px-6 py-3 rounded-full font-semibold text-white bg-gradient-to-r from-orange-500 to-red-500 shadow-md hover:shadow-lg hover:scale-105 transition-all active:scale-95"
+            >
+              {tourStep < episodeTourSteps.length - 1 ? 'Next →' : "Let's Go! 🚀"}
+            </button>
+          </div>
+        </div>
+
+        <style>{`
+          @keyframes onb-float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-20px); } }
+          @keyframes onb-float-delayed { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-20px); } }
+          @keyframes onb-slide-up { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+          .animate-onb-float { animation: onb-float 3s ease-in-out infinite; }
+          .animate-onb-float-delayed { animation: onb-float-delayed 4s ease-in-out infinite 1s; }
+          .animate-onb-slide-up { animation: onb-slide-up 0.5s ease-out; }
+        `}</style>
+      </div>
+    );
+  }
+
+  // ─── CHAT PHASE ───
   const renderCurrentInput = () => {
     if (currentQuestion >= questions.length) return null;
     const question = questions[currentQuestion];
@@ -251,7 +403,7 @@ const StudentOnboarding = () => {
 
     if (question.type === 'ratings') {
       return (
-        <div className="p-4 space-y-4">
+        <div className="p-4 space-y-3">
           {question.items?.map((item, index) => (
             <div key={index} className="flex items-center justify-between bg-white rounded-lg p-3 shadow-sm">
               <span className="text-sm font-semibold text-gray-700">{item.label}</span>
@@ -259,8 +411,12 @@ const StudentOnboarding = () => {
                 {[1, 2, 3, 4, 5].map(rating => (
                   <button
                     key={rating}
-                    onClick={() => handleAnswer({ [item.key]: rating })}
-                    className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-red-400 hover:from-orange-500 hover:to-red-500 text-white font-bold transition-all duration-300 hover:scale-110 active:scale-95 shadow-md hover:shadow-lg"
+                    onClick={() => setRatingValues(prev => ({ ...prev, [item.key]: rating }))}
+                    className={`w-9 h-9 rounded-full font-bold text-sm transition-all duration-300 hover:scale-110 active:scale-95 shadow-md ${
+                      ratingValues[item.key] === rating
+                        ? 'bg-gradient-to-br from-orange-500 to-red-500 text-white scale-110'
+                        : 'bg-gradient-to-br from-orange-200 to-yellow-200 text-gray-700'
+                    }`}
                   >
                     {rating}
                   </button>
@@ -268,6 +424,14 @@ const StudentOnboarding = () => {
               </div>
             </div>
           ))}
+          {question.items && Object.keys(ratingValues).length === question.items.length && (
+            <button
+              onClick={handleRatingsSubmit}
+              className="w-full py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-2xl font-semibold shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all active:scale-95"
+            >
+              Submit Ratings ✨
+            </button>
+          )}
         </div>
       );
     }
@@ -346,8 +510,16 @@ const StudentOnboarding = () => {
           </h1>
           <p className="text-sm text-orange-100">Getting to know you better...</p>
         </div>
-        <div className="ml-auto text-sm font-bold text-white bg-white/20 px-3 py-1 rounded-full">
-          {Math.min(currentQuestion + 1, questions.length)}/{questions.length}
+        <div className="ml-auto flex items-center gap-2">
+          <button
+            onClick={handleSkip}
+            className="text-xs text-white/80 hover:text-white font-medium bg-white/20 px-3 py-1 rounded-full transition-all hover:bg-white/30"
+          >
+            Skip
+          </button>
+          <span className="text-sm font-bold text-white bg-white/20 px-3 py-1 rounded-full">
+            {Math.min(currentQuestion + 1, questions.length)}/{questions.length}
+          </span>
         </div>
       </div>
 
@@ -355,7 +527,7 @@ const StudentOnboarding = () => {
       <div className="bg-white px-4 pb-3 pt-2 relative z-10">
         <div className="w-full bg-orange-200 rounded-full h-3 overflow-hidden">
           <div
-            className="bg-gradient-to-r from-orange-500 via-red-500 to-yellow-500 h-3 rounded-full transition-all duration-500 relative"
+            className="bg-gradient-to-r from-orange-500 via-red-500 to-yellow-500 h-3 rounded-full transition-all duration-500"
             style={{ width: `${((currentQuestion + 1) / questions.length) * 100}%` }}
           />
         </div>
@@ -431,36 +603,13 @@ const StudentOnboarding = () => {
       )}
 
       <style>{`
-        @keyframes onb-float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-20px); }
-        }
-        @keyframes onb-float-delayed {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-20px); }
-        }
-        @keyframes onb-wiggle {
-          0%, 100% { transform: rotate(0deg); }
-          25% { transform: rotate(-5deg); }
-          75% { transform: rotate(5deg); }
-        }
-        @keyframes onb-bounce-in {
-          0% { opacity: 0; transform: scale(0.3); }
-          50% { transform: scale(1.05); }
-          70% { transform: scale(0.9); }
-          100% { opacity: 1; transform: scale(1); }
-        }
-        @keyframes onb-slide-up {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes onb-spin-slow {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        @keyframes onb-fall {
-          to { transform: translateY(100vh) rotate(360deg); opacity: 0; }
-        }
+        @keyframes onb-float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-20px); } }
+        @keyframes onb-float-delayed { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-20px); } }
+        @keyframes onb-wiggle { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(-5deg); } 75% { transform: rotate(5deg); } }
+        @keyframes onb-bounce-in { 0% { opacity: 0; transform: scale(0.3); } 50% { transform: scale(1.05); } 70% { transform: scale(0.9); } 100% { opacity: 1; transform: scale(1); } }
+        @keyframes onb-slide-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes onb-spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes onb-fall { to { transform: translateY(100vh) rotate(360deg); opacity: 0; } }
         .animate-onb-float { animation: onb-float 3s ease-in-out infinite; }
         .animate-onb-float-delayed { animation: onb-float-delayed 4s ease-in-out infinite 1s; }
         .animate-onb-wiggle { animation: onb-wiggle 2s ease-in-out infinite; }

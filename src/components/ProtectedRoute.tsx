@@ -1,8 +1,9 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading } = useAuth();
+  const { user, role, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -16,6 +17,16 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
 
   if (!user) return <Navigate to="/auth" replace />;
+
+  // Redirect students to onboarding if they haven't completed it
+  const isOnboardingRoute = location.pathname === '/student/onboarding';
+  if (role === 'student' && !isOnboardingRoute) {
+    const completed = localStorage.getItem(`onboarding_complete_${user.id}`);
+    if (!completed) {
+      return <Navigate to="/student/onboarding" replace />;
+    }
+  }
+
   return <>{children}</>;
 };
 
