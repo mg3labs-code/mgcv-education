@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,8 +6,8 @@
 
 @layer base {
   :root {
-    --background: 40 20% 97%;
-    --foreground: 220 30% 12%;
+    --background: 220 20% 7%;
+    --foreground: 0 0% 100%;
 
     --card: 0 0% 100%;
     --card-foreground: 220 30% 12%;
@@ -15,26 +15,26 @@
     --popover: 0 0% 100%;
     --popover-foreground: 220 30% 12%;
 
-    --primary: 220 45% 20%;
-    --primary-foreground: 40 20% 97%;
+    --primary: 162 100% 41%;
+    --primary-foreground: 0 0% 100%;
 
     --secondary: 220 15% 92%;
     --secondary-foreground: 220 30% 12%;
 
-    --muted: 220 15% 95%;
-    --muted-foreground: 220 10% 46%;
+    --muted: 220 15% 20%;
+    --muted-foreground: 0 0% 70%;
 
-    --accent: 38 80% 55%;
-    --accent-foreground: 220 45% 12%;
+    --accent: 162 100% 41%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 65% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 15% 88%;
-    --input: 220 15% 88%;
-    --ring: 220 45% 20%;
+    --border: 0 0% 100% / 0.1;
+    --input: 0 0% 100% / 0.15;
+    --ring: 162 100% 41%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
 
     /* Custom tokens */
     --success: 152 55% 38%;
@@ -44,55 +44,36 @@
     --info: 210 75% 50%;
     --info-foreground: 0 0% 100%;
 
-    --gold: 38 80% 55%;
-    --gold-light: 38 60% 85%;
-    --navy: 220 45% 20%;
-    --navy-light: 220 30% 35%;
+    /* EduTech specific */
+    --teal: 162 100% 41%;
+    --teal-light: 162 80% 60%;
+    --dark-bg: 220 20% 7%;
+    --dark-surface: 220 15% 12%;
+    
+    /* Dashboard gradient */
+    --gradient-start: 234 77% 65%;
+    --gradient-end: 271 38% 47%;
 
     --sidebar-background: 220 45% 16%;
     --sidebar-foreground: 220 15% 90%;
-    --sidebar-primary: 38 80% 55%;
+    --sidebar-primary: 162 100% 41%;
     --sidebar-primary-foreground: 220 45% 12%;
     --sidebar-accent: 220 35% 24%;
     --sidebar-accent-foreground: 220 15% 90%;
     --sidebar-border: 220 35% 24%;
-    --sidebar-ring: 38 80% 55%;
+    --sidebar-ring: 162 100% 41%;
 
-    /* Metric colors */
-    --metric-critical-thinking: 210 75% 50%;
-    --metric-conceptual-clarity: 152 55% 38%;
-    --metric-retention: 38 80% 55%;
-    --metric-pattern: 280 50% 50%;
+    /* Dashboard card colors */
+    --dashboard-card: 0 0% 100% / 0.95;
+    --dashboard-card-foreground: 220 30% 15%;
+    --navbar-bg: 220 20% 7% / 0.95;
   }
 
   .dark {
-    --background: 220 30% 8%;
+    --background: 220 30% 5%;
     --foreground: 220 15% 90%;
     --card: 220 30% 12%;
     --card-foreground: 220 15% 90%;
-    --popover: 220 30% 12%;
-    --popover-foreground: 220 15% 90%;
-    --primary: 38 80% 55%;
-    --primary-foreground: 220 45% 12%;
-    --secondary: 220 25% 18%;
-    --secondary-foreground: 220 15% 90%;
-    --muted: 220 25% 18%;
-    --muted-foreground: 220 10% 55%;
-    --accent: 38 80% 55%;
-    --accent-foreground: 220 45% 12%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 220 25% 22%;
-    --input: 220 25% 22%;
-    --ring: 38 80% 55%;
-    --sidebar-background: 220 30% 6%;
-    --sidebar-foreground: 220 15% 85%;
-    --sidebar-primary: 38 80% 55%;
-    --sidebar-primary-foreground: 220 45% 12%;
-    --sidebar-accent: 220 25% 14%;
-    --sidebar-accent-foreground: 220 15% 85%;
-    --sidebar-border: 220 25% 14%;
-    --sidebar-ring: 38 80% 55%;
   }
 }
 
@@ -103,21 +84,108 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Inter', system-ui, sans-serif;
-  }
-
-  h1, h2, h3, h4, h5, h6 {
-    font-family: 'Source Serif 4', Georgia, serif;
-    @apply tracking-tight;
+    font-family: 'Segoe UI', 'Inter', Tahoma, Geneva, Verdana, sans-serif;
   }
 }
 
-@layer utilities {
-  .font-serif-display {
-    font-family: 'Source Serif 4', Georgia, serif;
-  }
+/* Gradient background for dashboards */
+.gradient-bg {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+}
 
-  .font-sans-body {
-    font-family: 'Inter', system-ui, sans-serif;
-  }
+/* Glassmorphism card */
+.glass-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.glass-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+/* Dark glassmorphism */
+.glass-dark {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(30px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Floating squares animation */
+@keyframes floatSquares {
+  0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
+}
+
+/* SVG line drawing animation */
+@keyframes drawLine {
+  0%, 100% { stroke-dasharray: 0, 1000; }
+  50% { stroke-dasharray: 1000, 0; }
+}
+
+/* Modal slide in */
+@keyframes modalSlideIn {
+  0% { opacity: 0; transform: translateY(50px) scale(0.9); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Fade in up animation */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Slide down animation */
+@keyframes slideDown {
+  from { transform: translateY(-100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Gradient shift */
+@keyframes gradientShift {
+  0%, 100% { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+  50% { background: linear-gradient(135deg, #764ba2 0%, #667eea 100%); }
+}
+
+/* Pulse animation */
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+
+.animate-slide-down {
+  animation: slideDown 0.8s ease-out;
+}
+
+.animate-modal-in {
+  animation: modalSlideIn 0.5s ease-out;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #4299e1, #3182ce);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #3182ce, #2c5aa0);
 }
