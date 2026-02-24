@@ -57,13 +57,13 @@ const TopNavbar = ({ role }: TopNavbarProps) => {
           )}
           {role === "student" && (
             <>
-              <button className="text-white cursor-pointer text-base font-medium transition-all py-2.5 px-[18px] rounded-full bg-transparent border-2 border-transparent hover:bg-blue-500/20 hover:border-blue-500/50 hover:-translate-y-0.5">
-                Today's Schedule
+              <button onClick={() => navigate("/student")} className={`text-white cursor-pointer text-base font-medium transition-all py-2.5 px-[18px] rounded-full bg-transparent border-2 border-transparent hover:bg-blue-500/20 hover:border-blue-500/50 hover:-translate-y-0.5 ${location.pathname === "/student" ? "bg-blue-500/20 border-blue-500/50" : ""}`}>
+                Dashboard
               </button>
               <button onClick={() => openModal("assignments")} className="text-white cursor-pointer text-base font-medium transition-all py-2.5 px-[18px] rounded-full bg-transparent border-2 border-transparent hover:bg-blue-500/20 hover:border-blue-500/50 hover:-translate-y-0.5">
                 Assignments
               </button>
-              <button className="text-white cursor-pointer text-base font-medium transition-all py-2.5 px-[18px] rounded-full bg-transparent border-2 border-transparent hover:bg-blue-500/20 hover:border-blue-500/50 hover:-translate-y-0.5">
+              <button onClick={() => navigate("/student/calendar")} className={`text-white cursor-pointer text-base font-medium transition-all py-2.5 px-[18px] rounded-full bg-transparent border-2 border-transparent hover:bg-blue-500/20 hover:border-blue-500/50 hover:-translate-y-0.5 ${location.pathname === "/student/calendar" ? "bg-blue-500/20 border-blue-500/50" : ""}`}>
                 Calendar
               </button>
               <button onClick={() => openModal("progress")} className="text-white cursor-pointer text-base font-medium transition-all py-2.5 px-[18px] rounded-full bg-transparent border-2 border-transparent hover:bg-blue-500/20 hover:border-blue-500/50 hover:-translate-y-0.5">
