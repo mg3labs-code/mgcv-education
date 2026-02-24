@@ -235,9 +235,19 @@ type SubSection = null | "extendTopic" | "extendChapter" | "insertTopic" | "dele
 interface TeachingCalendarProps {
   onSave?: (schedule: Record<string, ScheduleItem>, chapters: ChapterDef[]) => void;
   isSaving?: boolean;
+  selectedClass?: string;
+  onClassChange?: (className: string) => void;
 }
 
-const TeachingCalendar = ({ onSave, isSaving }: TeachingCalendarProps) => {
+const CLASSES = [
+  "Class 9",
+  "Class 10",
+  "Class 11",
+  "Class 12"
+];
+
+const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange }: TeachingCalendarProps) => {
+
   const now = new Date();
   const [monthIndex, setMonthIndex] = useState(now.getMonth());
   const [year, setYear] = useState(now.getFullYear());
@@ -530,7 +540,20 @@ const TeachingCalendar = ({ onSave, isSaving }: TeachingCalendarProps) => {
         {/* Header with action buttons */}
         <div className="bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white text-center py-6 px-8">
           <h2 className="text-2xl font-light mb-1">Mathematics Teaching Schedule</h2>
-          <p className="text-base opacity-90">Class 10th CBSE • 2025–26</p>
+          <div className="flex flex-col items-center gap-2 mt-1">
+            <Select value={selectedClass} onValueChange={onClassChange}>
+              <SelectTrigger className="w-[180px] bg-white/20 border-white/30 text-white h-8 text-sm">
+                <SelectValue placeholder="Select class..." />
+              </SelectTrigger>
+              <SelectContent className="bg-white">
+                {CLASSES.map((c) => (
+                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs opacity-80 uppercase tracking-wider font-medium">CBSE • 2025–26</p>
+          </div>
+
           <div className="flex justify-center gap-3 mt-5 flex-wrap">
             <button onClick={() => { setActiveModal("extend"); setSubSection(null); }} className="bg-white/20 text-white border-2 border-green-400/60 px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-white/30 hover:-translate-y-0.5 transition-all cursor-pointer backdrop-blur-sm">
               Extend & Insert
