@@ -1,20 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-
-const scheduleItems = [
-  { time: "09:00 AM – 10:00 AM", subject: "Mathematics", icon: "📐", topic: "Chapter 1: Real Numbers - Rational Numbers", type: "class" },
-  { time: "10:00 AM – 11:00 AM", subject: "Science", icon: "🔬", topic: "Chapter 1: Light - Reflection and Refraction", type: "class" },
-  { time: "11:00 AM – 11:15 AM", subject: "Short Break", icon: "☕", topic: "Refresh and Energize", type: "break" },
-  { time: "11:15 AM – 12:15 PM", subject: "English", icon: "📖", topic: "Chapter 1: A Letter to God - Reading Comprehension", type: "class" },
-  { time: "12:15 PM – 01:00 PM", subject: "Lunch Break", icon: "🍽️", topic: "Nutrition and Rest", type: "break" },
-  { time: "01:00 PM – 02:00 PM", subject: "Social Studies", icon: "🌍", topic: "Chapter 1: Resources and Development", type: "class" },
-  { time: "02:00 PM – 03:00 PM", subject: "Computer Science", icon: "💻", topic: "Chapter 1: Introduction to Programming", type: "class" },
-  { time: "03:00 PM – 04:00 PM", subject: "Physical Education", icon: "🏃", topic: "Chapter 1: Health and Fitness", type: "class" },
-];
-
-const calendarDays = ["S", "M", "T", "W", "T", "F", "S"];
 
 interface ScheduleItem {
   type: string;
@@ -25,55 +12,122 @@ interface ScheduleItem {
   isNational?: boolean;
 }
 
-const fallbackTopicColorHex: Record<string, string> = {
-  intro: "#3b82f6",
-  polynomial: "#7c3aed",
-  linearEquations: "#ec4899",
-  triangle: "#10b981",
+interface SubjectSchedule {
+  subject: string;
+  schedule: Record<string, ScheduleItem>;
+  chapters: { id: string; name: string; colorHex: string }[];
+}
+
+const SUBJECT_META: Record<string, { icon: string; time: string; color: string }> = {
+  "Mathematics": { icon: "📐", time: "09:00 AM – 10:00 AM", color: "#667eea" },
+  "Science": { icon: "🔬", time: "10:00 AM – 11:00 AM", color: "#48bb78" },
+  "English": { icon: "📖", time: "11:15 AM – 12:15 PM", color: "#9f7aea" },
+  "Social Science": { icon: "🌍", time: "01:00 PM – 02:00 PM", color: "#ed8936" },
+  "Hindi": { icon: "🇮🇳", time: "02:00 PM – 03:00 PM", color: "#f56565" },
+  "Sanskrit": { icon: "🕉️", time: "03:00 PM – 04:00 PM", color: "#38b2ac" },
 };
+
+const BREAKS = [
+  { time: "11:00 AM – 11:15 AM", subject: "Short Break", icon: "☕", topic: "Refresh and Energize", type: "break" as const },
+  { time: "12:15 PM – 01:00 PM", subject: "Lunch Break", icon: "🍽️", topic: "Nutrition and Rest", type: "break" as const },
+];
+
+const calendarDays = ["S", "M", "T", "W", "T", "F", "S"];
 
 const StudentDashboard = () => {
   const { fullName, user } = useAuth();
   const firstName = fullName?.split(" ")[0] || "Student";
   const [completedItems, setCompletedItems] = useState<number[]>([]);
-  const [teacherSchedule, setTeacherSchedule] = useState<Record<string, ScheduleItem> | null>(null);
-  const [scheduleClassName, setScheduleClassName] = useState("");
-  const [scheduleSubject, setScheduleSubject] = useState("");
-  const [chaptersData, setChaptersData] = useState<{ id: string; name: string; colorHex: string }[]>([]);
+  const [subjectSchedules, setSubjectSchedules] = useState<SubjectSchedule[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchSchedule = async () => {
+    const fetchAllSchedules = async () => {
       if (!user) return;
-
-      // First get the student's class_name
-      const { data: profileData } = await supabase
+      const { data: profile } = await supabase
         .from("profiles")
         .select("class_name")
         .eq("user_id", user.id)
         .maybeSingle();
 
-      const studentClass = profileData?.class_name;
-      if (!studentClass) return;
+      if (!profile?.class_name) { setLoading(false); return; }
 
-      // Fetch teaching schedule matching the student's class
-      const { data } = await supabase
+      const { data: schedules } = await supabase
         .from("teaching_schedules")
-        .select("schedule_data, chapters_data, class_name, subject")
-        .eq("class_name", studentClass)
-        .limit(1)
-        .maybeSingle();
+        .select("subject, schedule_data, chapters_data")
+        .eq("class_name", profile.class_name);
 
-      if (data?.schedule_data) {
-        setTeacherSchedule(data.schedule_data as unknown as Record<string, ScheduleItem>);
-        setScheduleClassName(data.class_name || "");
-        setScheduleSubject(data.subject || "Mathematics");
-        if (data.chapters_data) {
-          setChaptersData(data.chapters_data as unknown as { id: string; name: string; colorHex: string }[]);
-        }
+      if (schedules) {
+        setSubjectSchedules(
+          schedules.map((s) => ({
+            subject: s.subject,
+            schedule: s.schedule_data as unknown as Record<string, ScheduleItem>,
+            chapters: (s.chapters_data as unknown as { id: string; name: string; colorHex: string }[]) || [],
+          }))
+        );
       }
+      setLoading(false);
     };
-    fetchSchedule();
+    fetchAllSchedules();
   }, [user]);
+
+  const today = new Date();
+  const todayKey = today.toISOString().split("T")[0];
+
+  // Build today's dynamic schedule from all subjects
+  const todayScheduleItems = useMemo(() => {
+    const items: { time: string; subject: string; icon: string; topic: string; type: "class" | "break" | "holiday" | "practice" | "test" | "assignment"; color: string; chapterName?: string }[] = [];
+
+    // Sort subjects by their time slots
+    const orderedSubjects = Object.keys(SUBJECT_META);
+
+    orderedSubjects.forEach((subjectName) => {
+      const subSchedule = subjectSchedules.find((s) => s.subject === subjectName);
+      const meta = SUBJECT_META[subjectName];
+      const todayItem = subSchedule?.schedule[todayKey];
+
+      if (todayItem) {
+        const chapterName = todayItem.chapterId
+          ? subSchedule?.chapters.find((c) => c.id === todayItem.chapterId)?.name
+          : undefined;
+
+        let topic = todayItem.title || todayItem.label || "Scheduled";
+        if (chapterName) topic = `${chapterName}: ${topic}`;
+
+        items.push({
+          time: meta.time,
+          subject: subjectName,
+          icon: meta.icon,
+          topic,
+          type: todayItem.type as any,
+          color: todayItem.chapterId
+            ? (subSchedule?.chapters.find((c) => c.id === todayItem.chapterId)?.colorHex || meta.color)
+            : meta.color,
+          chapterName,
+        });
+      } else {
+        // No schedule for this subject today - still show as regular class
+        items.push({
+          time: meta.time,
+          subject: subjectName,
+          icon: meta.icon,
+          topic: "Regular Class",
+          type: "class",
+          color: meta.color,
+        });
+      }
+
+      // Insert breaks at appropriate positions
+      if (subjectName === "Science") {
+        items.push({ ...BREAKS[0], color: "#6b7280" });
+      }
+      if (subjectName === "English") {
+        items.push({ ...BREAKS[1], color: "#6b7280" });
+      }
+    });
+
+    return items;
+  }, [subjectSchedules, todayKey]);
 
   const toggleComplete = (index: number) => {
     setCompletedItems((prev) =>
@@ -81,19 +135,27 @@ const StudentDashboard = () => {
     );
   };
 
-  const totalClasses = scheduleItems.filter((s) => s.type === "class").length;
-  const completedClasses = completedItems.filter((i) => scheduleItems[i]?.type === "class").length;
+  const totalClasses = todayScheduleItems.filter((s) => s.type !== "break").length;
+  const completedClasses = completedItems.filter((i) => todayScheduleItems[i]?.type !== "break").length;
   const progressPercent = totalClasses > 0 ? Math.round((completedClasses / totalClasses) * 100) : 0;
 
-  // Get today's topic from teacher schedule
-  const today = new Date();
-  const todayKey = today.toISOString().split("T")[0];
-  const todayScheduleItem = teacherSchedule?.[todayKey];
+  // Find today's highlighted topic (first topic-type item)
+  const todayHighlight = todayScheduleItems.find((s) => (s.type as string) === "topic");
+
+  const getTypeBadge = (type: string) => {
+    switch (type) {
+      case "topic": return { label: "📚 Topic", bg: "from-blue-50 to-blue-100", text: "text-blue-800", border: "border-blue-300" };
+      case "practice": return { label: "🏋️ Practice", bg: "from-cyan-50 to-cyan-100", text: "text-cyan-800", border: "border-cyan-300" };
+      case "test": return { label: "📝 Test", bg: "from-red-50 to-red-100", text: "text-red-800", border: "border-red-300" };
+      case "assignment": return { label: "📋 Assignment", bg: "from-amber-50 to-amber-100", text: "text-amber-800", border: "border-amber-300" };
+      case "holiday": return { label: "🎉 Holiday", bg: "from-orange-50 to-orange-100", text: "text-orange-800", border: "border-orange-300" };
+      default: return { label: "📖 Class", bg: "from-gray-50 to-gray-100", text: "text-gray-800", border: "border-gray-300" };
+    }
+  };
 
   return (
     <DashboardLayout role="student">
       <div className="p-[30px] space-y-6">
-       {/* Main Layout: Sidebar + Schedule */}
         <div className="flex gap-[30px]">
           {/* Sidebar */}
           <aside className="w-[350px] flex-shrink-0">
@@ -101,14 +163,14 @@ const StudentDashboard = () => {
             <div className="bg-[#1a1a1a]/90 text-white rounded-2xl p-5 mb-5">
               <div className="flex items-center justify-between mb-5">
                 <div>
-                  <div className="text-lg font-medium">Day 23</div>
-                  <div className="text-xs text-gray-500">0/2238 left</div>
+                  <div className="text-lg font-medium">Day {today.getDate()}</div>
+                  <div className="text-xs text-gray-500">{today.toLocaleDateString("en-US", { weekday: "long" })}</div>
                 </div>
                 <div className="flex items-center gap-4">
                   <button className="text-gray-500 hover:text-white transition-colors text-lg bg-transparent border-none cursor-pointer">‹</button>
                   <div className="bg-gradient-to-br from-gray-500 to-gray-600 border-2 border-yellow-400 rounded-xl py-2 px-3 flex items-center gap-2">
-                    <span className="text-base text-yellow-400 font-bold">6</span>
-                    <span className="text-[10px] text-gray-300">MIN</span>
+                    <span className="text-base text-yellow-400 font-bold">{today.getDate()}</span>
+                    <span className="text-[10px] text-gray-300">{today.toLocaleDateString("en-US", { month: "short" }).toUpperCase()}</span>
                   </div>
                   <button className="text-gray-500 hover:text-white transition-colors text-lg bg-transparent border-none cursor-pointer">›</button>
                 </div>
@@ -116,79 +178,57 @@ const StudentDashboard = () => {
 
               {/* Mini Calendar */}
               <div className="mb-5">
-                <div className="text-sm text-gray-500 mb-2 text-center">February 2026</div>
+                <div className="text-sm text-gray-500 mb-2 text-center">
+                  {today.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+                </div>
                 <div className="grid grid-cols-7 gap-1 mb-3">
                   {calendarDays.map((d, i) => (
                     <div key={i} className="text-center text-xs text-gray-500 py-2 font-medium">{d}</div>
                   ))}
                 </div>
                 <div className="grid grid-cols-7 gap-1">
-                  {[...Array(28)].map((_, i) => {
-                    const day = i + 1;
-                    const isToday = day === 24;
-                    const isCompleted = day < 24 && day > 15;
-                    const isMissed = day <= 15 && [8, 9, 10].includes(day);
-                    return (
-                      <button
-                        key={i}
-                        className={`aspect-square flex items-center justify-center rounded-lg text-sm font-medium cursor-pointer transition-all border-none relative
-                          ${isToday ? "bg-emerald-500 text-white" : ""}
-                          ${isCompleted ? "bg-gray-700 text-emerald-500" : ""}
-                          ${isMissed ? "text-red-500" : ""}
-                          ${!isToday && !isCompleted && !isMissed ? "bg-transparent text-white hover:bg-[#3a3a3a]" : ""}
-                        `}
-                      >
-                        {day}
-                        {isCompleted && <span className="absolute top-0.5 right-0.5 text-[10px] text-emerald-500">✓</span>}
-                        {isMissed && <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 bg-red-500 rounded-full" />}
-                      </button>
-                    );
-                  })}
+                  {(() => {
+                    const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+                    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1).getDay();
+                    const cells = [];
+                    for (let i = 0; i < firstDayOfMonth; i++) {
+                      cells.push(<div key={`e-${i}`} className="aspect-square" />);
+                    }
+                    for (let d = 1; d <= daysInMonth; d++) {
+                      const isToday = d === today.getDate();
+                      const isPast = d < today.getDate();
+                      cells.push(
+                        <button
+                          key={d}
+                          className={`aspect-square flex items-center justify-center rounded-lg text-sm font-medium cursor-pointer transition-all border-none relative
+                            ${isToday ? "bg-emerald-500 text-white" : ""}
+                            ${isPast ? "bg-gray-700/50 text-gray-400" : ""}
+                            ${!isToday && !isPast ? "bg-transparent text-white hover:bg-[#3a3a3a]" : ""}
+                          `}
+                        >
+                          {d}
+                        </button>
+                      );
+                    }
+                    return cells;
+                  })()}
                 </div>
-              </div>
-
-              {/* Weekly Premium */}
-              <div className="bg-gradient-to-br from-amber-900 to-amber-700 rounded-xl p-4 mb-5">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="text-yellow-400 font-semibold flex items-center gap-2">ⓘ Weekly Premium</div>
-                  <div className="text-yellow-300 text-xs">4 days left</div>
-                </div>
-                <div className="flex justify-between items-center">
-                  {["W1", "W2", "W3", "W4", "W5"].map((d, i) => (
-                    <div key={i} className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium ${i === 1 ? "bg-yellow-400 text-[#1a1a1a]" : "bg-yellow-400/20 text-yellow-400"}`}>
-                      {d}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Footer */}
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-emerald-500 rounded rotate-45" />
-                  <span className="text-emerald-500 text-sm">0 Redeem</span>
-                </div>
-                <span className="text-gray-500 text-sm cursor-pointer hover:text-white transition-colors">Rules</span>
               </div>
             </div>
 
-            {/* Today's Schedule from Teacher */}
-            {todayScheduleItem && (
+            {/* Today's Highlighted Topic */}
+            {todayHighlight && (
               <div className="bg-white/95 backdrop-blur-[10px] p-6 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.1)] border border-white/20 mb-5">
                 <h3 className="mb-4 text-lg font-semibold border-b-[3px] border-blue-500 pb-2 bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
-                  📚 Today's Topic
+                  📚 Today's Focus
                 </h3>
                 <div
-                  className="text-white text-sm px-3 py-2 rounded-full text-center font-medium"
-                  style={{
-                    backgroundColor:
-                      (todayScheduleItem.chapterId && chaptersData.find(c => c.id === todayScheduleItem.chapterId)?.colorHex)
-                      || fallbackTopicColorHex[todayScheduleItem.cssClass || ""]
-                      || "#6b7280"
-                  }}
+                  className="text-white text-sm px-3 py-2.5 rounded-xl text-center font-medium"
+                  style={{ backgroundColor: todayHighlight.color }}
                 >
-                  {todayScheduleItem.title || todayScheduleItem.label || "No topic"}
+                  {todayHighlight.icon} {todayHighlight.subject}
                 </div>
+                <p className="text-sm text-muted-foreground mt-2 text-center">{todayHighlight.topic}</p>
               </div>
             )}
 
@@ -198,14 +238,8 @@ const StudentDashboard = () => {
                 📅 Today
               </h3>
               <div className="text-center text-lg font-semibold mb-4 bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
-                Monday, February 23, 2026
+                {today.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
               </div>
-              <div className="bg-gradient-to-r from-blue-50 to-purple-50 text-blue-700 p-4 rounded-xl border-l-4 border-blue-500 font-medium animate-pulse mb-3">
-                🔔 AI Quiz on June 10
-              </div>
-              <button disabled className="w-full bg-gradient-to-r from-blue-50 to-purple-50 text-blue-700 p-4 rounded-xl border-l-4 border-blue-500 font-medium opacity-50 cursor-not-allowed border-none text-left mb-3">
-                🔒 Quiz Locked
-              </button>
               <button className="w-full bg-gradient-to-r from-orange-50 to-pink-50 text-orange-700 p-4 rounded-xl border-l-4 border-orange-500 font-medium border-none text-left cursor-pointer hover:-translate-y-0.5 hover:shadow-md transition-all">
                 📝 Today's Draft
               </button>
@@ -217,10 +251,10 @@ const StudentDashboard = () => {
                 📊 Quick Stats
               </h3>
               {[
-                { label: "Classes Today:", value: String(totalClasses) },
+                { label: "Subjects Today:", value: String(totalClasses) },
                 { label: "Completed:", value: String(completedClasses) },
                 { label: "Remaining:", value: String(totalClasses - completedClasses) },
-                { label: "Quiz Score:", value: "--" },
+                { label: "Progress:", value: `${progressPercent}%` },
               ].map((stat, i) => (
                 <div key={i} className="flex justify-between items-center py-3 border-b border-gray-100/50 last:border-none hover:bg-blue-500/5 hover:rounded-lg hover:px-2.5 transition-all">
                   <span className="text-gray-500 text-sm font-medium">{stat.label}</span>
@@ -237,12 +271,16 @@ const StudentDashboard = () => {
                 <h2 className="text-[28px] bg-gradient-to-r from-[#2c3e50] to-blue-500 bg-clip-text text-transparent mb-1 font-bold">
                   📝 Today's Class Schedule
                 </h2>
-                <p className="text-gray-500 text-base italic">Click on each class as you complete them - Quiz unlocks at 100% completion!</p>
+                <p className="text-gray-500 text-base italic">
+                  {loading ? "Loading schedule..." : "Synced from your teacher's calendar — click to mark complete!"}
+                </p>
               </div>
 
               <div className="grid gap-5 grid-cols-[repeat(auto-fit,minmax(350px,1fr))] mb-8">
-                {scheduleItems.map((item, i) => {
+                {todayScheduleItems.map((item, i) => {
                   const isCompleted = completedItems.includes(i);
+                  const badge = getTypeBadge(item.type);
+
                   return (
                     <button
                       key={i}
@@ -256,36 +294,27 @@ const StudentDashboard = () => {
                       {isCompleted && (
                         <span className="absolute top-4 right-4 text-emerald-500 font-bold text-xl animate-scale-in">✓</span>
                       )}
-                      <span className="text-[13px] font-semibold text-gray-500 mb-1 block">{item.time}</span>
-                      <div className="text-lg font-bold text-[#2c3e50] mb-2">{item.icon} {item.subject}
+
+                      {/* Type indicator bar */}
+                      <div className="absolute top-0 left-0 w-1 h-full rounded-l-2xl" style={{ backgroundColor: item.color }} />
+
+                      <span className="text-[13px] font-semibold text-gray-500 mb-1 block pl-3">{item.time}</span>
+                      <div className="text-lg font-bold text-[#2c3e50] mb-2 pl-3">
+                        {item.icon} {item.subject}
                         {item.type === "break" && <span className="ml-2 text-xs font-normal text-gray-400 italic">Refresh and Energize</span>}
                       </div>
-                      <span className="text-sm text-gray-400 italic py-1 px-2.5 bg-blue-500/10 rounded-full inline-block">{item.topic}</span>
-                      <div className="flex gap-2 justify-center mt-3 pt-2 border-t border-blue-500/20" onClick={(e) => e.stopPropagation()}>
-                        {item.type === "class" && (
-                          <>
-                            <span className="py-1.5 px-3.5 rounded-full text-[11px] font-semibold uppercase tracking-wide bg-gradient-to-r from-blue-50 to-blue-100 text-blue-800 border border-blue-300 hover:-translate-y-0.5 hover:shadow-md transition-all cursor-pointer">
-                              📋 Overview
-                            </span>
-                            <span className="py-1.5 px-3.5 rounded-full text-[11px] font-semibold uppercase tracking-wide bg-gradient-to-r from-purple-50 to-purple-100 text-purple-800 border border-purple-300 hover:-translate-y-0.5 hover:shadow-md transition-all cursor-pointer">
-                              🔍 Deep Dive
-                            </span>
-                            <span className="py-1.5 px-3.5 rounded-full text-[11px] font-semibold uppercase tracking-wide bg-gradient-to-r from-purple-50 to-purple-100 text-purple-800 border border-purple-300 hover:-translate-y-0.5 hover:shadow-md transition-all cursor-pointer">
-                              Pop Quiz
-                            </span>
-                          </>
-                        )}
-                        {item.type === "break" && item.subject === "Short Break" && (
-                          <span className="py-1.5 px-3.5 rounded-full text-[11px] font-semibold uppercase tracking-wide bg-gradient-to-r from-purple-50 to-purple-100 text-purple-800 border border-purple-300 hover:-translate-y-0.5 hover:shadow-md transition-all cursor-pointer">
-                            🔍 Break Tips
+                      <span className="text-sm text-gray-500 italic py-1 px-2.5 bg-blue-500/10 rounded-full inline-block ml-3">{item.topic}</span>
+
+                      {item.type !== "break" && (
+                        <div className="flex gap-2 mt-3 pt-2 border-t border-blue-500/20 pl-3" onClick={(e) => e.stopPropagation()}>
+                          <span className={`py-1.5 px-3.5 rounded-full text-[11px] font-semibold uppercase tracking-wide bg-gradient-to-r ${badge.bg} ${badge.text} border ${badge.border} hover:-translate-y-0.5 hover:shadow-md transition-all cursor-pointer`}>
+                            {badge.label}
                           </span>
-                        )}
-                        {item.type === "break" && item.subject === "Lunch Break" && (
                           <span className="py-1.5 px-3.5 rounded-full text-[11px] font-semibold uppercase tracking-wide bg-gradient-to-r from-purple-50 to-purple-100 text-purple-800 border border-purple-300 hover:-translate-y-0.5 hover:shadow-md transition-all cursor-pointer">
-                            🔍 Nutrition Guide
+                            🔍 Deep Dive
                           </span>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </button>
                   );
                 })}
