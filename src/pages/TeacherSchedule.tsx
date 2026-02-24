@@ -6,9 +6,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
 const TeacherSchedule = () => {
-  const { user, fullName } = useAuth();
+  const { user } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
-  const [className, setClassName] = useState("");
+  const [className, setClassName] = useState("Class 10");
+
+
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -87,25 +89,16 @@ const TeacherSchedule = () => {
   return (
     <DashboardLayout role="teacher">
       <main className="p-8 max-w-[1400px] mx-auto">
-        {/* Class Name Input */}
-        <div className="bg-white/95 backdrop-blur-[10px] rounded-2xl p-6 mb-6 shadow-[0_8px_32px_rgba(0,0,0,0.1)] border border-white/20">
-          <div className="flex items-center gap-4 flex-wrap">
-            <label className="text-lg font-semibold text-[#2d3748]">📚 Publishing for Class:</label>
-            <input
-              type="text"
-              value={className}
-              onChange={(e) => setClassName(e.target.value)}
-              placeholder="e.g. 10th CBSE A"
-              className="px-4 py-2 rounded-lg border border-gray-300 text-base font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[200px]"
-            />
-            <span className="text-sm text-gray-500 italic">Students in this class will see this schedule</span>
-          </div>
-        </div>
-
-        <TeachingCalendar onSave={handleSave} isSaving={isSaving} />
+        <TeachingCalendar 
+          onSave={handleSave} 
+          isSaving={isSaving} 
+          selectedClass={className}
+          onClassChange={setClassName}
+        />
       </main>
     </DashboardLayout>
   );
+
 };
 
 export default TeacherSchedule;
