@@ -41,17 +41,20 @@ const TopNavbar = ({ role }: TopNavbarProps) => {
         <div className="flex gap-5 items-center">
           {role === "teacher" && (
             <>
-              <button className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-none py-2.5 px-5 rounded-lg cursor-pointer font-medium transition-all hover:-translate-y-0.5 hover:shadow-[0_4px_15px_rgba(66,153,225,0.4)]">
+              <button onClick={() => navigate("/teacher/schedule")} className={`bg-gradient-to-br from-blue-500 to-blue-600 text-white border-none py-2.5 px-5 rounded-lg cursor-pointer font-medium transition-all hover:-translate-y-0.5 hover:shadow-[0_4px_15px_rgba(66,153,225,0.4)] ${location.pathname === "/teacher/schedule" ? "ring-2 ring-white/60" : ""}`}>
                 Annual Schedule
               </button>
               <button className="bg-gradient-to-br from-blue-500 to-black text-white border-none py-2.5 px-5 rounded-lg cursor-pointer font-medium transition-all hover:-translate-y-0.5 hover:shadow-[0_4px_15px_rgba(72,187,120,0.4)]">
                 To-Do List
               </button>
-              <button className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-none py-2.5 px-5 rounded-lg cursor-pointer font-medium transition-all hover:-translate-y-0.5">
+              <button onClick={() => navigate("/teacher/analytics")} className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-none py-2.5 px-5 rounded-lg cursor-pointer font-medium transition-all hover:-translate-y-0.5">
                 Metrics
               </button>
               <button className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-none py-2.5 px-5 rounded-lg cursor-pointer font-medium transition-all hover:-translate-y-0.5">
                 Message Bar
+              </button>
+              <button onClick={() => navigate("/teacher")} className={`bg-gradient-to-br from-blue-500 to-blue-600 text-white border-none py-2.5 px-5 rounded-lg cursor-pointer font-medium transition-all hover:-translate-y-0.5 ${location.pathname === "/teacher" ? "ring-2 ring-white/60" : ""}`}>
+                Dashboard
               </button>
             </>
           )}
