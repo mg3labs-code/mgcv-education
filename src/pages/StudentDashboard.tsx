@@ -43,6 +43,7 @@ const StudentDashboard = () => {
   const [teacherSchedule, setTeacherSchedule] = useState<Record<string, ScheduleItem> | null>(null);
   const [scheduleClassName, setScheduleClassName] = useState("");
   const [scheduleSubject, setScheduleSubject] = useState("");
+  const [chaptersData, setChaptersData] = useState<{ id: string; name: string; colorHex: string }[]>([]);
 
   useEffect(() => {
     const fetchSchedule = async () => {
@@ -61,7 +62,7 @@ const StudentDashboard = () => {
       // Fetch teaching schedule matching the student's class
       const { data } = await supabase
         .from("teaching_schedules")
-        .select("schedule_data, class_name, subject")
+        .select("schedule_data, chapters_data, class_name, subject")
         .eq("class_name", studentClass)
         .limit(1)
         .maybeSingle();
@@ -70,6 +71,9 @@ const StudentDashboard = () => {
         setTeacherSchedule(data.schedule_data as unknown as Record<string, ScheduleItem>);
         setScheduleClassName(data.class_name || "");
         setScheduleSubject(data.subject || "Mathematics");
+        if (data.chapters_data) {
+          setChaptersData(data.chapters_data as unknown as { id: string; name: string; colorHex: string }[]);
+        }
       }
     };
     fetchSchedule();
@@ -99,6 +103,7 @@ const StudentDashboard = () => {
             scheduleData={teacherSchedule}
             className={scheduleClassName}
             subject={scheduleSubject}
+            chaptersData={chaptersData}
           />
         )}
 

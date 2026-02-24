@@ -20,10 +20,10 @@ const topicColorMap: Record<string, string> = {
   assignment: "bg-amber-500",
 };
 
-const chapterColors: Record<string, { name: string; hex: string }> = {
+const defaultChapterColors: Record<string, { name: string; hex: string }> = {
   real_numbers: { name: "Real Numbers", hex: "#3b82f6" },
   polynomials: { name: "Polynomials", hex: "#7c3aed" },
-  linearEquations: { name: "Linear Equations", hex: "#ec4899" },
+  linearEquations: { name: "Pair of Linear Equations", hex: "#ec4899" },
   triangles: { name: "Triangles", hex: "#10b981" },
 };
 
@@ -35,9 +35,19 @@ interface ScheduleCalendarProps {
   scheduleData: Record<string, ScheduleItem>;
   className?: string;
   subject?: string;
+  chaptersData?: { id: string; name: string; colorHex: string }[];
 }
 
-const ScheduleCalendar = ({ scheduleData, className: classLabel, subject }: ScheduleCalendarProps) => {
+const ScheduleCalendar = ({ scheduleData, className: classLabel, subject, chaptersData }: ScheduleCalendarProps) => {
+  // Build chapter colors from dynamic data or fallback to defaults
+  const chapterColors = useMemo(() => {
+    if (chaptersData && chaptersData.length > 0) {
+      const map: Record<string, { name: string; hex: string }> = {};
+      chaptersData.forEach(c => { map[c.id] = { name: c.name, hex: c.colorHex }; });
+      return map;
+    }
+    return defaultChapterColors;
+  }, [chaptersData]);
   const now = new Date();
   const [monthIndex, setMonthIndex] = useState(now.getMonth());
   const [year, setYear] = useState(now.getFullYear());
