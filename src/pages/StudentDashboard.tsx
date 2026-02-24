@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import ScheduleCalendar from "@/components/student/ScheduleCalendar";
 
 const scheduleItems = [
   { time: "09:00 AM – 10:00 AM", subject: "Mathematics", icon: "📐", topic: "Chapter 1: Real Numbers - Rational Numbers", type: "class" },
@@ -94,17 +93,7 @@ const StudentDashboard = () => {
   return (
     <DashboardLayout role="student">
       <div className="p-[30px] space-y-6">
-        {/* Teacher's Annual Calendar - Full Width */}
-        {teacherSchedule && (
-          <ScheduleCalendar
-            scheduleData={teacherSchedule}
-            className={scheduleClassName}
-            subject={scheduleSubject}
-            chaptersData={chaptersData}
-          />
-        )}
-
-        {/* Main Layout: Sidebar + Schedule */}
+       {/* Main Layout: Sidebar + Schedule */}
         <div className="flex gap-[30px]">
           {/* Sidebar */}
           <aside className="w-[350px] flex-shrink-0">
