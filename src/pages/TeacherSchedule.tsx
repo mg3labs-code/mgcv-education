@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
-import TeachingCalendar, { defaultChapters } from "@/components/teacher/TeachingCalendar";
+import TeachingCalendar, { type ChapterDef, type ScheduleItem } from "@/components/teacher/TeachingCalendar";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -23,7 +23,7 @@ const TeacherSchedule = () => {
     fetchProfile();
   }, [user]);
 
-  const handleSave = async (scheduleData: Record<string, unknown>) => {
+  const handleSave = async (scheduleData: Record<string, ScheduleItem>, chaptersArr: ChapterDef[]) => {
     if (!user) return;
     if (!className.trim()) {
       toast({
@@ -35,7 +35,7 @@ const TeacherSchedule = () => {
     }
     setIsSaving(true);
     try {
-      const chaptersData = defaultChapters.map(ch => ({
+      const chaptersData = chaptersArr.map(ch => ({
         id: ch.id,
         name: ch.name,
         colorHex: ch.colorHex,
