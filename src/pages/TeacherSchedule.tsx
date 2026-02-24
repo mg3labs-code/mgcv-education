@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
-import TeachingCalendar from "@/components/teacher/TeachingCalendar";
+import TeachingCalendar, { defaultChapters } from "@/components/teacher/TeachingCalendar";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -25,14 +25,27 @@ const TeacherSchedule = () => {
 
   const handleSave = async (scheduleData: Record<string, unknown>) => {
     if (!user) return;
+    if (!className.trim()) {
+      toast({
+        title: "Class name required",
+        description: "Please enter a class name before publishing.",
+        variant: "destructive",
+      });
+      return;
+    }
     setIsSaving(true);
     try {
-      // Check if schedule already exists
+      const chaptersData = defaultChapters.map(ch => ({
+        id: ch.id,
+        name: ch.name,
+        colorHex: ch.colorHex,
+      }));
+
       const { data: existing } = await supabase
         .from("teaching_schedules")
         .select("id")
         .eq("teacher_id", user.id)
-        .eq("subject", "Mathematics")
+        .eq("class_name", className)
         .maybeSingle();
 
       if (existing) {
@@ -40,7 +53,8 @@ const TeacherSchedule = () => {
           .from("teaching_schedules")
           .update({
             schedule_data: scheduleData as any,
-            class_name: className,
+            chapters_data: chaptersData as any,
+            subject: "Mathematics",
           })
           .eq("id", existing.id);
       } else {
@@ -51,12 +65,13 @@ const TeacherSchedule = () => {
             subject: "Mathematics",
             class_name: className,
             schedule_data: scheduleData as any,
+            chapters_data: chaptersData as any,
           });
       }
 
       toast({
         title: "Schedule Published! 🎉",
-        description: "Your students can now see the updated schedule.",
+        description: `Students in "${className}" can now see the updated schedule.`,
       });
     } catch (error) {
       toast({

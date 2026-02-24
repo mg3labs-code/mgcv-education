@@ -127,7 +127,7 @@ export interface ScheduleItem {
 
 const toKey = (date: Date) => date.toISOString().split("T")[0];
 
-export { toKey, generateSchedule };
+export { toKey, generateSchedule, defaultChapters };
 
 
 const topicColorMap: Record<string, string> = {
