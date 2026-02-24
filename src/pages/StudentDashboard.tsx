@@ -26,14 +26,11 @@ interface ScheduleItem {
   isNational?: boolean;
 }
 
-const topicColorMap: Record<string, string> = {
-  intro: "bg-blue-500",
-  polynomial: "bg-purple-600",
-  linearEquations: "bg-pink-500",
-  triangle: "bg-emerald-500",
-  practice: "bg-cyan-500",
-  test: "bg-red-500",
-  assignment: "bg-amber-500",
+const fallbackTopicColorHex: Record<string, string> = {
+  intro: "#3b82f6",
+  polynomial: "#7c3aed",
+  linearEquations: "#ec4899",
+  triangle: "#10b981",
 };
 
 const StudentDashboard = () => {
@@ -192,7 +189,15 @@ const StudentDashboard = () => {
                 <h3 className="mb-4 text-lg font-semibold border-b-[3px] border-blue-500 pb-2 bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
                   📚 Today's Topic
                 </h3>
-                <div className={`text-white text-sm px-3 py-2 rounded-full text-center font-medium ${topicColorMap[todayScheduleItem.cssClass || ""] || "bg-gray-500"}`}>
+                <div
+                  className="text-white text-sm px-3 py-2 rounded-full text-center font-medium"
+                  style={{
+                    backgroundColor:
+                      (todayScheduleItem.chapterId && chaptersData.find(c => c.id === todayScheduleItem.chapterId)?.colorHex)
+                      || fallbackTopicColorHex[todayScheduleItem.cssClass || ""]
+                      || "#6b7280"
+                  }}
+                >
                   {todayScheduleItem.title || todayScheduleItem.label || "No topic"}
                 </div>
               </div>

@@ -10,14 +10,12 @@ interface ScheduleItem {
   isNational?: boolean;
 }
 
-const topicColorMap: Record<string, string> = {
-  intro: "bg-blue-500",
-  polynomial: "bg-purple-600",
-  linearEquations: "bg-pink-500",
-  triangle: "bg-emerald-500",
-  practice: "bg-cyan-500",
-  test: "bg-red-500",
-  assignment: "bg-amber-500",
+// Fallback color map only used when no chaptersData is provided
+const fallbackTopicColorMap: Record<string, string> = {
+  intro: "#3b82f6",
+  polynomial: "#7c3aed",
+  linearEquations: "#ec4899",
+  triangle: "#10b981",
 };
 
 const defaultChapterColors: Record<string, { name: string; hex: string }> = {
@@ -114,7 +112,10 @@ const ScheduleCalendar = ({ scheduleData, className: classLabel, subject, chapte
               </div>
             )}
             {item.type === "topic" && (
-              <div className={`w-full text-white text-[10px] px-2 py-1 rounded-full text-center font-medium leading-tight ${topicColorMap[item.cssClass || ""] || "bg-gray-500"}`}>
+              <div
+                className="w-full text-white text-[10px] px-2 py-1 rounded-full text-center font-medium leading-tight"
+                style={{ backgroundColor: (item.chapterId && chapterColors[item.chapterId]?.hex) || fallbackTopicColorMap[item.cssClass || ""] || "#6b7280" }}
+              >
                 {item.title}
               </div>
             )}
