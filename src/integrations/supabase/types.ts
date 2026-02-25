@@ -103,6 +103,72 @@ export type Database = {
         }
         Relationships: []
       }
+      attendance: {
+        Row: {
+          class_name: string
+          created_at: string
+          date: string
+          id: string
+          status: string
+          student_id: string
+          teacher_id: string
+          updated_at: string
+        }
+        Insert: {
+          class_name: string
+          created_at?: string
+          date?: string
+          id?: string
+          status?: string
+          student_id: string
+          teacher_id: string
+          updated_at?: string
+        }
+        Update: {
+          class_name?: string
+          created_at?: string
+          date?: string
+          id?: string
+          status?: string
+          student_id?: string
+          teacher_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      parent_messages: {
+        Row: {
+          class_name: string
+          id: string
+          message: string
+          parent_email: string | null
+          sent_at: string
+          student_id: string
+          subject: string
+          teacher_id: string
+        }
+        Insert: {
+          class_name: string
+          id?: string
+          message: string
+          parent_email?: string | null
+          sent_at?: string
+          student_id: string
+          subject: string
+          teacher_id: string
+        }
+        Update: {
+          class_name?: string
+          id?: string
+          message?: string
+          parent_email?: string | null
+          sent_at?: string
+          student_id?: string
+          subject?: string
+          teacher_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           class_name: string | null

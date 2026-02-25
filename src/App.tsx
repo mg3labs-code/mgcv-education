@@ -17,6 +17,9 @@ import TeacherAnalytics from "./pages/TeacherAnalytics";
 import StudentCalendar from "./pages/StudentCalendar";
 import StudentAssignments from "./pages/StudentAssignments";
 import TeacherAssignments from "./pages/TeacherAssignments";
+import TeacherAttendance from "./pages/TeacherAttendance";
+import TeacherPerformance from "./pages/TeacherPerformance";
+import TeacherParentConnect from "./pages/TeacherParentConnect";
 import StudentExamRoom from "./pages/StudentExamRoom";
 import NotFound from "./pages/NotFound";
 
@@ -44,6 +47,9 @@ const App = () => (
             <Route path="/teacher/schedule" element={<ProtectedRoute><TeacherSchedule /></ProtectedRoute>} />
             <Route path="/teacher/analytics" element={<ProtectedRoute><TeacherAnalytics /></ProtectedRoute>} />
             <Route path="/teacher/assignments" element={<ProtectedRoute><TeacherAssignments /></ProtectedRoute>} />
+            <Route path="/teacher/attendance" element={<ProtectedRoute><TeacherAttendance /></ProtectedRoute>} />
+            <Route path="/teacher/performance" element={<ProtectedRoute><TeacherPerformance /></ProtectedRoute>} />
+            <Route path="/teacher/parent-connect" element={<ProtectedRoute><TeacherParentConnect /></ProtectedRoute>} />
             <Route path="/teacher/exam-room" element={<ProtectedRoute><StudentExamRoom /></ProtectedRoute>} />
             <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
             <Route path="/admin/schools" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />

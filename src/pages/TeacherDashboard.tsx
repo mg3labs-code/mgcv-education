@@ -16,13 +16,16 @@ const students = [
 
 const toolActions: Record<string, string> = {
   "Grade Assignments": "/teacher/assignments",
+  "Take Attendance": "/teacher/attendance",
+  "Performance Report": "/teacher/performance",
+  "Parent Connect": "/teacher/parent-connect",
 };
 
 const tools = [
   { icon: "📋", label: "Take Attendance" },
   { icon: "📝", label: "Grade Assignments" },
-  { icon: "❓", label: "Create Quiz" },
-  { icon: "📤", label: "Share Resources" },
+  { icon: "📊", label: "Performance Report" },
+  { icon: "💬", label: "Parent Connect" },
 ];
 
 const announcements = [
