@@ -10,8 +10,32 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Plus, Send, Eye, Trash2, Brain } from "lucide-react";
+import { Plus, Send, Eye, Trash2, Brain, ExternalLink, ChevronDown, ChevronUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+
+const ExtractedTextPreview = ({ text }: { text: string }) => {
+  const [expanded, setExpanded] = useState(false);
+  const truncated = text.length > 200;
+  return (
+    <div className="bg-background border border-border rounded p-2 text-xs">
+      <button onClick={() => setExpanded(!expanded)} className="flex items-center gap-1 font-medium text-muted-foreground mb-1 hover:text-foreground">
+        {expanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+        Extracted Text
+      </button>
+      {expanded && (
+        <p className="whitespace-pre-wrap text-muted-foreground max-h-48 overflow-y-auto">
+          {text}
+        </p>
+      )}
+      {!expanded && truncated && (
+        <p className="text-muted-foreground truncate">{text.substring(0, 200)}…</p>
+      )}
+      {!expanded && !truncated && (
+        <p className="text-muted-foreground">{text}</p>
+      )}
+    </div>
+  );
+};
 
 const BOARD_RUBRICS: Record<string, { label: string; criteria: { criterion: string; max_marks: number }[] }> = {
   cbse: {
@@ -393,52 +417,107 @@ const TeacherAssignments = () => {
                       </Button>
                     )}
                   </div>
-                  {sub.answers?.map((ans: any) => (
-                    <div key={ans.id} className="bg-muted/50 rounded-lg p-3 mb-2">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium">{ans.question?.question_text}</span>
-                        <div className="flex items-center gap-2">
-                          <Badge className={processingColor[ans.processing_status] || ""}>
-                            {ans.processing_status}
-                          </Badge>
-                          {ans.ai_confidence != null && (
-                            <Badge variant="outline">AI Confidence: {ans.ai_confidence}%</Badge>
-                          )}
+                  {sub.answers?.map((ans: any) => {
+                    const feedback = ans.ai_feedback as any;
+                    const rubricScores = feedback?.rubric_scores || {};
+                    const hasRubricScores = Object.keys(rubricScores).length > 0;
+                    return (
+                      <div key={ans.id} className="bg-muted/50 rounded-lg p-3 mb-2 space-y-2">
+                        {/* Header: question + status */}
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium">{ans.question?.question_text}</span>
+                          <div className="flex items-center gap-2">
+                            <Badge className={processingColor[ans.processing_status] || ""}>
+                              {ans.processing_status}
+                            </Badge>
+                            {ans.ai_confidence != null && (
+                              <Badge variant="outline">AI Confidence: {ans.ai_confidence}%</Badge>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                      {ans.processing_status === "failed" && (
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="text-sm text-destructive">{ans.processing_error}</span>
-                          <Button size="sm" variant="outline" onClick={() => retryMutation.mutate(ans.id)}>
-                            Retry AI
+
+                        {/* Error + retry */}
+                        {ans.processing_status === "failed" && (
+                          <div className="flex items-center gap-2 bg-destructive/10 rounded p-2">
+                            <span className="text-sm text-destructive flex-1">{ans.processing_error}</span>
+                            <Button size="sm" variant="outline" onClick={() => retryMutation.mutate(ans.id)}>
+                              Retry AI
+                            </Button>
+                          </div>
+                        )}
+
+                        {/* Uploaded file link */}
+                        {ans.file_url && (
+                          <a href={ans.file_url} target="_blank" rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
+                            <ExternalLink className="h-3 w-3" /> View Original File
+                          </a>
+                        )}
+
+                        {/* Extracted text (collapsible) */}
+                        {ans.extracted_text && (
+                          <ExtractedTextPreview text={ans.extracted_text} />
+                        )}
+
+                        {/* AI Evaluation */}
+                        {feedback && (
+                          <div className="space-y-2 text-xs">
+                            <p className="font-semibold">AI Score: {ans.ai_score}/{ans.question?.max_score}</p>
+
+                            {/* Rubric breakdown */}
+                            {hasRubricScores && (
+                              <div className="flex flex-wrap gap-2">
+                                {Object.entries(rubricScores).map(([criterion, score]) => (
+                                  <Badge key={criterion} variant="outline" className="font-normal">
+                                    {criterion}: {String(score)}
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
+
+                            {feedback.strengths?.length > 0 && (
+                              <div>
+                                <span className="font-medium text-emerald-600 dark:text-emerald-400">Strengths:</span>
+                                <ul className="list-disc list-inside ml-1 text-muted-foreground">
+                                  {(feedback.strengths as string[]).map((s: string, i: number) => <li key={i}>{s}</li>)}
+                                </ul>
+                              </div>
+                            )}
+                            {feedback.mistakes?.length > 0 && (
+                              <div>
+                                <span className="font-medium text-destructive">Mistakes:</span>
+                                <ul className="list-disc list-inside ml-1 text-muted-foreground">
+                                  {(feedback.mistakes as string[]).map((m: string, i: number) => <li key={i}>{m}</li>)}
+                                </ul>
+                              </div>
+                            )}
+                            {feedback.suggestions?.length > 0 && (
+                              <div>
+                                <span className="font-medium text-primary">Suggestions:</span>
+                                <ul className="list-disc list-inside ml-1 text-muted-foreground">
+                                  {(feedback.suggestions as string[]).map((s: string, i: number) => <li key={i}>{s}</li>)}
+                                </ul>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Grade actions */}
+                        <div className="flex items-center gap-2 pt-1">
+                          {ans.is_teacher_reviewed && (
+                            <Badge variant="default">Teacher: {ans.teacher_score}/{ans.question?.max_score}</Badge>
+                          )}
+                          <Button size="sm" variant="outline" onClick={() => setGradeModal({
+                            ...ans,
+                            teacher_feedback: ans.teacher_feedback || "",
+                            teacher_score: ans.teacher_score ?? ans.ai_score ?? 0,
+                          })}>
+                            {ans.is_teacher_reviewed ? "Edit Grade" : "Grade"}
                           </Button>
                         </div>
-                      )}
-                      {ans.ai_feedback && (
-                        <div className="text-xs space-y-1 mb-2">
-                          <p><strong>AI Score:</strong> {ans.ai_score}/{ans.question?.max_score}</p>
-                          {(ans.ai_feedback as any)?.strengths?.length > 0 && (
-                            <p className="text-green-600">✅ {((ans.ai_feedback as any).strengths as string[]).join(", ")}</p>
-                          )}
-                          {(ans.ai_feedback as any)?.mistakes?.length > 0 && (
-                            <p className="text-red-600">❌ {((ans.ai_feedback as any).mistakes as string[]).join(", ")}</p>
-                          )}
-                        </div>
-                      )}
-                      <div className="flex items-center gap-2">
-                        {ans.is_teacher_reviewed && (
-                          <Badge variant="default">Teacher: {ans.teacher_score}/{ans.question?.max_score}</Badge>
-                        )}
-                        <Button size="sm" variant="outline" onClick={() => setGradeModal({
-                          ...ans,
-                          teacher_feedback: ans.teacher_feedback || "",
-                          teacher_score: ans.teacher_score ?? ans.ai_score ?? 0,
-                        })}>
-                          {ans.is_teacher_reviewed ? "Edit Grade" : "Grade"}
-                        </Button>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </Card>
               ))}
               {(!submissions || submissions.length === 0) && (
