@@ -25,6 +25,7 @@ import StudentExamRoom from "./pages/StudentExamRoom";
 import StudentTextbook from "./pages/StudentTextbook";
 import TextbookChapter from "./pages/TextbookChapter";
 import TextbookEpisode from "./pages/TextbookEpisode";
+import TextbookLab from "./pages/TextbookLab";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -49,6 +50,7 @@ const App = () => (
             <Route path="/student/textbook" element={<ProtectedRoute><StudentTextbook /></ProtectedRoute>} />
             <Route path="/student/textbook/:chapterId" element={<ProtectedRoute><TextbookChapter /></ProtectedRoute>} />
             <Route path="/student/textbook/:chapterId/:episodeId" element={<ProtectedRoute><TextbookEpisode /></ProtectedRoute>} />
+            <Route path="/student/textbook-lab" element={<ProtectedRoute><TextbookLab /></ProtectedRoute>} />
             <Route path="/teacher" element={<ProtectedRoute><TeacherDashboard /></ProtectedRoute>} />
             <Route path="/teacher/students" element={<ProtectedRoute><TeacherDashboard /></ProtectedRoute>} />
             <Route path="/teacher/daily-todo" element={<ProtectedRoute><TeacherDailyTodo /></ProtectedRoute>} />
