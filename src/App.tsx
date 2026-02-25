@@ -17,6 +17,7 @@ import TeacherAnalytics from "./pages/TeacherAnalytics";
 import StudentCalendar from "./pages/StudentCalendar";
 import StudentAssignments from "./pages/StudentAssignments";
 import TeacherAssignments from "./pages/TeacherAssignments";
+import StudentExamRoom from "./pages/StudentExamRoom";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -38,6 +39,7 @@ const App = () => (
             <Route path="/student/progress" element={<ProtectedRoute><StudentDashboard /></ProtectedRoute>} />
             <Route path="/student/calendar" element={<ProtectedRoute><StudentCalendar /></ProtectedRoute>} />
             <Route path="/student/assignments" element={<ProtectedRoute><StudentAssignments /></ProtectedRoute>} />
+            <Route path="/student/exam-room" element={<ProtectedRoute><StudentExamRoom /></ProtectedRoute>} />
             <Route path="/teacher" element={<ProtectedRoute><TeacherDashboard /></ProtectedRoute>} />
             <Route path="/teacher/students" element={<ProtectedRoute><TeacherDashboard /></ProtectedRoute>} />
             <Route path="/teacher/schedule" element={<ProtectedRoute><TeacherSchedule /></ProtectedRoute>} />
