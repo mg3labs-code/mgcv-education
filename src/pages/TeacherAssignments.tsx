@@ -10,21 +10,63 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Plus, Send, Eye, Trash2 } from "lucide-react";
+import { Plus, Send, Eye, Trash2, Brain } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+
+const BOARD_RUBRICS: Record<string, { label: string; criteria: { criterion: string; max_marks: number }[] }> = {
+  cbse: {
+    label: "CBSE",
+    criteria: [
+      { criterion: "Conceptual Understanding", max_marks: 4 },
+      { criterion: "Application & Method", max_marks: 3 },
+      { criterion: "Accuracy of Answer", max_marks: 2 },
+      { criterion: "Presentation & Clarity", max_marks: 1 },
+    ],
+  },
+  icse: {
+    label: "ICSE",
+    criteria: [
+      { criterion: "Knowledge & Recall", max_marks: 3 },
+      { criterion: "Analytical Reasoning", max_marks: 3 },
+      { criterion: "Problem Solving", max_marks: 2 },
+      { criterion: "Neatness & Stepwise Working", max_marks: 2 },
+    ],
+  },
+  state: {
+    label: "State Board",
+    criteria: [
+      { criterion: "Content Accuracy", max_marks: 5 },
+      { criterion: "Method & Steps", max_marks: 3 },
+      { criterion: "Diagram/Illustration", max_marks: 2 },
+    ],
+  },
+  custom: { label: "Custom", criteria: [] },
+};
+
+const QUESTION_TYPES = [
+  { value: "short_answer", label: "Short Answer (1-2 marks)" },
+  { value: "long_answer", label: "Long Answer (3-5 marks)" },
+  { value: "case_based", label: "Case-Based (4-5 marks)" },
+  { value: "mcq", label: "MCQ (1 mark)" },
+  { value: "numerical", label: "Numerical (3-5 marks)" },
+];
 
 const TeacherAssignments = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
   const [viewSubmissions, setViewSubmissions] = useState<string | null>(null);
   const [gradeModal, setGradeModal] = useState<any>(null);
+  const [selectedBoard, setSelectedBoard] = useState("cbse");
   const [newAssignment, setNewAssignment] = useState({
     title: "",
     description: "",
     instructions: "",
     class_name: "Class 10",
     subject: "Mathematics",
-    questions: [{ question_text: "", max_score: 10, expected_answer_hints: "", rubric: [] as any[] }],
+    board: "cbse",
+    questions: [{ question_text: "", max_score: 10, expected_answer_hints: "", rubric: [] as any[], question_type: "short_answer" }],
   });
 
   const { data: assignments, isLoading } = useQuery({
@@ -55,7 +97,7 @@ const TeacherAssignments = () => {
       setShowCreate(false);
       setNewAssignment({
         title: "", description: "", instructions: "", class_name: "Class 10",
-        subject: "Mathematics", questions: [{ question_text: "", max_score: 10, expected_answer_hints: "", rubric: [] }],
+        subject: "Mathematics", board: "cbse", questions: [{ question_text: "", max_score: 10, expected_answer_hints: "", rubric: [], question_type: "short_answer" }],
       });
     },
     onError: (e: any) => toast.error(e.message),
@@ -152,7 +194,7 @@ const TeacherAssignments = () => {
   const addQuestion = () => {
     setNewAssignment((prev) => ({
       ...prev,
-      questions: [...prev.questions, { question_text: "", max_score: 10, expected_answer_hints: "", rubric: [] }],
+      questions: [...prev.questions, { question_text: "", max_score: 10, expected_answer_hints: "", rubric: [], question_type: "short_answer" }],
     }));
   };
 
@@ -185,9 +227,14 @@ const TeacherAssignments = () => {
             <h1 className="text-3xl font-bold text-foreground">📝 Assignments</h1>
             <p className="text-muted-foreground">Create, publish, and grade assignments</p>
           </div>
-          <Button onClick={() => setShowCreate(true)} className="gap-2">
-            <Plus className="h-4 w-4" /> Create Assignment
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => navigate("/teacher/insights")} className="gap-2">
+              <Brain className="h-4 w-4" /> Class Insights
+            </Button>
+            <Button onClick={() => setShowCreate(true)} className="gap-2">
+              <Plus className="h-4 w-4" /> Create Assignment
+            </Button>
+          </div>
         </div>
 
         {/* Assignment List */}
@@ -238,25 +285,70 @@ const TeacherAssignments = () => {
                 onChange={(e) => setNewAssignment((p) => ({ ...p, description: e.target.value }))} />
               <Textarea placeholder="Instructions for students" value={newAssignment.instructions}
                 onChange={(e) => setNewAssignment((p) => ({ ...p, instructions: e.target.value }))} />
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 <Input placeholder="Class" value={newAssignment.class_name}
                   onChange={(e) => setNewAssignment((p) => ({ ...p, class_name: e.target.value }))} />
                 <Input placeholder="Subject" value={newAssignment.subject}
                   onChange={(e) => setNewAssignment((p) => ({ ...p, subject: e.target.value }))} />
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Board</label>
+                  <select
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    value={newAssignment.board}
+                    onChange={(e) => {
+                      const board = e.target.value;
+                      setNewAssignment((p) => ({
+                        ...p,
+                        board,
+                        questions: p.questions.map(q => ({
+                          ...q,
+                          rubric: board !== "custom" ? BOARD_RUBRICS[board].criteria : q.rubric,
+                        })),
+                      }));
+                    }}
+                  >
+                    {Object.entries(BOARD_RUBRICS).map(([key, val]) => (
+                      <option key={key} value={key}>{val.label}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
+
+              {/* Board rubric preview */}
+              {newAssignment.board !== "custom" && (
+                <div className="bg-muted/50 rounded-lg p-3 text-xs">
+                  <span className="font-semibold text-muted-foreground">
+                    {BOARD_RUBRICS[newAssignment.board].label} Rubric:
+                  </span>
+                  <span className="text-muted-foreground ml-1">
+                    {BOARD_RUBRICS[newAssignment.board].criteria.map(c => `${c.criterion} (${c.max_marks}m)`).join(" • ")}
+                  </span>
+                </div>
+              )}
 
               <h4 className="font-semibold pt-2">Questions</h4>
               {newAssignment.questions.map((q, i) => (
                 <div key={i} className="border border-border rounded-lg p-4 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">Q{i + 1}</span>
-                    {i > 0 && (
-                      <Button size="sm" variant="ghost" onClick={() =>
-                        setNewAssignment((p) => ({ ...p, questions: p.questions.filter((_, j) => j !== i) }))
-                      }>
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                    )}
+                    <div className="flex items-center gap-2">
+                      <select
+                        className="text-xs rounded border border-input bg-background px-2 py-1"
+                        value={q.question_type}
+                        onChange={(e) => updateQuestion(i, "question_type", e.target.value)}
+                      >
+                        {QUESTION_TYPES.map(qt => (
+                          <option key={qt.value} value={qt.value}>{qt.label}</option>
+                        ))}
+                      </select>
+                      {i > 0 && (
+                        <Button size="sm" variant="ghost" onClick={() =>
+                          setNewAssignment((p) => ({ ...p, questions: p.questions.filter((_, j) => j !== i) }))
+                        }>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
                   <Textarea placeholder="Question text" value={q.question_text}
                     onChange={(e) => updateQuestion(i, "question_text", e.target.value)} />
