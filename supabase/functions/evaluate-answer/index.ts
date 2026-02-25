@@ -74,11 +74,11 @@ serve(async (req) => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            model: "google/gemini-2.5-flash",
+            model: "google/gemini-2.5-pro",
             messages: [
               {
                 role: "system",
-                content: "You are an OCR system. Extract ALL handwritten or printed text from the image exactly as written. Preserve formatting, equations, and diagrams described textually. Output only the extracted text, nothing else.",
+                content: "You are an expert OCR system for Indian school exam answer sheets. Extract ALL handwritten or printed text from the image exactly as written. Rules:\n1. Preserve mathematical equations using LaTeX notation (e.g., \\frac{a}{b}, x^2).\n2. Describe diagrams, graphs, and figures in [DIAGRAM: ...] blocks.\n3. Handle Hindi, Tamil, Telugu, and other regional scripts alongside English.\n4. Maintain paragraph structure, numbering, and bullet points.\n5. Mark illegible sections as [ILLEGIBLE].\n6. Output only the extracted text, nothing else.",
               },
               {
                 role: "user",
