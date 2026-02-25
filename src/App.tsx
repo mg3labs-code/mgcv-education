@@ -22,6 +22,9 @@ import TeacherPerformance from "./pages/TeacherPerformance";
 import TeacherDailyTodo from "./pages/TeacherDailyTodo";
 import TeacherInsights from "./pages/TeacherInsights";
 import StudentExamRoom from "./pages/StudentExamRoom";
+import StudentTextbook from "./pages/StudentTextbook";
+import TextbookChapter from "./pages/TextbookChapter";
+import TextbookEpisode from "./pages/TextbookEpisode";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -43,6 +46,9 @@ const App = () => (
             <Route path="/student/progress" element={<ProtectedRoute><StudentDashboard /></ProtectedRoute>} />
             <Route path="/student/calendar" element={<ProtectedRoute><StudentCalendar /></ProtectedRoute>} />
             <Route path="/student/assignments" element={<ProtectedRoute><StudentAssignments /></ProtectedRoute>} />
+            <Route path="/student/textbook" element={<ProtectedRoute><StudentTextbook /></ProtectedRoute>} />
+            <Route path="/student/textbook/:chapterId" element={<ProtectedRoute><TextbookChapter /></ProtectedRoute>} />
+            <Route path="/student/textbook/:chapterId/:episodeId" element={<ProtectedRoute><TextbookEpisode /></ProtectedRoute>} />
             <Route path="/teacher" element={<ProtectedRoute><TeacherDashboard /></ProtectedRoute>} />
             <Route path="/teacher/students" element={<ProtectedRoute><TeacherDashboard /></ProtectedRoute>} />
             <Route path="/teacher/daily-todo" element={<ProtectedRoute><TeacherDailyTodo /></ProtectedRoute>} />
