@@ -6,33 +6,33 @@
 
 @layer base {
   :root {
-    --background: 220 20% 7%;
-    --foreground: 210 20% 92%;
+    --background: 40 20% 96%;
+    --foreground: 220 25% 18%;
 
-    --card: 220 18% 12%;
-    --card-foreground: 210 20% 92%;
+    --card: 40 25% 99%;
+    --card-foreground: 220 25% 18%;
 
-    --popover: 220 18% 14%;
-    --popover-foreground: 210 20% 92%;
+    --popover: 40 25% 99%;
+    --popover-foreground: 220 25% 18%;
 
-    --primary: 162 100% 41%;
-    --primary-foreground: 220 20% 7%;
+    --primary: 162 65% 38%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 15% 18%;
-    --secondary-foreground: 210 20% 85%;
+    --secondary: 220 15% 90%;
+    --secondary-foreground: 220 25% 25%;
 
-    --muted: 220 15% 18%;
-    --muted-foreground: 210 10% 60%;
+    --muted: 220 14% 92%;
+    --muted-foreground: 220 10% 46%;
 
-    --accent: 162 100% 41%;
-    --accent-foreground: 220 20% 7%;
+    --accent: 162 55% 42%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 65% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 15% 22%;
-    --input: 220 15% 20%;
-    --ring: 162 100% 41%;
+    --border: 220 15% 87%;
+    --input: 220 15% 90%;
+    --ring: 162 65% 38%;
 
     --radius: 0.75rem;
 
@@ -45,37 +45,40 @@
     --info-foreground: 0 0% 100%;
 
     /* EduTech specific */
-    --teal: 162 100% 41%;
-    --teal-light: 162 80% 60%;
-    --dark-bg: 220 20% 7%;
-    --dark-surface: 220 15% 12%;
+    --teal: 162 65% 38%;
+    --teal-light: 162 50% 55%;
+    --dark-bg: 40 20% 96%;
+    --dark-surface: 40 25% 99%;
     
     /* Dashboard gradient */
-    --gradient-start: 234 77% 65%;
-    --gradient-end: 271 38% 47%;
+    --gradient-start: 162 55% 42%;
+    --gradient-end: 210 65% 52%;
 
-    --sidebar-background: 220 20% 10%;
-    --sidebar-foreground: 210 20% 85%;
-    --sidebar-primary: 162 100% 41%;
-    --sidebar-primary-foreground: 220 20% 7%;
-    --sidebar-accent: 220 15% 18%;
-    --sidebar-accent-foreground: 210 20% 85%;
-    --sidebar-border: 220 15% 22%;
-    --sidebar-ring: 162 100% 41%;
+    --sidebar-background: 220 18% 22%;
+    --sidebar-foreground: 210 20% 92%;
+    --sidebar-primary: 162 65% 42%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 15% 30%;
+    --sidebar-accent-foreground: 210 20% 92%;
+    --sidebar-border: 220 15% 32%;
+    --sidebar-ring: 162 65% 42%;
 
     /* Dashboard card colors */
-    --dashboard-card: 220 18% 14%;
-    --dashboard-card-foreground: 210 20% 92%;
-    --navbar-bg: 220 20% 7% / 0.95;
-  }
+    --dashboard-card: 40 25% 99%;
+    --dashboard-card-foreground: 220 25% 18%;
+    --navbar-bg: 220 18% 22% / 0.98;
 
-  .dark {
-    --background: 220 20% 5%;
-    --foreground: 210 20% 92%;
-    --card: 220 18% 10%;
-    --card-foreground: 210 20% 90%;
-    --popover: 220 18% 12%;
-    --popover-foreground: 210 20% 90%;
+    /* Metric colors */
+    --metric-critical-thinking: 280 60% 55%;
+    --metric-conceptual-clarity: 162 65% 42%;
+    --metric-retention: 38 85% 52%;
+    --metric-pattern: 210 70% 52%;
+
+    /* Gold and Navy */
+    --gold: 38 85% 52%;
+    --gold-light: 38 70% 65%;
+    --navy: 220 50% 30%;
+    --navy-light: 220 35% 50%;
   }
 }
 
@@ -92,30 +95,30 @@
 
 /* Gradient background for dashboards */
 .gradient-bg {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, hsl(162 55% 42%) 0%, hsl(210 65% 52%) 100%);
   min-height: 100vh;
 }
 
 /* Glassmorphism card */
 .glass-card {
-  background: hsl(220 18% 14% / 0.8);
-  backdrop-filter: blur(16px);
-  border: 1px solid hsl(220 15% 22%);
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
   border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 20px hsl(220 25% 18% / 0.06);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .glass-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 10px 30px hsl(220 25% 18% / 0.1);
 }
 
 /* Dark glassmorphism */
 .glass-dark {
-  background: rgba(255, 255, 255, 0.1);
+  background: hsl(220 18% 22% / 0.95);
   backdrop-filter: blur(30px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid hsl(220 15% 32%);
+  color: hsl(210 20% 92%);
 }
 
 /* Floating squares animation */
@@ -152,8 +155,8 @@
 
 /* Gradient shift */
 @keyframes gradientShift {
-  0%, 100% { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-  50% { background: linear-gradient(135deg, #764ba2 0%, #667eea 100%); }
+  0%, 100% { background: linear-gradient(135deg, hsl(162 55% 42%) 0%, hsl(210 65% 52%) 100%); }
+  50% { background: linear-gradient(135deg, hsl(210 65% 52%) 0%, hsl(162 55% 42%) 100%); }
 }
 
 /* Pulse animation */
@@ -180,14 +183,14 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: hsl(220 20% 10%);
+  background: hsl(var(--muted));
 }
 
 ::-webkit-scrollbar-thumb {
-  background: hsl(220 15% 25%);
+  background: hsl(var(--border));
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(162 100% 41% / 0.5);
+  background: hsl(var(--primary) / 0.5);
 }
