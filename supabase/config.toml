@@ -1,1 +1,7 @@
 project_id = "vgvebpchxvnoawgqnudc"
+
+[functions.evaluate-answer]
+verify_jwt = false
+
+[functions.manage-assignment]
+verify_jwt = false
