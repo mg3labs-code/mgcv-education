@@ -14,6 +14,95 @@ export type Database = {
   }
   public: {
     Tables: {
+      assignment_questions: {
+        Row: {
+          assignment_id: string
+          created_at: string
+          expected_answer_hints: string | null
+          id: string
+          max_score: number
+          question_number: number
+          question_text: string
+          rubric: Json
+        }
+        Insert: {
+          assignment_id: string
+          created_at?: string
+          expected_answer_hints?: string | null
+          id?: string
+          max_score?: number
+          question_number: number
+          question_text: string
+          rubric?: Json
+        }
+        Update: {
+          assignment_id?: string
+          created_at?: string
+          expected_answer_hints?: string | null
+          id?: string
+          max_score?: number
+          question_number?: number
+          question_text?: string
+          rubric?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignment_questions_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assignments: {
+        Row: {
+          class_name: string
+          created_at: string
+          description: string | null
+          due_date: string | null
+          id: string
+          instructions: string | null
+          is_published: boolean
+          max_total_score: number | null
+          subject: string
+          teacher_id: string
+          title: string
+          unlock_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          class_name: string
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          instructions?: string | null
+          is_published?: boolean
+          max_total_score?: number | null
+          subject?: string
+          teacher_id: string
+          title: string
+          unlock_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          class_name?: string
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          instructions?: string | null
+          is_published?: boolean
+          max_total_score?: number | null
+          subject?: string
+          teacher_id?: string
+          title?: string
+          unlock_date?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           class_name: string | null
@@ -43,6 +132,134 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      student_answers: {
+        Row: {
+          ai_confidence: number | null
+          ai_feedback: Json | null
+          ai_score: number | null
+          created_at: string
+          extracted_text: string | null
+          file_type: string | null
+          file_url: string | null
+          id: string
+          is_teacher_reviewed: boolean
+          processing_error: string | null
+          processing_status: string
+          question_id: string
+          retry_count: number
+          student_id: string
+          submission_id: string
+          teacher_feedback: string | null
+          teacher_score: number | null
+          updated_at: string
+        }
+        Insert: {
+          ai_confidence?: number | null
+          ai_feedback?: Json | null
+          ai_score?: number | null
+          created_at?: string
+          extracted_text?: string | null
+          file_type?: string | null
+          file_url?: string | null
+          id?: string
+          is_teacher_reviewed?: boolean
+          processing_error?: string | null
+          processing_status?: string
+          question_id: string
+          retry_count?: number
+          student_id: string
+          submission_id: string
+          teacher_feedback?: string | null
+          teacher_score?: number | null
+          updated_at?: string
+        }
+        Update: {
+          ai_confidence?: number | null
+          ai_feedback?: Json | null
+          ai_score?: number | null
+          created_at?: string
+          extracted_text?: string | null
+          file_type?: string | null
+          file_url?: string | null
+          id?: string
+          is_teacher_reviewed?: boolean
+          processing_error?: string | null
+          processing_status?: string
+          question_id?: string
+          retry_count?: number
+          student_id?: string
+          submission_id?: string
+          teacher_feedback?: string | null
+          teacher_score?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "assignment_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_answers_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "student_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_submissions: {
+        Row: {
+          assignment_id: string
+          created_at: string
+          finalized_at: string | null
+          finalized_by: string | null
+          id: string
+          status: string
+          student_id: string
+          submitted_at: string | null
+          teacher_remarks: string | null
+          total_score: number | null
+          updated_at: string
+        }
+        Insert: {
+          assignment_id: string
+          created_at?: string
+          finalized_at?: string | null
+          finalized_by?: string | null
+          id?: string
+          status?: string
+          student_id: string
+          submitted_at?: string | null
+          teacher_remarks?: string | null
+          total_score?: number | null
+          updated_at?: string
+        }
+        Update: {
+          assignment_id?: string
+          created_at?: string
+          finalized_at?: string | null
+          finalized_by?: string | null
+          id?: string
+          status?: string
+          student_id?: string
+          submitted_at?: string | null
+          teacher_remarks?: string | null
+          total_score?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_submissions_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "assignments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       teaching_schedules: {
         Row: {

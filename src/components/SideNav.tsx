@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { LucideIcon, LayoutDashboard, BookOpen, BarChart3, Users, Settings, LogOut, GraduationCap, CalendarDays } from "lucide-react";
+import { LucideIcon, LayoutDashboard, BookOpen, BarChart3, Users, Settings, LogOut, GraduationCap, CalendarDays, ClipboardList } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface NavItem {
@@ -11,12 +11,14 @@ interface NavItem {
 const studentNav: NavItem[] = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/student" },
   { label: "Episodes", icon: BookOpen, path: "/student/episodes" },
+  { label: "Assignments", icon: ClipboardList, path: "/student/assignments" },
   { label: "Progress", icon: BarChart3, path: "/student/progress" },
 ];
 
 const teacherNav: NavItem[] = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/teacher" },
   { label: "Annual Schedule", icon: CalendarDays, path: "/teacher/schedule" },
+  { label: "Assignments", icon: ClipboardList, path: "/teacher/assignments" },
   { label: "Students", icon: Users, path: "/teacher/students" },
   { label: "Analytics", icon: BarChart3, path: "/teacher/analytics" },
 ];
