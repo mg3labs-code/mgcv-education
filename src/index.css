@@ -7,31 +7,31 @@
 @layer base {
   :root {
     --background: 220 20% 7%;
-    --foreground: 0 0% 100%;
+    --foreground: 210 20% 92%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 220 30% 12%;
+    --card: 220 18% 12%;
+    --card-foreground: 210 20% 92%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 30% 12%;
+    --popover: 220 18% 14%;
+    --popover-foreground: 210 20% 92%;
 
     --primary: 162 100% 41%;
-    --primary-foreground: 0 0% 100%;
+    --primary-foreground: 220 20% 7%;
 
-    --secondary: 220 15% 92%;
-    --secondary-foreground: 220 30% 12%;
+    --secondary: 220 15% 18%;
+    --secondary-foreground: 210 20% 85%;
 
-    --muted: 220 15% 20%;
-    --muted-foreground: 0 0% 70%;
+    --muted: 220 15% 18%;
+    --muted-foreground: 210 10% 60%;
 
     --accent: 162 100% 41%;
-    --accent-foreground: 0 0% 100%;
+    --accent-foreground: 220 20% 7%;
 
     --destructive: 0 65% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 100% / 0.1;
-    --input: 0 0% 100% / 0.15;
+    --border: 220 15% 22%;
+    --input: 220 15% 20%;
     --ring: 162 100% 41%;
 
     --radius: 0.75rem;
@@ -54,26 +54,28 @@
     --gradient-start: 234 77% 65%;
     --gradient-end: 271 38% 47%;
 
-    --sidebar-background: 220 45% 16%;
-    --sidebar-foreground: 220 15% 90%;
+    --sidebar-background: 220 20% 10%;
+    --sidebar-foreground: 210 20% 85%;
     --sidebar-primary: 162 100% 41%;
-    --sidebar-primary-foreground: 220 45% 12%;
-    --sidebar-accent: 220 35% 24%;
-    --sidebar-accent-foreground: 220 15% 90%;
-    --sidebar-border: 220 35% 24%;
+    --sidebar-primary-foreground: 220 20% 7%;
+    --sidebar-accent: 220 15% 18%;
+    --sidebar-accent-foreground: 210 20% 85%;
+    --sidebar-border: 220 15% 22%;
     --sidebar-ring: 162 100% 41%;
 
     /* Dashboard card colors */
-    --dashboard-card: 0 0% 100% / 0.95;
-    --dashboard-card-foreground: 220 30% 15%;
+    --dashboard-card: 220 18% 14%;
+    --dashboard-card-foreground: 210 20% 92%;
     --navbar-bg: 220 20% 7% / 0.95;
   }
 
   .dark {
-    --background: 220 30% 5%;
-    --foreground: 220 15% 90%;
-    --card: 220 30% 12%;
-    --card-foreground: 220 15% 90%;
+    --background: 220 20% 5%;
+    --foreground: 210 20% 92%;
+    --card: 220 18% 10%;
+    --card-foreground: 210 20% 90%;
+    --popover: 220 18% 12%;
+    --popover-foreground: 210 20% 90%;
   }
 }
 
@@ -96,16 +98,17 @@
 
 /* Glassmorphism card */
 .glass-card {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
+  background: hsl(220 18% 14% / 0.8);
+  backdrop-filter: blur(16px);
+  border: 1px solid hsl(220 15% 22%);
   border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .glass-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  transform: translateY(-3px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
 }
 
 /* Dark glassmorphism */
@@ -173,19 +176,18 @@
 
 /* Scrollbar styling */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 10px;
+  background: hsl(220 20% 10%);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #4299e1, #3182ce);
+  background: hsl(220 15% 25%);
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, #3182ce, #2c5aa0);
+  background: hsl(162 100% 41% / 0.5);
 }
