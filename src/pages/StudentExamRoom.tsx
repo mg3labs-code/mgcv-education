@@ -149,7 +149,7 @@ const StudentExamRoom = () => {
   };
 
   return (
-    <DashboardLayout role="student">
+    <DashboardLayout role="teacher">
       <main className="p-6 max-w-[1100px] mx-auto">
         {/* Header */}
         <div className="mb-8">

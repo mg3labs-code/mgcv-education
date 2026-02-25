@@ -12,7 +12,6 @@ const studentNav: NavItem[] = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/student" },
   { label: "Episodes", icon: BookOpen, path: "/student/episodes" },
   { label: "Assignments", icon: ClipboardList, path: "/student/assignments" },
-  { label: "Exam Room", icon: School, path: "/student/exam-room" },
   { label: "Progress", icon: BarChart3, path: "/student/progress" },
 ];
 
@@ -20,6 +19,7 @@ const teacherNav: NavItem[] = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/teacher" },
   { label: "Annual Schedule", icon: CalendarDays, path: "/teacher/schedule" },
   { label: "Assignments", icon: ClipboardList, path: "/teacher/assignments" },
+  { label: "Exam Room", icon: School, path: "/teacher/exam-room" },
   { label: "Students", icon: Users, path: "/teacher/students" },
   { label: "Analytics", icon: BarChart3, path: "/teacher/analytics" },
 ];

@@ -328,6 +328,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      teacher_manages_class: {
+        Args: { _class_name: string; _teacher_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "student" | "teacher" | "admin"
