@@ -8,3 +8,9 @@ verify_jwt = false
 
 [functions.class-insights]
 verify_jwt = false
+
+[functions.voice-explain]
+verify_jwt = false
+
+[functions.transcribe-voice]
+verify_jwt = false

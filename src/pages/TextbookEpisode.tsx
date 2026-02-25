@@ -2,9 +2,10 @@ import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import PageLayout from "@/components/PageLayout";
 import { chapters, ContentBlock, ConceptContent, ActivityContent, RecallContent, ExplainContent, AssessmentContent, ExerciseContent } from "@/data/textbookData";
-import { ArrowLeft, ArrowRight, BookOpen, Brain, CheckCircle2, ChevronRight, Eye, EyeOff, Lightbulb, MessageSquare, PenLine, Sparkles, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, BookOpen, Brain, CheckCircle2, ChevronRight, Eye, EyeOff, Lightbulb, MessageSquare, Mic, PenLine, Sparkles, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import VoiceExplainWidget from "@/components/textbook/VoiceExplainWidget";
 
 // ─── Block Renderers ───────────────────────────────────────
 
@@ -99,6 +100,7 @@ const RecallBlock = ({ content }: { content: RecallContent }) => {
 
 const ExplainBlock = ({ content }: { content: ExplainContent }) => {
   const [text, setText] = useState("");
+  const [mode, setMode] = useState<"text" | "voice">("voice");
   const wordCount = text.trim().split(/\s+/).filter(Boolean).length;
 
   return (
@@ -118,22 +120,52 @@ const ExplainBlock = ({ content }: { content: ExplainContent }) => {
           </ul>
         </div>
       )}
-      <div>
-        <textarea
-          className="w-full rounded-xl border bg-background px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/30 min-h-[120px]"
-          placeholder="Write your explanation here..."
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-        />
-        <div className="flex justify-between items-center mt-1">
-          <span className="text-xs text-muted-foreground">{wordCount} words</span>
-          {content.wordLimit && (
-            <span className={`text-xs ${wordCount > content.wordLimit ? "text-red-500" : "text-muted-foreground"}`}>
-              Limit: {content.wordLimit}
-            </span>
-          )}
-        </div>
+
+      {/* Mode toggle */}
+      <div className="flex gap-2 p-1 bg-muted rounded-lg w-fit">
+        <button
+          onClick={() => setMode("voice")}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+            mode === "voice" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <Mic className="h-3.5 w-3.5" /> Speak It
+        </button>
+        <button
+          onClick={() => setMode("text")}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+            mode === "text" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <PenLine className="h-3.5 w-3.5" /> Write It
+        </button>
       </div>
+
+      {mode === "voice" ? (
+        <VoiceExplainWidget
+          topic="Real Numbers — Chapter 1"
+          prompt={content.prompt}
+          guidePoints={content.guidePoints}
+          onTranscript={(t) => setText(t)}
+        />
+      ) : (
+        <div>
+          <textarea
+            className="w-full rounded-xl border bg-background px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/30 min-h-[120px]"
+            placeholder="Write your explanation here..."
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+          />
+          <div className="flex justify-between items-center mt-1">
+            <span className="text-xs text-muted-foreground">{wordCount} words</span>
+            {content.wordLimit && (
+              <span className={`text-xs ${wordCount > content.wordLimit ? "text-destructive" : "text-muted-foreground"}`}>
+                Limit: {content.wordLimit}
+              </span>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
