@@ -1,165 +1,209 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
+import { Badge } from "@/components/ui/badge";
+import { Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface AssignmentsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-const assignments = [
-  {
-    subject: "Mathematics", icon: "📐", color: "#e74c3c",
-    due: "June 15, 2025", status: "PENDING", priority: "HIGH",
-    chapter: "Real Numbers",
-    tasks: [
-      "Exercise 1.1: Q1-10 (Rational number identification)",
-      "Exercise 1.2: Q1-8 (Decimal expansions)",
-      "Practice Set: Convert fractions to decimals",
-      "Word Problems: Real life applications of rational numbers",
-    ],
-  },
-  {
-    subject: "Science", icon: "🔬", color: "#e67e22",
-    due: "June 16, 2025", status: "PENDING", priority: "HIGH",
-    chapter: "Light - Reflection and Refraction",
-    tasks: [
-      "Exercise 10.1: Q1-12 (Laws of reflection)",
-      "Exercise 10.2: Q1-10 (Refraction problems)",
-      "Practical: Draw ray diagrams for plane mirrors",
-      "Assignment: Real life examples of reflection and refraction",
-    ],
-  },
-  {
-    subject: "English", icon: "📖", color: "#2ecc71",
-    due: "June 17, 2025", status: "IN PROGRESS", priority: "MEDIUM",
-    chapter: "A Letter to God",
-    tasks: [
-      "Read and summarize the story in 150 words",
-      "Character analysis of Lencho (200 words)",
-      "Answer questions 1-8 from textbook",
-      "Creative writing: Write a letter to someone you trust",
-    ],
-  },
-  {
-    subject: "Social Studies", icon: "🌍", color: "#f39c12",
-    due: "June 18, 2025", status: "PENDING", priority: "MEDIUM",
-    chapter: "Resources and Development",
-    tasks: [
-      "Map work: Identify major mineral resources in India",
-      "Project: Renewable vs Non-renewable resources comparison",
-      "Exercise 1.1: Q1-15 (Resource classification)",
-      "Case study: Water conservation methods",
-    ],
-  },
-  {
-    subject: "Computer Science", icon: "💻", color: "#3498db",
-    due: "June 20, 2025", status: "COMPLETED", priority: "LOW",
-    chapter: "Introduction to Programming",
-    tasks: [
-      "Install Python IDE and create first program",
-      "Write algorithms for 5 basic problems",
-      "Practice: Variables and data types exercises",
-      "Mini project: Simple calculator program",
-    ],
-  },
-  {
-    subject: "Physical Education", icon: "🏃", color: "#9b59b6",
-    due: "June 19, 2025", status: "IN PROGRESS", priority: "LOW",
-    chapter: "Health and Fitness",
-    tasks: [
-      "Maintain fitness diary for one week",
-      "Design a 30-minute workout routine",
-      "Research: Benefits of cardiovascular exercises",
-      "Practical: Demonstrate 10 flexibility exercises",
-    ],
-  },
-];
-
-const tests = [
-  { title: "Mathematics – Unit Test", date: "June 22, 2025", topics: "Real Numbers, Polynomials (Introduction)" },
-  { title: "Science – Practical Exam", date: "June 24, 2025", topics: "Light experiments, Ray diagrams" },
-  { title: "English – Reading Comprehension Test", date: "June 25, 2025", topics: "A Letter to God, Grammar exercises" },
-];
-
-const statusColor: Record<string, string> = {
-  COMPLETED: "#27ae60",
-  "IN PROGRESS": "#f39c12",
-  PENDING: "#e74c3c",
+const SUBJECT_ICONS: Record<string, string> = {
+  Mathematics: "📐", Science: "🔬", English: "📖",
+  "Social Science": "🌍", Hindi: "🇮🇳", Sanskrit: "🕉️",
+  "Computer Science": "💻", "Physical Education": "🏃",
 };
 
-const priorityColor: Record<string, string> = {
-  HIGH: "#e74c3c",
-  MEDIUM: "#f39c12",
-  LOW: "#95a5a6",
+const SUBJECT_COLORS: Record<string, string> = {
+  Mathematics: "#e74c3c", Science: "#e67e22", English: "#2ecc71",
+  "Social Science": "#f39c12", Hindi: "#f56565", Sanskrit: "#38b2ac",
+  "Computer Science": "#3498db", "Physical Education": "#9b59b6",
+};
+
+const statusColor: Record<string, string> = {
+  submitted: "#27ae60",
+  in_progress: "#f39c12",
+  not_started: "#e74c3c",
+};
+
+const statusLabel: Record<string, string> = {
+  submitted: "SUBMITTED",
+  in_progress: "IN PROGRESS",
+  not_started: "PENDING",
 };
 
 const AssignmentsModal = ({ open, onOpenChange }: AssignmentsModalProps) => {
-  const completed = assignments.filter(a => a.status === "COMPLETED").length;
-  const inProgress = assignments.filter(a => a.status === "IN PROGRESS").length;
-  const pending = assignments.filter(a => a.status === "PENDING").length;
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const { data: profile } = useQuery({
+    queryKey: ["student-profile-modal", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("class_name")
+        .eq("user_id", user!.id)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user && open,
+  });
+
+  const { data: assignments, isLoading } = useQuery({
+    queryKey: ["student-assignments-modal", profile?.class_name],
+    queryFn: async () => {
+      // Fetch published assignments for this class
+      const { data: assgns, error } = await supabase
+        .from("assignments")
+        .select("*, questions:assignment_questions(id)")
+        .eq("class_name", profile!.class_name!)
+        .eq("is_published", true)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+
+      // Fetch student's submissions to determine status
+      const { data: submissions } = await supabase
+        .from("student_submissions")
+        .select("assignment_id, status, total_score, answers:student_answers(id, processing_status)")
+        .eq("student_id", user!.id);
+
+      const submissionMap = new Map(
+        (submissions || []).map((s: any) => [s.assignment_id, s])
+      );
+
+      return (assgns || []).map((a: any) => {
+        const sub = submissionMap.get(a.id);
+        const questionCount = a.questions?.length || 0;
+        const answeredCount = sub?.answers?.length || 0;
+        const successCount = sub?.answers?.filter((ans: any) => ans.processing_status === "success").length || 0;
+        let status = "not_started";
+        if (sub?.status === "submitted" || sub?.status === "finalized") status = "submitted";
+        else if (sub) status = "in_progress";
+
+        return {
+          ...a,
+          questionCount,
+          answeredCount,
+          successCount,
+          studentStatus: status,
+          totalScore: sub?.total_score,
+        };
+      });
+    },
+    enabled: !!profile?.class_name && open,
+  });
+
+  const counts = {
+    submitted: assignments?.filter((a) => a.studentStatus === "submitted").length || 0,
+    in_progress: assignments?.filter((a) => a.studentStatus === "in_progress").length || 0,
+    not_started: assignments?.filter((a) => a.studentStatus === "not_started").length || 0,
+  };
+
+  // Upcoming tests from schedule (keep lightweight — just show assignments with due dates)
+  const upcomingTests = assignments?.filter(
+    (a) => a.due_date && new Date(a.due_date) > new Date()
+  ).slice(0, 3);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[1200px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="text-center border-b-[3px] border-blue-500 pb-5">
-          <DialogTitle className="text-[28px] text-[#2c3e50]">📚 WEEKLY ASSIGNMENTS & HOMEWORK</DialogTitle>
+        <DialogHeader className="text-center border-b-[3px] border-primary pb-5">
+          <DialogTitle className="text-[28px] text-foreground">📚 MY ASSIGNMENTS</DialogTitle>
           <div className="flex justify-center gap-8 mt-4">
             {[
-              { n: completed, label: "COMPLETED" },
-              { n: inProgress, label: "IN PROGRESS" },
-              { n: pending, label: "PENDING" },
+              { n: counts.submitted, label: "SUBMITTED", color: statusColor.submitted },
+              { n: counts.in_progress, label: "IN PROGRESS", color: statusColor.in_progress },
+              { n: counts.not_started, label: "PENDING", color: statusColor.not_started },
             ].map((s) => (
-              <div key={s.label} className="text-center px-5 py-2.5 bg-blue-500/10 rounded-xl">
-                <span className="block text-2xl font-bold text-blue-500">{s.n}</span>
-                <span className="text-xs text-gray-500 font-semibold uppercase">{s.label}</span>
+              <div key={s.label} className="text-center px-5 py-2.5 bg-primary/10 rounded-xl">
+                <span className="block text-2xl font-bold" style={{ color: s.color }}>{s.n}</span>
+                <span className="text-xs text-muted-foreground font-semibold uppercase">{s.label}</span>
               </div>
             ))}
           </div>
         </DialogHeader>
 
-        <h3 className="text-lg font-semibold text-[#2c3e50] mt-4 mb-3">📝 Current Assignments</h3>
-        <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(280px,1fr))]">
-          {assignments.map((a, i) => (
-            <div key={i} className="rounded-xl p-5 border-t-4 transition-all hover:-translate-y-1 hover:shadow-lg"
-              style={{ borderTopColor: a.color, background: `linear-gradient(135deg, ${a.color}10, ${a.color}05)` }}>
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-xl">{a.icon}</span>
-                <h4 className="font-bold text-[#2c3e50]">{a.subject}</h4>
-              </div>
-              <div className="flex items-center gap-2 mb-2 text-xs">
-                <span className="text-gray-500">📅 Due: {a.due}</span>
-                <span className="px-2 py-0.5 rounded-full text-white font-bold" style={{ background: statusColor[a.status] }}>{a.status}</span>
-                <span className="px-2 py-0.5 rounded-full text-white font-bold" style={{ background: priorityColor[a.priority] }}>{a.priority}</span>
-              </div>
-              <p className="text-sm font-semibold text-[#2c3e50] mb-2">📖 Chapter: {a.chapter}</p>
-              <ul className="mb-3">
-                {a.tasks.map((t, j) => (
-                  <li key={j} className="text-[13px] text-gray-600 py-1.5 border-b border-black/5 pl-5 relative before:content-['📌'] before:absolute before:left-0 before:top-1.5">{t}</li>
-                ))}
-              </ul>
-              <div className="flex gap-2">
-                <button className="flex-1 py-2 px-4 rounded-full text-[11px] font-semibold uppercase text-white bg-gradient-to-r from-emerald-500 to-emerald-400 hover:-translate-y-0.5 hover:shadow-md transition-all">
-                  ✅ Mark Complete
-                </button>
-                <button className="flex-1 py-2 px-4 rounded-full text-[11px] font-semibold uppercase text-white bg-gradient-to-r from-blue-500 to-blue-400 hover:-translate-y-0.5 hover:shadow-md transition-all">
-                  📋 View Details
-                </button>
-              </div>
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-muted-foreground">Loading assignments...</span>
+          </div>
+        ) : !assignments?.length ? (
+          <p className="text-center text-muted-foreground py-12">No assignments available yet</p>
+        ) : (
+          <>
+            <h3 className="text-lg font-semibold text-foreground mt-4 mb-3">📝 Current Assignments</h3>
+            <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(280px,1fr))]">
+              {assignments.map((a) => {
+                const color = SUBJECT_COLORS[a.subject] || "#3498db";
+                const icon = SUBJECT_ICONS[a.subject] || "📋";
+                return (
+                  <div
+                    key={a.id}
+                    className="rounded-xl p-5 border-t-4 transition-all hover:-translate-y-1 hover:shadow-lg cursor-pointer"
+                    style={{ borderTopColor: color, background: `linear-gradient(135deg, ${color}10, ${color}05)` }}
+                    onClick={() => { onOpenChange(false); navigate("/student/assignments"); }}
+                  >
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-xl">{icon}</span>
+                      <h4 className="font-bold text-foreground">{a.title}</h4>
+                    </div>
+                    <div className="flex items-center gap-2 mb-2 text-xs flex-wrap">
+                      <span className="text-muted-foreground">{a.subject} • {a.class_name}</span>
+                      <span
+                        className="px-2 py-0.5 rounded-full text-white font-bold text-[10px]"
+                        style={{ background: statusColor[a.studentStatus] }}
+                      >
+                        {statusLabel[a.studentStatus]}
+                      </span>
+                    </div>
+                    {a.due_date && (
+                      <p className="text-xs text-muted-foreground mb-2">
+                        📅 Due: {new Date(a.due_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                      </p>
+                    )}
+                    {a.description && (
+                      <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{a.description}</p>
+                    )}
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
+                      <span>📝 {a.questionCount} questions</span>
+                      <span>✅ {a.answeredCount} answered</span>
+                      {a.totalScore != null && <Badge variant="secondary">Score: {a.totalScore}</Badge>}
+                    </div>
+                    <div className="flex gap-2">
+                      <button className="flex-1 py-2 px-4 rounded-full text-[11px] font-semibold uppercase text-white bg-gradient-to-r from-blue-500 to-blue-400 hover:-translate-y-0.5 hover:shadow-md transition-all border-none cursor-pointer">
+                        {a.studentStatus === "not_started" ? "📋 Start" : a.studentStatus === "in_progress" ? "📋 Continue" : "📋 View"}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          ))}
-        </div>
 
-        <h3 className="text-lg font-semibold text-[#2c3e50] mt-6 mb-3">📅 Upcoming Tests & Exams</h3>
-        <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(300px,1fr))]">
-          {tests.map((t, i) => (
-            <div key={i} className="bg-gradient-to-br from-[#667eea] to-[#764ba2] text-white p-5 rounded-xl shadow-lg hover:-translate-y-1 transition-all">
-              <div className="flex justify-between items-center mb-2">
-                <h4 className="font-semibold">{t.title}</h4>
-                <span className="text-xs bg-white/20 px-2 py-1 rounded-lg">📅 {t.date}</span>
-              </div>
-              <p className="text-sm opacity-90">Topics: {t.topics}</p>
-            </div>
-          ))}
-        </div>
+            {upcomingTests && upcomingTests.length > 0 && (
+              <>
+                <h3 className="text-lg font-semibold text-foreground mt-6 mb-3">📅 Upcoming Due Dates</h3>
+                <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(300px,1fr))]">
+                  {upcomingTests.map((t) => (
+                    <div key={t.id} className="bg-gradient-to-br from-[#667eea] to-[#764ba2] text-white p-5 rounded-xl shadow-lg hover:-translate-y-1 transition-all">
+                      <div className="flex justify-between items-center mb-2">
+                        <h4 className="font-semibold">{t.title}</h4>
+                        <span className="text-xs bg-white/20 px-2 py-1 rounded-lg">
+                          📅 {new Date(t.due_date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                        </span>
+                      </div>
+                      <p className="text-sm opacity-90">{t.subject} • {t.questionCount} questions</p>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );
