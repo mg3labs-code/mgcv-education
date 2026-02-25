@@ -19,7 +19,7 @@ import StudentAssignments from "./pages/StudentAssignments";
 import TeacherAssignments from "./pages/TeacherAssignments";
 import TeacherAttendance from "./pages/TeacherAttendance";
 import TeacherPerformance from "./pages/TeacherPerformance";
-import TeacherParentConnect from "./pages/TeacherParentConnect";
+
 import TeacherInsights from "./pages/TeacherInsights";
 import StudentExamRoom from "./pages/StudentExamRoom";
 import NotFound from "./pages/NotFound";
@@ -50,7 +50,7 @@ const App = () => (
             <Route path="/teacher/assignments" element={<ProtectedRoute><TeacherAssignments /></ProtectedRoute>} />
             <Route path="/teacher/attendance" element={<ProtectedRoute><TeacherAttendance /></ProtectedRoute>} />
             <Route path="/teacher/performance" element={<ProtectedRoute><TeacherPerformance /></ProtectedRoute>} />
-            <Route path="/teacher/parent-connect" element={<ProtectedRoute><TeacherParentConnect /></ProtectedRoute>} />
+            <Route path="/teacher/quiz" element={<ProtectedRoute><TeacherDashboard /></ProtectedRoute>} />
             <Route path="/teacher/insights" element={<ProtectedRoute><TeacherInsights /></ProtectedRoute>} />
             <Route path="/teacher/exam-room" element={<ProtectedRoute><StudentExamRoom /></ProtectedRoute>} />
             <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />

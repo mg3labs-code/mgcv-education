@@ -18,14 +18,14 @@ const toolActions: Record<string, string> = {
   "Grade Assignments": "/teacher/assignments",
   "Take Attendance": "/teacher/attendance",
   "Performance Report": "/teacher/performance",
-  "Parent Connect": "/teacher/parent-connect",
+  "Quiz": "/teacher/quiz",
 };
 
 const tools = [
   { icon: "📋", label: "Take Attendance" },
   { icon: "📝", label: "Grade Assignments" },
   { icon: "📊", label: "Performance Report" },
-  { icon: "💬", label: "Parent Connect" },
+  { icon: "🧩", label: "Quiz" },
 ];
 
 const announcements = [
