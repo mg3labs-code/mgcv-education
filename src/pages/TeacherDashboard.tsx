@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -12,6 +13,10 @@ const students = [
   { name: "Priya Sharma", initials: "PS", note: "Needs support with geometry", score: 67, perf: "needs-support" as const, gradient: "from-orange-400 to-red-500" },
   { name: "Rahul Kumar", initials: "RK", note: "Good improvement shown", score: 82, perf: "good" as const, gradient: "from-blue-500 to-blue-600" },
 ];
+
+const toolActions: Record<string, string> = {
+  "Grade Assignments": "/teacher/assignments",
+};
 
 const tools = [
   { icon: "📋", label: "Take Attendance" },
@@ -40,6 +45,7 @@ const perfBadgeClass = {
 
 const TeacherDashboard = () => {
   const { fullName } = useAuth();
+  const navigate = useNavigate();
   const firstName = fullName?.split(" ")[0] || "Teacher";
 
   return (
@@ -119,7 +125,7 @@ const TeacherDashboard = () => {
             </div>
             <div className="grid grid-cols-2 gap-4">
               {tools.map((tool, i) => (
-                <button key={i} className="flex flex-col items-center p-6 rounded-xl bg-[#f8f9ff] transition-all cursor-pointer hover:bg-blue-50 hover:-translate-y-0.5 border-none text-inherit">
+                <button key={i} onClick={() => toolActions[tool.label] && navigate(toolActions[tool.label])} className="flex flex-col items-center p-6 rounded-xl bg-[#f8f9ff] transition-all cursor-pointer hover:bg-blue-50 hover:-translate-y-0.5 border-none text-inherit">
                   <div className="text-[2rem] mb-2">{tool.icon}</div>
                   <span className="text-sm font-medium text-[#2d3748]">{tool.label}</span>
                 </button>
