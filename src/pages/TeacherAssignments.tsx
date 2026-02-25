@@ -78,11 +78,10 @@ const TeacherAssignments = () => {
     queryKey: ["assignment-submissions", viewSubmissions],
     queryFn: async () => {
       if (!viewSubmissions) return [];
-      const { data, error } = await supabase
+      const { data: subs, error } = await supabase
         .from("student_submissions")
         .select(`
           *,
-          student:profiles!student_id(full_name),
           answers:student_answers(
             *,
             question:assignment_questions!question_id(question_text, max_score)
@@ -90,7 +89,22 @@ const TeacherAssignments = () => {
         `)
         .eq("assignment_id", viewSubmissions);
       if (error) throw error;
-      return data;
+      
+      // Fetch student names separately since there's no FK to profiles
+      const studentIds = [...new Set((subs || []).map((s: any) => s.student_id))];
+      let profileMap: Record<string, string> = {};
+      if (studentIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("user_id, full_name")
+          .in("user_id", studentIds);
+        profiles?.forEach((p: any) => { profileMap[p.user_id] = p.full_name; });
+      }
+      
+      return (subs || []).map((s: any) => ({
+        ...s,
+        student: { full_name: profileMap[s.student_id] || "Unknown Student" },
+      }));
     },
     enabled: !!viewSubmissions,
   });
