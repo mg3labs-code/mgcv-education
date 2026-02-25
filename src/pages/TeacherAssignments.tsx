@@ -529,36 +529,104 @@ const TeacherAssignments = () => {
 
         {/* Grade Modal */}
         <Dialog open={!!gradeModal} onOpenChange={() => setGradeModal(null)}>
-          <DialogContent>
+          <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Grade Answer</DialogTitle>
             </DialogHeader>
-            {gradeModal && (
-              <div className="space-y-4">
-                {gradeModal.extracted_text && (
-                  <div className="bg-muted p-3 rounded text-sm max-h-40 overflow-y-auto">
-                    <strong>Student Answer:</strong>
-                    <p className="mt-1 whitespace-pre-wrap">{gradeModal.extracted_text}</p>
+            {gradeModal && (() => {
+              const feedback = gradeModal.ai_feedback as any;
+              const rubricScores = feedback?.rubric_scores || {};
+              const hasRubricScores = Object.keys(rubricScores).length > 0;
+              return (
+                <div className="space-y-4">
+                  {/* Original file link */}
+                  {gradeModal.file_url && (
+                    <a href={gradeModal.file_url} target="_blank" rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-sm text-primary hover:underline">
+                      <ExternalLink className="h-3.5 w-3.5" /> View Original Uploaded File
+                    </a>
+                  )}
+
+                  {/* Extracted text */}
+                  {gradeModal.extracted_text && (
+                    <div className="bg-muted p-3 rounded text-sm max-h-48 overflow-y-auto">
+                      <strong>Extracted Student Answer:</strong>
+                      <p className="mt-1 whitespace-pre-wrap text-muted-foreground">{gradeModal.extracted_text}</p>
+                    </div>
+                  )}
+
+                  {/* AI Evaluation summary */}
+                  {feedback && (
+                    <div className="bg-accent/50 p-3 rounded text-sm space-y-3">
+                      <div className="flex items-center justify-between">
+                        <strong>AI Evaluation</strong>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline">{gradeModal.ai_score}/{gradeModal.question?.max_score} pts</Badge>
+                          <Badge variant="outline">Confidence: {gradeModal.ai_confidence}%</Badge>
+                        </div>
+                      </div>
+
+                      {/* Rubric breakdown */}
+                      {hasRubricScores && (
+                        <div className="space-y-1">
+                          <span className="text-xs font-semibold text-muted-foreground">Rubric Breakdown:</span>
+                          <div className="flex flex-wrap gap-2">
+                            {Object.entries(rubricScores).map(([criterion, score]) => (
+                              <Badge key={criterion} variant="secondary" className="font-normal text-xs">
+                                {criterion}: {String(score)}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {feedback.strengths?.length > 0 && (
+                        <div>
+                          <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">Strengths:</span>
+                          <ul className="list-disc list-inside text-xs text-muted-foreground ml-1">
+                            {(feedback.strengths as string[]).map((s: string, i: number) => <li key={i}>{s}</li>)}
+                          </ul>
+                        </div>
+                      )}
+                      {feedback.mistakes?.length > 0 && (
+                        <div>
+                          <span className="text-xs font-semibold text-destructive">Mistakes:</span>
+                          <ul className="list-disc list-inside text-xs text-muted-foreground ml-1">
+                            {(feedback.mistakes as string[]).map((m: string, i: number) => <li key={i}>{m}</li>)}
+                          </ul>
+                        </div>
+                      )}
+                      {feedback.suggestions?.length > 0 && (
+                        <div>
+                          <span className="text-xs font-semibold text-primary">Suggestions:</span>
+                          <ul className="list-disc list-inside text-xs text-muted-foreground ml-1">
+                            {(feedback.suggestions as string[]).map((s: string, i: number) => <li key={i}>{s}</li>)}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Teacher grading inputs */}
+                  <div className="space-y-2 border-t border-border pt-3">
+                    <label className="text-sm font-medium">Your Score</label>
+                    <Input type="number" placeholder="Score" value={gradeModal.teacher_score}
+                      onChange={(e) => setGradeModal((p: any) => ({ ...p, teacher_score: Number(e.target.value) }))} />
+                    <label className="text-sm font-medium">Your Feedback</label>
+                    <Textarea placeholder="Write feedback for the student..." rows={3} value={gradeModal.teacher_feedback}
+                      onChange={(e) => setGradeModal((p: any) => ({ ...p, teacher_feedback: e.target.value }))} />
                   </div>
-                )}
-                {gradeModal.ai_feedback && (
-                  <div className="bg-blue-50 dark:bg-blue-950 p-3 rounded text-sm">
-                    <strong>AI Suggestion:</strong> {gradeModal.ai_score} pts, {gradeModal.ai_confidence}% confidence
-                  </div>
-                )}
-                <Input type="number" placeholder="Score" value={gradeModal.teacher_score}
-                  onChange={(e) => setGradeModal((p: any) => ({ ...p, teacher_score: Number(e.target.value) }))} />
-                <Textarea placeholder="Feedback" value={gradeModal.teacher_feedback}
-                  onChange={(e) => setGradeModal((p: any) => ({ ...p, teacher_feedback: e.target.value }))} />
-                <Button className="w-full" onClick={() => gradeMutation.mutate({
-                  answer_id: gradeModal.id,
-                  teacher_feedback: gradeModal.teacher_feedback,
-                  teacher_score: gradeModal.teacher_score,
-                })}>
-                  Save Grade
-                </Button>
-              </div>
-            )}
+
+                  <Button className="w-full" onClick={() => gradeMutation.mutate({
+                    answer_id: gradeModal.id,
+                    teacher_feedback: gradeModal.teacher_feedback,
+                    teacher_score: gradeModal.teacher_score,
+                  })}>
+                    Save Grade
+                  </Button>
+                </div>
+              );
+            })()}
           </DialogContent>
         </Dialog>
       </main>
