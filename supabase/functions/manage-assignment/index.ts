@@ -20,23 +20,47 @@ serve(async (req) => {
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_PUBLISHABLE_KEY")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
       { global: { headers: { Authorization: authHeader } } }
     );
 
     const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsErr } = await supabase.auth.getClaims(token);
-    if (claimsErr || !claimsData?.claims) {
+    const { data: { user }, error: userErr } = await supabase.auth.getUser(token);
+    if (userErr || !user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const userId = claimsData.claims.sub as string;
-    const body = await req.json();
+    const userId = user.id;
+
+    // Check content type to decide parsing
+    const contentType = req.headers.get("content-type") || "";
+    let body: any;
+    let fileData: Uint8Array | null = null;
+    let fileName: string | null = null;
+    let fileType: string | null = null;
+
+    if (contentType.includes("multipart/form-data")) {
+      const formData = await req.formData();
+      body = {
+        action: formData.get("action") as string,
+        assignment_id: formData.get("assignment_id") as string,
+        question_id: formData.get("question_id") as string,
+        extracted_text: formData.get("extracted_text") as string || null,
+      };
+      const file = formData.get("file") as File | null;
+      if (file) {
+        fileData = new Uint8Array(await file.arrayBuffer());
+        fileName = file.name;
+        fileType = file.type;
+      }
+    } else {
+      body = await req.json();
+    }
+
     const { action } = body;
 
-    // Use service role for admin operations
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
@@ -46,7 +70,6 @@ serve(async (req) => {
       case "create_assignment": {
         const { title, description, instructions, class_name, subject, questions, unlock_date, due_date } = body;
 
-        // Create assignment
         const { data: assignment, error: aErr } = await supabase
           .from("assignments")
           .insert({
@@ -66,7 +89,6 @@ serve(async (req) => {
 
         if (aErr) throw aErr;
 
-        // Create questions
         if (questions?.length > 0) {
           const questionRows = questions.map((q: any, i: number) => ({
             assignment_id: assignment.id,
@@ -118,7 +140,6 @@ serve(async (req) => {
 
         if (subErr) throw subErr;
 
-        // Check if already finalized
         if (submission.status === "finalized" || submission.status === "submitted") {
           return new Response(
             JSON.stringify({ error: "Submission already finalized" }),
@@ -126,26 +147,56 @@ serve(async (req) => {
           );
         }
 
-        // Upsert answer - save immediately, return success
+        // Upload file to storage if provided
+        let fileUrl: string | null = null;
+        let detectedFileType: string | null = fileType;
+
+        if (fileData && fileName) {
+          const ext = fileName.split(".").pop() || "bin";
+          const storagePath = `${userId}/${assignment_id}/${question_id}.${ext}`;
+
+          const { error: uploadErr } = await supabaseAdmin.storage
+            .from("answer-files")
+            .upload(storagePath, fileData, {
+              contentType: fileType || "application/octet-stream",
+              upsert: true,
+            });
+
+          if (uploadErr) {
+            console.error("Storage upload error:", uploadErr);
+            throw new Error("File upload failed: " + uploadErr.message);
+          }
+
+          // Generate a signed URL for OCR (valid 1 hour)
+          const { data: signedData } = await supabaseAdmin.storage
+            .from("answer-files")
+            .createSignedUrl(storagePath, 3600);
+
+          fileUrl = signedData?.signedUrl || null;
+        }
+
+        // Upsert answer
+        const answerData: any = {
+          submission_id: submission.id,
+          question_id,
+          student_id: userId,
+          processing_status: "pending",
+        };
+
+        if (extracted_text) answerData.extracted_text = extracted_text;
+        if (fileUrl) answerData.file_url = fileUrl;
+        if (detectedFileType) answerData.file_type = detectedFileType;
+
         const { data: answer, error: ansErr } = await supabase
           .from("student_answers")
-          .upsert(
-            {
-              submission_id: submission.id,
-              question_id,
-              student_id: userId,
-              extracted_text: extracted_text || null,
-              processing_status: extracted_text ? "pending" : "pending",
-            },
-            { onConflict: "submission_id,question_id" }
-          )
+          .upsert(answerData, { onConflict: "submission_id,question_id" })
           .select()
           .single();
 
         if (ansErr) throw ansErr;
 
         // Trigger async AI evaluation (fire and forget)
-        if (extracted_text) {
+        if (extracted_text || fileUrl) {
           const evalUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/evaluate-answer`;
           fetch(evalUrl, {
             method: "POST",
@@ -166,7 +217,6 @@ serve(async (req) => {
       case "finalize_submission": {
         const { assignment_id } = body;
 
-        // Check all questions answered
         const { data: submission } = await supabase
           .from("student_submissions")
           .select("id, status")
@@ -239,7 +289,6 @@ serve(async (req) => {
       case "retry_evaluation": {
         const { answer_id } = body;
 
-        // Trigger re-evaluation
         const evalUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/evaluate-answer`;
         await fetch(evalUrl, {
           method: "POST",
