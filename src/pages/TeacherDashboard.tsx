@@ -1,82 +1,6 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
-import { ChevronDown, ChevronUp, BookOpen, Clock, MapPin, Lightbulb, FlaskConical } from "lucide-react";
-
-interface TopicBreakdown {
-  heading: string;
-  points: string[];
-}
-
-interface ScheduleItem {
-  time: string;
-  endTime: string;
-  class: string;
-  room: string;
-  topic: string;
-  chapter: string;
-  activity: "Topic" | "Practice" | "Revision" | "Test";
-  status: "completed" | "current" | "upcoming";
-  color: string;
-  breakdown: TopicBreakdown[];
-  keyFormulas?: string[];
-  teachingTip?: string;
-}
-
-const scheduleItems: ScheduleItem[] = [
-  {
-    time: "9:00 AM", endTime: "9:45 AM", class: "10th CBSE Mathematics", room: "Room 302",
-    topic: "Real Numbers – Euclid's Division Lemma", chapter: "Ch 1: Real Numbers",
-    activity: "Topic", status: "completed", color: "#4299e1",
-    breakdown: [
-      { heading: "Core Concept", points: ["a = bq + r where 0 ≤ r < b", "Used to find HCF of two positive integers", "Lemma vs Theorem distinction"] },
-      { heading: "Steps to Apply", points: ["Apply division to a and b (a > b)", "If r = 0, b is HCF", "Else apply lemma to b and r, repeat"] },
-    ],
-    keyFormulas: ["a = bq + r, 0 ≤ r < b", "HCF(a,b) = HCF(b,r)"],
-    teachingTip: "Use numerical example (455, 42) before abstract proof. Students struggle with 'why repeat?'"
-  },
-  {
-    time: "10:00 AM", endTime: "10:45 AM", class: "10th CBSE Mathematics", room: "Room 302",
-    topic: "Fundamental Theorem of Arithmetic", chapter: "Ch 1: Real Numbers",
-    activity: "Practice", status: "current", color: "#48bb78",
-    breakdown: [
-      { heading: "Core Concept", points: ["Every composite = product of primes (unique)", "Prime factorisation is unique ignoring order", "Applications: finding LCM & HCF"] },
-      { heading: "Method", points: ["Factor tree for prime factorisation", "HCF = smallest powers of common primes", "LCM = greatest powers of all primes"] },
-    ],
-    keyFormulas: ["HCF × LCM = Product of two numbers"],
-    teachingTip: "Common mistake: students multiply all primes for HCF. Stress 'smallest power of COMMON primes'."
-  },
-  {
-    time: "11:00 AM", endTime: "11:45 AM", class: "9th CBSE Mathematics", room: "Room 205",
-    topic: "Irrational Numbers", chapter: "Ch 1: Number Systems",
-    activity: "Topic", status: "upcoming", color: "#ed64a6",
-    breakdown: [
-      { heading: "What to Cover", points: ["Non-terminating, non-repeating decimals", "√2, √3, π — proof √2 is irrational", "Locating irrationals on number line"] },
-      { heading: "Key Distinctions", points: ["Rational: p/q form, terminating/repeating", "Irrational: cannot be p/q", "Together = Real Numbers ℝ"] },
-    ],
-    keyFormulas: ["√2 ≈ 1.414", "√3 ≈ 1.732"],
-    teachingTip: "Walk through proof by contradiction slowly — students find it abstract."
-  },
-  {
-    time: "12:00 PM", endTime: "12:45 PM", class: "8th CBSE Mathematics", room: "Room 101",
-    topic: "Properties of Rational Number Operations", chapter: "Ch 1: Rational Numbers",
-    activity: "Revision", status: "upcoming", color: "#9f7aea",
-    breakdown: [
-      { heading: "Properties", points: ["Closure: ✓ for +,−,× | ✗ for ÷ (by 0)", "Commutative: ✓ for +,× | ✗ for −,÷", "Associative: ✓ for +,× | ✗ for −,÷"] },
-      { heading: "Special Elements", points: ["Additive identity: 0", "Multiplicative identity: 1", "Inverse of a/b → -a/b and b/a"] },
-    ],
-    keyFormulas: ["a/b × b/a = 1"],
-    teachingTip: "Use ✓/✗ grid for all 4 operations × 3 properties — very visual."
-  },
-];
-
-const activityColors: Record<string, string> = {
-  "Topic": "bg-blue-100 text-blue-800",
-  "Practice": "bg-green-100 text-green-800",
-  "Revision": "bg-purple-100 text-purple-800",
-  "Test": "bg-red-100 text-red-800",
-};
 
 const students = [
   { name: "Arjun Reddy", initials: "AR", note: "Excellent progress in algebra", score: 95, perf: "excellent" as const, gradient: "from-emerald-500 to-emerald-600" },
@@ -115,13 +39,6 @@ const TeacherDashboard = () => {
   const { fullName } = useAuth();
   const navigate = useNavigate();
   const firstName = fullName?.split(" ")[0] || "Teacher";
-  const [expandedSlot, setExpandedSlot] = useState<number | null>(
-    scheduleItems.findIndex(s => s.status === "current") >= 0
-      ? scheduleItems.findIndex(s => s.status === "current")
-      : 0
-  );
-
-  const toggleSlot = (i: number) => setExpandedSlot(expandedSlot === i ? null : i);
 
   return (
     <DashboardLayout role="teacher">
@@ -148,107 +65,6 @@ const TeacherDashboard = () => {
           </div>
         </div>
 
-        {/* ── Full-Width: Today's Schedule + Topic Prep ── */}
-        <div className="glass-card p-8 mb-8" style={{ animationDelay: "0.1s" }}>
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-[50px] h-[50px] rounded-xl flex items-center justify-center text-2xl text-white bg-gradient-to-br from-indigo-500 to-purple-500">
-              <BookOpen className="h-6 w-6" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-semibold text-foreground">Today's Schedule & Topic Prep</h2>
-              <p className="text-sm text-muted-foreground">Click any slot to see the topic breakdown for a quick revision</p>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            {scheduleItems.map((item, i) => {
-              const isExpanded = expandedSlot === i;
-              const statusLabel = item.status === "completed" ? "Done" : item.status === "current" ? "Now" : "Next";
-              const statusClass = item.status === "completed" ? "bg-green-100 text-green-800" : item.status === "current" ? "bg-amber-100 text-amber-800 animate-pulse" : "bg-slate-100 text-slate-600";
-
-              return (
-                <div key={i} className="rounded-xl border border-border/60 overflow-hidden transition-all" style={{ borderLeftWidth: "4px", borderLeftColor: item.color }}>
-                  {/* Timeline Row */}
-                  <button
-                    onClick={() => toggleSlot(i)}
-                    className="w-full flex items-center gap-4 p-4 text-left bg-card hover:bg-accent/30 transition-colors border-none cursor-pointer"
-                  >
-                    <div className="min-w-[90px]">
-                      <div className="font-semibold text-foreground text-sm">{item.time}</div>
-                      <div className="text-xs text-muted-foreground">{item.endTime}</div>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <span className="font-medium text-foreground text-sm truncate">{item.topic}</span>
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold shrink-0 ${activityColors[item.activity]}`}>{item.activity}</span>
-                      </div>
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{item.class}</span>
-                        <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{item.room}</span>
-                        <span className="text-muted-foreground/60">• {item.chapter}</span>
-                      </div>
-                    </div>
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-semibold shrink-0 ${statusClass}`}>{statusLabel}</span>
-                    {isExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0" /> : <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />}
-                  </button>
-
-                  {/* Expanded: Topic Breakdown */}
-                  {isExpanded && (
-                    <div className="bg-accent/20 border-t border-border/40 p-5 animate-fadeInUp">
-                      <div className="grid md:grid-cols-2 gap-4">
-                        {/* Breakdown sections */}
-                        {item.breakdown.map((section, si) => (
-                          <div key={si} className="bg-card rounded-lg p-4 border border-border/30">
-                            <h4 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
-                              <BookOpen className="h-3.5 w-3.5 text-primary" />
-                              {section.heading}
-                            </h4>
-                            <ul className="space-y-1.5">
-                              {section.points.map((pt, pi) => (
-                                <li key={pi} className="text-xs text-muted-foreground flex items-start gap-2">
-                                  <span className="text-primary mt-0.5 shrink-0">›</span>
-                                  <span>{pt}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        ))}
-
-                        {/* Key Formulas */}
-                        {item.keyFormulas && item.keyFormulas.length > 0 && (
-                          <div className="bg-card rounded-lg p-4 border border-border/30">
-                            <h4 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
-                              <FlaskConical className="h-3.5 w-3.5 text-primary" />
-                              Key Formulas
-                            </h4>
-                            <div className="space-y-1.5">
-                              {item.keyFormulas.map((f, fi) => (
-                                <div key={fi} className="text-xs bg-primary/5 text-primary font-mono px-3 py-1.5 rounded-md border border-primary/10">
-                                  {f}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Teaching Tip */}
-                        {item.teachingTip && (
-                          <div className="bg-amber-50 rounded-lg p-4 border border-amber-200/50 md:col-span-2">
-                            <h4 className="text-sm font-semibold text-amber-800 mb-1 flex items-center gap-2">
-                              <Lightbulb className="h-3.5 w-3.5" />
-                              Teaching Tip
-                            </h4>
-                            <p className="text-xs text-amber-700 leading-relaxed">{item.teachingTip}</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
 
         {/* Dashboard Grid */}
         <div className="grid grid-cols-[repeat(auto-fit,minmax(350px,1fr))] gap-8 mb-8">
