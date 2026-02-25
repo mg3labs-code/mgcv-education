@@ -10,7 +10,8 @@ interface NavItem {
 
 const studentNav: NavItem[] = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/student" },
-  { label: "Episodes", icon: BookOpen, path: "/student/episodes" },
+  { label: "Textbook", icon: BookOpen, path: "/student/textbook" },
+  { label: "Episodes", icon: GraduationCap, path: "/student/episodes" },
   { label: "Assignments", icon: ClipboardList, path: "/student/assignments" },
   { label: "Progress", icon: BarChart3, path: "/student/progress" },
 ];
