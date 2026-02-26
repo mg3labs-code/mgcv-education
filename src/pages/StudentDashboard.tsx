@@ -1,7 +1,10 @@
 import { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { findTextbookMatch } from "@/data/topicTextbookMap";
+import PopQuizModal from "@/components/student/PopQuizModal";
 
 interface ScheduleItem {
   type: string;
@@ -36,10 +39,12 @@ const calendarDays = ["S", "M", "T", "W", "T", "F", "S"];
 
 const StudentDashboard = () => {
   const { fullName, user } = useAuth();
+  const navigate = useNavigate();
   const firstName = fullName?.split(" ")[0] || "Student";
   const [completedItems, setCompletedItems] = useState<number[]>([]);
   const [subjectSchedules, setSubjectSchedules] = useState<SubjectSchedule[]>([]);
   const [loading, setLoading] = useState(true);
+  const [quizSubject, setQuizSubject] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchAllSchedules = async () => {
@@ -310,8 +315,24 @@ const StudentDashboard = () => {
                           <span className={`py-1.5 px-3.5 rounded-full text-[11px] font-semibold uppercase tracking-wide bg-gradient-to-r ${badge.bg} ${badge.text} border ${badge.border} hover:-translate-y-0.5 hover:shadow-md transition-all cursor-pointer`}>
                             {badge.label}
                           </span>
-                          <span className="py-1.5 px-3.5 rounded-full text-[11px] font-semibold uppercase tracking-wide bg-gradient-to-r from-purple-50 to-purple-100 text-purple-800 border border-purple-300 hover:-translate-y-0.5 hover:shadow-md transition-all cursor-pointer">
+                          <span
+                            className="py-1.5 px-3.5 rounded-full text-[11px] font-semibold uppercase tracking-wide bg-gradient-to-r from-purple-50 to-purple-100 text-purple-800 border border-purple-300 hover:-translate-y-0.5 hover:shadow-md transition-all cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const topicMatch = findTextbookMatch(item.topic);
+                              navigate(`/student/deep-dive?topic=${encodeURIComponent(item.topic)}&subject=${encodeURIComponent(item.subject)}&date=${todayKey}${topicMatch ? `&chapter=${topicMatch.chapterId}` : ""}`);
+                            }}
+                          >
                             🔍 Deep Dive
+                          </span>
+                          <span
+                            className="py-1.5 px-3.5 rounded-full text-[11px] font-semibold uppercase tracking-wide bg-gradient-to-r from-emerald-50 to-emerald-100 text-emerald-800 border border-emerald-300 hover:-translate-y-0.5 hover:shadow-md transition-all cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setQuizSubject(item.subject);
+                            }}
+                          >
+                            ⚡ Pop Quiz
                           </span>
                         </div>
                       )}
@@ -332,6 +353,15 @@ const StudentDashboard = () => {
           </section>
         </div>
       </div>
+
+      {/* Pop Quiz Modal */}
+      {quizSubject && (
+        <PopQuizModal
+          open={!!quizSubject}
+          onClose={() => setQuizSubject(null)}
+          subject={quizSubject}
+        />
+      )}
     </DashboardLayout>
   );
 };
