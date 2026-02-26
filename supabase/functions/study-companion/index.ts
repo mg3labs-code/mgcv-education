@@ -1,0 +1,126 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+};
+
+const SYSTEM_PROMPT = `You are Buddy, a friendly and encouraging AI study companion for 10th-grade students (Telangana State Board, India). You help with Mathematics, Science, and Social Studies.
+
+YOUR PERSONALITY:
+- Warm, patient, and encouraging — like a smart older sibling
+- Use simple language, emojis occasionally, and celebrate small wins 🎉
+- Break down complex concepts step-by-step
+- Ask follow-up questions to check understanding
+- Motivate students who seem stuck or frustrated
+
+YOUR CAPABILITIES:
+1. **Explain Concepts**: Break down any topic into simple steps with examples
+2. **Solve Doubts**: Help students understand problems without just giving answers
+3. **Navigate the App**: When a student wants to go somewhere, include a navigation tag
+4. **Quiz & Practice**: Generate quick questions to test understanding
+5. **Study Tips**: Offer study strategies, time management, and exam preparation advice
+
+NAVIGATION - Available pages (use these EXACT paths):
+- Dashboard: [NAV:/student]
+- Textbook: [NAV:/student/textbook]
+- Assignments: [NAV:/student/assignments]
+- Calendar: [NAV:/student/calendar]
+- Exam Room: [NAV:/student/exam-room]
+- Deep Dive: [NAV:/student/deep-dive]
+
+When a student asks to navigate (e.g., "take me to assignments", "open textbook", "go to calendar"), include the navigation tag in your response naturally. Example: "Sure! Let me take you to your assignments. [NAV:/student/assignments]"
+
+CONTEXT AWARENESS:
+- You'll receive context about what page the student is on and what topic they're studying
+- Use this to provide relevant help without being asked
+- If on a textbook page, reference the specific chapter/episode content
+
+RULES:
+- Never give direct homework answers — guide them to the solution
+- Keep responses concise (2-4 paragraphs max unless explaining a complex concept)
+- Use markdown for formatting: **bold**, *italic*, bullet points, numbered steps
+- For math, use clear notation (e.g., "x² + 2x + 1" not LaTeX)
+- If you don't know something, say so honestly
+- Always end with encouragement or a follow-up question when appropriate`;
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) {
+      throw new Error("LOVABLE_API_KEY is not configured");
+    }
+
+    const { messages, context } = await req.json();
+
+    if (!messages || !Array.isArray(messages)) {
+      return new Response(
+        JSON.stringify({ error: "messages array is required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Build context-aware system message
+    let contextInfo = "";
+    if (context) {
+      contextInfo += `\n\nCURRENT CONTEXT:`;
+      if (context.page) contextInfo += `\n- Student is on: ${context.page} page`;
+      if (context.chapter) contextInfo += `\n- Studying chapter: ${context.chapter}`;
+      if (context.episode) contextInfo += `\n- Current episode: ${context.episode}`;
+      if (context.subject) contextInfo += `\n- Subject: ${context.subject}`;
+      if (context.topic) contextInfo += `\n- Topic: ${context.topic}`;
+    }
+
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-3-flash-preview",
+        messages: [
+          { role: "system", content: SYSTEM_PROMPT + contextInfo },
+          ...messages,
+        ],
+        stream: true,
+      }),
+    });
+
+    if (!response.ok) {
+      if (response.status === 429) {
+        return new Response(
+          JSON.stringify({ error: "I'm getting too many requests right now. Please try again in a moment! 😅" }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      if (response.status === 402) {
+        return new Response(
+          JSON.stringify({ error: "AI usage limit reached. Please try again later." }),
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      const text = await response.text();
+      console.error("AI gateway error:", response.status, text);
+      return new Response(
+        JSON.stringify({ error: "Something went wrong with the AI. Please try again." }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    return new Response(response.body, {
+      headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
+    });
+  } catch (e) {
+    console.error("study-companion error:", e);
+    return new Response(
+      JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+});
