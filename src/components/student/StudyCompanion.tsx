@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   MessageCircle, X, Send, Plus, Sparkles, BookOpen,
-  ClipboardList, Lightbulb, Loader2
+  ClipboardList, Lightbulb, Loader2, Volume2, VolumeX
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -10,6 +10,36 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import CompanionVoiceInput from "./CompanionVoiceInput";
+
+function speakText(text: string, onEnd?: () => void) {
+  if (!("speechSynthesis" in window)) return;
+  window.speechSynthesis.cancel();
+  // Strip markdown/formatting for cleaner speech
+  const clean = text
+    .replace(/\[NAV:[^\]]+\]/g, "")
+    .replace(/\*\*(.+?)\*\*/g, "$1")
+    .replace(/\*(.+?)\*/g, "$1")
+    .replace(/`(.+?)`/g, "$1")
+    .replace(/^[•\-]\s*/gm, "")
+    .replace(/^\d+\.\s*/gm, "")
+    .trim();
+  if (!clean) return;
+  const utterance = new SpeechSynthesisUtterance(clean);
+  utterance.rate = 1.05;
+  utterance.pitch = 1.1;
+  // Try to pick a natural-sounding voice
+  const voices = window.speechSynthesis.getVoices();
+  const preferred = voices.find(
+    (v) => v.lang.startsWith("en") && (v.name.includes("Google") || v.name.includes("Samantha") || v.name.includes("Natural"))
+  ) || voices.find((v) => v.lang.startsWith("en"));
+  if (preferred) utterance.voice = preferred;
+  if (onEnd) utterance.onend = onEnd;
+  window.speechSynthesis.speak(utterance);
+}
+
+function stopSpeaking() {
+  if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+}
 
 interface ChatMessage {
   id?: string;
@@ -82,12 +112,33 @@ const StudyCompanion = () => {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [hasGreeted, setHasGreeted] = useState(false);
   const [showNudge, setShowNudge] = useState(false);
+  const [ttsEnabled, setTtsEnabled] = useState(() => {
+    const saved = localStorage.getItem("buddy_tts");
+    return saved !== "false"; // default ON
+  });
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { user, fullName } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Preload voices
+  useEffect(() => {
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.getVoices();
+      window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+    }
+    return () => stopSpeaking();
+  }, []);
+
+  const toggleTts = () => {
+    const next = !ttsEnabled;
+    setTtsEnabled(next);
+    localStorage.setItem("buddy_tts", String(next));
+    if (!next) { stopSpeaking(); setIsSpeaking(false); }
+  };
 
   // Auto-open on first ever visit
   useEffect(() => {
@@ -312,6 +363,11 @@ const StudyCompanion = () => {
 
       if (assistantContent) {
         persistMessage({ role: "assistant", content: assistantContent }, sessionId);
+        // Auto-speak the response
+        if (ttsEnabled) {
+          setIsSpeaking(true);
+          speakText(assistantContent, () => setIsSpeaking(false));
+        }
       }
     } catch (e) {
       console.error("Stream error:", e);
@@ -385,10 +441,19 @@ const StudyCompanion = () => {
               </div>
             </div>
             <div className="flex items-center gap-1">
+              <Button
+                size="icon"
+                variant="ghost"
+                className={`h-7 w-7 ${isSpeaking ? "text-primary animate-pulse" : ""}`}
+                onClick={toggleTts}
+                title={ttsEnabled ? "Mute Buddy" : "Unmute Buddy"}
+              >
+                {ttsEnabled ? <Volume2 className="h-3.5 w-3.5" /> : <VolumeX className="h-3.5 w-3.5" />}
+              </Button>
               <Button size="icon" variant="ghost" className="h-7 w-7" onClick={startNewChat} title="New Chat">
                 <Plus className="h-3.5 w-3.5" />
               </Button>
-              <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setIsOpen(false)}>
+              <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { stopSpeaking(); setIsOpen(false); }}>
                 <X className="h-3.5 w-3.5" />
               </Button>
             </div>
