@@ -45,6 +45,8 @@ const StudentDashboard = () => {
   const [subjectSchedules, setSubjectSchedules] = useState<SubjectSchedule[]>([]);
   const [loading, setLoading] = useState(true);
   const [quizSubject, setQuizSubject] = useState<string | null>(null);
+  const [dailyQuizOpen, setDailyQuizOpen] = useState(false);
+  const [dailyQuizScore, setDailyQuizScore] = useState<{ score: number; total: number } | null>(null);
 
   useEffect(() => {
     const fetchAllSchedules = async () => {
@@ -248,6 +250,20 @@ const StudentDashboard = () => {
               <button className="w-full bg-gradient-to-r from-orange-50 to-pink-50 text-orange-700 p-4 rounded-xl border-l-4 border-orange-500 font-medium border-none text-left cursor-pointer hover:-translate-y-0.5 hover:shadow-md transition-all">
                 📝 Today's Draft
               </button>
+
+              {/* Daily Knowledge Quiz - unlocks at 100% */}
+              {progressPercent >= 100 ? (
+                <button
+                  onClick={() => setDailyQuizOpen(true)}
+                  className="w-full mt-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white p-4 rounded-xl font-semibold border-none text-center cursor-pointer hover:-translate-y-0.5 hover:shadow-lg transition-all animate-pulse"
+                >
+                  🧠 Daily Knowledge Quiz — Unlocked! 🎉
+                </button>
+              ) : (
+                <div className="w-full mt-3 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-400 p-4 rounded-xl font-medium text-center cursor-not-allowed border-none">
+                  🔒 Daily Quiz — Complete all classes to unlock
+                </div>
+              )}
             </div>
 
             {/* Quick Stats */}
@@ -260,6 +276,7 @@ const StudentDashboard = () => {
                 { label: "Completed:", value: String(completedClasses) },
                 { label: "Remaining:", value: String(totalClasses - completedClasses) },
                 { label: "Progress:", value: `${progressPercent}%` },
+                ...(dailyQuizScore ? [{ label: "Daily Quiz:", value: `${dailyQuizScore.score}/${dailyQuizScore.total}` }] : []),
               ].map((stat, i) => (
                 <div key={i} className="flex justify-between items-center py-3 border-b border-gray-100/50 last:border-none hover:bg-blue-500/5 hover:rounded-lg hover:px-2.5 transition-all">
                   <span className="text-gray-500 text-sm font-medium">{stat.label}</span>
@@ -360,6 +377,17 @@ const StudentDashboard = () => {
           open={!!quizSubject}
           onClose={() => setQuizSubject(null)}
           subject={quizSubject}
+        />
+      )}
+
+      {/* Daily Knowledge Quiz Modal */}
+      {dailyQuizOpen && (
+        <PopQuizModal
+          open={dailyQuizOpen}
+          onClose={() => setDailyQuizOpen(false)}
+          subject="All Subjects"
+          mode="daily"
+          onComplete={(score, total) => setDailyQuizScore({ score, total })}
         />
       )}
     </DashboardLayout>

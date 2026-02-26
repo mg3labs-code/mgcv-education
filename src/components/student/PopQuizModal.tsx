@@ -1,16 +1,21 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { getQuizForSubject, QuizQuestion } from "@/data/popQuizData";
+import { Badge } from "@/components/ui/badge";
+import { getQuizForSubject, getDailyQuiz, QuizQuestion, DailyQuizQuestion } from "@/data/popQuizData";
 
 interface PopQuizModalProps {
   open: boolean;
   onClose: () => void;
   subject: string;
+  mode?: "subject" | "daily";
+  onComplete?: (score: number, total: number) => void;
 }
 
-const PopQuizModal = ({ open, onClose, subject }: PopQuizModalProps) => {
-  const [questions] = useState<QuizQuestion[]>(() => getQuizForSubject(subject, 10));
+const PopQuizModal = ({ open, onClose, subject, mode = "subject", onComplete }: PopQuizModalProps) => {
+  const [questions] = useState<(QuizQuestion | DailyQuizQuestion)[]>(() =>
+    mode === "daily" ? getDailyQuiz(10) : getQuizForSubject(subject, 10)
+  );
   const [currentQ, setCurrentQ] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [score, setScore] = useState(0);
@@ -29,6 +34,7 @@ const PopQuizModal = ({ open, onClose, subject }: PopQuizModalProps) => {
       setSelected(null);
     } else {
       setFinished(true);
+      onComplete?.(newScore, questions.length);
     }
   };
 
@@ -41,29 +47,38 @@ const PopQuizModal = ({ open, onClose, subject }: PopQuizModalProps) => {
   };
 
   const percentage = questions.length > 0 ? Math.round((score / questions.length) * 100) : 0;
+  const title = mode === "daily" ? "🧠 Daily Knowledge Quiz" : "Pop Quiz";
 
   if (questions.length === 0) {
     return (
       <Dialog open={open} onOpenChange={onClose}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Pop Quiz</DialogTitle>
+            <DialogTitle>{title}</DialogTitle>
           </DialogHeader>
-          <p className="text-center text-muted-foreground py-8">No quiz questions available for {subject} yet.</p>
+          <p className="text-center text-muted-foreground py-8">No quiz questions available yet.</p>
           <Button onClick={onClose} className="w-full">Close</Button>
         </DialogContent>
       </Dialog>
     );
   }
 
+  const currentQuestion = questions[currentQ];
+  const questionSubject = "subject" in currentQuestion ? (currentQuestion as DailyQuizQuestion).subject : subject;
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-center">
-            {finished ? "🎯 Quiz Complete!" : `Pop Quiz — Question ${currentQ + 1}/${questions.length}`}
+            {finished ? "🎯 Quiz Complete!" : `${title} — Question ${currentQ + 1}/${questions.length}`}
           </DialogTitle>
-          <p className="text-sm text-muted-foreground text-center">{subject}</p>
+          {!finished && mode === "daily" && (
+            <Badge variant="outline" className="mx-auto mt-1">{questionSubject}</Badge>
+          )}
+          {!finished && mode === "subject" && (
+            <p className="text-sm text-muted-foreground text-center">{subject}</p>
+          )}
         </DialogHeader>
 
         {!finished ? (
@@ -78,12 +93,12 @@ const PopQuizModal = ({ open, onClose, subject }: PopQuizModalProps) => {
 
             {/* Question */}
             <div className="bg-muted/50 rounded-xl p-5 border-l-4 border-primary">
-              <p className="font-semibold text-foreground">{questions[currentQ].question}</p>
+              <p className="font-semibold text-foreground">{currentQuestion.question}</p>
             </div>
 
             {/* Options */}
             <div className="space-y-2">
-              {questions[currentQ].options.map((opt, i) => (
+              {currentQuestion.options.map((opt, i) => (
                 <button
                   key={i}
                   onClick={() => setSelected(i)}
@@ -123,6 +138,7 @@ const PopQuizModal = ({ open, onClose, subject }: PopQuizModalProps) => {
               {questions.map((q, i) => {
                 const userAns = answers[i];
                 const isCorrect = userAns === q.correct;
+                const qSubject = "subject" in q ? (q as DailyQuizQuestion).subject : subject;
                 return (
                   <div
                     key={i}
@@ -132,9 +148,14 @@ const PopQuizModal = ({ open, onClose, subject }: PopQuizModalProps) => {
                         : "bg-red-50 border-red-300 dark:bg-red-950/30 dark:border-red-800"
                     }`}
                   >
-                    <p className="font-medium mb-1">Q{i + 1}: {q.question}</p>
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="font-medium flex-1">Q{i + 1}: {q.question}</p>
+                      {mode === "daily" && (
+                        <Badge variant="secondary" className="text-[10px] shrink-0">{qSubject}</Badge>
+                      )}
+                    </div>
                     <p className={isCorrect ? "text-emerald-700 dark:text-emerald-400" : "text-red-700 dark:text-red-400"}>
-                      Your answer: {userAns !== null ? q.options[userAns] : "—"}
+                      Your answer: {userAns !== null && userAns !== undefined ? q.options[userAns] : "—"}
                     </p>
                     {!isCorrect && (
                       <p className="text-emerald-700 dark:text-emerald-400">Correct: {q.options[q.correct]}</p>

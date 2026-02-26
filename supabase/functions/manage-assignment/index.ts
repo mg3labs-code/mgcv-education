@@ -175,7 +175,7 @@ serve(async (req) => {
           fileUrl = signedData?.signedUrl || null;
         }
 
-        // Upsert answer
+        // Upsert answer — store raw storage path (not signed URL) for permanent access
         const answerData: any = {
           submission_id: submission.id,
           question_id,
@@ -184,7 +184,10 @@ serve(async (req) => {
         };
 
         if (extracted_text) answerData.extracted_text = extracted_text;
-        if (fileUrl) answerData.file_url = fileUrl;
+        if (fileData && fileName) {
+          const ext = fileName.split(".").pop() || "bin";
+          answerData.file_url = `${userId}/${assignment_id}/${question_id}.${ext}`;
+        }
         if (detectedFileType) answerData.file_type = detectedFileType;
 
         const { data: answer, error: ansErr } = await supabase

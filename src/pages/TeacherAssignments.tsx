@@ -75,6 +75,31 @@ const QUESTION_TYPES = [
   { value: "numerical", label: "Numerical (3-5 marks)" },
 ];
 
+const openFile = async (fileUrl: string) => {
+  try {
+    // Extract storage path: could be a raw path or a signed URL
+    let storagePath = fileUrl;
+    if (fileUrl.includes("/answer-files/")) {
+      // Signed URL format: .../object/sign/answer-files/{path}?token=...
+      const afterBucket = fileUrl.split("/answer-files/")[1];
+      storagePath = afterBucket?.split("?")[0] || fileUrl;
+    }
+    storagePath = decodeURIComponent(storagePath);
+
+    const { data, error } = await supabase.storage
+      .from("answer-files")
+      .createSignedUrl(storagePath, 3600);
+
+    if (error || !data?.signedUrl) {
+      toast.error("Could not generate file link");
+      return;
+    }
+    window.open(data.signedUrl, "_blank");
+  } catch {
+    toast.error("Failed to open file");
+  }
+};
+
 const TeacherAssignments = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -448,10 +473,10 @@ const TeacherAssignments = () => {
 
                         {/* Uploaded file link */}
                         {ans.file_url && (
-                          <a href={ans.file_url} target="_blank" rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
+                          <button onClick={() => openFile(ans.file_url)}
+                            className="inline-flex items-center gap-1 text-xs text-primary hover:underline bg-transparent border-none cursor-pointer p-0">
                             <ExternalLink className="h-3 w-3" /> View Original File
-                          </a>
+                          </button>
                         )}
 
                         {/* Extracted text (collapsible) */}
@@ -541,10 +566,10 @@ const TeacherAssignments = () => {
                 <div className="space-y-4">
                   {/* Original file link */}
                   {gradeModal.file_url && (
-                    <a href={gradeModal.file_url} target="_blank" rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-sm text-primary hover:underline">
+                    <button onClick={() => openFile(gradeModal.file_url)}
+                      className="inline-flex items-center gap-1 text-sm text-primary hover:underline bg-transparent border-none cursor-pointer p-0">
                       <ExternalLink className="h-3.5 w-3.5" /> View Original Uploaded File
-                    </a>
+                    </button>
                   )}
 
                   {/* Extracted text */}
