@@ -87,10 +87,26 @@ export const popQuizData: Record<string, QuizQuestion[]> = {
   ],
 };
 
+export interface DailyQuizQuestion extends QuizQuestion {
+  subject: string;
+}
+
 // Get questions for a specific subject (shuffled, limited count)
 export function getQuizForSubject(subject: string, count: number = 10): QuizQuestion[] {
   const questions = popQuizData[subject];
   if (!questions) return [];
   const shuffled = [...questions].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count);
+}
+
+// Get a daily cross-subject quiz (pulls from ALL subjects, shuffled)
+export function getDailyQuiz(count: number = 10): DailyQuizQuestion[] {
+  const allQuestions: DailyQuizQuestion[] = [];
+  for (const [subject, questions] of Object.entries(popQuizData)) {
+    for (const q of questions) {
+      allQuestions.push({ ...q, subject });
+    }
+  }
+  const shuffled = allQuestions.sort(() => Math.random() - 0.5);
   return shuffled.slice(0, count);
 }
