@@ -11,30 +11,99 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import CompanionVoiceInput from "./CompanionVoiceInput";
 
-function speakText(text: string, onEnd?: () => void) {
-  if (!("speechSynthesis" in window)) return;
-  window.speechSynthesis.cancel();
-  // Strip markdown/formatting for cleaner speech
-  const clean = text
+function cleanForSpeech(text: string) {
+  return text
     .replace(/\[NAV:[^\]]+\]/g, "")
     .replace(/\*\*(.+?)\*\*/g, "$1")
     .replace(/\*(.+?)\*/g, "$1")
     .replace(/`(.+?)`/g, "$1")
     .replace(/^[•\-]\s*/gm, "")
     .replace(/^\d+\.\s*/gm, "")
+    .replace(/#{1,6}\s*/g, "")
     .trim();
-  if (!clean) return;
-  const utterance = new SpeechSynthesisUtterance(clean);
-  utterance.rate = 1.05;
-  utterance.pitch = 1.1;
-  // Try to pick a natural-sounding voice
+}
+
+function getPreferredVoice() {
   const voices = window.speechSynthesis.getVoices();
-  const preferred = voices.find(
+  return voices.find(
     (v) => v.lang.startsWith("en") && (v.name.includes("Google") || v.name.includes("Samantha") || v.name.includes("Natural"))
-  ) || voices.find((v) => v.lang.startsWith("en"));
-  if (preferred) utterance.voice = preferred;
-  if (onEnd) utterance.onend = onEnd;
-  window.speechSynthesis.speak(utterance);
+  ) || voices.find((v) => v.lang.startsWith("en")) || null;
+}
+
+/** Continuous streaming TTS: queues sentences and speaks them as they arrive */
+class StreamingSpeaker {
+  private queue: string[] = [];
+  private speaking = false;
+  private aborted = false;
+  private buffer = "";
+  private onSpeakingChange: (v: boolean) => void;
+  // Split on sentence-ending punctuation followed by space/newline, or double newline
+  private sentenceRe = /(?<=[.!?…])\s+|(?:\n\n)/;
+
+  constructor(onSpeakingChange: (v: boolean) => void) {
+    this.onSpeakingChange = onSpeakingChange;
+  }
+
+  /** Feed new text delta from the stream */
+  feed(delta: string) {
+    if (this.aborted) return;
+    this.buffer += delta;
+    // Extract complete sentences
+    let parts = this.buffer.split(this.sentenceRe);
+    if (parts.length > 1) {
+      // Keep the last (potentially incomplete) part in buffer
+      this.buffer = parts.pop()!;
+      for (const sentence of parts) {
+        const clean = cleanForSpeech(sentence);
+        if (clean) this.queue.push(clean);
+      }
+      this.processQueue();
+    }
+  }
+
+  /** Call when the stream is done to flush remaining text */
+  flush() {
+    if (this.aborted) return;
+    const remaining = cleanForSpeech(this.buffer);
+    this.buffer = "";
+    if (remaining) {
+      this.queue.push(remaining);
+      this.processQueue();
+    }
+  }
+
+  abort() {
+    this.aborted = true;
+    this.queue = [];
+    this.buffer = "";
+    if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+    this.speaking = false;
+    this.onSpeakingChange(false);
+  }
+
+  private processQueue() {
+    if (this.speaking || this.aborted || this.queue.length === 0) return;
+    this.speaking = true;
+    this.onSpeakingChange(true);
+    this.speakNext();
+  }
+
+  private speakNext() {
+    if (this.aborted || this.queue.length === 0) {
+      this.speaking = false;
+      this.onSpeakingChange(false);
+      return;
+    }
+    const text = this.queue.shift()!;
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 1.05;
+    utterance.pitch = 1.1;
+    const voice = getPreferredVoice();
+    if (voice) utterance.voice = voice;
+    utterance.onend = () => this.speakNext();
+    utterance.onerror = () => this.speakNext();
+    window.speechSynthesis.speak(utterance);
+  }
 }
 
 function stopSpeaking() {
@@ -273,6 +342,10 @@ const StudyCompanion = () => {
     }));
 
     let assistantContent = "";
+    // Create a streaming speaker if TTS enabled
+    const speaker = ttsEnabled && "speechSynthesis" in window
+      ? new StreamingSpeaker(setIsSpeaking)
+      : null;
 
     try {
       const resp = await fetch(STUDY_COMPANION_URL, {
@@ -291,6 +364,7 @@ const StudyCompanion = () => {
         const err = await resp.json().catch(() => ({ error: "Failed" }));
         toast.error(err.error || "Something went wrong");
         setIsLoading(false);
+        speaker?.abort();
         return;
       }
 
@@ -333,6 +407,7 @@ const StudyCompanion = () => {
             if (delta) {
               assistantContent += delta;
               updateAssistant(assistantContent);
+              speaker?.feed(delta);
             }
           } catch {
             buffer = line + "\n" + buffer;
@@ -354,24 +429,24 @@ const StudyCompanion = () => {
             if (delta) {
               assistantContent += delta;
               updateAssistant(assistantContent);
+              speaker?.feed(delta);
             }
           } catch { /* ignore */ }
         }
       }
 
+      // Flush remaining buffered text to TTS
+      speaker?.flush();
+
       handleNavigation(assistantContent);
 
       if (assistantContent) {
         persistMessage({ role: "assistant", content: assistantContent }, sessionId);
-        // Auto-speak the response
-        if (ttsEnabled) {
-          setIsSpeaking(true);
-          speakText(assistantContent, () => setIsSpeaking(false));
-        }
       }
     } catch (e) {
       console.error("Stream error:", e);
       toast.error("Failed to get a response. Please try again.");
+      speaker?.abort();
     } finally {
       setIsLoading(false);
     }
