@@ -7,9 +7,10 @@ import { toast } from "sonner";
 interface CompanionVoiceInputProps {
   onTranscript: (text: string) => void;
   disabled?: boolean;
+  showLabel?: boolean;
 }
 
-const CompanionVoiceInput = ({ onTranscript, disabled }: CompanionVoiceInputProps) => {
+const CompanionVoiceInput = ({ onTranscript, disabled, showLabel }: CompanionVoiceInputProps) => {
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [seconds, setSeconds] = useState(0);
@@ -91,23 +92,37 @@ const CompanionVoiceInput = ({ onTranscript, disabled }: CompanionVoiceInputProp
 
   if (isTranscribing) {
     return (
-      <Button size="icon" variant="ghost" disabled className="h-8 w-8 shrink-0">
-        <Loader2 className="h-4 w-4 animate-spin" />
-      </Button>
+      <div className="flex items-center gap-1.5 shrink-0">
+        <Button size="icon" variant="ghost" disabled className="h-9 w-9">
+          <Loader2 className="h-4 w-4 animate-spin" />
+        </Button>
+        <span className="text-[10px] text-muted-foreground">Transcribing...</span>
+      </div>
+    );
+  }
+
+  if (isRecording) {
+    return (
+      <button
+        onClick={stopRecording}
+        className="flex items-center gap-1.5 shrink-0 h-9 px-3 rounded-lg bg-destructive text-destructive-foreground text-xs font-medium animate-pulse"
+      >
+        <Square className="h-3.5 w-3.5" />
+        <span>{seconds}s</span>
+      </button>
     );
   }
 
   return (
-    <Button
-      size="icon"
-      variant={isRecording ? "destructive" : "ghost"}
-      className="h-8 w-8 shrink-0"
-      onClick={isRecording ? stopRecording : startRecording}
+    <button
+      onClick={startRecording}
       disabled={disabled}
-      title={isRecording ? `Recording... ${seconds}s` : "Voice input"}
+      className="flex items-center gap-1 shrink-0 h-9 px-2.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors disabled:opacity-50"
+      title="Voice input"
     >
-      {isRecording ? <Square className="h-3.5 w-3.5" /> : <Mic className="h-4 w-4" />}
-    </Button>
+      <Mic className="h-4.5 w-4.5" />
+      {showLabel && <span className="text-xs">Speak</span>}
+    </button>
   );
 };
 

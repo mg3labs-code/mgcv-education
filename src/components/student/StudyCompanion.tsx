@@ -19,22 +19,15 @@ interface ChatMessage {
 
 const STUDY_COMPANION_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/study-companion`;
 
-// Simple markdown-like rendering
 function renderContent(text: string) {
-  // Remove NAV tags from display
   const cleaned = text.replace(/\[NAV:[^\]]+\]/g, "").trim();
   return cleaned.split("\n").map((line, i) => {
-    // Bold
     let html = line.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
-    // Italic
     html = html.replace(/\*(.+?)\*/g, "<em>$1</em>");
-    // Inline code
     html = html.replace(/`(.+?)`/g, '<code class="bg-muted px-1 rounded text-xs">$1</code>');
-    // Bullet points
     if (html.startsWith("- ") || html.startsWith("• ")) {
       html = `<span class="ml-2">• ${html.slice(2)}</span>`;
     }
-    // Numbered list
     const numMatch = html.match(/^(\d+)\.\s/);
     if (numMatch) {
       html = `<span class="ml-2">${html}</span>`;
@@ -67,6 +60,13 @@ function getGreeting(pathname: string, name: string) {
   return `Hi ${first}! 😊 I'm Buddy, your study companion. Ask me anything!`;
 }
 
+function getNudgeMessage(pathname: string) {
+  if (pathname.startsWith("/student/textbook/")) return "Need help with this chapter? 📖";
+  if (pathname === "/student/assignments") return "Stuck on an assignment? 📝";
+  if (pathname === "/student") return "Hey! Need help? 👋";
+  return "I'm here if you need help! 💡";
+}
+
 const QUICK_ACTIONS = [
   { label: "Explain this topic", icon: Lightbulb, prompt: "Can you explain what I'm currently studying in simple terms?" },
   { label: "Quiz me", icon: Sparkles, prompt: "Give me a quick quiz on what I'm studying right now." },
@@ -81,11 +81,43 @@ const StudyCompanion = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [hasGreeted, setHasGreeted] = useState(false);
+  const [showNudge, setShowNudge] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { user, fullName } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Auto-open on first ever visit
+  useEffect(() => {
+    if (!user) return;
+    const hasOpened = localStorage.getItem("buddy_has_opened");
+    if (!hasOpened) {
+      // Small delay so page renders first
+      const t = setTimeout(() => {
+        setIsOpen(true);
+        localStorage.setItem("buddy_has_opened", "true");
+      }, 1500);
+      return () => clearTimeout(t);
+    }
+  }, [user]);
+
+  // Idle nudge: show badge after 30s on a page with no interaction
+  useEffect(() => {
+    if (isOpen) {
+      setShowNudge(false);
+      return;
+    }
+    // Reset idle timer on route change
+    setShowNudge(false);
+    idleTimerRef.current = setTimeout(() => {
+      setShowNudge(true);
+    }, 30000);
+    return () => {
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    };
+  }, [isOpen, location.pathname]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -108,7 +140,6 @@ const StudyCompanion = () => {
       const greetMsg: ChatMessage = { role: "assistant", content: greeting };
       setMessages([greetMsg]);
       setHasGreeted(true);
-      // Persist greeting
       persistMessage(greetMsg, sessionId);
     }
   }, [isOpen, hasGreeted, sessionId, messages.length]);
@@ -116,7 +147,6 @@ const StudyCompanion = () => {
   const loadOrCreateSession = async () => {
     if (!user) return;
     try {
-      // Load most recent session
       const { data: sessions } = await supabase
         .from("chat_sessions")
         .select("id")
@@ -127,7 +157,6 @@ const StudyCompanion = () => {
       if (sessions && sessions.length > 0) {
         const sid = sessions[0].id;
         setSessionId(sid);
-        // Load messages
         const { data: msgs } = await supabase
           .from("chat_messages")
           .select("id, role, content")
@@ -140,7 +169,6 @@ const StudyCompanion = () => {
           setHasGreeted(true);
         }
       } else {
-        // Create new session
         const { data } = await supabase
           .from("chat_sessions")
           .insert({ user_id: user.id, title: "Study Chat" })
@@ -164,7 +192,6 @@ const StudyCompanion = () => {
         content: msg.content,
         context: getPageContext(location.pathname),
       });
-      // Update session timestamp
       await supabase.from("chat_sessions").update({ updated_at: new Date().toISOString() }).eq("id", sid);
     } catch (e) {
       console.error("Failed to persist message:", e);
@@ -187,10 +214,8 @@ const StudyCompanion = () => {
     setInput("");
     setIsLoading(true);
 
-    // Persist user message
     persistMessage(userMsg, sessionId);
 
-    // Build message history for API (last 20 messages for context window)
     const history = [...messages, userMsg].slice(-20).map((m) => ({
       role: m.role,
       content: m.content,
@@ -265,7 +290,6 @@ const StudyCompanion = () => {
         }
       }
 
-      // Final flush
       if (buffer.trim()) {
         for (let raw of buffer.split("\n")) {
           if (!raw) continue;
@@ -284,10 +308,8 @@ const StudyCompanion = () => {
         }
       }
 
-      // Handle navigation
       handleNavigation(assistantContent);
 
-      // Persist assistant message
       if (assistantContent) {
         persistMessage({ role: "assistant", content: assistantContent }, sessionId);
       }
@@ -325,15 +347,27 @@ const StudyCompanion = () => {
 
   return (
     <>
-      {/* Floating Button */}
+      {/* Floating Button with nudge */}
       {!isOpen && (
-        <button
-          onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-lg hover:shadow-xl transition-all hover:scale-105 flex items-center justify-center animate-pulse"
-          aria-label="Open Study Companion"
-        >
-          <MessageCircle className="h-6 w-6" />
-        </button>
+        <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2">
+          {/* Nudge tooltip */}
+          {showNudge && (
+            <div className="animate-fade-in bg-primary text-primary-foreground text-xs font-medium px-3 py-2 rounded-xl rounded-br-sm shadow-lg max-w-[200px]">
+              {getNudgeMessage(location.pathname)}
+            </div>
+          )}
+          <button
+            onClick={() => setIsOpen(true)}
+            className="relative h-14 w-14 rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-lg hover:shadow-xl transition-all hover:scale-105 flex items-center justify-center animate-bounce"
+            style={{ animationDuration: "2s", animationIterationCount: 3 }}
+            aria-label="Open Study Companion"
+          >
+            <MessageCircle className="h-6 w-6" />
+            {showNudge && (
+              <span className="absolute -top-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-destructive border-2 border-background" />
+            )}
+          </button>
+        </div>
       )}
 
       {/* Chat Panel */}
@@ -386,7 +420,7 @@ const StudyCompanion = () => {
             </div>
           </ScrollArea>
 
-          {/* Quick Actions - show only when no messages or just greeting */}
+          {/* Quick Actions */}
           {messages.length <= 1 && (
             <div className="px-3 pb-2 flex flex-wrap gap-1.5">
               {QUICK_ACTIONS.map((action) => (
@@ -403,13 +437,9 @@ const StudyCompanion = () => {
             </div>
           )}
 
-          {/* Input */}
+          {/* Input - voice button is now larger and next to send */}
           <div className="px-3 pb-3 pt-1 border-t border-border">
             <div className="flex items-end gap-1.5 bg-muted/50 rounded-xl px-2 py-1.5">
-              <CompanionVoiceInput
-                onTranscript={(text) => sendMessage(text)}
-                disabled={isLoading}
-              />
               <textarea
                 ref={inputRef}
                 value={input}
@@ -420,10 +450,15 @@ const StudyCompanion = () => {
                 className="flex-1 bg-transparent border-none outline-none resize-none text-sm py-1.5 text-foreground placeholder:text-muted-foreground max-h-20"
                 disabled={isLoading}
               />
+              <CompanionVoiceInput
+                onTranscript={(text) => sendMessage(text)}
+                disabled={isLoading}
+                showLabel={!input.trim() && messages.length <= 1}
+              />
               <Button
                 size="icon"
                 variant="ghost"
-                className="h-8 w-8 shrink-0"
+                className="h-9 w-9 shrink-0"
                 onClick={() => sendMessage(input)}
                 disabled={!input.trim() || isLoading}
               >
