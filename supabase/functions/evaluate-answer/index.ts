@@ -66,6 +66,30 @@ serve(async (req) => {
 
     if (!studentText && answer.file_url) {
       try {
+        // The file_url is a storage path, not a full URL — generate a signed URL first
+        let imageUrl = answer.file_url;
+        if (!imageUrl.startsWith("http")) {
+          const { data: signedData, error: signErr } = await supabaseAdmin.storage
+            .from("answer-files")
+            .createSignedUrl(imageUrl, 3600);
+          if (signErr || !signedData?.signedUrl) {
+            console.error("Failed to create signed URL:", signErr);
+            await supabaseAdmin
+              .from("student_answers")
+              .update({
+                processing_status: "failed",
+                processing_error: "Could not access uploaded file",
+                retry_count: (answer.retry_count || 0) + 1,
+              })
+              .eq("id", answer_id);
+            return new Response(JSON.stringify({ error: "File access failed" }), {
+              status: 422,
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+          }
+          imageUrl = signedData.signedUrl;
+        }
+
         // Use AI to describe/extract text from image
         const ocrResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
           method: "POST",
@@ -84,7 +108,7 @@ serve(async (req) => {
                 role: "user",
                 content: [
                   { type: "text", text: "Extract all text from this student answer sheet:" },
-                  { type: "image_url", image_url: { url: answer.file_url } },
+                  { type: "image_url", image_url: { url: imageUrl } },
                 ],
               },
             ],
