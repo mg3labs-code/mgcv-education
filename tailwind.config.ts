@@ -110,6 +110,18 @@ export default {
           from: { width: "0%" },
           to: { width: "var(--progress-width)" },
         },
+        "waveBar1": {
+          "0%, 100%": { height: "6px" },
+          "50%": { height: "14px" },
+        },
+        "waveBar2": {
+          "0%, 100%": { height: "10px" },
+          "50%": { height: "6px" },
+        },
+        "waveBar3": {
+          "0%, 100%": { height: "8px" },
+          "50%": { height: "14px" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
