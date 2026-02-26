@@ -1,36 +1,53 @@
 
 
-# Make Buddy Auto-Open and Voice-First
+# Upgrade Buddy to Streaming ElevenLabs TTS
 
-## Issues Found
-1. **Not automatic**: The chatbot requires clicking the floating button to open. It should auto-open on first visit to greet the student proactively.
-2. **Voice not prominent**: The mic button is small and placed to the left of the text input, easy to miss. It should be more visible and encouraged.
+## Problem
+The current browser `speechSynthesis` API produces robotic, choppy speech. You want natural, continuous streaming voice like ElevenLabs, ChatGPT, Google AI Studio, or Wispr.
+
+## Solution
+Replace browser speechSynthesis with **ElevenLabs streaming TTS** via a backend function. This streams audio chunks back to the client as sentences arrive from the AI, giving a smooth, natural voice experience.
+
+## How It Will Work
+
+1. As AI text streams in sentence-by-sentence, each complete sentence is sent to ElevenLabs streaming TTS endpoint
+2. Audio chunks stream back and are queued for seamless playback using Web Audio API
+3. Result: Buddy starts speaking naturally within ~0.5s of each sentence completing, with no gaps between sentences
+
+## Requirement
+You will need to provide an **ElevenLabs API key**. You can get a free one at [elevenlabs.io](https://elevenlabs.io) (includes free usage tier). I will prompt you for it during implementation.
 
 ## Changes
 
-### 1. Auto-open on first student visit (`StudyCompanion.tsx`)
-- Auto-open the chat panel the first time a student lands on any page (use `localStorage` flag `buddy_has_opened`)
-- On subsequent visits, keep it closed but show a greeting tooltip/badge on the floating button
-- Add a small bounce animation + "Hey! Need help?" tooltip on the floating button when closed
+### 1. New backend function: `elevenlabs-tts-stream`
+- Accepts text + voice ID
+- Calls ElevenLabs streaming TTS API (`/v1/text-to-speech/{voiceId}/stream`)
+- Returns streaming audio (MP3 chunks) to the client
+- Uses `eleven_turbo_v2_5` model for lowest latency
 
-### 2. Make voice input more prominent (`StudyCompanion.tsx`)
-- Move the mic button to be larger and more visible next to the send button
-- Add a pulsing "Tap to speak" hint on the mic button when the chat first opens and the input is empty
-- Show voice recording timer more visibly inside the input area
+### 2. Update `StudyCompanion.tsx` - Replace `StreamingSpeaker` class
+- Remove all `window.speechSynthesis` code
+- New `StreamingSpeaker` class that:
+  - Buffers incoming text deltas into complete sentences (same as now)
+  - For each sentence, fetches streaming audio from the edge function
+  - Uses Web Audio API (`AudioContext`) to decode and queue audio chunks for gapless playback
+  - Manages an audio queue so sentences play back-to-back seamlessly
+- Keep the same TTS toggle, speaking state, and waveform animation
 
-### 3. Proactive nudge after idle (`StudyCompanion.tsx`)
-- After 30 seconds on a page with no interaction, show a subtle notification badge on the floating button with a contextual message like "Need help with Real Numbers?"
+### 3. Voice selection
+- Default voice: "Sarah" (EXAVITQu4vr4xnSDxMaL) - natural, warm female voice that fits Buddy's personality
+- Can be changed later to any ElevenLabs voice
 
 ## Technical Details
 
-### File: `src/components/student/StudyCompanion.tsx`
-- Add `useEffect` to auto-open on first visit using `localStorage.getItem("buddy_has_opened")`
-- Add a notification dot/tooltip on the floating button when closed
-- Reorder the input area: text input first, then voice button (larger, with label), then send
-- Add idle timer that shows a badge after 30s
+### Audio playback pipeline
+```text
+AI stream --> sentence buffer --> ElevenLabs TTS (streaming) --> AudioContext decode --> queue --> play
+```
 
-### File: `src/components/student/CompanionVoiceInput.tsx`
-- Increase button size from `h-8 w-8` to `h-9 w-9`
-- Add a "Speak" label next to the mic icon when not recording
-- Show seconds timer more prominently during recording
+Each sentence is fetched as a complete MP3 blob, decoded, and queued. The next sentence starts playing immediately when the current one ends, creating continuous speech.
+
+### Files changed
+- `supabase/functions/elevenlabs-tts-stream/index.ts` (new)
+- `src/components/student/StudyCompanion.tsx` (replace StreamingSpeaker)
 
