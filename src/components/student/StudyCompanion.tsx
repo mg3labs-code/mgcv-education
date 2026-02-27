@@ -23,35 +23,29 @@ function cleanForSpeech(text: string) {
     .trim();
 }
 
-function getPreferredVoice() {
-  const voices = window.speechSynthesis.getVoices();
-  return voices.find(
-    (v) => v.lang.startsWith("en") && (v.name.includes("Google") || v.name.includes("Samantha") || v.name.includes("Natural"))
-  ) || voices.find((v) => v.lang.startsWith("en")) || null;
-}
+const TTS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-tts-stream`;
 
-/** Continuous streaming TTS: queues sentences and speaks them as they arrive */
+/** ElevenLabs streaming TTS: queues sentences, fetches audio, plays gaplessly via Web Audio API */
 class StreamingSpeaker {
   private queue: string[] = [];
-  private speaking = false;
+  private processing = false;
   private aborted = false;
   private buffer = "";
   private onSpeakingChange: (v: boolean) => void;
-  // Split on sentence-ending punctuation followed by space/newline, or double newline
+  private audioContext: AudioContext | null = null;
+  private scheduledEnd = 0;
+  private activeSourceNodes: AudioBufferSourceNode[] = [];
   private sentenceRe = /(?<=[.!?…])\s+|(?:\n\n)/;
 
   constructor(onSpeakingChange: (v: boolean) => void) {
     this.onSpeakingChange = onSpeakingChange;
   }
 
-  /** Feed new text delta from the stream */
   feed(delta: string) {
     if (this.aborted) return;
     this.buffer += delta;
-    // Extract complete sentences
-    let parts = this.buffer.split(this.sentenceRe);
+    const parts = this.buffer.split(this.sentenceRe);
     if (parts.length > 1) {
-      // Keep the last (potentially incomplete) part in buffer
       this.buffer = parts.pop()!;
       for (const sentence of parts) {
         const clean = cleanForSpeech(sentence);
@@ -61,7 +55,6 @@ class StreamingSpeaker {
     }
   }
 
-  /** Call when the stream is done to flush remaining text */
   flush() {
     if (this.aborted) return;
     const remaining = cleanForSpeech(this.buffer);
@@ -76,38 +69,78 @@ class StreamingSpeaker {
     this.aborted = true;
     this.queue = [];
     this.buffer = "";
-    if ("speechSynthesis" in window) window.speechSynthesis.cancel();
-    this.speaking = false;
+    for (const node of this.activeSourceNodes) {
+      try { node.stop(); } catch {}
+    }
+    this.activeSourceNodes = [];
+    if (this.audioContext) {
+      this.audioContext.close().catch(() => {});
+      this.audioContext = null;
+    }
+    this.processing = false;
     this.onSpeakingChange(false);
   }
 
-  private processQueue() {
-    if (this.speaking || this.aborted || this.queue.length === 0) return;
-    this.speaking = true;
+  private async processQueue() {
+    if (this.processing || this.aborted) return;
+    this.processing = true;
     this.onSpeakingChange(true);
-    this.speakNext();
-  }
 
-  private speakNext() {
-    if (this.aborted || this.queue.length === 0) {
-      this.speaking = false;
-      this.onSpeakingChange(false);
-      return;
+    if (!this.audioContext) {
+      this.audioContext = new AudioContext();
+      this.scheduledEnd = this.audioContext.currentTime;
     }
-    const text = this.queue.shift()!;
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 1.05;
-    utterance.pitch = 1.1;
-    const voice = getPreferredVoice();
-    if (voice) utterance.voice = voice;
-    utterance.onend = () => this.speakNext();
-    utterance.onerror = () => this.speakNext();
-    window.speechSynthesis.speak(utterance);
+
+    while (this.queue.length > 0 && !this.aborted) {
+      const text = this.queue.shift()!;
+      try {
+        const resp = await fetch(TTS_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ text }),
+        });
+
+        if (!resp.ok || this.aborted) continue;
+
+        const arrayBuffer = await resp.arrayBuffer();
+        if (this.aborted || !this.audioContext) break;
+
+        const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+        if (this.aborted || !this.audioContext) break;
+
+        const source = this.audioContext.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(this.audioContext.destination);
+        this.activeSourceNodes.push(source);
+
+        // Schedule gaplessly after previous audio ends
+        const startTime = Math.max(this.audioContext.currentTime, this.scheduledEnd);
+        source.start(startTime);
+        this.scheduledEnd = startTime + audioBuffer.duration;
+
+        source.onended = () => {
+          this.activeSourceNodes = this.activeSourceNodes.filter((n) => n !== source);
+          if (this.activeSourceNodes.length === 0 && this.queue.length === 0) {
+            this.onSpeakingChange(false);
+          }
+        };
+      } catch (e) {
+        console.error("TTS playback error:", e);
+      }
+    }
+
+    this.processing = false;
+    if (this.queue.length === 0 && this.activeSourceNodes.length === 0) {
+      this.onSpeakingChange(false);
+    }
   }
 }
 
 function stopSpeaking() {
-  if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+  // No-op: abort() on speaker instance handles cleanup
 }
 
 interface ChatMessage {
@@ -193,20 +226,18 @@ const StudyCompanion = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Preload voices
+  const speakerRef = useRef<StreamingSpeaker | null>(null);
+
+  // Cleanup on unmount
   useEffect(() => {
-    if ("speechSynthesis" in window) {
-      window.speechSynthesis.getVoices();
-      window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
-    }
-    return () => stopSpeaking();
+    return () => { speakerRef.current?.abort(); };
   }, []);
 
   const toggleTts = () => {
     const next = !ttsEnabled;
     setTtsEnabled(next);
     localStorage.setItem("buddy_tts", String(next));
-    if (!next) { stopSpeaking(); setIsSpeaking(false); }
+    if (!next) { speakerRef.current?.abort(); speakerRef.current = null; setIsSpeaking(false); }
   };
 
   // Auto-open on first ever visit
@@ -343,9 +374,9 @@ const StudyCompanion = () => {
 
     let assistantContent = "";
     // Create a streaming speaker if TTS enabled
-    const speaker = ttsEnabled && "speechSynthesis" in window
-      ? new StreamingSpeaker(setIsSpeaking)
-      : null;
+    speakerRef.current?.abort();
+    const speaker = ttsEnabled ? new StreamingSpeaker(setIsSpeaking) : null;
+    speakerRef.current = speaker;
 
     try {
       const resp = await fetch(STUDY_COMPANION_URL, {
@@ -536,7 +567,7 @@ const StudyCompanion = () => {
               <Button size="icon" variant="ghost" className="h-7 w-7" onClick={startNewChat} title="New Chat">
                 <Plus className="h-3.5 w-3.5" />
               </Button>
-              <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { stopSpeaking(); setIsOpen(false); }}>
+              <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { speakerRef.current?.abort(); setIsOpen(false); }}>
                 <X className="h-3.5 w-3.5" />
               </Button>
             </div>
