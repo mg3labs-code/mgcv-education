@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Mic, MicOff, Send, User, Bot, Sparkles, BookOpen, Brain, Zap, Target, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface Message {
   type: 'bot' | 'user';
@@ -179,6 +180,8 @@ const episodeTourSteps = [
   }
 ];
 
+const SpeechRecognitionAPI = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
 const StudentOnboarding = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -187,12 +190,14 @@ const StudentOnboarding = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentInput, setCurrentInput] = useState('');
   const [isListening, setIsListening] = useState(false);
+  const [interimText, setInterimText] = useState('');
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [studentData, setStudentData] = useState<Record<string, unknown>>({});
   const [isTyping, setIsTyping] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [ratingValues, setRatingValues] = useState<Record<string, number>>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -205,9 +210,18 @@ const StudentOnboarding = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase]);
 
+  // Cleanup recognition on unmount
+  useEffect(() => {
+    return () => {
+      if (recognitionRef.current) {
+        try { recognitionRef.current.stop(); } catch {}
+        recognitionRef.current = null;
+      }
+    };
+  }, []);
+
   const markOnboardingComplete = async () => {
     if (!user) return;
-    // Store completion in localStorage as fallback
     localStorage.setItem(`onboarding_complete_${user.id}`, 'true');
   };
 
@@ -260,27 +274,86 @@ const StudentOnboarding = () => {
     if (currentInput.trim()) {
       handleAnswer(currentInput.trim());
       setCurrentInput('');
+      // Stop listening if active
+      stopListening();
     }
   };
 
-  const handleVoiceToggle = () => {
-    if ('webkitSpeechRecognition' in window) {
-      const recognition = new (window as any).webkitSpeechRecognition();
-      recognition.continuous = false;
-      recognition.interimResults = false;
+  const stopListening = useCallback(() => {
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop(); } catch {}
+    }
+    setIsListening(false);
+    setInterimText('');
+  }, []);
 
-      if (!isListening) {
-        setIsListening(true);
-        recognition.start();
-        recognition.onresult = (event: any) => {
-          setCurrentInput(event.results[0][0].transcript);
-          setIsListening(false);
-        };
-        recognition.onerror = () => setIsListening(false);
-        recognition.onend = () => setIsListening(false);
+  const handleVoiceToggle = useCallback(() => {
+    if (!SpeechRecognitionAPI) {
+      toast.error("Your browser doesn't support voice recognition.");
+      return;
+    }
+
+    if (isListening) {
+      // Stop and submit what we have
+      stopListening();
+      if (currentInput.trim()) {
+        handleTextSubmit();
       }
+      return;
     }
-  };
+
+    // Stop any existing recognition
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop(); } catch {}
+      recognitionRef.current = null;
+    }
+
+    const recognition = new SpeechRecognitionAPI();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = "en-IN";
+    recognitionRef.current = recognition;
+
+    recognition.onresult = (event: any) => {
+      let interim = "";
+      let finalText = "";
+      for (let i = 0; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalText += transcript;
+        } else {
+          interim += transcript;
+        }
+      }
+      
+      if (finalText) {
+        setCurrentInput(finalText.trim());
+        setInterimText('');
+      } else {
+        setInterimText(interim);
+      }
+    };
+
+    recognition.onerror = (event: any) => {
+      if (event.error !== "no-speech" && event.error !== "aborted") {
+        console.error("Speech recognition error:", event.error);
+        toast.error("Voice recognition error. Please try again.");
+      }
+      setIsListening(false);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+      setInterimText('');
+    };
+
+    try {
+      recognition.start();
+      setIsListening(true);
+    } catch {
+      toast.error("Could not start voice recognition.");
+    }
+  }, [isListening, currentInput, stopListening]);
 
   const handleRatingsSubmit = () => {
     const question = questions[currentQuestion];
@@ -437,33 +510,42 @@ const StudentOnboarding = () => {
     }
 
     return (
-      <div className="flex items-center gap-2 p-4 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-lg">
-        <input
-          type="text"
-          value={currentInput}
-          onChange={(e) => setCurrentInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleTextSubmit()}
-          placeholder={question.placeholder || "Type your answer..."}
-          className="flex-1 px-4 py-3 border-2 border-orange-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition-all duration-300"
-        />
-        {question.type === 'voice_or_text' && (
-          <button
-            onClick={handleVoiceToggle}
-            className={`p-3 rounded-2xl transition-all duration-300 hover:scale-110 active:scale-95 ${
-              isListening
-                ? 'bg-red-500 text-white shadow-lg animate-pulse'
-                : 'bg-orange-400 hover:bg-orange-500 text-white shadow-md'
-            }`}
-          >
-            {isListening ? <MicOff size={20} /> : <Mic size={20} />}
-          </button>
+      <div className="flex flex-col gap-2 p-4 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-lg">
+        {/* Interim transcript preview */}
+        {interimText && (
+          <div className="text-xs text-orange-500 italic px-2 animate-pulse">
+            🎤 {interimText}...
+          </div>
         )}
-        <button
-          onClick={handleTextSubmit}
-          className="px-5 py-3 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white rounded-2xl transition-all duration-300 shadow-md hover:shadow-lg hover:scale-105 active:scale-95 font-semibold"
-        >
-          <Send size={18} />
-        </button>
+        <div className="flex items-center gap-2">
+          <input
+            type="text"
+            value={currentInput}
+            onChange={(e) => setCurrentInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleTextSubmit()}
+            placeholder={isListening ? "Listening... speak now" : (question.placeholder || "Type your answer...")}
+            className="flex-1 px-4 py-3 border-2 border-orange-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition-all duration-300"
+          />
+          {question.type === 'voice_or_text' && (
+            <button
+              onClick={handleVoiceToggle}
+              className={`p-3 rounded-2xl transition-all duration-300 hover:scale-110 active:scale-95 ${
+                isListening
+                  ? 'bg-red-500 text-white shadow-lg shadow-red-500/30 animate-pulse'
+                  : 'bg-orange-400 hover:bg-orange-500 text-white shadow-md'
+              }`}
+              title={isListening ? "Stop listening" : "Start voice input"}
+            >
+              {isListening ? <MicOff size={20} /> : <Mic size={20} />}
+            </button>
+          )}
+          <button
+            onClick={handleTextSubmit}
+            className="px-5 py-3 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white rounded-2xl transition-all duration-300 shadow-md hover:shadow-lg hover:scale-105 active:scale-95 font-semibold"
+          >
+            <Send size={18} />
+          </button>
+        </div>
       </div>
     );
   };
