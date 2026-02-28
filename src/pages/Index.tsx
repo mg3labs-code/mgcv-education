@@ -8,10 +8,15 @@ type LoginType = "student" | "teacher" | "";
 type ModalType = "login" | "about" | "contact" | "";
 type AuthMode = "login" | "signup";
 
+const isInIframe = () => {
+  try { return window.self !== window.top; } catch { return true; }
+};
+
 const Index = () => {
   const navigate = useNavigate();
   const { user, role, loading, signIn, signUp } = useAuth();
   const { toast } = useToast();
+  const inIframe = isInIframe();
   const [modalType, setModalType] = useState<ModalType>("");
   const [loginType, setLoginType] = useState<LoginType>("");
   const [authMode, setAuthMode] = useState<AuthMode>("login");
@@ -108,8 +113,17 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-[#0f1419] text-white overflow-x-hidden">
+      {/* Iframe Banner */}
+      {inIframe && (
+        <div className="fixed top-0 left-0 right-0 z-[1100] bg-teal text-white text-center py-2 text-sm">
+          For the best experience,{" "}
+          <a href={window.location.href} target="_blank" rel="noopener noreferrer" className="underline font-semibold">
+            open in a new tab
+          </a>
+        </div>
+      )}
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-[1000] bg-[#0f1419]/95 backdrop-blur-[20px] py-5 border-b border-white/10">
+      <header className="fixed top-0 left-0 right-0 z-[1000] bg-[#0f1419]/95 backdrop-blur-[20px] py-5 border-b border-white/10" style={{ top: inIframe ? '36px' : 0 }}>
         <div className="max-w-[1400px] mx-auto flex justify-between items-center px-10">
           <div className="text-[32px] font-light tracking-wide">EduTech</div>
           <nav className="flex list-none gap-12 items-center">

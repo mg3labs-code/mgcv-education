@@ -6,7 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
-import AuthPage from "./pages/AuthPage";
+
 import StudentDashboard from "./pages/StudentDashboard";
 import LearningEpisode from "./pages/LearningEpisode";
 import TeacherDashboard from "./pages/TeacherDashboard";
@@ -41,7 +41,7 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<AuthPage />} />
+            
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/student" element={<ProtectedRoute><StudentDashboard /></ProtectedRoute>} />
             <Route path="/student/episode/:id" element={<ProtectedRoute><LearningEpisode /></ProtectedRoute>} />
