@@ -1,74 +1,91 @@
 
 
-## Fix Desktop/Laptop Layout and Show Detailed Errors
+## Comprehensive Voice System Overhaul: Smooth, Interactive Student Experience
 
-### Root Causes Found
+### Current Issues Found
 
-1. **TopNavbar has NO responsive design** -- all 7-8 navigation buttons are in a single horizontal row with no wrapping, overflow handling, or hamburger menu. On laptops and tablets, buttons overflow off-screen.
-
-2. **StudentDashboard uses fixed-width sidebar** (`w-[350px]`) in a flex layout with no responsive breakpoints. On smaller laptops, the sidebar and main content fight for space.
-
-3. **Error messages are generic** -- the login form only shows `err.message` (e.g., "Failed to fetch") with no error codes, no debugging info, and no actionable guidance.
+1. **ElevenLabs TTS quota exhausted** -- Only 3 credits remain out of 2000. Every TTS call fails with `quota_exceeded`. This is why voice output is completely broken right now.
+2. **Voice input (CompanionVoiceInput)** uses MediaRecorder + server-side transcription via Gemini, adding 3-5 second latency per input.
+3. **Onboarding voice** uses `webkitSpeechRecognition` in a non-continuous, fire-and-forget pattern that breaks after one use.
+4. **StudyCompanion voice mode** has race conditions: recognition restarts overlap with speaking state, causing echo loops and dropped transcripts.
+5. **No fallback TTS** -- when ElevenLabs fails, there's no fallback, so Buddy goes completely silent with no error shown to the user.
+6. **Navigation from voice** works but has no audio/visual confirmation.
 
 ---
 
-### Plan
+### Plan (5 Tasks)
 
-**1. Make TopNavbar responsive**
-- Add a hamburger menu toggle for mobile/tablet (below `lg` breakpoint)
-- Hide the horizontal button row on smaller screens, show it in a dropdown/sheet
-- Keep the logo and avatar/logout always visible
-- Ensure teacher nav buttons (Dashboard, Schedule, Metrics, Message Bar) and student nav buttons all fit properly
+**Task 1: Fix TTS with Fallback to Browser Speech**
 
-**2. Make StudentDashboard responsive**
-- Change the fixed `w-[350px]` sidebar to stack vertically on mobile/tablet (`flex-col` on small screens, `flex-row` on `lg+`)
-- Use `lg:w-[350px] w-full` so the sidebar takes full width on smaller screens
-- Ensure the schedule grid cards don't overflow
+Since ElevenLabs quota is exhausted, add a graceful fallback:
+- In `StreamingSpeaker`, catch TTS API errors (401/quota) and automatically switch to browser `SpeechSynthesis` API
+- Show a small toast once: "Using built-in voice (premium voice unavailable)"
+- Browser TTS is free, instant, and works on all devices
+- When ElevenLabs quota resets or is topped up, it auto-recovers
 
-**3. Make TeacherDashboard responsive**
-- The grid already uses `auto-fit` which is decent, but ensure padding and font sizes scale properly on smaller viewports
+**Task 2: Fix Voice Input Bugs in StudyCompanion**
 
-**4. Show detailed errors with codes on screen**
-- In the login form (`Index.tsx`), catch errors and display:
-  - The error message
-  - The error code (if available from the backend response)
-  - A human-readable reason/suggestion (e.g., "Check your email and password", "Network error - try opening in a new tab")
-- Show the error inline below the submit button (not just as a toast) so users can see it clearly
-- Add a small debug panel that appears when errors occur, showing the technical details
+- Fix the race condition in voice mode: stop recognition BEFORE sending message, restart AFTER TTS completes
+- Add proper cleanup when switching between voice mode and text mode
+- Fix `onend` handler that causes duplicate restarts
+- Add a 1-second debounce after speech ends before sending to prevent partial transcript submission
+- Pause recognition while loading AND speaking (currently has timing gaps)
 
-**5. Improve AuthContext error handling**
-- In `signIn` and `signUp`, pass through the full error object (including `status`, `code`, `message`) so the UI can display meaningful details
+**Task 3: Fix Onboarding Voice Input**
+
+- Replace the broken one-shot `webkitSpeechRecognition` with the same robust pattern used in StudyCompanion
+- Make the recognition instance persistent (stored in ref) instead of creating a new one each click
+- Add proper error handling and visual feedback (pulsing mic, "Listening..." text)
+- Clean up recognition on component unmount
+
+**Task 4: Add Smooth UI Feedback for Voice Interactions**
+
+- Add animated waveform visualization when Buddy is speaking (already partially exists, make it smoother)
+- Add a "tap to interrupt" feature: clicking while Buddy speaks stops TTS and starts listening
+- Show real-time transcript preview as user speaks (already exists for StudyCompanion, ensure it works reliably)
+- Add subtle sound effect or haptic feedback on mic activation
+- Add visual pulse animation on the Buddy floating button when voice mode is active
+
+**Task 5: Improve Error Handling and User Feedback**
+
+- Show inline errors in the companion chat when TTS/transcription fails instead of just toasts
+- Add retry button for failed messages
+- Show connection status indicator (online/offline/degraded)
+- When ElevenLabs quota is exceeded, inform user clearly: "Voice output temporarily using built-in voice"
 
 ---
 
 ### Technical Details
 
 ```text
-TopNavbar.tsx
-  - Wrap nav buttons in a container hidden below lg: "hidden lg:flex"
-  - Add hamburger button visible below lg: "lg:hidden"
-  - Add mobile dropdown with all nav items
-  - Keep avatar + logout always visible
+StudyCompanion.tsx (StreamingSpeaker class):
+  - processQueue(): catch 401/quota errors from TTS_URL
+  - Fallback: use window.speechSynthesis.speak() with best available voice
+  - Add error count tracking - after 2 failures, switch to fallback permanently for session
 
-StudentDashboard.tsx
-  Line 166: Change "flex gap-[30px]" to "flex flex-col lg:flex-row gap-6 lg:gap-[30px]"
-  Line 168: Change "w-[350px] flex-shrink-0" to "w-full lg:w-[350px] lg:flex-shrink-0"
+StudyCompanion.tsx (voice mode):
+  - startListening(): add guard against double-start
+  - sendMessage(): stop recognition first, set isLoading, resume after TTS ends
+  - useEffect for isSpeaking: increase delay from 500ms to 800ms before restarting mic
+  - Add finalTranscript debounce: collect for 1s before sending
 
-Index.tsx (login form)
-  - Add inline error display below submit button
-  - Show error code + message + suggestion
-  - Parse different error types:
-    - "Failed to fetch" -> show network/iframe guidance
-    - "Invalid login credentials" -> show wrong email/password
-    - Other errors -> show raw message + code
+CompanionVoiceInput.tsx:
+  - No changes needed (works correctly for tap-to-record pattern)
 
-AuthContext.tsx
-  - Enhance error throwing to include status codes
+StudentOnboarding.tsx:
+  - handleVoiceToggle(): store recognition in ref, reuse across clicks
+  - Add proper onend cleanup
+  - Show interim results while speaking
+
+Files to change:
+  - src/components/student/StudyCompanion.tsx
+  - src/pages/StudentOnboarding.tsx
 ```
 
-### Files to Change
-- `src/components/TopNavbar.tsx` -- add responsive hamburger menu
-- `src/pages/StudentDashboard.tsx` -- responsive sidebar layout
-- `src/pages/Index.tsx` -- inline error display with codes and reasons
-- `src/contexts/AuthContext.tsx` -- pass full error details
+### What This Achieves
+- Voice always works (ElevenLabs when available, browser TTS as fallback)
+- No more race conditions or echo loops in voice mode
+- Smooth, responsive mic interactions across all pages
+- Students get clear feedback on what's happening at every step
+- Onboarding voice input actually works reliably
 
