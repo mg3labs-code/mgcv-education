@@ -1,53 +1,52 @@
 
 
-# Upgrade Buddy to Streaming ElevenLabs TTS
+## Fix Authentication Flow
 
-## Problem
-The current browser `speechSynthesis` API produces robotic, choppy speech. You want natural, continuous streaming voice like ElevenLabs, ChatGPT, Google AI Studio, or Wispr.
+### Problem 1: Wrong Sign-In Page
+The `ProtectedRoute` component redirects unauthenticated users to `/auth` (a separate page that was added for the retry feature). But your real sign-in experience is on the landing page (`/`) with the dark-themed modal login. Users should never see the `/auth` page.
 
-## Solution
-Replace browser speechSynthesis with **ElevenLabs streaming TTS** via a backend function. This streams audio chunks back to the client as sentences arrive from the AI, giving a smooth, natural voice experience.
+### Problem 2: "Failed to Fetch" in Preview
+The preview environment runs inside an iframe, which causes browsers to block cross-origin authentication requests. This is a known limitation of iframe-based previews -- not a code bug. The fix is to detect when the app runs in an iframe and prompt users to open in a new tab.
 
-## How It Will Work
+---
 
-1. As AI text streams in sentence-by-sentence, each complete sentence is sent to ElevenLabs streaming TTS endpoint
-2. Audio chunks stream back and are queued for seamless playback using Web Audio API
-3. Result: Buddy starts speaking naturally within ~0.5s of each sentence completing, with no gaps between sentences
+### Changes
 
-## Requirement
-You will need to provide an **ElevenLabs API key**. You can get a free one at [elevenlabs.io](https://elevenlabs.io) (includes free usage tier). I will prompt you for it during implementation.
+**1. Update `ProtectedRoute.tsx`**
+- Change the redirect from `/auth` to `/` so unauthenticated users land on the main page with the modal login.
 
-## Changes
+**2. Remove `/auth` route from `App.tsx`**
+- Remove the `AuthPage` import and route since it's not needed.
 
-### 1. New backend function: `elevenlabs-tts-stream`
-- Accepts text + voice ID
-- Calls ElevenLabs streaming TTS API (`/v1/text-to-speech/{voiceId}/stream`)
-- Returns streaming audio (MP3 chunks) to the client
-- Uses `eleven_turbo_v2_5` model for lowest latency
+**3. Delete `src/pages/AuthPage.tsx`**
+- This page is unused once the redirect points to `/`.
 
-### 2. Update `StudyCompanion.tsx` - Replace `StreamingSpeaker` class
-- Remove all `window.speechSynthesis` code
-- New `StreamingSpeaker` class that:
-  - Buffers incoming text deltas into complete sentences (same as now)
-  - For each sentence, fetches streaming audio from the edge function
-  - Uses Web Audio API (`AudioContext`) to decode and queue audio chunks for gapless playback
-  - Manages an audio queue so sentences play back-to-back seamlessly
-- Keep the same TTS toggle, speaking state, and waveform animation
+**4. Add iframe detection to `Index.tsx`**
+- Detect if the app is running inside an iframe.
+- If so, show a small banner or modify the login button to open the app in a new tab, which avoids the "Failed to fetch" issue entirely.
 
-### 3. Voice selection
-- Default voice: "Sarah" (EXAVITQu4vr4xnSDxMaL) - natural, warm female voice that fits Buddy's personality
-- Can be changed later to any ElevenLabs voice
+**5. Add iframe detection helper**
+- Create a small utility `isInIframe()` that checks `window.self !== window.top`.
 
-## Technical Details
+---
 
-### Audio playback pipeline
+### Technical Details
+
 ```text
-AI stream --> sentence buffer --> ElevenLabs TTS (streaming) --> AudioContext decode --> queue --> play
+ProtectedRoute.tsx
+  Line 19: Change <Navigate to="/auth" ...> --> <Navigate to="/" ...>
+
+App.tsx
+  Remove: import AuthPage
+  Remove: <Route path="/auth" element={<AuthPage />} />
+
+Index.tsx
+  Add: iframe check at top of component
+  Add: banner/link when in iframe saying "Open in new tab to sign in"
 ```
 
-Each sentence is fetched as a complete MP3 blob, decoded, and queued. The next sentence starts playing immediately when the current one ends, creating continuous speech.
-
-### Files changed
-- `supabase/functions/elevenlabs-tts-stream/index.ts` (new)
-- `src/components/student/StudyCompanion.tsx` (replace StreamingSpeaker)
+### Result
+- Users always see the dark-themed landing page for login
+- In iframe/preview: users see a prompt to open in a new tab, avoiding network errors
+- On the live published URL: login works normally with no changes needed
 
