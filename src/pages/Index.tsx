@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import ForgotPasswordModal from "@/components/ForgotPasswordModal";
 
 type LoginType = "student" | "teacher" | "";
 type ModalType = "login" | "about" | "contact" | "";
@@ -14,6 +15,7 @@ const Index = () => {
   const [modalType, setModalType] = useState<ModalType>("");
   const [loginType, setLoginType] = useState<LoginType>("");
   const [authMode, setAuthMode] = useState<AuthMode>("login");
+  const [showForgot, setShowForgot] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -39,6 +41,7 @@ const Index = () => {
     setModalType("");
     setLoginType("");
     setAuthMode("login");
+    setShowForgot(false);
     setEmail("");
     setPassword("");
     setFullName("");
@@ -200,77 +203,89 @@ const Index = () => {
             <h2 className="text-[2.5rem] mb-2 text-teal font-light">
               {loginType === "student" ? "Student Portal" : "Teacher Portal"}
             </h2>
-            <p className="text-white/80 mb-10 text-base">
-              {authMode === "login"
-                ? loginType === "student" ? "Access your learning dashboard" : "Manage your classroom"
-                : "Create your account"}
-            </p>
 
-            <form onSubmit={handleSubmit}>
-              {authMode === "signup" && (
-                <>
+            {showForgot ? (
+              <div className="mt-8">
+                <ForgotPasswordModal onBack={() => setShowForgot(false)} variant="glass" />
+              </div>
+            ) : (
+              <>
+                <p className="text-white/80 mb-10 text-base">
+                  {authMode === "login"
+                    ? loginType === "student" ? "Access your learning dashboard" : "Manage your classroom"
+                    : "Create your account"}
+                </p>
+
+                <form onSubmit={handleSubmit}>
+                  {authMode === "signup" && (
+                    <>
+                      <div className="mb-6">
+                        <input
+                          type="text"
+                          value={fullName}
+                          onChange={(e) => setFullName(e.target.value)}
+                          required
+                          placeholder="👤 Enter your full name"
+                          className="w-full py-[18px] px-6 border-none rounded-full bg-white/15 text-white text-base outline-none border-2 border-transparent transition-all placeholder:text-white/60 focus:bg-white/20 focus:border-teal focus:shadow-[0_0_20px_rgba(0,212,170,0.3)]"
+                        />
+                      </div>
+                      <div className="mb-6">
+                        <input
+                          type="text"
+                          value={className}
+                          onChange={(e) => setClassName(e.target.value)}
+                          placeholder="🏫 Enter your class (e.g. 9th CBSE)"
+                          className="w-full py-[18px] px-6 border-none rounded-full bg-white/15 text-white text-base outline-none border-2 border-transparent transition-all placeholder:text-white/60 focus:bg-white/20 focus:border-teal focus:shadow-[0_0_20px_rgba(0,212,170,0.3)]"
+                        />
+                      </div>
+                    </>
+                  )}
                   <div className="mb-6">
                     <input
-                      type="text"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                       required
-                      placeholder="👤 Enter your full name"
+                      placeholder="📧 Enter your email"
                       className="w-full py-[18px] px-6 border-none rounded-full bg-white/15 text-white text-base outline-none border-2 border-transparent transition-all placeholder:text-white/60 focus:bg-white/20 focus:border-teal focus:shadow-[0_0_20px_rgba(0,212,170,0.3)]"
                     />
                   </div>
                   <div className="mb-6">
                     <input
-                      type="text"
-                      value={className}
-                      onChange={(e) => setClassName(e.target.value)}
-                      placeholder="🏫 Enter your class (e.g. 9th CBSE)"
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      minLength={6}
+                      placeholder="🔒 Enter your password"
                       className="w-full py-[18px] px-6 border-none rounded-full bg-white/15 text-white text-base outline-none border-2 border-transparent transition-all placeholder:text-white/60 focus:bg-white/20 focus:border-teal focus:shadow-[0_0_20px_rgba(0,212,170,0.3)]"
                     />
                   </div>
-                </>
-              )}
-              <div className="mb-6">
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  placeholder="📧 Enter your email"
-                  className="w-full py-[18px] px-6 border-none rounded-full bg-white/15 text-white text-base outline-none border-2 border-transparent transition-all placeholder:text-white/60 focus:bg-white/20 focus:border-teal focus:shadow-[0_0_20px_rgba(0,212,170,0.3)]"
-                />
-              </div>
-              <div className="mb-6">
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength={6}
-                  placeholder="🔒 Enter your password"
-                  className="w-full py-[18px] px-6 border-none rounded-full bg-white/15 text-white text-base outline-none border-2 border-transparent transition-all placeholder:text-white/60 focus:bg-white/20 focus:border-teal focus:shadow-[0_0_20px_rgba(0,212,170,0.3)]"
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={submitting}
-                className="w-full py-[18px] border-none rounded-full bg-gradient-to-br from-teal to-teal-light text-white text-lg font-semibold cursor-pointer transition-all mt-5 hover:-translate-y-0.5 hover:shadow-[0_15px_35px_rgba(0,212,170,0.4)] disabled:opacity-50"
-              >
-                {submitting ? "⏳ Authenticating..." : authMode === "login" ? "🚀 Access Portal" : "🚀 Create Account"}
-              </button>
-            </form>
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="w-full py-[18px] border-none rounded-full bg-gradient-to-br from-teal to-teal-light text-white text-lg font-semibold cursor-pointer transition-all mt-5 hover:-translate-y-0.5 hover:shadow-[0_15px_35px_rgba(0,212,170,0.4)] disabled:opacity-50"
+                  >
+                    {submitting ? "⏳ Authenticating..." : authMode === "login" ? "🚀 Access Portal" : "🚀 Create Account"}
+                  </button>
+                </form>
 
-            <div className="flex justify-between mt-6">
-              <button className="text-white/70 text-sm transition-colors hover:text-teal bg-transparent border-none cursor-pointer">
-                Forgot Password?
-              </button>
-              <button
-                onClick={() => setAuthMode(authMode === "login" ? "signup" : "login")}
-                className="text-white/70 text-sm transition-colors hover:text-teal bg-transparent border-none cursor-pointer"
-              >
-                {authMode === "login" ? "Register Now" : "Sign In Instead"}
-              </button>
-            </div>
+                <div className="flex justify-between mt-6">
+                  <button
+                    onClick={() => setShowForgot(true)}
+                    className="text-white/70 text-sm transition-colors hover:text-teal bg-transparent border-none cursor-pointer"
+                  >
+                    Forgot Password?
+                  </button>
+                  <button
+                    onClick={() => setAuthMode(authMode === "login" ? "signup" : "login")}
+                    className="text-white/70 text-sm transition-colors hover:text-teal bg-transparent border-none cursor-pointer"
+                  >
+                    {authMode === "login" ? "Register Now" : "Sign In Instead"}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
