@@ -2,7 +2,8 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   MessageCircle, X, Send, Plus, Sparkles, BookOpen,
-  ClipboardList, Lightbulb, Loader2, Volume2, VolumeX, Mic, MicOff
+  ClipboardList, Lightbulb, Loader2, Volume2, VolumeX, Mic, MicOff,
+  RefreshCw, WifiOff, Wifi
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -36,6 +37,10 @@ class StreamingSpeaker {
   private scheduledEnd = 0;
   private activeSourceNodes: AudioBufferSourceNode[] = [];
   private sentenceRe = /(?<=[.!?…])\s+|(?:\n\n)/;
+  private useFallback = false;
+  private ttsFailCount = 0;
+  private fallbackToastShown = false;
+  private browserUtterances: SpeechSynthesisUtterance[] = [];
 
   constructor(onSpeakingChange: (v: boolean) => void) {
     this.onSpeakingChange = onSpeakingChange;
@@ -69,6 +74,7 @@ class StreamingSpeaker {
     this.aborted = true;
     this.queue = [];
     this.buffer = "";
+    // Stop ElevenLabs audio
     for (const node of this.activeSourceNodes) {
       try { node.stop(); } catch {}
     }
@@ -77,6 +83,9 @@ class StreamingSpeaker {
       this.audioContext.close().catch(() => {});
       this.audioContext = null;
     }
+    // Stop browser TTS
+    window.speechSynthesis.cancel();
+    this.browserUtterances = [];
     this.processing = false;
     this.onSpeakingChange(false);
   }
@@ -85,19 +94,53 @@ class StreamingSpeaker {
     return this.processing || this.queue.length > 0 || this.activeSourceNodes.length > 0;
   }
 
+  private useBrowserTTS(text: string): Promise<void> {
+    return new Promise((resolve) => {
+      if (this.aborted) { resolve(); return; }
+      const utterance = new SpeechSynthesisUtterance(text);
+      const voices = window.speechSynthesis.getVoices();
+      // Pick a good English voice
+      const preferred = voices.find(v => v.lang === "en-IN") 
+        || voices.find(v => v.lang.startsWith("en") && v.name.includes("Google"))
+        || voices.find(v => v.lang.startsWith("en"))
+        || voices[0];
+      if (preferred) utterance.voice = preferred;
+      utterance.rate = 1.05;
+      utterance.pitch = 1.0;
+      this.browserUtterances.push(utterance);
+
+      utterance.onend = () => {
+        this.browserUtterances = this.browserUtterances.filter(u => u !== utterance);
+        resolve();
+      };
+      utterance.onerror = () => {
+        this.browserUtterances = this.browserUtterances.filter(u => u !== utterance);
+        resolve();
+      };
+      window.speechSynthesis.speak(utterance);
+    });
+  }
+
   private async processQueue() {
     if (this.processing || this.aborted) return;
     this.processing = true;
     this.onSpeakingChange(true);
 
-    if (!this.audioContext) {
-      this.audioContext = new AudioContext();
-      this.scheduledEnd = this.audioContext.currentTime;
-    }
-
     while (this.queue.length > 0 && !this.aborted) {
       const text = this.queue.shift()!;
+
+      // If we've switched to fallback, use browser TTS
+      if (this.useFallback) {
+        await this.useBrowserTTS(text);
+        continue;
+      }
+
       try {
+        if (!this.audioContext) {
+          this.audioContext = new AudioContext();
+          this.scheduledEnd = this.audioContext.currentTime;
+        }
+
         const resp = await fetch(TTS_URL, {
           method: "POST",
           headers: {
@@ -107,7 +150,24 @@ class StreamingSpeaker {
           body: JSON.stringify({ text }),
         });
 
-        if (!resp.ok || this.aborted) continue;
+        if (!resp.ok) {
+          this.ttsFailCount++;
+          console.error(`ElevenLabs TTS error: ${resp.status}`);
+          
+          // Switch to fallback after 2 failures or on quota/auth errors
+          if (resp.status === 401 || resp.status === 402 || resp.status === 403 || this.ttsFailCount >= 2) {
+            this.useFallback = true;
+            if (!this.fallbackToastShown) {
+              this.fallbackToastShown = true;
+              toast.info("Using built-in voice (premium voice temporarily unavailable)", { duration: 5000 });
+            }
+            await this.useBrowserTTS(text);
+            continue;
+          }
+          continue;
+        }
+
+        if (this.aborted) continue;
 
         const arrayBuffer = await resp.arrayBuffer();
         if (this.aborted || !this.audioContext) break;
@@ -124,6 +184,9 @@ class StreamingSpeaker {
         source.start(startTime);
         this.scheduledEnd = startTime + audioBuffer.duration;
 
+        // Reset fail count on success
+        this.ttsFailCount = 0;
+
         source.onended = () => {
           this.activeSourceNodes = this.activeSourceNodes.filter((n) => n !== source);
           if (this.activeSourceNodes.length === 0 && this.queue.length === 0) {
@@ -132,11 +195,20 @@ class StreamingSpeaker {
         };
       } catch (e) {
         console.error("TTS playback error:", e);
+        this.ttsFailCount++;
+        if (this.ttsFailCount >= 2) {
+          this.useFallback = true;
+          if (!this.fallbackToastShown) {
+            this.fallbackToastShown = true;
+            toast.info("Using built-in voice (premium voice temporarily unavailable)", { duration: 5000 });
+          }
+          await this.useBrowserTTS(text);
+        }
       }
     }
 
     this.processing = false;
-    if (this.queue.length === 0 && this.activeSourceNodes.length === 0) {
+    if (this.queue.length === 0 && this.activeSourceNodes.length === 0 && this.browserUtterances.length === 0) {
       this.onSpeakingChange(false);
     }
   }
@@ -146,6 +218,7 @@ interface ChatMessage {
   id?: string;
   role: "user" | "assistant";
   content: string;
+  error?: boolean;
 }
 
 const STUDY_COMPANION_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/study-companion`;
@@ -224,15 +297,31 @@ const StudyCompanion = () => {
   const [voiceMode, setVoiceMode] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [interimTranscript, setInterimTranscript] = useState("");
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const recognitionRef = useRef<any>(null);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const finalTranscriptBufferRef = useRef("");
+  const listeningIntentRef = useRef(false); // tracks whether we WANT to be listening
   const { user, fullName } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
   const speakerRef = useRef<StreamingSpeaker | null>(null);
+
+  // Online/offline tracking
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -240,6 +329,7 @@ const StudyCompanion = () => {
       speakerRef.current?.abort();
       recognitionRef.current?.abort?.();
       recognitionRef.current?.stop?.();
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
     };
   }, []);
 
@@ -250,12 +340,28 @@ const StudyCompanion = () => {
     if (!next) { speakerRef.current?.abort(); speakerRef.current = null; setIsSpeaking(false); }
   };
 
+  // Refs for stable access in callbacks
+  const voiceModeRef = useRef(voiceMode);
+  const isLoadingRef = useRef(isLoading);
+  const speakingRef = useRef(isSpeaking);
+  voiceModeRef.current = voiceMode;
+  isLoadingRef.current = isLoading;
+  speakingRef.current = isSpeaking;
+
   // Voice mode: continuous listening via SpeechRecognition
   const startListening = useCallback(() => {
     if (!SpeechRecognition) {
       toast.error("Your browser doesn't support voice recognition.");
       return;
     }
+
+    // Guard against double-start
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop(); } catch {}
+      recognitionRef.current = null;
+    }
+
+    listeningIntentRef.current = true;
 
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
@@ -264,19 +370,35 @@ const StudyCompanion = () => {
 
     recognition.onresult = (event: any) => {
       let interim = "";
-      let final = "";
+      let finalText = "";
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const transcript = event.results[i][0].transcript;
         if (event.results[i].isFinal) {
-          final += transcript;
+          finalText += transcript;
         } else {
           interim += transcript;
         }
       }
       setInterimTranscript(interim);
-      if (final.trim()) {
-        setInterimTranscript("");
-        sendMessageRef.current(final.trim());
+      
+      if (finalText.trim()) {
+        // Buffer final transcript and debounce 1s before sending
+        finalTranscriptBufferRef.current += " " + finalText.trim();
+        setInterimTranscript(finalTranscriptBufferRef.current.trim() + "...");
+        
+        if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = setTimeout(() => {
+          const toSend = finalTranscriptBufferRef.current.trim();
+          finalTranscriptBufferRef.current = "";
+          setInterimTranscript("");
+          if (toSend) {
+            // Stop recognition BEFORE sending
+            listeningIntentRef.current = false;
+            try { recognitionRef.current?.stop(); } catch {}
+            setIsListening(false);
+            sendMessageRef.current(toSend);
+          }
+        }, 1000);
       }
     };
 
@@ -287,9 +409,17 @@ const StudyCompanion = () => {
     };
 
     recognition.onend = () => {
-      // Auto-restart if still in voice mode
-      if (voiceModeRef.current && !isLoadingRef.current && !speakingRef.current) {
-        try { recognition.start(); } catch {}
+      // Only auto-restart if we intend to be listening
+      if (listeningIntentRef.current && voiceModeRef.current && !isLoadingRef.current && !speakingRef.current) {
+        try {
+          setTimeout(() => {
+            if (listeningIntentRef.current && voiceModeRef.current && !isLoadingRef.current && !speakingRef.current) {
+              recognition.start();
+            } else {
+              setIsListening(false);
+            }
+          }, 100);
+        } catch {}
       } else {
         setIsListening(false);
       }
@@ -305,24 +435,18 @@ const StudyCompanion = () => {
   }, []);
 
   const stopListening = useCallback(() => {
+    listeningIntentRef.current = false;
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    finalTranscriptBufferRef.current = "";
     recognitionRef.current?.stop?.();
     recognitionRef.current = null;
     setIsListening(false);
     setInterimTranscript("");
   }, []);
 
-  // Refs for stable access in callbacks
-  const voiceModeRef = useRef(voiceMode);
-  const isLoadingRef = useRef(isLoading);
-  const speakingRef = useRef(isSpeaking);
-  voiceModeRef.current = voiceMode;
-  isLoadingRef.current = isLoading;
-  speakingRef.current = isSpeaking;
-
   // When voice mode toggles
   useEffect(() => {
     if (voiceMode && isOpen) {
-      // Also enable TTS when entering voice mode
       if (!ttsEnabled) {
         setTtsEnabled(true);
         localStorage.setItem("buddy_tts", "true");
@@ -336,12 +460,11 @@ const StudyCompanion = () => {
   // Resume listening after Buddy finishes speaking in voice mode
   useEffect(() => {
     if (voiceMode && !isSpeaking && !isLoading && isOpen) {
-      // Small delay to avoid picking up Buddy's own audio
       const t = setTimeout(() => {
         if (voiceModeRef.current && !isLoadingRef.current && !speakingRef.current) {
           startListening();
         }
-      }, 500);
+      }, 800); // increased delay to avoid picking up Buddy's audio
       return () => clearTimeout(t);
     }
   }, [isSpeaking, isLoading, voiceMode, isOpen]);
@@ -349,6 +472,7 @@ const StudyCompanion = () => {
   // Pause listening while Buddy is speaking or loading
   useEffect(() => {
     if (voiceMode && (isSpeaking || isLoading)) {
+      listeningIntentRef.current = false;
       recognitionRef.current?.stop?.();
       setIsListening(false);
     }
@@ -469,8 +593,27 @@ const StudyCompanion = () => {
     }
   };
 
+  // Tap to interrupt: clicking while speaking stops TTS and starts listening
+  const handleInterrupt = useCallback(() => {
+    if (isSpeaking) {
+      speakerRef.current?.abort();
+      speakerRef.current = null;
+      setIsSpeaking(false);
+      if (voiceMode) {
+        setTimeout(() => startListening(), 200);
+      }
+    }
+  }, [isSpeaking, voiceMode, startListening]);
+
   const sendMessage = useCallback(async (text: string) => {
     if (!text.trim() || isLoading) return;
+
+    // Stop listening before sending
+    if (voiceModeRef.current) {
+      listeningIntentRef.current = false;
+      recognitionRef.current?.stop?.();
+      setIsListening(false);
+    }
 
     const userMsg: ChatMessage = { role: "user", content: text.trim() };
     setMessages((prev) => [...prev, userMsg]);
@@ -504,7 +647,12 @@ const StudyCompanion = () => {
 
       if (!resp.ok) {
         const err = await resp.json().catch(() => ({ error: "Failed" }));
-        toast.error(err.error || "Something went wrong");
+        // Add inline error message instead of just toast
+        setMessages((prev) => [...prev, { 
+          role: "assistant", 
+          content: `⚠️ ${err.error || "Something went wrong. Please try again."}`,
+          error: true 
+        }]);
         setIsLoading(false);
         speaker?.abort();
         return;
@@ -585,16 +733,31 @@ const StudyCompanion = () => {
       }
     } catch (e) {
       console.error("Stream error:", e);
-      toast.error("Failed to get a response. Please try again.");
+      setMessages((prev) => [...prev, {
+        role: "assistant",
+        content: "⚠️ Failed to get a response. Please check your connection and try again.",
+        error: true,
+      }]);
       speaker?.abort();
     } finally {
       setIsLoading(false);
+      // Voice mode will auto-resume via the isSpeaking/isLoading useEffect
     }
   }, [messages, sessionId, isLoading, location.pathname, ttsEnabled]);
 
   // Stable ref for sendMessage so recognition callback always uses latest
   const sendMessageRef = useRef(sendMessage);
   sendMessageRef.current = sendMessage;
+
+  // Retry failed message
+  const retryLastMessage = useCallback(() => {
+    const lastUserMsg = [...messages].reverse().find(m => m.role === "user");
+    if (lastUserMsg) {
+      // Remove the error message
+      setMessages(prev => prev.filter(m => !m.error));
+      sendMessage(lastUserMsg.content);
+    }
+  }, [messages, sendMessage]);
 
   const startNewChat = async () => {
     if (!user) return;
@@ -636,8 +799,8 @@ const StudyCompanion = () => {
           )}
           <button
             onClick={() => setIsOpen(true)}
-            className="relative h-14 w-14 rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-lg hover:shadow-xl transition-all hover:scale-105 flex items-center justify-center animate-bounce"
-            style={{ animationDuration: "2s", animationIterationCount: 3 }}
+            className={`relative h-14 w-14 rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-lg hover:shadow-xl transition-all hover:scale-105 flex items-center justify-center ${voiceMode ? "ring-4 ring-primary/30 animate-pulse" : "animate-bounce"}`}
+            style={voiceMode ? undefined : { animationDuration: "2s", animationIterationCount: 3 }}
             aria-label="Open Study Companion"
           >
             <MessageCircle className="h-6 w-6" />
@@ -654,7 +817,11 @@ const StudyCompanion = () => {
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-primary/10 to-primary/5 border-b border-border">
             <div className="flex items-center gap-2">
-              <div className={`relative h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center transition-all ${isSpeaking ? "ring-2 ring-primary/40" : ""}`}>
+              <div 
+                className={`relative h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center transition-all cursor-pointer ${isSpeaking ? "ring-2 ring-primary/40" : ""}`}
+                onClick={handleInterrupt}
+                title={isSpeaking ? "Tap to interrupt" : "Buddy"}
+              >
                 <Sparkles className={`h-4 w-4 text-primary transition-transform ${isSpeaking ? "animate-pulse" : ""}`} />
                 {isSpeaking && (
                   <div className="absolute inset-0 flex items-center justify-center gap-[2px]">
@@ -667,19 +834,21 @@ const StudyCompanion = () => {
               </div>
               <div>
                 <h3 className="text-sm font-semibold text-foreground">Buddy</h3>
-                <p className="text-[10px] text-muted-foreground">
-                  {voiceMode
+                <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                  {!isOnline ? (
+                    <><WifiOff className="h-2.5 w-2.5 text-destructive" /> Offline</>
+                  ) : voiceMode
                     ? isListening
                       ? "🎤 Listening..."
                       : isSpeaking
-                        ? "🔊 Speaking..."
+                        ? "🔊 Tap to interrupt"
                         : "Voice Mode"
-                    : "Your Study Companion"}
+                    : <><Wifi className="h-2.5 w-2.5 text-green-500" /> Your Study Companion</>
+                  }
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-1">
-              {/* Voice Mode Toggle */}
               <Button
                 size="icon"
                 variant={voiceMode ? "default" : "ghost"}
@@ -714,20 +883,31 @@ const StudyCompanion = () => {
                 <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                   <div
                     className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
-                      msg.role === "user"
-                        ? "bg-primary text-primary-foreground rounded-br-md"
-                        : "bg-muted text-foreground rounded-bl-md"
+                      msg.error
+                        ? "bg-destructive/10 text-destructive border border-destructive/20 rounded-bl-md"
+                        : msg.role === "user"
+                          ? "bg-primary text-primary-foreground rounded-br-md"
+                          : "bg-muted text-foreground rounded-bl-md"
                     }`}
                   >
                     {renderContent(msg.content)}
+                    {msg.error && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="mt-2 h-7 text-xs border-destructive/30 text-destructive hover:bg-destructive/10"
+                        onClick={retryLastMessage}
+                      >
+                        <RefreshCw className="h-3 w-3 mr-1" /> Retry
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))}
-              {/* Show interim transcript as user is speaking */}
               {interimTranscript && (
                 <div className="flex justify-end">
                   <div className="max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed bg-primary/30 text-primary-foreground rounded-br-md italic opacity-70">
-                    {interimTranscript}...
+                    {interimTranscript}
                   </div>
                 </div>
               )}
@@ -745,7 +925,10 @@ const StudyCompanion = () => {
           {voiceMode && (
             <div className="px-3 py-2 border-t border-border">
               <div className="flex items-center justify-center gap-3">
-                <div className={`flex items-center gap-2 px-4 py-2.5 rounded-full ${isListening ? "bg-primary/10" : "bg-muted"} transition-colors`}>
+                <div 
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-full ${isListening ? "bg-primary/10" : isSpeaking ? "bg-primary/5 cursor-pointer" : "bg-muted"} transition-colors`}
+                  onClick={isSpeaking ? handleInterrupt : undefined}
+                >
                   {isListening ? (
                     <>
                       <div className="flex items-center gap-[3px]">
@@ -758,8 +941,14 @@ const StudyCompanion = () => {
                     </>
                   ) : isSpeaking ? (
                     <>
-                      <Volume2 className="h-4 w-4 text-primary animate-pulse" />
-                      <span className="text-xs text-primary font-medium">Buddy is speaking...</span>
+                      <div className="flex items-center gap-[2px]">
+                        <span className="w-1 h-2 bg-primary/60 rounded-full animate-[waveBar1_0.4s_ease-in-out_infinite]" />
+                        <span className="w-1 h-3 bg-primary/60 rounded-full animate-[waveBar2_0.4s_ease-in-out_infinite_0.1s]" />
+                        <span className="w-1 h-2.5 bg-primary/60 rounded-full animate-[waveBar3_0.4s_ease-in-out_infinite_0.2s]" />
+                        <span className="w-1 h-2 bg-primary/60 rounded-full animate-[waveBar1_0.4s_ease-in-out_infinite_0.3s]" />
+                        <span className="w-1 h-3.5 bg-primary/60 rounded-full animate-[waveBar2_0.4s_ease-in-out_infinite_0.05s]" />
+                      </div>
+                      <span className="text-xs text-primary font-medium">Buddy speaking... tap to interrupt</span>
                     </>
                   ) : isLoading ? (
                     <>
