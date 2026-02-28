@@ -28,6 +28,7 @@ const Index = () => {
   const [className, setClassName] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [loginError, setLoginError] = useState<{ message: string; code?: string; suggestion: string } | null>(null);
 
   useEffect(() => {
     if (!loading && user && role) {
@@ -64,9 +65,32 @@ const Index = () => {
     return () => document.removeEventListener("keydown", handler);
   }, [closeModal]);
 
+  const parseError = (err: any): { message: string; code?: string; suggestion: string } => {
+    const msg = err?.message || "Unknown error";
+    const code = err?.code || err?.status?.toString() || undefined;
+
+    if (msg.includes("Failed to fetch") || msg.includes("NetworkError")) {
+      return { message: msg, code: "NETWORK_ERROR", suggestion: "Network issue detected. Try opening the app in a new tab or check your internet connection." };
+    }
+    if (msg.includes("Invalid login credentials")) {
+      return { message: msg, code: "AUTH_INVALID_CREDENTIALS", suggestion: "Double-check your email and password. If you just signed up, verify your email first." };
+    }
+    if (msg.includes("Email not confirmed")) {
+      return { message: msg, code: "AUTH_EMAIL_NOT_CONFIRMED", suggestion: "Please check your inbox and click the verification link before signing in." };
+    }
+    if (msg.includes("User already registered")) {
+      return { message: msg, code: "AUTH_USER_EXISTS", suggestion: "An account with this email already exists. Try signing in instead." };
+    }
+    if (msg.includes("Password should be at least")) {
+      return { message: msg, code: "AUTH_WEAK_PASSWORD", suggestion: "Password must be at least 6 characters long." };
+    }
+    return { message: msg, code, suggestion: "Something went wrong. Please try again or contact support." };
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
+    setLoginError(null);
 
     try {
       if (authMode === "signup") {
@@ -80,11 +104,8 @@ const Index = () => {
         closeModal();
       }
     } catch (err: any) {
-      toast({
-        title: "Error",
-        description: err.message || "Something went wrong. Please try again.",
-        variant: "destructive",
-      });
+      const parsed = parseError(err);
+      setLoginError(parsed);
     } finally {
       setSubmitting(false);
     }
@@ -303,6 +324,22 @@ const Index = () => {
                   >
                     {submitting ? "⏳ Authenticating..." : authMode === "login" ? "🚀 Access Portal" : "🚀 Create Account"}
                   </button>
+
+                  {/* Inline error display */}
+                  {loginError && (
+                    <div className="mt-4 bg-red-500/20 border border-red-400/40 rounded-xl p-4 text-left animate-modal-in">
+                      <div className="flex items-start gap-2">
+                        <span className="text-red-400 text-lg mt-0.5">⚠️</span>
+                        <div className="flex-1">
+                          <p className="text-red-300 font-semibold text-sm">{loginError.message}</p>
+                          {loginError.code && (
+                            <p className="text-red-400/70 text-xs mt-1 font-mono">Code: {loginError.code}</p>
+                          )}
+                          <p className="text-white/80 text-xs mt-2">{loginError.suggestion}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </form>
 
                 <div className="flex justify-between mt-5 md:mt-6">
