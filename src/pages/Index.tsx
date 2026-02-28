@@ -63,60 +63,27 @@ const Index = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // If running in an iframe, auth requests will be blocked by the browser.
-    // Redirect the user to the published URL in a new tab.
-    if (isInIframe()) {
-      toast({
-        title: "Opening in a new tab",
-        description: "Authentication doesn't work inside the preview. Opening the live app for you…",
-      });
-      window.open("https://mind-map-academy.lovable.app", "_blank");
-      return;
-    }
-
     setSubmitting(true);
 
-    const maxRetries = 3;
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      try {
-        if (authMode === "signup") {
-          const selectedRole = loginType === "teacher" ? "teacher" : "student";
-          await signUp(email, password, fullName, selectedRole as any, className);
-          toast({ title: "Account created!", description: "You're now signed in." });
-        } else {
-          await signIn(email, password);
-          toast({ title: "Welcome back!" });
-        }
+    try {
+      if (authMode === "signup") {
+        const selectedRole = loginType === "teacher" ? "teacher" : "student";
+        await signUp(email, password, fullName, selectedRole as any, className);
+        toast({ title: "Account created!", description: "Please check your email to verify your account." });
         closeModal();
-        return;
-      } catch (err: any) {
-        const isNetworkError =
-          err.message === "Failed to fetch" ||
-          err.message?.includes("NetworkError") ||
-          err.message?.includes("network") ||
-          err.code === "ECONNABORTED";
-
-        if (isNetworkError && attempt < maxRetries) {
-          toast({
-            title: "Connection issue",
-            description: `Retrying… (${attempt}/${maxRetries})`,
-          });
-          await new Promise((r) => setTimeout(r, 1000 * attempt));
-          continue;
-        }
-
-        toast({
-          title: "Error",
-          description: isNetworkError
-            ? "Unable to reach the server. Please check your connection and try again."
-            : err.message,
-          variant: "destructive",
-        });
-        return;
-      } finally {
-        if (attempt === maxRetries || true) setSubmitting(false);
+      } else {
+        await signIn(email, password);
+        toast({ title: "Welcome back!" });
+        closeModal();
       }
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -127,11 +94,11 @@ const Index = () => {
     <div className="min-h-screen bg-[#0f1419] text-white overflow-x-hidden">
       {/* Iframe Banner */}
       {inIframe && (
-        <div className="fixed top-0 left-0 right-0 z-[1100] bg-teal text-white text-center py-2 text-sm">
-          For the best experience,{" "}
-          <a href={window.location.href} target="_blank" rel="noopener noreferrer" className="underline font-semibold">
-            open in a new tab
-          </a>
+        <div className="fixed top-0 left-0 right-0 z-[1100] bg-amber-600 text-white text-center py-2 text-sm">
+          ⚠️ If login fails here, please{" "}
+          <a href="https://mind-map-academy.lovable.app" target="_blank" rel="noopener noreferrer" className="underline font-semibold">
+            open the live app
+          </a>{" "}instead.
         </div>
       )}
       {/* Header */}
