@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { Menu, X } from "lucide-react";
 import AssignmentsModal from "./student/AssignmentsModal";
 import ProgressModal from "./student/ProgressModal";
 import MessageModal from "./student/MessageModal";
@@ -16,6 +17,7 @@ const TopNavbar = ({ role }: TopNavbarProps) => {
   const location = useLocation();
   const { signOut, fullName } = useAuth();
   const [activeModal, setActiveModal] = useState<string | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
@@ -26,74 +28,112 @@ const TopNavbar = ({ role }: TopNavbarProps) => {
     ? fullName.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
     : role[0].toUpperCase();
 
-  const openModal = (modal: string) => setActiveModal(modal);
+  const openModal = (modal: string) => {
+    setActiveModal(modal);
+    setMenuOpen(false);
+  };
   const closeModal = () => setActiveModal(null);
+
+  const navAction = (path: string) => {
+    navigate(path);
+    setMenuOpen(false);
+  };
+
+  const teacherItems = [
+    { label: "Dashboard", path: "/teacher", type: "nav" as const },
+    { label: "Annual Schedule", path: "/teacher/schedule", type: "nav" as const },
+    { label: "Metrics", path: "/teacher/analytics", type: "nav" as const },
+    { label: "Message Bar", modal: "message", type: "modal" as const },
+  ];
+
+  const studentItems = [
+    { label: "Dashboard", path: "/student", type: "nav" as const },
+    { label: "Assignments", modal: "assignments", type: "modal" as const },
+    { label: "Calendar", path: "/student/calendar", type: "nav" as const },
+    { label: "Progress", modal: "progress", type: "modal" as const },
+    { label: "Message Bar", modal: "message", type: "modal" as const },
+    { label: "Notifications", modal: "notifications", type: "modal" as const },
+    { label: "Personalisation", modal: "personalisation", type: "modal" as const },
+  ];
+
+  const items = role === "teacher" ? teacherItems : role === "student" ? studentItems : [];
+
+  const isActive = (path?: string) => path && location.pathname === path;
+
+  const btnBase = role === "teacher"
+    ? "bg-gradient-to-br from-blue-500 to-blue-600 text-white border-none py-2.5 px-5 rounded-lg cursor-pointer font-medium transition-all hover:-translate-y-0.5 hover:shadow-[0_4px_15px_rgba(66,153,225,0.4)]"
+    : "text-white cursor-pointer text-base font-medium transition-all py-2.5 px-[18px] rounded-full bg-transparent border-2 border-transparent hover:bg-blue-500/20 hover:border-blue-500/50 hover:-translate-y-0.5";
 
   return (
     <>
-      <nav className="bg-[#0f1419]/95 backdrop-blur-[10px] py-4 px-8 flex justify-between items-center shadow-[0_4px_20px_rgba(0,0,0,0.1)] sticky top-0 z-[1000] animate-slide-down border-b-2 border-blue-500/30">
+      <nav className="bg-[#0f1419]/95 backdrop-blur-[10px] py-4 px-4 lg:px-8 flex justify-between items-center shadow-[0_4px_20px_rgba(0,0,0,0.1)] sticky top-0 z-[1000] animate-slide-down border-b-2 border-blue-500/30">
         <a href="/" className="no-underline">
           <div className="text-2xl font-bold text-white flex items-center gap-2.5">
             EduTech
           </div>
         </a>
 
-        <div className="flex gap-5 items-center">
-          {role === "teacher" && (
-            <>
-              <button onClick={() => navigate("/teacher")} className={`bg-gradient-to-br from-blue-500 to-blue-600 text-white border-none py-2.5 px-5 rounded-lg cursor-pointer font-medium transition-all hover:-translate-y-0.5 hover:shadow-[0_4px_15px_rgba(66,153,225,0.4)] ${location.pathname === "/teacher" ? "ring-2 ring-white/60" : ""}`}>
-                Dashboard
+        {/* Desktop nav */}
+        <div className="hidden lg:flex gap-5 items-center">
+          {items.map((item) =>
+            item.type === "nav" ? (
+              <button key={item.label} onClick={() => navigate(item.path!)} className={`${btnBase} ${isActive(item.path) ? "ring-2 ring-white/60" : ""}`}>
+                {item.label}
               </button>
-              <button onClick={() => navigate("/teacher/schedule")} className={`bg-gradient-to-br from-blue-500 to-blue-600 text-white border-none py-2.5 px-5 rounded-lg cursor-pointer font-medium transition-all hover:-translate-y-0.5 hover:shadow-[0_4px_15px_rgba(66,153,225,0.4)] ${location.pathname === "/teacher/schedule" ? "ring-2 ring-white/60" : ""}`}>
-                Annual Schedule
+            ) : (
+              <button key={item.label} onClick={() => openModal(item.modal!)} className={btnBase}>
+                {item.label}
               </button>
-              <button onClick={() => navigate("/teacher/analytics")} className={`bg-gradient-to-br from-blue-500 to-blue-600 text-white border-none py-2.5 px-5 rounded-lg cursor-pointer font-medium transition-all hover:-translate-y-0.5 hover:shadow-[0_4px_15px_rgba(66,153,225,0.4)] ${location.pathname === "/teacher/analytics" ? "ring-2 ring-white/60" : ""}`}>
-                Metrics
-              </button>
-              <button onClick={() => openModal("message")} className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-none py-2.5 px-5 rounded-lg cursor-pointer font-medium transition-all hover:-translate-y-0.5 hover:shadow-[0_4px_15px_rgba(66,153,225,0.4)]">
-                Message Bar
-              </button>
-            </>
-          )}
-          {role === "student" && (
-            <>
-              <button onClick={() => navigate("/student")} className={`text-white cursor-pointer text-base font-medium transition-all py-2.5 px-[18px] rounded-full bg-transparent border-2 border-transparent hover:bg-blue-500/20 hover:border-blue-500/50 hover:-translate-y-0.5 ${location.pathname === "/student" ? "bg-blue-500/20 border-blue-500/50" : ""}`}>
-                Dashboard
-              </button>
-              <button onClick={() => openModal("assignments")} className="text-white cursor-pointer text-base font-medium transition-all py-2.5 px-[18px] rounded-full bg-transparent border-2 border-transparent hover:bg-blue-500/20 hover:border-blue-500/50 hover:-translate-y-0.5">
-                Assignments
-              </button>
-              <button onClick={() => navigate("/student/calendar")} className={`text-white cursor-pointer text-base font-medium transition-all py-2.5 px-[18px] rounded-full bg-transparent border-2 border-transparent hover:bg-blue-500/20 hover:border-blue-500/50 hover:-translate-y-0.5 ${location.pathname === "/student/calendar" ? "bg-blue-500/20 border-blue-500/50" : ""}`}>
-                Calendar
-              </button>
-              <button onClick={() => openModal("progress")} className="text-white cursor-pointer text-base font-medium transition-all py-2.5 px-[18px] rounded-full bg-transparent border-2 border-transparent hover:bg-blue-500/20 hover:border-blue-500/50 hover:-translate-y-0.5">
-                Progress
-              </button>
-              <button onClick={() => openModal("message")} className="bg-gradient-to-br from-blue-500 to-black text-white border-none py-2.5 px-5 rounded-lg cursor-pointer font-medium transition-all hover:-translate-y-0.5 hover:shadow-[0_4px_15px_rgba(66,153,225,0.4)]">
-                Message Bar
-              </button>
-              <button onClick={() => openModal("notifications")} className="bg-gradient-to-br from-blue-500 to-black text-white border-none py-2.5 px-5 rounded-lg cursor-pointer font-medium transition-all hover:-translate-y-0.5 hover:shadow-[0_4px_15px_rgba(66,153,225,0.4)]">
-                Notifications
-              </button>
-              <button onClick={() => openModal("personalisation")} className="text-white cursor-pointer text-base font-medium transition-all py-2.5 px-[18px] rounded-full bg-transparent border-2 border-transparent hover:bg-blue-500/20 hover:border-blue-500/50 hover:-translate-y-0.5">
-                Personalisation
-              </button>
-            </>
+            )
           )}
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 lg:gap-4">
+          {/* Hamburger for mobile/tablet */}
+          <button
+            className="lg:hidden text-white bg-transparent border-none cursor-pointer"
+            onClick={() => setMenuOpen(!menuOpen)}
+            aria-label="Toggle menu"
+          >
+            {menuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
+
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-400 to-pink-600 flex items-center justify-center text-white font-bold text-base">
             {initials}
           </div>
           <button
             onClick={handleSignOut}
-            className="bg-red-400 text-white border-none py-2.5 px-5 rounded-lg cursor-pointer font-medium transition-all hover:bg-red-500 hover:-translate-y-0.5"
+            className="bg-red-400 text-white border-none py-2 px-4 lg:py-2.5 lg:px-5 rounded-lg cursor-pointer font-medium transition-all hover:bg-red-500 hover:-translate-y-0.5 text-sm lg:text-base"
           >
             Logout
           </button>
         </div>
       </nav>
+
+      {/* Mobile/tablet dropdown */}
+      {menuOpen && (
+        <div className="lg:hidden bg-[#0f1419]/98 border-b-2 border-blue-500/30 px-4 py-3 flex flex-col gap-2 sticky top-[73px] z-[999] animate-slide-down">
+          {items.map((item) =>
+            item.type === "nav" ? (
+              <button
+                key={item.label}
+                onClick={() => navAction(item.path!)}
+                className={`text-left text-white py-3 px-4 rounded-lg transition-all bg-transparent border-none text-base ${isActive(item.path) ? "bg-blue-500/20 font-semibold" : "hover:bg-white/10"}`}
+              >
+                {item.label}
+              </button>
+            ) : (
+              <button
+                key={item.label}
+                onClick={() => openModal(item.modal!)}
+                className="text-left text-white py-3 px-4 rounded-lg transition-all bg-transparent border-none text-base hover:bg-white/10"
+              >
+                {item.label}
+              </button>
+            )
+          )}
+        </div>
+      )}
 
       {/* Student Modals */}
       {role === "student" && (

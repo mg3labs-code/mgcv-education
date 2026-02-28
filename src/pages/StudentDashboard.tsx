@@ -163,9 +163,9 @@ const StudentDashboard = () => {
   return (
     <DashboardLayout role="student">
       <div className="p-[30px] space-y-6">
-        <div className="flex gap-[30px]">
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-[30px]">
           {/* Sidebar */}
-          <aside className="w-[350px] flex-shrink-0">
+          <aside className="w-full lg:w-[350px] lg:flex-shrink-0">
             {/* Calendar Card */}
             <div className="bg-[#1a1a1a]/90 text-white rounded-2xl p-5 mb-5">
               <div className="flex items-center justify-between mb-5">
