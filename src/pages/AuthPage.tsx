@@ -17,13 +17,40 @@ const AuthPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-    try {
-      await signIn(email, password);
-      toast({ title: "Welcome back!" });
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
-    } finally {
-      setSubmitting(false);
+
+    const maxRetries = 3;
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        await signIn(email, password);
+        toast({ title: "Welcome back!" });
+        return;
+      } catch (err: any) {
+        const isNetworkError =
+          err.message === "Failed to fetch" ||
+          err.message?.includes("NetworkError") ||
+          err.message?.includes("network") ||
+          err.code === "ECONNABORTED";
+
+        if (isNetworkError && attempt < maxRetries) {
+          toast({
+            title: "Connection issue",
+            description: `Retrying… (${attempt}/${maxRetries})`,
+          });
+          await new Promise((r) => setTimeout(r, 1000 * attempt));
+          continue;
+        }
+
+        toast({
+          title: "Error",
+          description: isNetworkError
+            ? "Unable to reach the server. Please check your connection and try again."
+            : err.message,
+          variant: "destructive",
+        });
+        return;
+      } finally {
+        if (attempt === maxRetries || true) setSubmitting(false);
+      }
     }
   };
 
