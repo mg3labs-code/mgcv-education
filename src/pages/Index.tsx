@@ -63,6 +63,18 @@ const Index = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // If running in an iframe, auth requests will be blocked by the browser.
+    // Redirect the user to the published URL in a new tab.
+    if (isInIframe()) {
+      toast({
+        title: "Opening in a new tab",
+        description: "Authentication doesn't work inside the preview. Opening the live app for you…",
+      });
+      window.open("https://mind-map-academy.lovable.app", "_blank");
+      return;
+    }
+
     setSubmitting(true);
 
     const maxRetries = 3;
