@@ -116,18 +116,26 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-[#0f1419] text-white overflow-x-hidden">
-      {/* Iframe Banner */}
+      {/* Iframe Banner - Prominent */}
       {inIframe && (
-        <div className="fixed top-0 left-0 right-0 z-[1100] bg-amber-600 text-white text-center py-2 text-sm">
-          ⚠️ If login fails here, please{" "}
-          <a href="https://mind-map-academy.lovable.app" target="_blank" rel="noopener noreferrer" className="underline font-semibold">
-            open the live app
-          </a>{" "}instead.
+        <div className="fixed top-0 left-0 right-0 z-[1100] bg-gradient-to-r from-amber-600 to-red-600 text-white text-center py-4 px-4 shadow-lg">
+          <div className="max-w-xl mx-auto">
+            <p className="font-bold text-base mb-1">⚠️ Preview Mode — Login may not work here</p>
+            <p className="text-sm text-white/90 mb-2">Browser security blocks authentication inside iframes. Open the app directly to sign in.</p>
+            <a
+              href="https://mind-map-academy.lovable.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block bg-white text-red-700 font-bold px-6 py-2 rounded-full text-sm hover:bg-white/90 transition-all shadow-md"
+            >
+              🚀 Open Live App in New Tab ↗
+            </a>
+          </div>
         </div>
       )}
 
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-[1000] bg-[#0f1419]/95 backdrop-blur-[20px] py-4 md:py-5 border-b border-white/10" style={{ top: inIframe ? '36px' : 0 }}>
+      <header className="fixed top-0 left-0 right-0 z-[1000] bg-[#0f1419]/95 backdrop-blur-[20px] py-4 md:py-5 border-b border-white/10" style={{ top: inIframe ? '100px' : 0 }}>
         <div className="max-w-[1400px] mx-auto flex justify-between items-center px-4 md:px-10">
           <div className="text-2xl md:text-[32px] font-light tracking-wide">EduTech</div>
 
