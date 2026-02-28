@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   MessageCircle, X, Send, Plus, Sparkles, BookOpen,
-  ClipboardList, Lightbulb, Loader2, Volume2, VolumeX
+  ClipboardList, Lightbulb, Loader2, Volume2, VolumeX, Mic, MicOff
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import CompanionVoiceInput from "./CompanionVoiceInput";
 
+// Clean text for speech synthesis
 function cleanForSpeech(text: string) {
   return text
     .replace(/\[NAV:[^\]]+\]/g, "")
@@ -25,7 +26,6 @@ function cleanForSpeech(text: string) {
 
 const TTS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-tts-stream`;
 
-/** ElevenLabs streaming TTS: queues sentences, fetches audio, plays gaplessly via Web Audio API */
 class StreamingSpeaker {
   private queue: string[] = [];
   private processing = false;
@@ -81,6 +81,10 @@ class StreamingSpeaker {
     this.onSpeakingChange(false);
   }
 
+  isBusy() {
+    return this.processing || this.queue.length > 0 || this.activeSourceNodes.length > 0;
+  }
+
   private async processQueue() {
     if (this.processing || this.aborted) return;
     this.processing = true;
@@ -116,7 +120,6 @@ class StreamingSpeaker {
         source.connect(this.audioContext.destination);
         this.activeSourceNodes.push(source);
 
-        // Schedule gaplessly after previous audio ends
         const startTime = Math.max(this.audioContext.currentTime, this.scheduledEnd);
         source.start(startTime);
         this.scheduledEnd = startTime + audioBuffer.duration;
@@ -137,10 +140,6 @@ class StreamingSpeaker {
       this.onSpeakingChange(false);
     }
   }
-}
-
-function stopSpeaking() {
-  // No-op: abort() on speaker instance handles cleanup
 }
 
 interface ChatMessage {
@@ -206,6 +205,9 @@ const QUICK_ACTIONS = [
   { label: "My Assignments", icon: ClipboardList, prompt: "Take me to my assignments." },
 ];
 
+// SpeechRecognition type for browser
+const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
 const StudyCompanion = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -216,12 +218,16 @@ const StudyCompanion = () => {
   const [showNudge, setShowNudge] = useState(false);
   const [ttsEnabled, setTtsEnabled] = useState(() => {
     const saved = localStorage.getItem("buddy_tts");
-    return saved !== "false"; // default ON
+    return saved !== "false";
   });
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [voiceMode, setVoiceMode] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [interimTranscript, setInterimTranscript] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const recognitionRef = useRef<any>(null);
   const { user, fullName } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -230,7 +236,11 @@ const StudyCompanion = () => {
 
   // Cleanup on unmount
   useEffect(() => {
-    return () => { speakerRef.current?.abort(); };
+    return () => {
+      speakerRef.current?.abort();
+      recognitionRef.current?.abort?.();
+      recognitionRef.current?.stop?.();
+    };
   }, []);
 
   const toggleTts = () => {
@@ -240,12 +250,115 @@ const StudyCompanion = () => {
     if (!next) { speakerRef.current?.abort(); speakerRef.current = null; setIsSpeaking(false); }
   };
 
+  // Voice mode: continuous listening via SpeechRecognition
+  const startListening = useCallback(() => {
+    if (!SpeechRecognition) {
+      toast.error("Your browser doesn't support voice recognition.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = "en-IN";
+
+    recognition.onresult = (event: any) => {
+      let interim = "";
+      let final = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          final += transcript;
+        } else {
+          interim += transcript;
+        }
+      }
+      setInterimTranscript(interim);
+      if (final.trim()) {
+        setInterimTranscript("");
+        sendMessageRef.current(final.trim());
+      }
+    };
+
+    recognition.onerror = (event: any) => {
+      if (event.error !== "no-speech" && event.error !== "aborted") {
+        console.error("Speech recognition error:", event.error);
+      }
+    };
+
+    recognition.onend = () => {
+      // Auto-restart if still in voice mode
+      if (voiceModeRef.current && !isLoadingRef.current && !speakingRef.current) {
+        try { recognition.start(); } catch {}
+      } else {
+        setIsListening(false);
+      }
+    };
+
+    recognitionRef.current = recognition;
+    try {
+      recognition.start();
+      setIsListening(true);
+    } catch {
+      toast.error("Could not start voice recognition.");
+    }
+  }, []);
+
+  const stopListening = useCallback(() => {
+    recognitionRef.current?.stop?.();
+    recognitionRef.current = null;
+    setIsListening(false);
+    setInterimTranscript("");
+  }, []);
+
+  // Refs for stable access in callbacks
+  const voiceModeRef = useRef(voiceMode);
+  const isLoadingRef = useRef(isLoading);
+  const speakingRef = useRef(isSpeaking);
+  voiceModeRef.current = voiceMode;
+  isLoadingRef.current = isLoading;
+  speakingRef.current = isSpeaking;
+
+  // When voice mode toggles
+  useEffect(() => {
+    if (voiceMode && isOpen) {
+      // Also enable TTS when entering voice mode
+      if (!ttsEnabled) {
+        setTtsEnabled(true);
+        localStorage.setItem("buddy_tts", "true");
+      }
+      startListening();
+    } else {
+      stopListening();
+    }
+  }, [voiceMode, isOpen]);
+
+  // Resume listening after Buddy finishes speaking in voice mode
+  useEffect(() => {
+    if (voiceMode && !isSpeaking && !isLoading && isOpen) {
+      // Small delay to avoid picking up Buddy's own audio
+      const t = setTimeout(() => {
+        if (voiceModeRef.current && !isLoadingRef.current && !speakingRef.current) {
+          startListening();
+        }
+      }, 500);
+      return () => clearTimeout(t);
+    }
+  }, [isSpeaking, isLoading, voiceMode, isOpen]);
+
+  // Pause listening while Buddy is speaking or loading
+  useEffect(() => {
+    if (voiceMode && (isSpeaking || isLoading)) {
+      recognitionRef.current?.stop?.();
+      setIsListening(false);
+    }
+  }, [isSpeaking, isLoading, voiceMode]);
+
   // Auto-open on first ever visit
   useEffect(() => {
     if (!user) return;
     const hasOpened = localStorage.getItem("buddy_has_opened");
     if (!hasOpened) {
-      // Small delay so page renders first
       const t = setTimeout(() => {
         setIsOpen(true);
         localStorage.setItem("buddy_has_opened", "true");
@@ -254,13 +367,12 @@ const StudyCompanion = () => {
     }
   }, [user]);
 
-  // Idle nudge: show badge after 30s on a page with no interaction
+  // Idle nudge
   useEffect(() => {
     if (isOpen) {
       setShowNudge(false);
       return;
     }
-    // Reset idle timer on route change
     setShowNudge(false);
     idleTimerRef.current = setTimeout(() => {
       setShowNudge(true);
@@ -270,21 +382,21 @@ const StudyCompanion = () => {
     };
   }, [isOpen, location.pathname]);
 
-  // Scroll to bottom on new messages
+  // Scroll to bottom
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, interimTranscript]);
 
-  // Load or create session when opened
+  // Load or create session
   useEffect(() => {
     if (isOpen && user && !sessionId) {
       loadOrCreateSession();
     }
   }, [isOpen, user]);
 
-  // Greeting on first open
+  // Greeting
   useEffect(() => {
     if (isOpen && !hasGreeted && messages.length === 0 && sessionId) {
       const greeting = getGreeting(location.pathname, fullName);
@@ -373,7 +485,6 @@ const StudyCompanion = () => {
     }));
 
     let assistantContent = "";
-    // Create a streaming speaker if TTS enabled
     speakerRef.current?.abort();
     const speaker = ttsEnabled ? new StreamingSpeaker(setIsSpeaking) : null;
     speakerRef.current = speaker;
@@ -466,9 +577,7 @@ const StudyCompanion = () => {
         }
       }
 
-      // Flush remaining buffered text to TTS
       speaker?.flush();
-
       handleNavigation(assistantContent);
 
       if (assistantContent) {
@@ -481,7 +590,11 @@ const StudyCompanion = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [messages, sessionId, isLoading, location.pathname]);
+  }, [messages, sessionId, isLoading, location.pathname, ttsEnabled]);
+
+  // Stable ref for sendMessage so recognition callback always uses latest
+  const sendMessageRef = useRef(sendMessage);
+  sendMessageRef.current = sendMessage;
 
   const startNewChat = async () => {
     if (!user) return;
@@ -505,6 +618,10 @@ const StudyCompanion = () => {
     }
   };
 
+  const toggleVoiceMode = () => {
+    setVoiceMode((v) => !v);
+  };
+
   if (!user) return null;
 
   return (
@@ -512,7 +629,6 @@ const StudyCompanion = () => {
       {/* Floating Button with nudge */}
       {!isOpen && (
         <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2">
-          {/* Nudge tooltip */}
           {showNudge && (
             <div className="animate-fade-in bg-primary text-primary-foreground text-xs font-medium px-3 py-2 rounded-xl rounded-br-sm shadow-lg max-w-[200px]">
               {getNudgeMessage(location.pathname)}
@@ -534,7 +650,7 @@ const StudyCompanion = () => {
 
       {/* Chat Panel */}
       {isOpen && (
-        <div className="fixed bottom-4 right-4 z-50 w-[380px] h-[560px] bg-background border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 fade-in duration-300">
+        <div className="fixed bottom-0 right-0 sm:bottom-4 sm:right-4 z-50 w-full sm:w-[380px] h-[100dvh] sm:h-[560px] bg-background border border-border sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 fade-in duration-300">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-primary/10 to-primary/5 border-b border-border">
             <div className="flex items-center gap-2">
@@ -551,10 +667,28 @@ const StudyCompanion = () => {
               </div>
               <div>
                 <h3 className="text-sm font-semibold text-foreground">Buddy</h3>
-                <p className="text-[10px] text-muted-foreground">Your Study Companion</p>
+                <p className="text-[10px] text-muted-foreground">
+                  {voiceMode
+                    ? isListening
+                      ? "🎤 Listening..."
+                      : isSpeaking
+                        ? "🔊 Speaking..."
+                        : "Voice Mode"
+                    : "Your Study Companion"}
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-1">
+              {/* Voice Mode Toggle */}
+              <Button
+                size="icon"
+                variant={voiceMode ? "default" : "ghost"}
+                className={`h-7 w-7 ${voiceMode ? "bg-primary text-primary-foreground" : ""}`}
+                onClick={toggleVoiceMode}
+                title={voiceMode ? "Exit Voice Mode" : "Enter Voice Mode (hands-free)"}
+              >
+                {voiceMode ? <Mic className="h-3.5 w-3.5" /> : <MicOff className="h-3.5 w-3.5" />}
+              </Button>
               <Button
                 size="icon"
                 variant="ghost"
@@ -567,7 +701,7 @@ const StudyCompanion = () => {
               <Button size="icon" variant="ghost" className="h-7 w-7" onClick={startNewChat} title="New Chat">
                 <Plus className="h-3.5 w-3.5" />
               </Button>
-              <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { speakerRef.current?.abort(); setIsOpen(false); }}>
+              <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { speakerRef.current?.abort(); setVoiceMode(false); setIsOpen(false); }}>
                 <X className="h-3.5 w-3.5" />
               </Button>
             </div>
@@ -589,6 +723,14 @@ const StudyCompanion = () => {
                   </div>
                 </div>
               ))}
+              {/* Show interim transcript as user is speaking */}
+              {interimTranscript && (
+                <div className="flex justify-end">
+                  <div className="max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed bg-primary/30 text-primary-foreground rounded-br-md italic opacity-70">
+                    {interimTranscript}...
+                  </div>
+                </div>
+              )}
               {isLoading && messages[messages.length - 1]?.role !== "assistant" && (
                 <div className="flex justify-start">
                   <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-3">
@@ -599,8 +741,49 @@ const StudyCompanion = () => {
             </div>
           </ScrollArea>
 
+          {/* Voice Mode Active Indicator */}
+          {voiceMode && (
+            <div className="px-3 py-2 border-t border-border">
+              <div className="flex items-center justify-center gap-3">
+                <div className={`flex items-center gap-2 px-4 py-2.5 rounded-full ${isListening ? "bg-primary/10" : "bg-muted"} transition-colors`}>
+                  {isListening ? (
+                    <>
+                      <div className="flex items-center gap-[3px]">
+                        <span className="w-1 h-3 bg-primary rounded-full animate-[waveBar1_0.6s_ease-in-out_infinite]" />
+                        <span className="w-1 h-4 bg-primary rounded-full animate-[waveBar2_0.6s_ease-in-out_infinite_0.15s]" />
+                        <span className="w-1 h-3.5 bg-primary rounded-full animate-[waveBar3_0.6s_ease-in-out_infinite_0.3s]" />
+                        <span className="w-1 h-3 bg-primary rounded-full animate-[waveBar1_0.6s_ease-in-out_infinite_0.45s]" />
+                      </div>
+                      <span className="text-xs text-primary font-medium">Listening... just speak!</span>
+                    </>
+                  ) : isSpeaking ? (
+                    <>
+                      <Volume2 className="h-4 w-4 text-primary animate-pulse" />
+                      <span className="text-xs text-primary font-medium">Buddy is speaking...</span>
+                    </>
+                  ) : isLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground">Thinking...</span>
+                    </>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">Starting mic...</span>
+                  )}
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8 text-xs"
+                  onClick={toggleVoiceMode}
+                >
+                  Exit Voice
+                </Button>
+              </div>
+            </div>
+          )}
+
           {/* Quick Actions */}
-          {messages.length <= 1 && (
+          {messages.length <= 1 && !voiceMode && (
             <div className="px-3 pb-2 flex flex-wrap gap-1.5">
               {QUICK_ACTIONS.map((action) => (
                 <button
@@ -616,35 +799,37 @@ const StudyCompanion = () => {
             </div>
           )}
 
-          {/* Input - voice button is now larger and next to send */}
-          <div className="px-3 pb-3 pt-1 border-t border-border">
-            <div className="flex items-end gap-1.5 bg-muted/50 rounded-xl px-2 py-1.5">
-              <textarea
-                ref={inputRef}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Ask me anything..."
-                rows={1}
-                className="flex-1 bg-transparent border-none outline-none resize-none text-sm py-1.5 text-foreground placeholder:text-muted-foreground max-h-20"
-                disabled={isLoading}
-              />
-              <CompanionVoiceInput
-                onTranscript={(text) => sendMessage(text)}
-                disabled={isLoading}
-                showLabel={!input.trim() && messages.length <= 1}
-              />
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-9 w-9 shrink-0"
-                onClick={() => sendMessage(input)}
-                disabled={!input.trim() || isLoading}
-              >
-                <Send className="h-4 w-4" />
-              </Button>
+          {/* Text Input - hidden in voice mode */}
+          {!voiceMode && (
+            <div className="px-3 pb-3 pt-1 border-t border-border">
+              <div className="flex items-end gap-1.5 bg-muted/50 rounded-xl px-2 py-1.5">
+                <textarea
+                  ref={inputRef}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Ask me anything..."
+                  rows={1}
+                  className="flex-1 bg-transparent border-none outline-none resize-none text-sm py-1.5 text-foreground placeholder:text-muted-foreground max-h-20"
+                  disabled={isLoading}
+                />
+                <CompanionVoiceInput
+                  onTranscript={(text) => sendMessage(text)}
+                  disabled={isLoading}
+                  showLabel={!input.trim() && messages.length <= 1}
+                />
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-9 w-9 shrink-0"
+                  onClick={() => sendMessage(input)}
+                  disabled={!input.trim() || isLoading}
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       )}
     </>

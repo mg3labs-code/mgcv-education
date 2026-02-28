@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import ForgotPasswordModal from "@/components/ForgotPasswordModal";
+import { Menu, X } from "lucide-react";
 
 type LoginType = "student" | "teacher" | "";
 type ModalType = "login" | "about" | "contact" | "";
@@ -26,6 +27,7 @@ const Index = () => {
   const [fullName, setFullName] = useState("");
   const [className, setClassName] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && user && role) {
@@ -34,6 +36,7 @@ const Index = () => {
   }, [loading, user, role, navigate]);
 
   const openModal = (type: "student" | "teacher" | "about" | "contact") => {
+    setMobileMenuOpen(false);
     if (type === "student" || type === "teacher") {
       setLoginType(type);
       setModalType("login");
@@ -101,11 +104,23 @@ const Index = () => {
           </a>{" "}instead.
         </div>
       )}
+
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-[1000] bg-[#0f1419]/95 backdrop-blur-[20px] py-5 border-b border-white/10" style={{ top: inIframe ? '36px' : 0 }}>
-        <div className="max-w-[1400px] mx-auto flex justify-between items-center px-10">
-          <div className="text-[32px] font-light tracking-wide">EduTech</div>
-          <nav className="flex list-none gap-12 items-center">
+      <header className="fixed top-0 left-0 right-0 z-[1000] bg-[#0f1419]/95 backdrop-blur-[20px] py-4 md:py-5 border-b border-white/10" style={{ top: inIframe ? '36px' : 0 }}>
+        <div className="max-w-[1400px] mx-auto flex justify-between items-center px-4 md:px-10">
+          <div className="text-2xl md:text-[32px] font-light tracking-wide">EduTech</div>
+
+          {/* Mobile menu toggle */}
+          <button
+            className="md:hidden text-white/80 bg-transparent border-none"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle menu"
+          >
+            {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
+
+          {/* Desktop nav */}
+          <nav className="hidden md:flex list-none gap-12 items-center">
             <button onClick={() => openModal("student")} className="text-white/80 text-base font-normal transition-colors hover:text-teal cursor-pointer bg-transparent border-none">
               Student Login
             </button>
@@ -123,25 +138,52 @@ const Index = () => {
             </button>
           </nav>
         </div>
+
+        {/* Mobile nav dropdown */}
+        {mobileMenuOpen && (
+          <div className="md:hidden bg-[#0f1419]/98 border-t border-white/10 px-4 py-4 flex flex-col gap-3 animate-slide-down">
+            <button onClick={() => openModal("student")} className="text-white/80 text-base py-2 text-left bg-transparent border-none">
+              Student Login
+            </button>
+            <button onClick={() => openModal("teacher")} className="text-white/80 text-base py-2 text-left bg-transparent border-none">
+              Teacher Login
+            </button>
+            <button onClick={() => openModal("about")} className="text-white/80 text-base py-2 text-left bg-transparent border-none">
+              About
+            </button>
+            <button onClick={() => openModal("contact")} className="bg-teal text-white px-6 py-3 rounded-full font-semibold text-center">
+              CONTACT
+            </button>
+          </div>
+        )}
       </header>
 
       {/* Main Content */}
-      <main className="min-h-screen flex items-center relative overflow-hidden pt-[100px]">
-        <div className="max-w-[1400px] mx-auto px-10 grid grid-cols-2 gap-[100px] items-center w-full">
+      <main className="min-h-screen flex items-center relative overflow-hidden pt-24 md:pt-[100px]">
+        <div className="max-w-[1400px] mx-auto px-4 md:px-10 grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-[100px] items-center w-full">
           <div className="z-10">
-            <div className="text-2xl text-teal mb-5 font-light italic">Empowering Minds.</div>
-            <h1 className="text-[72px] font-bold leading-[1.1] mb-8 text-white">
+            <div className="text-lg md:text-2xl text-teal mb-3 md:mb-5 font-light italic">Empowering Minds.</div>
+            <h1 className="text-4xl md:text-[72px] font-bold leading-[1.1] mb-5 md:mb-8 text-white">
               The Right Learning.<br />
               The Right Future.™
             </h1>
-            <p className="text-xl text-white/70 leading-relaxed font-light">
+            <p className="text-base md:text-xl text-white/70 leading-relaxed font-light">
               A trusted educational technology platform that bridges the gap between students and teachers, fostering collaborative learning for tomorrow's leaders.
             </p>
+            {/* Mobile CTA buttons */}
+            <div className="flex flex-col sm:flex-row gap-3 mt-8 md:hidden">
+              <button onClick={() => openModal("student")} className="bg-teal text-white px-6 py-4 rounded-full font-semibold text-base">
+                Student Login
+              </button>
+              <button onClick={() => openModal("teacher")} className="bg-white/10 text-white px-6 py-4 rounded-full font-semibold text-base border border-white/20">
+                Teacher Login
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Background Animation */}
-        <div className="absolute top-0 right-0 w-[60%] h-full z-[1]">
+        {/* Background Animation - hidden on mobile for performance */}
+        <div className="absolute top-0 right-0 w-[60%] h-full z-[1] hidden md:block">
           <div className="absolute w-full h-full opacity-10">
             {[...Array(9)].map((_, i) => (
               <div
@@ -188,12 +230,12 @@ const Index = () => {
 
       {/* Login Modal */}
       {modalType === "login" && (
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-[10px] z-[2000] flex justify-center items-center" onClick={(e) => e.target === e.currentTarget && closeModal()}>
-          <div className="glass-dark rounded-[20px] p-[50px] w-[450px] text-center animate-modal-in relative">
-            <button onClick={closeModal} className="absolute top-5 right-6 text-3xl cursor-pointer text-white/70 hover:text-white bg-transparent border-none">
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-[10px] z-[2000] flex justify-center items-center p-4" onClick={(e) => e.target === e.currentTarget && closeModal()}>
+          <div className="glass-dark rounded-[20px] p-8 md:p-[50px] w-full max-w-[450px] text-center animate-modal-in relative">
+            <button onClick={closeModal} className="absolute top-4 right-5 text-3xl cursor-pointer text-white/70 hover:text-white bg-transparent border-none">
               &times;
             </button>
-            <h2 className="text-[2.5rem] mb-2 text-teal font-light">
+            <h2 className="text-2xl md:text-[2.5rem] mb-2 text-teal font-light">
               {loginType === "student" ? "Student Portal" : "Teacher Portal"}
             </h2>
 
@@ -203,7 +245,7 @@ const Index = () => {
               </div>
             ) : (
               <>
-                <p className="text-white/80 mb-10 text-base">
+                <p className="text-white/80 mb-6 md:mb-10 text-sm md:text-base">
                   {authMode === "login"
                     ? loginType === "student" ? "Access your learning dashboard" : "Manage your classroom"
                     : "Create your account"}
@@ -212,38 +254,38 @@ const Index = () => {
                 <form onSubmit={handleSubmit}>
                   {authMode === "signup" && (
                     <>
-                      <div className="mb-6">
+                      <div className="mb-4 md:mb-6">
                         <input
                           type="text"
                           value={fullName}
                           onChange={(e) => setFullName(e.target.value)}
                           required
                           placeholder="👤 Enter your full name"
-                          className="w-full py-[18px] px-6 border-none rounded-full bg-white/15 text-white text-base outline-none border-2 border-transparent transition-all placeholder:text-white/60 focus:bg-white/20 focus:border-teal focus:shadow-[0_0_20px_rgba(0,212,170,0.3)]"
+                          className="w-full py-4 md:py-[18px] px-5 md:px-6 border-none rounded-full bg-white/15 text-white text-sm md:text-base outline-none border-2 border-transparent transition-all placeholder:text-white/60 focus:bg-white/20 focus:border-teal focus:shadow-[0_0_20px_rgba(0,212,170,0.3)]"
                         />
                       </div>
-                      <div className="mb-6">
+                      <div className="mb-4 md:mb-6">
                         <input
                           type="text"
                           value={className}
                           onChange={(e) => setClassName(e.target.value)}
                           placeholder="🏫 Enter your class (e.g. 9th CBSE)"
-                          className="w-full py-[18px] px-6 border-none rounded-full bg-white/15 text-white text-base outline-none border-2 border-transparent transition-all placeholder:text-white/60 focus:bg-white/20 focus:border-teal focus:shadow-[0_0_20px_rgba(0,212,170,0.3)]"
+                          className="w-full py-4 md:py-[18px] px-5 md:px-6 border-none rounded-full bg-white/15 text-white text-sm md:text-base outline-none border-2 border-transparent transition-all placeholder:text-white/60 focus:bg-white/20 focus:border-teal focus:shadow-[0_0_20px_rgba(0,212,170,0.3)]"
                         />
                       </div>
                     </>
                   )}
-                  <div className="mb-6">
+                  <div className="mb-4 md:mb-6">
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
                       placeholder="📧 Enter your email"
-                      className="w-full py-[18px] px-6 border-none rounded-full bg-white/15 text-white text-base outline-none border-2 border-transparent transition-all placeholder:text-white/60 focus:bg-white/20 focus:border-teal focus:shadow-[0_0_20px_rgba(0,212,170,0.3)]"
+                      className="w-full py-4 md:py-[18px] px-5 md:px-6 border-none rounded-full bg-white/15 text-white text-sm md:text-base outline-none border-2 border-transparent transition-all placeholder:text-white/60 focus:bg-white/20 focus:border-teal focus:shadow-[0_0_20px_rgba(0,212,170,0.3)]"
                     />
                   </div>
-                  <div className="mb-6">
+                  <div className="mb-4 md:mb-6">
                     <input
                       type="password"
                       value={password}
@@ -251,28 +293,28 @@ const Index = () => {
                       required
                       minLength={6}
                       placeholder="🔒 Enter your password"
-                      className="w-full py-[18px] px-6 border-none rounded-full bg-white/15 text-white text-base outline-none border-2 border-transparent transition-all placeholder:text-white/60 focus:bg-white/20 focus:border-teal focus:shadow-[0_0_20px_rgba(0,212,170,0.3)]"
+                      className="w-full py-4 md:py-[18px] px-5 md:px-6 border-none rounded-full bg-white/15 text-white text-sm md:text-base outline-none border-2 border-transparent transition-all placeholder:text-white/60 focus:bg-white/20 focus:border-teal focus:shadow-[0_0_20px_rgba(0,212,170,0.3)]"
                     />
                   </div>
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="w-full py-[18px] border-none rounded-full bg-gradient-to-br from-teal to-teal-light text-white text-lg font-semibold cursor-pointer transition-all mt-5 hover:-translate-y-0.5 hover:shadow-[0_15px_35px_rgba(0,212,170,0.4)] disabled:opacity-50"
+                    className="w-full py-4 md:py-[18px] border-none rounded-full bg-gradient-to-br from-teal to-teal-light text-white text-base md:text-lg font-semibold cursor-pointer transition-all mt-3 md:mt-5 hover:-translate-y-0.5 hover:shadow-[0_15px_35px_rgba(0,212,170,0.4)] disabled:opacity-50"
                   >
                     {submitting ? "⏳ Authenticating..." : authMode === "login" ? "🚀 Access Portal" : "🚀 Create Account"}
                   </button>
                 </form>
 
-                <div className="flex justify-between mt-6">
+                <div className="flex justify-between mt-5 md:mt-6">
                   <button
                     onClick={() => setShowForgot(true)}
-                    className="text-white/70 text-sm transition-colors hover:text-teal bg-transparent border-none cursor-pointer"
+                    className="text-white/70 text-xs md:text-sm transition-colors hover:text-teal bg-transparent border-none cursor-pointer"
                   >
                     Forgot Password?
                   </button>
                   <button
                     onClick={() => setAuthMode(authMode === "login" ? "signup" : "login")}
-                    className="text-white/70 text-sm transition-colors hover:text-teal bg-transparent border-none cursor-pointer"
+                    className="text-white/70 text-xs md:text-sm transition-colors hover:text-teal bg-transparent border-none cursor-pointer"
                   >
                     {authMode === "login" ? "Register Now" : "Sign In Instead"}
                   </button>
@@ -285,21 +327,21 @@ const Index = () => {
 
       {/* About Modal */}
       {modalType === "about" && (
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-[10px] z-[2000] flex justify-center items-center" onClick={(e) => e.target === e.currentTarget && closeModal()}>
-          <div className="glass-dark rounded-[20px] p-[50px] w-[600px] max-w-[90%] max-h-[80vh] overflow-y-auto text-left animate-modal-in relative">
-            <button onClick={closeModal} className="absolute top-5 right-6 text-3xl cursor-pointer text-white/70 hover:text-white bg-transparent border-none">
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-[10px] z-[2000] flex justify-center items-center p-4" onClick={(e) => e.target === e.currentTarget && closeModal()}>
+          <div className="glass-dark rounded-[20px] p-8 md:p-[50px] w-full max-w-[600px] max-h-[80vh] overflow-y-auto text-left animate-modal-in relative">
+            <button onClick={closeModal} className="absolute top-4 right-5 text-3xl cursor-pointer text-white/70 hover:text-white bg-transparent border-none">
               &times;
             </button>
-            <h2 className="text-[2.5rem] mb-5 text-teal font-light text-center">About EduTech</h2>
-            <div className="text-white/90 leading-relaxed text-base space-y-5">
+            <h2 className="text-2xl md:text-[2.5rem] mb-5 text-teal font-light text-center">About EduTech</h2>
+            <div className="text-white/90 leading-relaxed text-sm md:text-base space-y-5">
               <p>
-                <strong className="text-teal">EduTech</strong> is a cutting-edge educational technology platform designed to revolutionize the way students learn and teachers educate. Our mission is to bridge the digital divide in education by providing intuitive, accessible, and powerful tools that enhance the learning experience for everyone involved.
+                <strong className="text-teal">EduTech</strong> is a cutting-edge educational technology platform designed to revolutionize the way students learn and teachers educate.
               </p>
               <p>
-                Built with modern web technologies and user-centered design principles, EduTech offers separate, tailored experiences for both students and educators. Students can access interactive learning materials, track their progress, collaborate with peers, and receive personalized feedback. Teachers benefit from comprehensive classroom management tools, analytics dashboards, assignment creation capabilities, and seamless communication channels with their students.
+                Built with modern web technologies and user-centered design principles, EduTech offers separate, tailored experiences for both students and educators.
               </p>
               <p>
-                Our platform emphasizes <strong className="text-teal">collaborative learning</strong>, <strong className="text-teal">data-driven insights</strong>, and <strong className="text-teal">personalized education paths</strong>. Whether you're a student seeking to excel in your studies or an educator looking to create impactful learning experiences, EduTech provides the technological foundation to achieve your educational goals.
+                Our platform emphasizes <strong className="text-teal">collaborative learning</strong>, <strong className="text-teal">data-driven insights</strong>, and <strong className="text-teal">personalized education paths</strong>.
               </p>
             </div>
           </div>
@@ -308,13 +350,13 @@ const Index = () => {
 
       {/* Contact Modal */}
       {modalType === "contact" && (
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-[10px] z-[2000] flex justify-center items-center" onClick={(e) => e.target === e.currentTarget && closeModal()}>
-          <div className="glass-dark rounded-[20px] p-[50px] w-[550px] max-w-[90%] text-center animate-modal-in relative">
-            <button onClick={closeModal} className="absolute top-5 right-6 text-3xl cursor-pointer text-white/70 hover:text-white bg-transparent border-none">
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-[10px] z-[2000] flex justify-center items-center p-4" onClick={(e) => e.target === e.currentTarget && closeModal()}>
+          <div className="glass-dark rounded-[20px] p-8 md:p-[50px] w-full max-w-[550px] text-center animate-modal-in relative">
+            <button onClick={closeModal} className="absolute top-4 right-5 text-3xl cursor-pointer text-white/70 hover:text-white bg-transparent border-none">
               &times;
             </button>
-            <h2 className="text-[2.5rem] mb-8 text-teal font-light">Get in Touch</h2>
-            <div className="text-white/90 leading-relaxed text-base text-left space-y-5">
+            <h2 className="text-2xl md:text-[2.5rem] mb-6 md:mb-8 text-teal font-light">Get in Touch</h2>
+            <div className="text-white/90 leading-relaxed text-sm md:text-base text-left space-y-4 md:space-y-5">
               {[
                 { icon: "📧", title: "Developer Email", desc: "mg3labs@gmail.com" },
                 { icon: "🚀", title: "MG3 Labs", desc: "Innovation in Educational Technology" },
@@ -322,11 +364,11 @@ const Index = () => {
                 { icon: "⚡", title: "Response Time", desc: "We typically respond within 24-48 hours" },
                 { icon: "🌐", title: "Available Services", desc: "Custom development, integration support, and consultation" },
               ].map((item, i) => (
-                <div key={i} className="flex items-center p-4 bg-white/5 rounded-[10px] border border-white/10">
-                  <div className="text-2xl mr-4 text-teal w-8">{item.icon}</div>
+                <div key={i} className="flex items-center p-3 md:p-4 bg-white/5 rounded-[10px] border border-white/10">
+                  <div className="text-xl md:text-2xl mr-3 md:mr-4 text-teal w-8">{item.icon}</div>
                   <div>
-                    <h4 className="text-teal mb-1 text-lg">{item.title}</h4>
-                    <p className="text-white/80 text-sm">{item.desc}</p>
+                    <h4 className="text-teal mb-0.5 md:mb-1 text-base md:text-lg">{item.title}</h4>
+                    <p className="text-white/80 text-xs md:text-sm">{item.desc}</p>
                   </div>
                 </div>
               ))}
