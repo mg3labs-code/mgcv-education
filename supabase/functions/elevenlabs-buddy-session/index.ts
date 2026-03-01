@@ -158,6 +158,7 @@ async function getOrCreateAgent(supabaseAdmin: any, elevenlabsKey: string): Prom
         agent: {
           prompt: {
             prompt: BUDDY_SYSTEM_PROMPT,
+            tools: CLIENT_TOOLS,
           },
           first_message: BUDDY_FIRST_MESSAGE,
           language: "en",
@@ -170,7 +171,6 @@ async function getOrCreateAgent(supabaseAdmin: any, elevenlabsKey: string): Prom
           style: 0.25,
           use_speaker_boost: true,
         },
-        client_tools: CLIENT_TOOLS,
       },
     }),
   });
