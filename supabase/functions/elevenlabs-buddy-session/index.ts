@@ -160,7 +160,7 @@ async function getOrCreateAgent(supabaseAdmin: any, elevenlabsKey: string): Prom
             prompt: BUDDY_SYSTEM_PROMPT,
           },
           first_message: BUDDY_FIRST_MESSAGE,
-          language: "multi",
+          language: "en",
         },
         tts: {
           voice_id: "pFZP5JQG7iQjIQuC4Bku", // Lily - warm, gentle, nurturing
