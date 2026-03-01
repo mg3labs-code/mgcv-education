@@ -3,16 +3,18 @@ import { useLocation, useNavigate } from "react-router-dom";
 import {
   MessageCircle, X, Send, Plus, Sparkles, BookOpen,
   ClipboardList, Lightbulb, Loader2, Volume2, VolumeX, Mic, MicOff,
-  RefreshCw, WifiOff, Wifi
+  RefreshCw, WifiOff, Wifi, Phone, PhoneOff
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useConversation } from "@elevenlabs/react";
 import CompanionVoiceInput from "./CompanionVoiceInput";
 
-// Clean text for speech synthesis
+// ─── Text chat helpers (unchanged) ───
+
 function cleanForSpeech(text: string) {
   return text
     .replace(/\[NAV:[^\]]+\]/g, "")
@@ -25,194 +27,8 @@ function cleanForSpeech(text: string) {
     .trim();
 }
 
-const TTS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-tts-stream`;
-
-class StreamingSpeaker {
-  private queue: string[] = [];
-  private processing = false;
-  private aborted = false;
-  private buffer = "";
-  private onSpeakingChange: (v: boolean) => void;
-  private audioContext: AudioContext | null = null;
-  private scheduledEnd = 0;
-  private activeSourceNodes: AudioBufferSourceNode[] = [];
-  private sentenceRe = /(?<=[.!?…])\s+|(?:\n\n)/;
-  private useFallback = false;
-  private ttsFailCount = 0;
-  private fallbackToastShown = false;
-  private browserUtterances: SpeechSynthesisUtterance[] = [];
-
-  constructor(onSpeakingChange: (v: boolean) => void) {
-    this.onSpeakingChange = onSpeakingChange;
-  }
-
-  feed(delta: string) {
-    if (this.aborted) return;
-    this.buffer += delta;
-    const parts = this.buffer.split(this.sentenceRe);
-    if (parts.length > 1) {
-      this.buffer = parts.pop()!;
-      for (const sentence of parts) {
-        const clean = cleanForSpeech(sentence);
-        if (clean) this.queue.push(clean);
-      }
-      this.processQueue();
-    }
-  }
-
-  flush() {
-    if (this.aborted) return;
-    const remaining = cleanForSpeech(this.buffer);
-    this.buffer = "";
-    if (remaining) {
-      this.queue.push(remaining);
-      this.processQueue();
-    }
-  }
-
-  abort() {
-    this.aborted = true;
-    this.queue = [];
-    this.buffer = "";
-    // Stop ElevenLabs audio
-    for (const node of this.activeSourceNodes) {
-      try { node.stop(); } catch {}
-    }
-    this.activeSourceNodes = [];
-    if (this.audioContext) {
-      this.audioContext.close().catch(() => {});
-      this.audioContext = null;
-    }
-    // Stop browser TTS
-    window.speechSynthesis.cancel();
-    this.browserUtterances = [];
-    this.processing = false;
-    this.onSpeakingChange(false);
-  }
-
-  isBusy() {
-    return this.processing || this.queue.length > 0 || this.activeSourceNodes.length > 0;
-  }
-
-  private useBrowserTTS(text: string): Promise<void> {
-    return new Promise((resolve) => {
-      if (this.aborted) { resolve(); return; }
-      const utterance = new SpeechSynthesisUtterance(text);
-      const voices = window.speechSynthesis.getVoices();
-      // Pick a good English voice
-      const preferred = voices.find(v => v.lang === "en-IN") 
-        || voices.find(v => v.lang.startsWith("en") && v.name.includes("Google"))
-        || voices.find(v => v.lang.startsWith("en"))
-        || voices[0];
-      if (preferred) utterance.voice = preferred;
-      utterance.rate = 1.05;
-      utterance.pitch = 1.0;
-      this.browserUtterances.push(utterance);
-
-      utterance.onend = () => {
-        this.browserUtterances = this.browserUtterances.filter(u => u !== utterance);
-        resolve();
-      };
-      utterance.onerror = () => {
-        this.browserUtterances = this.browserUtterances.filter(u => u !== utterance);
-        resolve();
-      };
-      window.speechSynthesis.speak(utterance);
-    });
-  }
-
-  private async processQueue() {
-    if (this.processing || this.aborted) return;
-    this.processing = true;
-    this.onSpeakingChange(true);
-
-    while (this.queue.length > 0 && !this.aborted) {
-      const text = this.queue.shift()!;
-
-      // If we've switched to fallback, use browser TTS
-      if (this.useFallback) {
-        await this.useBrowserTTS(text);
-        continue;
-      }
-
-      try {
-        if (!this.audioContext) {
-          this.audioContext = new AudioContext();
-          this.scheduledEnd = this.audioContext.currentTime;
-        }
-
-        const resp = await fetch(TTS_URL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          },
-          body: JSON.stringify({ text }),
-        });
-
-        if (!resp.ok) {
-          this.ttsFailCount++;
-          console.error(`ElevenLabs TTS error: ${resp.status}`);
-          
-          // Switch to fallback after 2 failures or on quota/auth errors
-          if (resp.status === 401 || resp.status === 402 || resp.status === 403 || this.ttsFailCount >= 2) {
-            this.useFallback = true;
-            if (!this.fallbackToastShown) {
-              this.fallbackToastShown = true;
-              toast.info("Using built-in voice (premium voice temporarily unavailable)", { duration: 5000 });
-            }
-            await this.useBrowserTTS(text);
-            continue;
-          }
-          continue;
-        }
-
-        if (this.aborted) continue;
-
-        const arrayBuffer = await resp.arrayBuffer();
-        if (this.aborted || !this.audioContext) break;
-
-        const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
-        if (this.aborted || !this.audioContext) break;
-
-        const source = this.audioContext.createBufferSource();
-        source.buffer = audioBuffer;
-        source.connect(this.audioContext.destination);
-        this.activeSourceNodes.push(source);
-
-        const startTime = Math.max(this.audioContext.currentTime, this.scheduledEnd);
-        source.start(startTime);
-        this.scheduledEnd = startTime + audioBuffer.duration;
-
-        // Reset fail count on success
-        this.ttsFailCount = 0;
-
-        source.onended = () => {
-          this.activeSourceNodes = this.activeSourceNodes.filter((n) => n !== source);
-          if (this.activeSourceNodes.length === 0 && this.queue.length === 0) {
-            this.onSpeakingChange(false);
-          }
-        };
-      } catch (e) {
-        console.error("TTS playback error:", e);
-        this.ttsFailCount++;
-        if (this.ttsFailCount >= 2) {
-          this.useFallback = true;
-          if (!this.fallbackToastShown) {
-            this.fallbackToastShown = true;
-            toast.info("Using built-in voice (premium voice temporarily unavailable)", { duration: 5000 });
-          }
-          await this.useBrowserTTS(text);
-        }
-      }
-    }
-
-    this.processing = false;
-    if (this.queue.length === 0 && this.activeSourceNodes.length === 0 && this.browserUtterances.length === 0) {
-      this.onSpeakingChange(false);
-    }
-  }
-}
+const STUDY_COMPANION_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/study-companion`;
+const BUDDY_SESSION_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-buddy-session`;
 
 interface ChatMessage {
   id?: string;
@@ -220,8 +36,6 @@ interface ChatMessage {
   content: string;
   error?: boolean;
 }
-
-const STUDY_COMPANION_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/study-companion`;
 
 function renderContent(text: string) {
   const cleaned = text.replace(/\[NAV:[^\]]+\]/g, "").trim();
@@ -278,8 +92,17 @@ const QUICK_ACTIONS = [
   { label: "My Assignments", icon: ClipboardList, prompt: "Take me to my assignments." },
 ];
 
-// SpeechRecognition type for browser
-const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+// ─── Navigation routes for client tools ───
+const NAV_ROUTES: Record<string, string> = {
+  dashboard: "/student",
+  textbook: "/student/textbook",
+  assignments: "/student/assignments",
+  calendar: "/student/calendar",
+  "exam room": "/student/exam-room",
+  "exam-room": "/student/exam-room",
+  "deep dive": "/student/deep-dive",
+  "deep-dive": "/student/deep-dive",
+};
 
 const StudyCompanion = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -289,27 +112,131 @@ const StudyCompanion = () => {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [hasGreeted, setHasGreeted] = useState(false);
   const [showNudge, setShowNudge] = useState(false);
-  const [ttsEnabled, setTtsEnabled] = useState(() => {
-    const saved = localStorage.getItem("buddy_tts");
-    return saved !== "false";
-  });
-  const [isSpeaking, setIsSpeaking] = useState(false);
-  const [voiceMode, setVoiceMode] = useState(false);
-  const [isListening, setIsListening] = useState(false);
-  const [interimTranscript, setInterimTranscript] = useState("");
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  // Voice agent state
+  const [voiceMode, setVoiceMode] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [voiceTranscripts, setVoiceTranscripts] = useState<Array<{ role: "user" | "agent"; text: string }>>([]);
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const recognitionRef = useRef<any>(null);
-  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const finalTranscriptBufferRef = useRef("");
-  const listeningIntentRef = useRef(false); // tracks whether we WANT to be listening
   const { user, fullName } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
-  const speakerRef = useRef<StreamingSpeaker | null>(null);
+  // ─── ElevenLabs Conversational AI Agent ───
+  const conversation = useConversation({
+    onConnect: () => {
+      console.log("🎙️ Connected to Buddy voice agent");
+      setIsConnecting(false);
+      toast.success("Voice connected! Start speaking.", { duration: 2000 });
+    },
+    onDisconnect: () => {
+      console.log("🔇 Disconnected from Buddy voice agent");
+      setVoiceMode(false);
+      setIsConnecting(false);
+    },
+    onMessage: (message: any) => {
+      // Handle transcripts and agent responses
+      if (message.type === "user_transcript") {
+        const text = message.user_transcription_event?.user_transcript;
+        if (text) {
+          setVoiceTranscripts((prev) => [...prev, { role: "user", text }]);
+        }
+      } else if (message.type === "agent_response") {
+        const text = message.agent_response_event?.agent_response;
+        if (text) {
+          setVoiceTranscripts((prev) => [...prev, { role: "agent", text }]);
+          // Handle navigation from agent response
+          handleNavigation(text);
+        }
+      } else if (message.type === "agent_response_correction") {
+        const corrected = message.agent_response_correction_event?.corrected_agent_response;
+        if (corrected) {
+          // Replace last agent message with corrected version
+          setVoiceTranscripts((prev) => {
+            const newTranscripts = [...prev];
+            for (let i = newTranscripts.length - 1; i >= 0; i--) {
+              if (newTranscripts[i].role === "agent") {
+                newTranscripts[i] = { role: "agent", text: corrected };
+                break;
+              }
+            }
+            return newTranscripts;
+          });
+        }
+      }
+    },
+    onError: (error: any) => {
+      console.error("Voice agent error:", error);
+      toast.error("Voice connection error. Please try again.");
+      setIsConnecting(false);
+    },
+    clientTools: {
+      navigateTo: (params: { page: string }) => {
+        const route = NAV_ROUTES[params.page.toLowerCase()];
+        if (route) {
+          navigate(route);
+          return `Navigated to ${params.page}`;
+        }
+        return `Could not find page: ${params.page}`;
+      },
+    },
+  });
+
+  // Start voice conversation
+  const startVoiceAgent = useCallback(async () => {
+    setIsConnecting(true);
+    try {
+      // Request microphone permission
+      await navigator.mediaDevices.getUserMedia({ audio: true });
+
+      // Get conversation token from edge function
+      const response = await fetch(BUDDY_SESSION_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({ error: "Failed to start voice session" }));
+        throw new Error(err.error || "Failed to start voice session");
+      }
+
+      const data = await response.json();
+      if (!data.token) {
+        throw new Error("No conversation token received");
+      }
+
+      // Start the ElevenLabs conversation with WebRTC
+      await conversation.startSession({
+        conversationToken: data.token,
+        connectionType: "webrtc",
+      });
+
+      setVoiceMode(true);
+      setVoiceTranscripts([]);
+    } catch (error: any) {
+      console.error("Failed to start voice agent:", error);
+      toast.error(error.message || "Failed to start voice. Check mic permissions.");
+      setIsConnecting(false);
+    }
+  }, [conversation]);
+
+  // Stop voice conversation
+  const stopVoiceAgent = useCallback(async () => {
+    try {
+      await conversation.endSession();
+    } catch (e) {
+      console.error("Error ending session:", e);
+    }
+    setVoiceMode(false);
+    setIsConnecting(false);
+  }, [conversation]);
 
   // Online/offline tracking
   useEffect(() => {
@@ -326,157 +253,11 @@ const StudyCompanion = () => {
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      speakerRef.current?.abort();
-      recognitionRef.current?.abort?.();
-      recognitionRef.current?.stop?.();
-      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+      if (conversation.status === "connected") {
+        conversation.endSession().catch(() => {});
+      }
     };
   }, []);
-
-  const toggleTts = () => {
-    const next = !ttsEnabled;
-    setTtsEnabled(next);
-    localStorage.setItem("buddy_tts", String(next));
-    if (!next) { speakerRef.current?.abort(); speakerRef.current = null; setIsSpeaking(false); }
-  };
-
-  // Refs for stable access in callbacks
-  const voiceModeRef = useRef(voiceMode);
-  const isLoadingRef = useRef(isLoading);
-  const speakingRef = useRef(isSpeaking);
-  voiceModeRef.current = voiceMode;
-  isLoadingRef.current = isLoading;
-  speakingRef.current = isSpeaking;
-
-  // Voice mode: continuous listening via SpeechRecognition
-  const startListening = useCallback(() => {
-    if (!SpeechRecognition) {
-      toast.error("Your browser doesn't support voice recognition.");
-      return;
-    }
-
-    // Guard against double-start
-    if (recognitionRef.current) {
-      try { recognitionRef.current.stop(); } catch {}
-      recognitionRef.current = null;
-    }
-
-    listeningIntentRef.current = true;
-
-    const recognition = new SpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = "en-IN";
-
-    recognition.onresult = (event: any) => {
-      let interim = "";
-      let finalText = "";
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const transcript = event.results[i][0].transcript;
-        if (event.results[i].isFinal) {
-          finalText += transcript;
-        } else {
-          interim += transcript;
-        }
-      }
-      setInterimTranscript(interim);
-      
-      if (finalText.trim()) {
-        // Buffer final transcript and debounce 1s before sending
-        finalTranscriptBufferRef.current += " " + finalText.trim();
-        setInterimTranscript(finalTranscriptBufferRef.current.trim() + "...");
-        
-        if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
-        debounceTimerRef.current = setTimeout(() => {
-          const toSend = finalTranscriptBufferRef.current.trim();
-          finalTranscriptBufferRef.current = "";
-          setInterimTranscript("");
-          if (toSend) {
-            // Stop recognition BEFORE sending
-            listeningIntentRef.current = false;
-            try { recognitionRef.current?.stop(); } catch {}
-            setIsListening(false);
-            sendMessageRef.current(toSend);
-          }
-        }, 1000);
-      }
-    };
-
-    recognition.onerror = (event: any) => {
-      if (event.error !== "no-speech" && event.error !== "aborted") {
-        console.error("Speech recognition error:", event.error);
-      }
-    };
-
-    recognition.onend = () => {
-      // Only auto-restart if we intend to be listening
-      if (listeningIntentRef.current && voiceModeRef.current && !isLoadingRef.current && !speakingRef.current) {
-        try {
-          setTimeout(() => {
-            if (listeningIntentRef.current && voiceModeRef.current && !isLoadingRef.current && !speakingRef.current) {
-              recognition.start();
-            } else {
-              setIsListening(false);
-            }
-          }, 100);
-        } catch {}
-      } else {
-        setIsListening(false);
-      }
-    };
-
-    recognitionRef.current = recognition;
-    try {
-      recognition.start();
-      setIsListening(true);
-    } catch {
-      toast.error("Could not start voice recognition.");
-    }
-  }, []);
-
-  const stopListening = useCallback(() => {
-    listeningIntentRef.current = false;
-    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
-    finalTranscriptBufferRef.current = "";
-    recognitionRef.current?.stop?.();
-    recognitionRef.current = null;
-    setIsListening(false);
-    setInterimTranscript("");
-  }, []);
-
-  // When voice mode toggles
-  useEffect(() => {
-    if (voiceMode && isOpen) {
-      if (!ttsEnabled) {
-        setTtsEnabled(true);
-        localStorage.setItem("buddy_tts", "true");
-      }
-      startListening();
-    } else {
-      stopListening();
-    }
-  }, [voiceMode, isOpen]);
-
-  // Resume listening after Buddy finishes speaking in voice mode
-  useEffect(() => {
-    if (voiceMode && !isSpeaking && !isLoading && isOpen) {
-      const t = setTimeout(() => {
-        if (voiceModeRef.current && !isLoadingRef.current && !speakingRef.current) {
-          startListening();
-        }
-      }, 800); // increased delay to avoid picking up Buddy's audio
-      return () => clearTimeout(t);
-    }
-  }, [isSpeaking, isLoading, voiceMode, isOpen]);
-
-  // Pause listening while Buddy is speaking or loading
-  useEffect(() => {
-    if (voiceMode && (isSpeaking || isLoading)) {
-      listeningIntentRef.current = false;
-      recognitionRef.current?.stop?.();
-      setIsListening(false);
-    }
-  }, [isSpeaking, isLoading, voiceMode]);
 
   // Auto-open on first ever visit
   useEffect(() => {
@@ -511,7 +292,7 @@ const StudyCompanion = () => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages, interimTranscript]);
+  }, [messages, voiceTranscripts]);
 
   // Load or create session
   useEffect(() => {
@@ -522,14 +303,14 @@ const StudyCompanion = () => {
 
   // Greeting
   useEffect(() => {
-    if (isOpen && !hasGreeted && messages.length === 0 && sessionId) {
+    if (isOpen && !hasGreeted && messages.length === 0 && sessionId && !voiceMode) {
       const greeting = getGreeting(location.pathname, fullName);
       const greetMsg: ChatMessage = { role: "assistant", content: greeting };
       setMessages([greetMsg]);
       setHasGreeted(true);
       persistMessage(greetMsg, sessionId);
     }
-  }, [isOpen, hasGreeted, sessionId, messages.length]);
+  }, [isOpen, hasGreeted, sessionId, messages.length, voiceMode]);
 
   const loadOrCreateSession = async () => {
     if (!user) return;
@@ -591,29 +372,17 @@ const StudyCompanion = () => {
       const path = navMatch[1];
       setTimeout(() => navigate(path), 500);
     }
-  };
-
-  // Tap to interrupt: clicking while speaking stops TTS and starts listening
-  const handleInterrupt = useCallback(() => {
-    if (isSpeaking) {
-      speakerRef.current?.abort();
-      speakerRef.current = null;
-      setIsSpeaking(false);
-      if (voiceMode) {
-        setTimeout(() => startListening(), 200);
+    // Also check for spoken navigation patterns
+    for (const [key, route] of Object.entries(NAV_ROUTES)) {
+      if (text.toLowerCase().includes(`navigate to ${key}`) || text.toLowerCase().includes(`go to ${key}`)) {
+        setTimeout(() => navigate(route), 500);
+        break;
       }
     }
-  }, [isSpeaking, voiceMode, startListening]);
+  };
 
   const sendMessage = useCallback(async (text: string) => {
     if (!text.trim() || isLoading) return;
-
-    // Stop listening before sending
-    if (voiceModeRef.current) {
-      listeningIntentRef.current = false;
-      recognitionRef.current?.stop?.();
-      setIsListening(false);
-    }
 
     const userMsg: ChatMessage = { role: "user", content: text.trim() };
     setMessages((prev) => [...prev, userMsg]);
@@ -628,9 +397,6 @@ const StudyCompanion = () => {
     }));
 
     let assistantContent = "";
-    speakerRef.current?.abort();
-    const speaker = ttsEnabled ? new StreamingSpeaker(setIsSpeaking) : null;
-    speakerRef.current = speaker;
 
     try {
       const resp = await fetch(STUDY_COMPANION_URL, {
@@ -647,14 +413,12 @@ const StudyCompanion = () => {
 
       if (!resp.ok) {
         const err = await resp.json().catch(() => ({ error: "Failed" }));
-        // Add inline error message instead of just toast
-        setMessages((prev) => [...prev, { 
-          role: "assistant", 
+        setMessages((prev) => [...prev, {
+          role: "assistant",
           content: `⚠️ ${err.error || "Something went wrong. Please try again."}`,
-          error: true 
+          error: true,
         }]);
         setIsLoading(false);
-        speaker?.abort();
         return;
       }
 
@@ -697,7 +461,6 @@ const StudyCompanion = () => {
             if (delta) {
               assistantContent += delta;
               updateAssistant(assistantContent);
-              speaker?.feed(delta);
             }
           } catch {
             buffer = line + "\n" + buffer;
@@ -719,13 +482,11 @@ const StudyCompanion = () => {
             if (delta) {
               assistantContent += delta;
               updateAssistant(assistantContent);
-              speaker?.feed(delta);
             }
           } catch { /* ignore */ }
         }
       }
 
-      speaker?.flush();
       handleNavigation(assistantContent);
 
       if (assistantContent) {
@@ -738,22 +499,14 @@ const StudyCompanion = () => {
         content: "⚠️ Failed to get a response. Please check your connection and try again.",
         error: true,
       }]);
-      speaker?.abort();
     } finally {
       setIsLoading(false);
-      // Voice mode will auto-resume via the isSpeaking/isLoading useEffect
     }
-  }, [messages, sessionId, isLoading, location.pathname, ttsEnabled]);
+  }, [messages, sessionId, isLoading, location.pathname]);
 
-  // Stable ref for sendMessage so recognition callback always uses latest
-  const sendMessageRef = useRef(sendMessage);
-  sendMessageRef.current = sendMessage;
-
-  // Retry failed message
   const retryLastMessage = useCallback(() => {
     const lastUserMsg = [...messages].reverse().find(m => m.role === "user");
     if (lastUserMsg) {
-      // Remove the error message
       setMessages(prev => prev.filter(m => !m.error));
       sendMessage(lastUserMsg.content);
     }
@@ -761,6 +514,10 @@ const StudyCompanion = () => {
 
   const startNewChat = async () => {
     if (!user) return;
+    // End voice if active
+    if (voiceMode) {
+      await stopVoiceAgent();
+    }
     const { data } = await supabase
       .from("chat_sessions")
       .insert({ user_id: user.id, title: "Study Chat" })
@@ -771,6 +528,7 @@ const StudyCompanion = () => {
       setSessionId(data.id);
       setMessages([]);
       setHasGreeted(false);
+      setVoiceTranscripts([]);
     }
   };
 
@@ -781,11 +539,17 @@ const StudyCompanion = () => {
     }
   };
 
-  const toggleVoiceMode = () => {
-    setVoiceMode((v) => !v);
+  const handleClose = async () => {
+    if (voiceMode) {
+      await stopVoiceAgent();
+    }
+    setIsOpen(false);
   };
 
   if (!user) return null;
+
+  const isVoiceActive = conversation.status === "connected";
+  const isBuddySpeaking = conversation.isSpeaking;
 
   return (
     <>
@@ -799,8 +563,8 @@ const StudyCompanion = () => {
           )}
           <button
             onClick={() => setIsOpen(true)}
-            className={`relative h-14 w-14 rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-lg hover:shadow-xl transition-all hover:scale-105 flex items-center justify-center ${voiceMode ? "ring-4 ring-primary/30 animate-pulse" : "animate-bounce"}`}
-            style={voiceMode ? undefined : { animationDuration: "2s", animationIterationCount: 3 }}
+            className={`relative h-14 w-14 rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-lg hover:shadow-xl transition-all hover:scale-105 flex items-center justify-center ${isVoiceActive ? "ring-4 ring-green-400/50 animate-pulse" : "animate-bounce"}`}
+            style={isVoiceActive ? undefined : { animationDuration: "2s", animationIterationCount: 3 }}
             aria-label="Open Study Companion"
           >
             <MessageCircle className="h-6 w-6" />
@@ -817,13 +581,9 @@ const StudyCompanion = () => {
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-primary/10 to-primary/5 border-b border-border">
             <div className="flex items-center gap-2">
-              <div 
-                className={`relative h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center transition-all cursor-pointer ${isSpeaking ? "ring-2 ring-primary/40" : ""}`}
-                onClick={handleInterrupt}
-                title={isSpeaking ? "Tap to interrupt" : "Buddy"}
-              >
-                <Sparkles className={`h-4 w-4 text-primary transition-transform ${isSpeaking ? "animate-pulse" : ""}`} />
-                {isSpeaking && (
+              <div className={`relative h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center transition-all ${isBuddySpeaking ? "ring-2 ring-green-400/60" : ""}`}>
+                <Sparkles className={`h-4 w-4 text-primary transition-transform ${isBuddySpeaking ? "animate-pulse" : ""}`} />
+                {isBuddySpeaking && (
                   <div className="absolute inset-0 flex items-center justify-center gap-[2px]">
                     <span className="w-[2px] h-2 bg-primary rounded-full animate-[waveBar1_0.6s_ease-in-out_infinite]" />
                     <span className="w-[2px] h-3 bg-primary rounded-full animate-[waveBar2_0.6s_ease-in-out_infinite_0.15s]" />
@@ -837,187 +597,211 @@ const StudyCompanion = () => {
                 <p className="text-[10px] text-muted-foreground flex items-center gap-1">
                   {!isOnline ? (
                     <><WifiOff className="h-2.5 w-2.5 text-destructive" /> Offline</>
-                  ) : voiceMode
-                    ? isListening
-                      ? "🎤 Listening..."
-                      : isSpeaking
-                        ? "🔊 Tap to interrupt"
-                        : "Voice Mode"
-                    : <><Wifi className="h-2.5 w-2.5 text-green-500" /> Your Study Companion</>
+                  ) : isVoiceActive
+                    ? isBuddySpeaking
+                      ? "🔊 Speaking..."
+                      : "🎤 Listening..."
+                    : isConnecting
+                      ? "⏳ Connecting voice..."
+                      : <><Wifi className="h-2.5 w-2.5 text-green-500" /> Your Study Companion</>
                   }
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-1">
+              {/* Voice Agent Toggle */}
               <Button
                 size="icon"
-                variant={voiceMode ? "default" : "ghost"}
-                className={`h-7 w-7 ${voiceMode ? "bg-primary text-primary-foreground" : ""}`}
-                onClick={toggleVoiceMode}
-                title={voiceMode ? "Exit Voice Mode" : "Enter Voice Mode (hands-free)"}
+                variant={isVoiceActive ? "default" : "ghost"}
+                className={`h-7 w-7 ${isVoiceActive ? "bg-green-600 hover:bg-green-700 text-white" : ""}`}
+                onClick={isVoiceActive ? stopVoiceAgent : startVoiceAgent}
+                disabled={isConnecting}
+                title={isVoiceActive ? "End Voice Call" : "Start Voice Call with Buddy"}
               >
-                {voiceMode ? <Mic className="h-3.5 w-3.5" /> : <MicOff className="h-3.5 w-3.5" />}
-              </Button>
-              <Button
-                size="icon"
-                variant="ghost"
-                className={`h-7 w-7 ${isSpeaking ? "text-primary animate-pulse" : ""}`}
-                onClick={toggleTts}
-                title={ttsEnabled ? "Mute Buddy" : "Unmute Buddy"}
-              >
-                {ttsEnabled ? <Volume2 className="h-3.5 w-3.5" /> : <VolumeX className="h-3.5 w-3.5" />}
+                {isConnecting ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : isVoiceActive ? (
+                  <PhoneOff className="h-3.5 w-3.5" />
+                ) : (
+                  <Phone className="h-3.5 w-3.5" />
+                )}
               </Button>
               <Button size="icon" variant="ghost" className="h-7 w-7" onClick={startNewChat} title="New Chat">
                 <Plus className="h-3.5 w-3.5" />
               </Button>
-              <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { speakerRef.current?.abort(); setVoiceMode(false); setIsOpen(false); }}>
+              <Button size="icon" variant="ghost" className="h-7 w-7" onClick={handleClose}>
                 <X className="h-3.5 w-3.5" />
               </Button>
             </div>
           </div>
 
-          {/* Messages */}
-          <ScrollArea className="flex-1 px-3 py-2" ref={scrollRef as any}>
-            <div className="space-y-3">
-              {messages.map((msg, i) => (
-                <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                  <div
-                    className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
-                      msg.error
-                        ? "bg-destructive/10 text-destructive border border-destructive/20 rounded-bl-md"
-                        : msg.role === "user"
-                          ? "bg-primary text-primary-foreground rounded-br-md"
-                          : "bg-muted text-foreground rounded-bl-md"
-                    }`}
-                  >
-                    {renderContent(msg.content)}
-                    {msg.error && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="mt-2 h-7 text-xs border-destructive/30 text-destructive hover:bg-destructive/10"
-                        onClick={retryLastMessage}
+          {/* Voice Mode Active - Full Duplex UI */}
+          {isVoiceActive ? (
+            <div className="flex-1 flex flex-col">
+              {/* Voice transcripts */}
+              <ScrollArea className="flex-1 px-3 py-2" ref={scrollRef as any}>
+                <div className="space-y-3">
+                  {voiceTranscripts.map((t, i) => (
+                    <div key={i} className={`flex ${t.role === "user" ? "justify-end" : "justify-start"}`}>
+                      <div
+                        className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
+                          t.role === "user"
+                            ? "bg-primary text-primary-foreground rounded-br-md"
+                            : "bg-muted text-foreground rounded-bl-md"
+                        }`}
                       >
-                        <RefreshCw className="h-3 w-3 mr-1" /> Retry
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              ))}
-              {interimTranscript && (
-                <div className="flex justify-end">
-                  <div className="max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed bg-primary/30 text-primary-foreground rounded-br-md italic opacity-70">
-                    {interimTranscript}
-                  </div>
-                </div>
-              )}
-              {isLoading && messages[messages.length - 1]?.role !== "assistant" && (
-                <div className="flex justify-start">
-                  <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-3">
-                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                  </div>
-                </div>
-              )}
-            </div>
-          </ScrollArea>
-
-          {/* Voice Mode Active Indicator */}
-          {voiceMode && (
-            <div className="px-3 py-2 border-t border-border">
-              <div className="flex items-center justify-center gap-3">
-                <div 
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-full ${isListening ? "bg-primary/10" : isSpeaking ? "bg-primary/5 cursor-pointer" : "bg-muted"} transition-colors`}
-                  onClick={isSpeaking ? handleInterrupt : undefined}
-                >
-                  {isListening ? (
-                    <>
-                      <div className="flex items-center gap-[3px]">
-                        <span className="w-1 h-3 bg-primary rounded-full animate-[waveBar1_0.6s_ease-in-out_infinite]" />
-                        <span className="w-1 h-4 bg-primary rounded-full animate-[waveBar2_0.6s_ease-in-out_infinite_0.15s]" />
-                        <span className="w-1 h-3.5 bg-primary rounded-full animate-[waveBar3_0.6s_ease-in-out_infinite_0.3s]" />
-                        <span className="w-1 h-3 bg-primary rounded-full animate-[waveBar1_0.6s_ease-in-out_infinite_0.45s]" />
+                        {t.text}
                       </div>
-                      <span className="text-xs text-primary font-medium">Listening... just speak!</span>
-                    </>
-                  ) : isSpeaking ? (
-                    <>
-                      <div className="flex items-center gap-[2px]">
-                        <span className="w-1 h-2 bg-primary/60 rounded-full animate-[waveBar1_0.4s_ease-in-out_infinite]" />
-                        <span className="w-1 h-3 bg-primary/60 rounded-full animate-[waveBar2_0.4s_ease-in-out_infinite_0.1s]" />
-                        <span className="w-1 h-2.5 bg-primary/60 rounded-full animate-[waveBar3_0.4s_ease-in-out_infinite_0.2s]" />
-                        <span className="w-1 h-2 bg-primary/60 rounded-full animate-[waveBar1_0.4s_ease-in-out_infinite_0.3s]" />
-                        <span className="w-1 h-3.5 bg-primary/60 rounded-full animate-[waveBar2_0.4s_ease-in-out_infinite_0.05s]" />
+                    </div>
+                  ))}
+                  {voiceTranscripts.length === 0 && (
+                    <div className="flex flex-col items-center justify-center h-full py-12 text-center gap-4">
+                      <div className="relative">
+                        <div className={`h-20 w-20 rounded-full bg-gradient-to-br from-green-400/20 to-green-600/20 flex items-center justify-center ${isBuddySpeaking ? "" : "animate-pulse"}`}>
+                          <Mic className={`h-8 w-8 ${isBuddySpeaking ? "text-green-400" : "text-green-500"}`} />
+                        </div>
+                        {/* Ripple effect */}
+                        <div className="absolute inset-0 rounded-full border-2 border-green-400/30 animate-ping" style={{ animationDuration: "2s" }} />
+                        <div className="absolute -inset-2 rounded-full border border-green-400/20 animate-ping" style={{ animationDuration: "3s" }} />
                       </div>
-                      <span className="text-xs text-primary font-medium">Buddy speaking... tap to interrupt</span>
-                    </>
-                  ) : isLoading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                      <span className="text-xs text-muted-foreground">Thinking...</span>
-                    </>
-                  ) : (
-                    <span className="text-xs text-muted-foreground">Starting mic...</span>
+                      <div>
+                        <p className="text-sm font-medium text-foreground">
+                          {isBuddySpeaking ? "Buddy is speaking..." : "Buddy is listening..."}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">Just speak naturally!</p>
+                      </div>
+                    </div>
                   )}
                 </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="h-8 text-xs"
-                  onClick={toggleVoiceMode}
-                >
-                  Exit Voice
-                </Button>
+              </ScrollArea>
+
+              {/* Voice controls footer */}
+              <div className="px-3 py-3 border-t border-border">
+                <div className="flex items-center justify-center gap-3">
+                  {/* Audio visualizer */}
+                  <div className={`flex items-center gap-[3px] px-4 py-2.5 rounded-full ${isBuddySpeaking ? "bg-green-500/10" : "bg-primary/10"} transition-colors`}>
+                    {isBuddySpeaking ? (
+                      <>
+                        <div className="flex items-center gap-[2px]">
+                          <span className="w-1 h-2 bg-green-500 rounded-full animate-[waveBar1_0.4s_ease-in-out_infinite]" />
+                          <span className="w-1 h-3.5 bg-green-500 rounded-full animate-[waveBar2_0.4s_ease-in-out_infinite_0.1s]" />
+                          <span className="w-1 h-2.5 bg-green-500 rounded-full animate-[waveBar3_0.4s_ease-in-out_infinite_0.2s]" />
+                          <span className="w-1 h-3 bg-green-500 rounded-full animate-[waveBar1_0.4s_ease-in-out_infinite_0.3s]" />
+                          <span className="w-1 h-2 bg-green-500 rounded-full animate-[waveBar2_0.4s_ease-in-out_infinite_0.05s]" />
+                        </div>
+                        <span className="text-xs text-green-600 font-medium ml-2">Buddy speaking</span>
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex items-center gap-[3px]">
+                          <span className="w-1 h-3 bg-primary rounded-full animate-[waveBar1_0.6s_ease-in-out_infinite]" />
+                          <span className="w-1 h-4 bg-primary rounded-full animate-[waveBar2_0.6s_ease-in-out_infinite_0.15s]" />
+                          <span className="w-1 h-3.5 bg-primary rounded-full animate-[waveBar3_0.6s_ease-in-out_infinite_0.3s]" />
+                          <span className="w-1 h-3 bg-primary rounded-full animate-[waveBar1_0.6s_ease-in-out_infinite_0.45s]" />
+                        </div>
+                        <span className="text-xs text-primary font-medium ml-2">Listening...</span>
+                      </>
+                    )}
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    className="h-9 px-4 text-xs rounded-full"
+                    onClick={stopVoiceAgent}
+                  >
+                    <PhoneOff className="h-3.5 w-3.5 mr-1.5" />
+                    End Call
+                  </Button>
+                </div>
               </div>
             </div>
-          )}
+          ) : (
+            <>
+              {/* Text Chat Messages */}
+              <ScrollArea className="flex-1 px-3 py-2" ref={scrollRef as any}>
+                <div className="space-y-3">
+                  {messages.map((msg, i) => (
+                    <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                      <div
+                        className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
+                          msg.error
+                            ? "bg-destructive/10 text-destructive border border-destructive/20 rounded-bl-md"
+                            : msg.role === "user"
+                              ? "bg-primary text-primary-foreground rounded-br-md"
+                              : "bg-muted text-foreground rounded-bl-md"
+                        }`}
+                      >
+                        {renderContent(msg.content)}
+                        {msg.error && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="mt-2 h-7 text-xs border-destructive/30 text-destructive hover:bg-destructive/10"
+                            onClick={retryLastMessage}
+                          >
+                            <RefreshCw className="h-3 w-3 mr-1" /> Retry
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  {isLoading && messages[messages.length - 1]?.role !== "assistant" && (
+                    <div className="flex justify-start">
+                      <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-3">
+                        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
 
-          {/* Quick Actions */}
-          {messages.length <= 1 && !voiceMode && (
-            <div className="px-3 pb-2 flex flex-wrap gap-1.5">
-              {QUICK_ACTIONS.map((action) => (
-                <button
-                  key={action.label}
-                  onClick={() => sendMessage(action.prompt)}
-                  disabled={isLoading}
-                  className="flex items-center gap-1 px-2.5 py-1.5 text-xs rounded-full bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors disabled:opacity-50"
-                >
-                  <action.icon className="h-3 w-3" />
-                  {action.label}
-                </button>
-              ))}
-            </div>
-          )}
+              {/* Quick Actions */}
+              {messages.length <= 1 && (
+                <div className="px-3 pb-2 flex flex-wrap gap-1.5">
+                  {QUICK_ACTIONS.map((action) => (
+                    <button
+                      key={action.label}
+                      onClick={() => sendMessage(action.prompt)}
+                      disabled={isLoading}
+                      className="flex items-center gap-1 px-2.5 py-1.5 text-xs rounded-full bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors disabled:opacity-50"
+                    >
+                      <action.icon className="h-3 w-3" />
+                      {action.label}
+                    </button>
+                  ))}
+                </div>
+              )}
 
-          {/* Text Input - hidden in voice mode */}
-          {!voiceMode && (
-            <div className="px-3 pb-3 pt-1 border-t border-border">
-              <div className="flex items-end gap-1.5 bg-muted/50 rounded-xl px-2 py-1.5">
-                <textarea
-                  ref={inputRef}
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Ask me anything..."
-                  rows={1}
-                  className="flex-1 bg-transparent border-none outline-none resize-none text-sm py-1.5 text-foreground placeholder:text-muted-foreground max-h-20"
-                  disabled={isLoading}
-                />
-                <CompanionVoiceInput
-                  onTranscript={(text) => sendMessage(text)}
-                  disabled={isLoading}
-                  showLabel={!input.trim() && messages.length <= 1}
-                />
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-9 w-9 shrink-0"
-                  onClick={() => sendMessage(input)}
-                  disabled={!input.trim() || isLoading}
-                >
-                  <Send className="h-4 w-4" />
-                </Button>
+              {/* Text Input */}
+              <div className="px-3 pb-3 pt-1 border-t border-border">
+                <div className="flex items-end gap-1.5 bg-muted/50 rounded-xl px-2 py-1.5">
+                  <textarea
+                    ref={inputRef}
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Ask me anything..."
+                    rows={1}
+                    className="flex-1 bg-transparent border-none outline-none resize-none text-sm py-1.5 text-foreground placeholder:text-muted-foreground max-h-20"
+                    disabled={isLoading}
+                  />
+                  <CompanionVoiceInput
+                    onTranscript={(text) => sendMessage(text)}
+                    disabled={isLoading}
+                    showLabel={!input.trim() && messages.length <= 1}
+                  />
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-9 w-9 shrink-0"
+                    onClick={() => sendMessage(input)}
+                    disabled={!input.trim() || isLoading}
+                  >
+                    <Send className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
-            </div>
+            </>
           )}
         </div>
       )}
