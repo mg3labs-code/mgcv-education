@@ -63,7 +63,7 @@ const PopQuizModal = ({ open, onClose, subject, mode = "subject", onComplete }: 
   if (questions.length === 0) {
     return (
       <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md z-[60]">
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
           </DialogHeader>
@@ -79,7 +79,7 @@ const PopQuizModal = ({ open, onClose, subject, mode = "subject", onComplete }: 
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto z-[60]">
         <DialogHeader>
           <DialogTitle className="text-center">
             {finished ? "🎯 Quiz Complete!" : `${title} — Question ${currentQ + 1}/${questions.length}`}
