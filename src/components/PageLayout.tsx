@@ -8,7 +8,8 @@ interface PageLayoutProps {
 const PageLayout = ({ role, children }: PageLayoutProps) => (
   <div className="min-h-screen bg-background">
     <SideNav role={role} />
-    <main className="ml-60 p-8">{children}</main>
+    {/* pt-14 on mobile for the fixed top bar; md:ml-60 for desktop sidebar */}
+    <main className="pt-14 md:pt-0 md:ml-60 p-4 md:p-8">{children}</main>
   </div>
 );
 

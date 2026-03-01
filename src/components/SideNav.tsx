@@ -1,6 +1,10 @@
+import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { LucideIcon, LayoutDashboard, BookOpen, BarChart3, Users, Settings, LogOut, GraduationCap, CalendarDays, ClipboardList, School, Brain, ListTodo, FlaskConical } from "lucide-react";
+import { LucideIcon, LayoutDashboard, BookOpen, BarChart3, Users, Settings, LogOut, GraduationCap, CalendarDays, ClipboardList, School, Brain, ListTodo, FlaskConical, Menu } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
 
 interface NavItem {
   label: string;
@@ -42,10 +46,10 @@ interface SideNavProps {
   role: "student" | "teacher" | "admin";
 }
 
-const SideNav = ({ role }: SideNavProps) => {
-  const navigate = useNavigate();
+const NavContent = ({ role, onNavigate }: { role: string; onNavigate: (path: string) => void }) => {
   const location = useLocation();
   const { signOut, fullName } = useAuth();
+  const navigate = useNavigate();
   const items = navMap[role];
 
   const handleSignOut = async () => {
@@ -54,7 +58,7 @@ const SideNav = ({ role }: SideNavProps) => {
   };
 
   return (
-    <aside className="fixed left-0 top-0 bottom-0 w-60 bg-sidebar flex flex-col z-40">
+    <>
       <div className="p-5 border-b border-sidebar-border">
         <h1 className="font-serif text-lg font-bold text-sidebar-foreground tracking-tight">
           EduTech
@@ -70,7 +74,7 @@ const SideNav = ({ role }: SideNavProps) => {
           return (
             <button
               key={item.path}
-              onClick={() => navigate(item.path)}
+              onClick={() => onNavigate(item.path)}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors ${
                 isActive
                   ? "bg-sidebar-accent text-sidebar-primary"
@@ -93,6 +97,47 @@ const SideNav = ({ role }: SideNavProps) => {
           Sign Out
         </button>
       </div>
+    </>
+  );
+};
+
+const SideNav = ({ role }: SideNavProps) => {
+  const navigate = useNavigate();
+  const isMobile = useIsMobile();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const handleNavigate = (path: string) => {
+    navigate(path);
+    if (isMobile) setMobileOpen(false);
+  };
+
+  if (isMobile) {
+    return (
+      <>
+        {/* Mobile top bar with hamburger */}
+        <div className="fixed top-0 left-0 right-0 h-14 bg-sidebar flex items-center px-4 z-40 border-b border-sidebar-border">
+          <Button size="icon" variant="ghost" onClick={() => setMobileOpen(true)} className="text-sidebar-foreground">
+            <Menu className="h-5 w-5" />
+          </Button>
+          <h1 className="font-serif text-base font-bold text-sidebar-foreground ml-3 tracking-tight">EduTech</h1>
+        </div>
+
+        {/* Mobile drawer */}
+        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+          <SheetContent side="left" className="w-64 p-0 bg-sidebar border-sidebar-border">
+            <SheetTitle className="sr-only">Navigation</SheetTitle>
+            <div className="flex flex-col h-full">
+              <NavContent role={role} onNavigate={handleNavigate} />
+            </div>
+          </SheetContent>
+        </Sheet>
+      </>
+    );
+  }
+
+  return (
+    <aside className="fixed left-0 top-0 bottom-0 w-60 bg-sidebar flex flex-col z-40">
+      <NavContent role={role} onNavigate={handleNavigate} />
     </aside>
   );
 };
