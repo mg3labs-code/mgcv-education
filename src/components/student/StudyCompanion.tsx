@@ -356,14 +356,7 @@ const StudyCompanion = () => {
     };
   }, []);
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (conversation.status === "connected") {
-        conversation.endSession().catch(() => {});
-      }
-    };
-  }, []);
+  // No cleanup on unmount - StudyCompanion now lives at App level and doesn't unmount during navigation
 
   // Auto-open on first ever visit
   useEffect(() => {
