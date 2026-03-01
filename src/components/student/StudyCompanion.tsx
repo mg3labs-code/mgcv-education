@@ -636,10 +636,9 @@ const StudyCompanion = () => {
     }
   };
 
-  const handleClose = async () => {
-    if (voiceMode) {
-      await stopVoiceAgent();
-    }
+  const handleClose = () => {
+    // Only close the UI panel — do NOT end the voice session
+    // Voice stays active in background so student can keep talking
     setIsOpen(false);
   };
 
@@ -682,12 +681,22 @@ const StudyCompanion = () => {
           )}
           <button
             onClick={() => setIsOpen(true)}
-            className={`relative h-14 w-14 rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-lg hover:shadow-xl transition-all hover:scale-105 flex items-center justify-center ${isVoiceActive ? "ring-4 ring-green-400/50 animate-pulse" : "animate-bounce"}`}
+            className={`relative h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-105 flex items-center justify-center ${
+              isVoiceActive
+                ? "bg-gradient-to-br from-green-500 to-green-600 text-white ring-4 ring-green-400/50 animate-pulse"
+                : "bg-gradient-to-br from-primary to-primary/70 text-primary-foreground animate-bounce"
+            }`}
             style={isVoiceActive ? undefined : { animationDuration: "2s", animationIterationCount: 3 }}
-            aria-label="Open Study Companion"
+            aria-label={isVoiceActive ? "Buddy is on a call — tap to open" : "Open Study Companion"}
           >
-            <MessageCircle className="h-6 w-6" />
-            {showNudge && (
+            {isVoiceActive ? <Phone className="h-6 w-6" /> : <MessageCircle className="h-6 w-6" />}
+            {isVoiceActive && (
+              <span className="absolute -top-1 -right-1 flex h-4 w-4">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-4 w-4 bg-green-500 border-2 border-white" />
+              </span>
+            )}
+            {showNudge && !isVoiceActive && (
               <span className="absolute -top-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-destructive border-2 border-background" />
             )}
           </button>
