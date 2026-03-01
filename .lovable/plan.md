@@ -1,91 +1,96 @@
 
 
-## Comprehensive Voice System Overhaul: Smooth, Interactive Student Experience
+## Supercharge Buddy: Smart Tools, Smooth Voice, Telugu Support
 
-### Current Issues Found
+### What We're Building
 
-1. **ElevenLabs TTS quota exhausted** -- Only 3 credits remain out of 2000. Every TTS call fails with `quota_exceeded`. This is why voice output is completely broken right now.
-2. **Voice input (CompanionVoiceInput)** uses MediaRecorder + server-side transcription via Gemini, adding 3-5 second latency per input.
-3. **Onboarding voice** uses `webkitSpeechRecognition` in a non-continuous, fire-and-forget pattern that breaks after one use.
-4. **StudyCompanion voice mode** has race conditions: recognition restarts overlap with speaking state, causing echo loops and dropped transcripts.
-5. **No fallback TTS** -- when ElevenLabs fails, there's no fallback, so Buddy goes completely silent with no error shown to the user.
-6. **Navigation from voice** works but has no audio/visual confirmation.
-
----
-
-### Plan (5 Tasks)
-
-**Task 1: Fix TTS with Fallback to Browser Speech**
-
-Since ElevenLabs quota is exhausted, add a graceful fallback:
-- In `StreamingSpeaker`, catch TTS API errors (401/quota) and automatically switch to browser `SpeechSynthesis` API
-- Show a small toast once: "Using built-in voice (premium voice unavailable)"
-- Browser TTS is free, instant, and works on all devices
-- When ElevenLabs quota resets or is topped up, it auto-recovers
-
-**Task 2: Fix Voice Input Bugs in StudyCompanion**
-
-- Fix the race condition in voice mode: stop recognition BEFORE sending message, restart AFTER TTS completes
-- Add proper cleanup when switching between voice mode and text mode
-- Fix `onend` handler that causes duplicate restarts
-- Add a 1-second debounce after speech ends before sending to prevent partial transcript submission
-- Pause recognition while loading AND speaking (currently has timing gaps)
-
-**Task 3: Fix Onboarding Voice Input**
-
-- Replace the broken one-shot `webkitSpeechRecognition` with the same robust pattern used in StudyCompanion
-- Make the recognition instance persistent (stored in ref) instead of creating a new one each click
-- Add proper error handling and visual feedback (pulsing mic, "Listening..." text)
-- Clean up recognition on component unmount
-
-**Task 4: Add Smooth UI Feedback for Voice Interactions**
-
-- Add animated waveform visualization when Buddy is speaking (already partially exists, make it smoother)
-- Add a "tap to interrupt" feature: clicking while Buddy speaks stops TTS and starts listening
-- Show real-time transcript preview as user speaks (already exists for StudyCompanion, ensure it works reliably)
-- Add subtle sound effect or haptic feedback on mic activation
-- Add visual pulse animation on the Buddy floating button when voice mode is active
-
-**Task 5: Improve Error Handling and User Feedback**
-
-- Show inline errors in the companion chat when TTS/transcription fails instead of just toasts
-- Add retry button for failed messages
-- Show connection status indicator (online/offline/degraded)
-- When ElevenLabs quota is exceeded, inform user clearly: "Voice output temporarily using built-in voice"
+Right now Buddy can only talk and navigate. We're upgrading him to:
+- **Do things**: open textbook chapters, start quizzes, know what you're studying
+- **Sound better**: use a calm, warm, caring voice (not the current Sarah voice)
+- **Speak Telugu too**: support bilingual conversation (English + Telugu)
+- **Be smarter about context**: know what page you're on and help accordingly
 
 ---
 
-### Technical Details
+### Voice Selection
 
-```text
-StudyCompanion.tsx (StreamingSpeaker class):
-  - processQueue(): catch 401/quota errors from TTS_URL
-  - Fallback: use window.speechSynthesis.speak() with best available voice
-  - Add error count tracking - after 2 failures, switch to fallback permanently for session
+Replacing **Sarah** (current) with a warmer, calmer voice better suited for young students:
 
-StudyCompanion.tsx (voice mode):
-  - startListening(): add guard against double-start
-  - sendMessage(): stop recognition first, set isLoading, resume after TTS ends
-  - useEffect for isSpeaking: increase delay from 500ms to 800ms before restarting mic
-  - Add finalTranscript debounce: collect for 1s before sending
+| Voice | ID | Why |
+|-------|----|-----|
+| **Lily** (primary) | `pFZP5JQG7iQjIQuC4Bku` | Warm, gentle, nurturing tone -- perfect for guiding children |
+| **Matilda** (fallback) | `XrExE9yKIg1WjnnlVkGX` | Calm, clear, friendly -- great for explanations |
 
-CompanionVoiceInput.tsx:
-  - No changes needed (works correctly for tap-to-record pattern)
+For Telugu support, we'll set the agent language to `multi` (multilingual) using the `eleven_multilingual_v2` model so Buddy can seamlessly switch between English and Telugu when the student speaks in Telugu.
 
-StudentOnboarding.tsx:
-  - handleVoiceToggle(): store recognition in ref, reuse across clicks
-  - Add proper onend cleanup
-  - Show interim results while speaking
+---
 
-Files to change:
-  - src/components/student/StudyCompanion.tsx
-  - src/pages/StudentOnboarding.tsx
-```
+### 6 Client Tools Buddy Gets
 
-### What This Achieves
-- Voice always works (ElevenLabs when available, browser TTS as fallback)
-- No more race conditions or echo loops in voice mode
-- Smooth, responsive mic interactions across all pages
-- Students get clear feedback on what's happening at every step
-- Onboarding voice input actually works reliably
+| Tool | What It Does | Example Voice Command |
+|------|-------------|----------------------|
+| **navigateTo** | Go to any page | "Take me to assignments" |
+| **openTextbook** | Open a specific chapter or episode | "Open chapter 1 episode 3" |
+| **startQuiz** | Start a pop quiz | "Quiz me on Science" |
+| **getCurrentPage** | Tells Buddy where you are | (Buddy uses this automatically) |
+| **getChapterList** | Lists available chapters | "What chapters can I study?" |
+| **explainCurrentTopic** | Reads current episode content | "Explain what's on this page" |
+
+---
+
+### New System Prompt (Kid-Friendly, Voice-First)
+
+Key changes from current prompt:
+- Written for **spoken delivery** -- short sentences, no markdown, no special characters
+- Instructions for **when to use each tool** so Buddy actually uses them
+- **Telugu support**: "If the student speaks in Telugu, reply in Telugu naturally"
+- **Always positive**: never say "wrong" -- say "almost! let's try again"
+- **Age-appropriate**: analogies from cricket, movies, games that 6-10th graders relate to
+- **Proactive**: "When you know what page they're on, mention it and offer help"
+
+---
+
+### Contextual Page Updates
+
+When the student navigates to a new page, Buddy automatically gets told:
+- "Student is now on Chapter 1: Real Numbers, Episode 3: Euclid's Algorithm"
+- This lets Buddy say things like "Oh nice, you're looking at Euclid's Algorithm! Want me to explain how it works?"
+
+---
+
+### Changes Summary
+
+**File 1: `supabase/functions/elevenlabs-buddy-session/index.ts`**
+- Rewrite system prompt for voice-first delivery with tool usage instructions and Telugu support
+- Change voice from Sarah to Lily (`pFZP5JQG7iQjIQuC4Bku`)
+- Set voice settings: stability 0.35, similarity_boost 0.7, style 0.25 (warm, expressive)
+- Add `client_tools` array in agent creation body with all 6 tools (name, description, parameters)
+- Set language to `multi` for bilingual support
+- Update first message to be warmer: "Hey there! I'm Buddy, your study buddy. I can help you with anything you're learning. What's on your mind?"
+
+**File 2: `src/components/student/StudyCompanion.tsx`**
+- Expand `clientTools` in `useConversation` from 1 tool to 6 tools
+- Add `openTextbook`: navigates to `/student/textbook/{chapterId}/{episodeId}`
+- Add `startQuiz`: sets new state `voiceQuizSubject` + `voiceQuizOpen`, renders `PopQuizModal`
+- Add `getCurrentPage`: returns current path + readable context
+- Add `getChapterList`: returns chapter titles and episode counts from textbookData
+- Add `explainCurrentTopic`: returns episode content blocks as readable text
+- Add `useEffect` on `location.pathname` to call `conversation.sendContextualUpdate()` with page description
+- Import `chapters` from textbookData, `PopQuizModal` component
+- Add `voiceQuizSubject`/`voiceQuizOpen` state + `PopQuizModal` render
+
+**Database: Delete old agent ID**
+- SQL migration: `DELETE FROM app_config WHERE key = 'elevenlabs_agent_id'`
+- This forces the edge function to create a fresh agent with new tools, voice, and prompt on next call
+
+---
+
+### What Students Will Experience
+
+- Buddy sounds calm, warm, and caring -- like a friendly older sibling
+- "Buddy, quiz me on Maths!" -- quiz modal opens, Buddy reads questions
+- "Open chapter 1" -- textbook opens to the right chapter
+- "Explain what's on this page" -- Buddy reads and explains the current content
+- Speaking in Telugu works naturally -- Buddy responds in Telugu
+- Buddy knows where you are: "I see you're studying Real Numbers. Want me to explain Euclid's Division?"
 
