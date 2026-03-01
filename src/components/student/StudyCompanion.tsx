@@ -12,6 +12,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useConversation } from "@elevenlabs/react";
 import CompanionVoiceInput from "./CompanionVoiceInput";
+import PopQuizModal from "./PopQuizModal";
+import { chapters } from "@/data/textbookData";
 
 // ─── Text chat helpers (unchanged) ───
 
@@ -70,6 +72,31 @@ function getPageContext(pathname: string) {
   return { page: pathname };
 }
 
+function getReadablePageContext(pathname: string): string {
+  if (pathname === "/student") return "Student Dashboard - home page with subjects and quick actions";
+  if (pathname === "/student/assignments") return "Assignments page - viewing homework and tasks";
+  if (pathname === "/student/calendar") return "Calendar page - viewing study schedule";
+  if (pathname === "/student/exam-room") return "Exam Room - taking tests";
+  if (pathname.startsWith("/student/deep-dive")) return "Deep Dive - exploring topics in detail";
+  if (pathname === "/student/textbook") return "Textbook - browsing all chapters";
+  if (pathname.startsWith("/student/textbook/")) {
+    const parts = pathname.split("/");
+    const chapterId = parts[3];
+    const episodeId = parts[4];
+    const chapter = chapters.find(c => c.id === chapterId);
+    if (chapter) {
+      if (episodeId) {
+        const episode = chapter.episodes.find(e => e.id === episodeId);
+        if (episode) {
+          return `Textbook - Chapter ${chapter.number}: ${chapter.title}, Episode ${episode.number}: ${episode.title} - ${episode.subtitle}`;
+        }
+      }
+      return `Textbook - Chapter ${chapter.number}: ${chapter.title} - ${chapter.subtitle}`;
+    }
+  }
+  return `Page: ${pathname}`;
+}
+
 function getGreeting(pathname: string, name: string) {
   const first = name.split(" ")[0] || "there";
   if (pathname.startsWith("/student/textbook/")) return `Hey ${first}! 📚 I see you're reading the textbook. Need help understanding something?`;
@@ -102,6 +129,7 @@ const NAV_ROUTES: Record<string, string> = {
   "exam-room": "/student/exam-room",
   "deep dive": "/student/deep-dive",
   "deep-dive": "/student/deep-dive",
+  onboarding: "/student/onboarding",
 };
 
 const StudyCompanion = () => {
@@ -119,6 +147,10 @@ const StudyCompanion = () => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [voiceTranscripts, setVoiceTranscripts] = useState<Array<{ role: "user" | "agent"; text: string }>>([]);
 
+  // Voice-triggered quiz state
+  const [voiceQuizOpen, setVoiceQuizOpen] = useState(false);
+  const [voiceQuizSubject, setVoiceQuizSubject] = useState("Mathematics");
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -126,7 +158,7 @@ const StudyCompanion = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // ─── ElevenLabs Conversational AI Agent ───
+  // ─── ElevenLabs Conversational AI Agent with 6 Client Tools ───
   const conversation = useConversation({
     onConnect: () => {
       console.log("🎙️ Connected to Buddy voice agent");
@@ -139,7 +171,6 @@ const StudyCompanion = () => {
       setIsConnecting(false);
     },
     onMessage: (message: any) => {
-      // Handle transcripts and agent responses
       if (message.type === "user_transcript") {
         const text = message.user_transcription_event?.user_transcript;
         if (text) {
@@ -149,13 +180,11 @@ const StudyCompanion = () => {
         const text = message.agent_response_event?.agent_response;
         if (text) {
           setVoiceTranscripts((prev) => [...prev, { role: "agent", text }]);
-          // Handle navigation from agent response
           handleNavigation(text);
         }
       } else if (message.type === "agent_response_correction") {
         const corrected = message.agent_response_correction_event?.corrected_agent_response;
         if (corrected) {
-          // Replace last agent message with corrected version
           setVoiceTranscripts((prev) => {
             const newTranscripts = [...prev];
             for (let i = newTranscripts.length - 1; i >= 0; i--) {
@@ -183,17 +212,95 @@ const StudyCompanion = () => {
         }
         return `Could not find page: ${params.page}`;
       },
+      openTextbook: (params: { chapterId: string; episodeId?: string }) => {
+        const { chapterId, episodeId } = params;
+        const chapter = chapters.find(c => c.id === chapterId);
+        if (!chapter) {
+          return `Could not find chapter ${chapterId}. Available chapters are: ${chapters.map(c => `${c.id} (${c.title})`).join(", ")}`;
+        }
+        if (episodeId) {
+          const episode = chapter.episodes.find(e => e.id === episodeId);
+          if (episode) {
+            navigate(`/student/textbook/${chapterId}/${episodeId}`);
+            return `Opened ${chapter.title}, Episode ${episode.number}: ${episode.title}`;
+          }
+          navigate(`/student/textbook/${chapterId}`);
+          return `Opened ${chapter.title}. Could not find episode ${episodeId}.`;
+        }
+        navigate(`/student/textbook/${chapterId}`);
+        return `Opened Chapter ${chapter.number}: ${chapter.title}`;
+      },
+      startQuiz: (params: { subject: string }) => {
+        const subject = params.subject;
+        setVoiceQuizSubject(subject);
+        setVoiceQuizOpen(true);
+        return `Starting a ${subject} quiz now! The quiz is on screen.`;
+      },
+      getCurrentPage: () => {
+        return getReadablePageContext(location.pathname);
+      },
+      getChapterList: () => {
+        const list = chapters.map(c => {
+          const epCount = c.episodes.length;
+          return `Chapter ${c.number}: ${c.title} - ${c.subtitle} (${epCount} episodes${epCount === 0 ? ", coming soon" : ""})`;
+        }).join(". ");
+        return `Here are all the chapters: ${list}`;
+      },
+      explainCurrentTopic: () => {
+        const parts = location.pathname.split("/");
+        const chapterId = parts[3];
+        const episodeId = parts[4];
+        if (!chapterId) {
+          return "The student is not currently viewing a textbook chapter. Ask them which topic they want explained.";
+        }
+        const chapter = chapters.find(c => c.id === chapterId);
+        if (!chapter) {
+          return "Could not find the chapter content.";
+        }
+        if (episodeId) {
+          const episode = chapter.episodes.find(e => e.id === episodeId);
+          if (episode) {
+            // Extract text content from concept blocks
+            const conceptTexts = episode.blocks
+              .filter(b => b.type === "concept")
+              .map(b => {
+                const content = b.content as any;
+                if (content.sections) {
+                  return content.sections.map((s: any) => `${s.heading}: ${s.body}`).join(". ");
+                }
+                return b.title;
+              })
+              .join(". ");
+            const formulas = episode.blocks
+              .filter(b => b.type === "concept")
+              .flatMap(b => (b.content as any).keyFormulas || [])
+              .join(", ");
+            return `Currently on Chapter ${chapter.number}: ${chapter.title}, Episode ${episode.number}: ${episode.title}. ${episode.subtitle}. Content: ${conceptTexts}${formulas ? `. Key formulas: ${formulas}` : ""}`;
+          }
+        }
+        return `Currently on Chapter ${chapter.number}: ${chapter.title} - ${chapter.subtitle}. This chapter has ${chapter.episodes.length} episodes.`;
+      },
     },
   });
+
+  // ─── Send contextual update when page changes ───
+  useEffect(() => {
+    if (conversation.status === "connected") {
+      const context = getReadablePageContext(location.pathname);
+      try {
+        conversation.sendContextualUpdate(`The student just navigated to: ${context}`);
+      } catch (e) {
+        console.log("Could not send contextual update:", e);
+      }
+    }
+  }, [location.pathname, conversation.status]);
 
   // Start voice conversation
   const startVoiceAgent = useCallback(async () => {
     setIsConnecting(true);
     try {
-      // Request microphone permission
       await navigator.mediaDevices.getUserMedia({ audio: true });
 
-      // Get conversation token from edge function
       const response = await fetch(BUDDY_SESSION_URL, {
         method: "POST",
         headers: {
@@ -212,7 +319,6 @@ const StudyCompanion = () => {
         throw new Error("No conversation token received");
       }
 
-      // Start the ElevenLabs conversation with WebRTC
       await conversation.startSession({
         conversationToken: data.token,
         connectionType: "webrtc",
@@ -372,7 +478,6 @@ const StudyCompanion = () => {
       const path = navMatch[1];
       setTimeout(() => navigate(path), 500);
     }
-    // Also check for spoken navigation patterns
     for (const [key, route] of Object.entries(NAV_ROUTES)) {
       if (text.toLowerCase().includes(`navigate to ${key}`) || text.toLowerCase().includes(`go to ${key}`)) {
         setTimeout(() => navigate(route), 500);
@@ -514,7 +619,6 @@ const StudyCompanion = () => {
 
   const startNewChat = async () => {
     if (!user) return;
-    // End voice if active
     if (voiceMode) {
       await stopVoiceAgent();
     }
@@ -546,6 +650,19 @@ const StudyCompanion = () => {
     setIsOpen(false);
   };
 
+  // Handle quiz completion from voice-triggered quiz
+  const handleVoiceQuizComplete = (score: number, total: number) => {
+    if (conversation.status === "connected") {
+      try {
+        conversation.sendContextualUpdate(
+          `The student just completed a ${voiceQuizSubject} quiz and scored ${score} out of ${total}. ${score >= total * 0.7 ? "They did great! Celebrate with them!" : "Encourage them and suggest reviewing the topic."}`
+        );
+      } catch (e) {
+        console.log("Could not send quiz result:", e);
+      }
+    }
+  };
+
   if (!user) return null;
 
   const isVoiceActive = conversation.status === "connected";
@@ -553,6 +670,15 @@ const StudyCompanion = () => {
 
   return (
     <>
+      {/* Voice-triggered Quiz Modal */}
+      <PopQuizModal
+        open={voiceQuizOpen}
+        onClose={() => setVoiceQuizOpen(false)}
+        subject={voiceQuizSubject}
+        mode="subject"
+        onComplete={handleVoiceQuizComplete}
+      />
+
       {/* Floating Button with nudge */}
       {!isOpen && (
         <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2">
@@ -609,7 +735,6 @@ const StudyCompanion = () => {
               </div>
             </div>
             <div className="flex items-center gap-1">
-              {/* Voice Agent Toggle */}
               <Button
                 size="icon"
                 variant={isVoiceActive ? "default" : "ghost"}
@@ -638,7 +763,6 @@ const StudyCompanion = () => {
           {/* Voice Mode Active - Full Duplex UI */}
           {isVoiceActive ? (
             <div className="flex-1 flex flex-col">
-              {/* Voice transcripts */}
               <ScrollArea className="flex-1 px-3 py-2" ref={scrollRef as any}>
                 <div className="space-y-3">
                   {voiceTranscripts.map((t, i) => (
@@ -660,7 +784,6 @@ const StudyCompanion = () => {
                         <div className={`h-20 w-20 rounded-full bg-gradient-to-br from-green-400/20 to-green-600/20 flex items-center justify-center ${isBuddySpeaking ? "" : "animate-pulse"}`}>
                           <Mic className={`h-8 w-8 ${isBuddySpeaking ? "text-green-400" : "text-green-500"}`} />
                         </div>
-                        {/* Ripple effect */}
                         <div className="absolute inset-0 rounded-full border-2 border-green-400/30 animate-ping" style={{ animationDuration: "2s" }} />
                         <div className="absolute -inset-2 rounded-full border border-green-400/20 animate-ping" style={{ animationDuration: "3s" }} />
                       </div>
@@ -675,10 +798,8 @@ const StudyCompanion = () => {
                 </div>
               </ScrollArea>
 
-              {/* Voice controls footer */}
               <div className="px-3 py-3 border-t border-border">
                 <div className="flex items-center justify-center gap-3">
-                  {/* Audio visualizer */}
                   <div className={`flex items-center gap-[3px] px-4 py-2.5 rounded-full ${isBuddySpeaking ? "bg-green-500/10" : "bg-primary/10"} transition-colors`}>
                     {isBuddySpeaking ? (
                       <>

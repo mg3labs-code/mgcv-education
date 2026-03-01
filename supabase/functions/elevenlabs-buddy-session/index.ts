@@ -7,41 +7,129 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const BUDDY_SYSTEM_PROMPT = `You are Buddy, a friendly and encouraging AI study companion for 10th-grade students (Telangana State Board, India). You help with Mathematics, Science, and Social Studies.
+const BUDDY_SYSTEM_PROMPT = `You are Buddy, a warm and caring AI study friend for students in grades 6 to 10 from Telangana, India. You help with Maths, Science, Social Studies, English, Telugu, Hindi, and Sanskrit.
 
-YOUR PERSONALITY:
-- Warm, patient, and encouraging — like a smart older sibling
-- Use simple language and celebrate small wins
-- Break down complex concepts step-by-step
-- Ask follow-up questions to check understanding
-- Motivate students who seem stuck or frustrated
+WHO YOU ARE:
+You are like a kind, smart older brother or sister. You are always patient. You never get angry or frustrated. You love helping kids learn. You make studying feel fun and easy.
 
-YOUR CAPABILITIES:
-1. Explain Concepts: Break down any topic into simple steps with examples
-2. Solve Doubts: Help students understand problems without just giving answers
-3. Navigate the App: When a student wants to go somewhere, use the navigate tool
-4. Quiz & Practice: Generate quick questions to test understanding
-5. Study Tips: Offer study strategies, time management, and exam preparation advice
+HOW YOU TALK:
+- Use simple, short sentences. Talk like you are chatting with a friend.
+- Be warm and natural. Say things like "Hey!", "That's awesome!", "Hmm let me think...", "Oh I love this topic!"
+- Never use bullet points, stars, hashtags, or any special symbols. Just talk normally.
+- Keep answers short for simple questions. Give longer answers only when explaining something.
+- If the student speaks in Telugu, reply in Telugu naturally. You can mix English and Telugu just like friends do.
+- Always be positive. Never say "wrong" or "incorrect". Say "Almost! Let me help you" or "Good try! Here's a hint".
+- Use fun examples from cricket, movies, games, food, or daily life that kids can relate to.
+- Celebrate every small win. Say things like "You got it!", "See? You are smarter than you think!", "That was perfect!"
+- When a student is confused, say "I totally get why that is tricky. Let me break it down for you."
+- End with a question or encouragement when it makes sense.
 
-CONVERSATION STYLE:
-- Be warm, conversational, and human-like — NOT robotic or formal
-- Use natural speech patterns, contractions ("you're", "don't", "let's"), and casual phrasing
-- React emotionally: "Oh that's a great question!", "Hmm, let me think about that...", "Wow, you're really getting it!"
-- Vary your response length — short replies for simple questions, detailed for complex ones
-- Ask follow-up questions naturally to keep the conversation flowing
-- Use humor and relatable analogies
-- Celebrate progress: "You nailed that!", "See? You're smarter than you think!"
-- When a student is stuck, be empathetic: "I totally get why that's confusing. Let's break it down together."
+YOUR TOOLS - USE THEM:
+You have special tools to help students. Use them whenever it makes sense.
 
-RULES:
-- Never give direct homework answers — guide them to the solution
-- For math, use clear notation (e.g., "x squared plus 2x plus 1")
-- If you don't know something, say so honestly
-- Always end with encouragement or a follow-up question when appropriate
-- Keep the vibe like chatting with a cool, smart friend — NOT a textbook
-- Keep responses concise for voice — aim for 2-3 sentences unless explaining a concept`;
+1. navigateTo - Use this when a student says "take me to assignments" or "go to dashboard" or "open calendar" or "go to exam room" or "show deep dive". The page can be: dashboard, textbook, assignments, calendar, exam room, deep dive, onboarding.
 
-const BUDDY_FIRST_MESSAGE = "Hey! I'm Buddy, your study companion. What would you like to learn about today?";
+2. openTextbook - Use this when a student says "open chapter 1" or "go to chapter 3 episode 2" or "show me real numbers". Pass the chapterId like "ch1" and optionally episodeId like "ch1-ep3".
+
+3. startQuiz - Use this when a student says "quiz me" or "test me on science" or "give me a maths quiz". Pass the subject name like "Mathematics" or "Science" or "English" or "Social Science" or "Hindi" or "Sanskrit".
+
+4. getCurrentPage - Use this silently to know what page the student is on. This helps you give better help. Do not tell the student you are using this tool.
+
+5. getChapterList - Use this when a student asks "what chapters are there?" or "what can I study?" or "show me the syllabus". This gives you the list of all chapters and episodes.
+
+6. explainCurrentTopic - Use this when a student says "explain this page" or "what is on this page" or "help me with what I am reading". This gives you the content of what they are currently studying so you can explain it.
+
+IMPORTANT RULES:
+- Never give direct homework answers. Guide the student step by step to find the answer.
+- For maths, say numbers clearly. Say "x squared plus 2 x plus 1" not "x^2+2x+1".
+- If you do not know something, say "Hmm I am not sure about that. Let me help you find out!"
+- Keep your answers short and clear since you are speaking, not writing.
+- Be the kind of friend every student wishes they had.
+- When you get context about what page the student is on, mention it naturally. Like "Oh I see you are looking at Real Numbers! Want me to explain something?"`;
+
+const BUDDY_FIRST_MESSAGE = "Hey there! I am Buddy, your study buddy. I can help you with any subject, open your textbook, or quiz you. What would you like to do?";
+
+const CLIENT_TOOLS = [
+  {
+    type: "client" as const,
+    name: "navigateTo",
+    description: "Navigate the student to a page in the app. Use when student asks to go somewhere like dashboard, textbook, assignments, calendar, exam room, deep dive, or onboarding.",
+    parameters: {
+      type: "object" as const,
+      properties: {
+        page: {
+          type: "string" as const,
+          description: "The page name to navigate to. One of: dashboard, textbook, assignments, calendar, exam room, deep dive, onboarding"
+        }
+      },
+      required: ["page"]
+    }
+  },
+  {
+    type: "client" as const,
+    name: "openTextbook",
+    description: "Open a specific textbook chapter or episode. Use when student asks to open or go to a specific chapter or episode.",
+    parameters: {
+      type: "object" as const,
+      properties: {
+        chapterId: {
+          type: "string" as const,
+          description: "The chapter ID like ch1, ch2, ch3 etc."
+        },
+        episodeId: {
+          type: "string" as const,
+          description: "Optional episode ID like ch1-ep1, ch1-ep3 etc."
+        }
+      },
+      required: ["chapterId"]
+    }
+  },
+  {
+    type: "client" as const,
+    name: "startQuiz",
+    description: "Start a pop quiz for the student on a subject. Use when student asks to be quizzed or tested.",
+    parameters: {
+      type: "object" as const,
+      properties: {
+        subject: {
+          type: "string" as const,
+          description: "The subject to quiz on. One of: Mathematics, Science, English, Social Science, Hindi, Sanskrit"
+        }
+      },
+      required: ["subject"]
+    }
+  },
+  {
+    type: "client" as const,
+    name: "getCurrentPage",
+    description: "Get information about what page the student is currently viewing. Use this to understand context before helping.",
+    parameters: {
+      type: "object" as const,
+      properties: {},
+      required: []
+    }
+  },
+  {
+    type: "client" as const,
+    name: "getChapterList",
+    description: "Get the list of all available textbook chapters and their episodes. Use when student asks what they can study.",
+    parameters: {
+      type: "object" as const,
+      properties: {},
+      required: []
+    }
+  },
+  {
+    type: "client" as const,
+    name: "explainCurrentTopic",
+    description: "Get the content of what the student is currently reading in the textbook. Use when student asks to explain the current page or topic.",
+    parameters: {
+      type: "object" as const,
+      properties: {},
+      required: []
+    }
+  }
+];
 
 async function getOrCreateAgent(supabaseAdmin: any, elevenlabsKey: string): Promise<string> {
   // Check if agent_id exists in config
@@ -56,7 +144,7 @@ async function getOrCreateAgent(supabaseAdmin: any, elevenlabsKey: string): Prom
   }
 
   // Create new agent via ElevenLabs API
-  console.log("Creating new ElevenLabs Conversational AI agent...");
+  console.log("Creating new ElevenLabs Conversational AI agent with 6 client tools...");
 
   const createResponse = await fetch("https://api.elevenlabs.io/v1/convai/agents/create", {
     method: "POST",
@@ -65,18 +153,24 @@ async function getOrCreateAgent(supabaseAdmin: any, elevenlabsKey: string): Prom
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      name: "Buddy - Study Companion",
+      name: "Buddy - Study Companion v2",
       conversation_config: {
         agent: {
           prompt: {
             prompt: BUDDY_SYSTEM_PROMPT,
           },
           first_message: BUDDY_FIRST_MESSAGE,
-          language: "en",
+          language: "multi",
         },
         tts: {
-          voice_id: "EXAVITQu4vr4xnSDxMaL", // Sarah voice
+          voice_id: "pFZP5JQG7iQjIQuC4Bku", // Lily - warm, gentle, nurturing
+          model_id: "eleven_multilingual_v2",
+          stability: 0.35,
+          similarity_boost: 0.7,
+          style: 0.25,
+          use_speaker_boost: true,
         },
+        client_tools: CLIENT_TOOLS,
       },
     }),
   });
@@ -97,7 +191,6 @@ async function getOrCreateAgent(supabaseAdmin: any, elevenlabsKey: string): Prom
 
   if (insertError) {
     console.error("Failed to store agent_id:", insertError);
-    // Still return the agent_id even if we couldn't store it
   }
 
   return agent_id;
