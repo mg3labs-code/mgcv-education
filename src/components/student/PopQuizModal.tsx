@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,14 +13,25 @@ interface PopQuizModalProps {
 }
 
 const PopQuizModal = ({ open, onClose, subject, mode = "subject", onComplete }: PopQuizModalProps) => {
-  const [questions] = useState<(QuizQuestion | DailyQuizQuestion)[]>(() =>
-    mode === "daily" ? getDailyQuiz(10) : getQuizForSubject(subject, 10)
-  );
+  const [questions, setQuestions] = useState<(QuizQuestion | DailyQuizQuestion)[]>([]);
   const [currentQ, setCurrentQ] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [score, setScore] = useState(0);
   const [finished, setFinished] = useState(false);
   const [answers, setAnswers] = useState<(number | null)[]>([]);
+
+  // Reset all state when modal opens or subject changes
+  useEffect(() => {
+    if (open) {
+      const q = mode === "daily" ? getDailyQuiz(10) : getQuizForSubject(subject, 10);
+      setQuestions(q);
+      setCurrentQ(0);
+      setSelected(null);
+      setScore(0);
+      setFinished(false);
+      setAnswers([]);
+    }
+  }, [open, subject, mode]);
 
   const handleSubmit = () => {
     if (selected === null) return;
