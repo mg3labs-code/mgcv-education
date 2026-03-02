@@ -164,7 +164,7 @@ async function getOrCreateAgent(supabaseAdmin: any, elevenlabsKey: string): Prom
           language: "en",
         },
         tts: {
-          voice_id: "1Z7Y8o9cvUeWq8oLKgMY", // Tripti - child-friendly voice
+          voice_id: "pFZP5JQG7iQjIQuC4Bku", // Lily - warm, gentle, nurturing
           model_id: "eleven_multilingual_v2",
           stability: 0.35,
           similarity_boost: 0.7,
