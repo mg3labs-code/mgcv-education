@@ -331,6 +331,13 @@ const StudyCompanion = () => {
   // TTS helper: speak response aloud when input was voice
   const speakResponse = useCallback(async (text: string) => {
     try {
+      // Stop any currently playing TTS before starting new one
+      if (ttsAudioRef.current) {
+        ttsAudioRef.current.pause();
+        ttsAudioRef.current.currentTime = 0;
+        ttsAudioRef.current = null;
+      }
+
       const cleaned = cleanForSpeech(text);
       if (!cleaned) return;
 
@@ -573,6 +580,13 @@ const StudyCompanion = () => {
   const sendMessage = useCallback(async (text: string) => {
     if (!text.trim() || isLoading) return;
 
+    // Stop any currently playing TTS when user sends new input
+    if (ttsAudioRef.current) {
+      ttsAudioRef.current.pause();
+      ttsAudioRef.current = null;
+      setIsSpeakingTTS(false);
+    }
+
     const userMsg: ChatMessage = { role: "user", content: text.trim() };
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
@@ -682,7 +696,8 @@ const StudyCompanion = () => {
         persistMessage({ role: "assistant", content: assistantContent }, sessionId);
         
         // Voice in = voice out: if user spoke, play response aloud
-        if (inputModeRef.current === "voice") {
+        // Skip TTS when live voice call is active (agent handles audio)
+        if (inputModeRef.current === "voice" && conversation.status !== "connected") {
           speakResponse(assistantContent);
         }
       }
@@ -696,7 +711,7 @@ const StudyCompanion = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [messages, sessionId, isLoading, location.pathname, speakResponse]);
+  }, [messages, sessionId, isLoading, location.pathname, speakResponse, conversation.status]);
 
   const retryLastMessage = useCallback(() => {
     const lastUserMsg = [...messages].reverse().find(m => m.role === "user");
