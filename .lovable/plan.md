@@ -1,78 +1,73 @@
 
 
-# Fix Voice Persistence and Smart Response Mode
+# Fix Overlapping Voice Playback and Voice System Coordination
 
-## Problems Identified
+## Problem
 
-1. **Voice disconnects unexpectedly**: When navigating pages or closing the chat panel, the ElevenLabs voice session drops. The `onDisconnect` handler blindly resets `voiceMode = false` without distinguishing between user-initiated stops and unexpected disconnects.
+When using voice input (transcribe button), each response triggers TTS playback via `speakResponse`. But if the user sends a new message before the previous TTS finishes, both audio streams play simultaneously -- voices overlap and it becomes chaotic. Additionally, if the live voice call (phone icon) is active, the TTS system can also fire, creating a third source of audio.
 
-2. **Response mode doesn't match input mode**: The `CompanionVoiceInput` transcribes speech and feeds it into `sendMessage()` as plain text. The response always comes back as text only, even when the student spoke their question. Students expect: voice in = voice out, text in = text out.
+## Root Cause
 
----
+1. **No cancellation of previous TTS**: `speakResponse` creates a new `Audio` object each time but never stops the one already playing via `ttsAudioRef`.
+2. **No coordination between live call and TTS**: When the ElevenLabs agent call is active, the transcribe mic button can still trigger `sendMessage` + `speakResponse`, playing TTS on top of the live agent audio.
 
 ## Solution
 
-### 1. Voice Persistence Fix
+### 1. Stop Previous TTS Before Starting New One
 
-**Problem root cause**: The `onDisconnect` callback (line 168-171) unconditionally sets `voiceMode = false`. Any transient WebRTC hiccup or unexpected disconnect kills the voice session permanently.
+At the top of `speakResponse`, stop and clean up any currently playing audio before starting new playback:
 
-**Fix**:
-- Add a `userStoppedVoiceRef` flag (a ref, not state, to avoid re-renders)
-- Only reset `voiceMode` in `onDisconnect` if the user explicitly stopped it
-- In `stopVoiceAgent`, set the flag to `true` before calling `endSession()`
-- In `onDisconnect`, check the flag: if `false`, attempt auto-reconnect (with a retry limit of 2)
-- Ensure `handleClose` (closing panel) never touches the voice session (already correct, but reinforce)
+```
+if (ttsAudioRef.current) {
+  ttsAudioRef.current.pause();
+  ttsAudioRef.current.currentTime = 0;
+  ttsAudioRef.current = null;
+}
+```
 
-### 2. Smart Response Mode (Voice In = Voice Out)
+This ensures only the latest response is ever spoken -- older audio is immediately cancelled.
 
-**Approach**: Track whether the last user input came from voice (CompanionVoiceInput) or text (keyboard). When a voice-transcribed message gets a response, play that response aloud using the existing `elevenlabs-tts-stream` edge function.
+### 2. Skip TTS When Live Voice Call Is Active
 
-**Changes**:
-- Add an `inputModeRef` (`"text"` or `"voice"`) to `StudyCompanion`
-- When `CompanionVoiceInput.onTranscript` fires, set `inputModeRef.current = "voice"` before calling `sendMessage()`
-- When the text input/send button is used, set `inputModeRef.current = "text"`
-- After `sendMessage` finishes streaming the assistant response, if `inputModeRef.current === "voice"`, call a `speakResponse(text)` helper
-- `speakResponse` will use `fetch()` to call `elevenlabs-tts-stream` with the response text (cleaned via `cleanForSpeech`), then play the audio blob
-- Add a small speaker icon on voice-generated responses to indicate they were spoken
+If the ElevenLabs conversational agent is connected (`conversation.status === "connected"`), the agent itself handles speech output. The TTS system should NOT also play audio. Add a guard at the top of the `sendMessage` completion block:
 
-### 3. Simplify the Flow
+```
+// Only use TTS for voice-input responses when live call is NOT active
+if (inputModeRef.current === "voice" && conversation.status !== "connected") {
+  speakResponse(assistantContent);
+}
+```
 
-- Remove unnecessary complexity: the `CompanionVoiceInput` "Speak" label and the voice input button will remain as-is
-- Add a subtle visual indicator (small speaker icon) on messages that were spoken aloud
-- If TTS fails (quota, network), fall back gracefully to text-only with no error toast (silent fallback)
+### 3. Stop TTS When User Sends New Input
 
----
+When the user sends any new message (text or voice), immediately stop any currently playing TTS so the new response takes priority:
+
+Add at the top of `sendMessage`:
+```
+if (ttsAudioRef.current) {
+  ttsAudioRef.current.pause();
+  ttsAudioRef.current = null;
+  setIsSpeakingTTS(false);
+}
+```
 
 ## Files to Modify
 
 ### `src/components/student/StudyCompanion.tsx`
-- Add `userStoppedVoiceRef = useRef(false)` and `reconnectAttemptsRef = useRef(0)`
-- Update `onDisconnect`: check flag, attempt reconnect if unexpected
-- Update `stopVoiceAgent`: set `userStoppedVoiceRef.current = true`
-- Update `startVoiceAgent`: reset `userStoppedVoiceRef.current = false` and `reconnectAttemptsRef.current = 0`
-- Add `inputModeRef = useRef<"text" | "voice">("text")`
-- Add `speakResponse(text: string)` helper that calls `elevenlabs-tts-stream`
-- Update `CompanionVoiceInput.onTranscript` handler to set mode to `"voice"`
-- Update `sendMessage` to call `speakResponse` after streaming completes when mode is `"voice"`
-- Update send button / Enter key handler to set mode to `"text"`
 
-### No other files need changes
-- `elevenlabs-tts-stream` edge function already exists and works
-- `CompanionVoiceInput` component doesn't need changes (callback interface is sufficient)
+Three targeted changes:
 
----
+1. **`speakResponse` function (~line 332)**: Add audio cancellation at the start -- stop any existing `ttsAudioRef.current` before fetching and playing new audio.
 
-## Technical Details
+2. **`sendMessage` function (~line 573)**: Add TTS stop at the beginning so any playing audio is cancelled when a new message is sent.
 
-```text
-Input Flow:
-  Keyboard/Send --> inputModeRef = "text"  --> sendMessage() --> text response only
-  Mic/Transcribe --> inputModeRef = "voice" --> sendMessage() --> text response + TTS playback
+3. **TTS trigger after streaming (~line 685)**: Add `conversation.status !== "connected"` guard so TTS doesn't fire when the live voice call is already handling audio output.
 
-Voice Persistence:
-  User clicks "End Call" --> userStoppedVoiceRef = true --> endSession() --> onDisconnect resets state
-  Unexpected disconnect --> userStoppedVoiceRef = false --> onDisconnect tries reconnect (max 2x)
-  Close panel (X) --> no voice changes, session stays active
-  Navigate pages --> no effect (component at App level, never unmounts)
-```
+## Behavior After Fix
+
+- **New voice input while TTS is playing**: Old TTS stops immediately, new response plays when ready
+- **Live call active + transcribe button used**: Text response only (agent handles voice separately)
+- **Live call NOT active + transcribe button**: TTS plays response (one at a time, latest wins)
+- **Text input**: No TTS, text-only response (unchanged)
+- **User says "continue"**: Normal flow, latest response plays
 
