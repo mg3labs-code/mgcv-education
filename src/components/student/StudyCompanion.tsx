@@ -328,10 +328,38 @@ const StudyCompanion = () => {
     }
   }, [location.pathname, conversation.status]);
 
+  // Browser TTS fallback: uses built-in speechSynthesis when ElevenLabs fails
+  const browserTTSFallback = useCallback((text: string) => {
+    if (!window.speechSynthesis) {
+      console.warn("speechSynthesis not supported");
+      setIsSpeakingTTS(false);
+      return;
+    }
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    // Pick best available English voice (prefer Google/Microsoft natural voices)
+    const voices = window.speechSynthesis.getVoices();
+    const preferred = voices.find(v =>
+      v.lang.startsWith("en") && (/google|microsoft/i.test(v.name)) && !v.localService
+    );
+    const englishVoice = preferred || voices.find(v => v.lang.startsWith("en"));
+    if (englishVoice) utterance.voice = englishVoice;
+
+    utterance.rate = 0.95;
+    utterance.pitch = 1.0;
+    utterance.onend = () => setIsSpeakingTTS(false);
+    utterance.onerror = () => setIsSpeakingTTS(false);
+
+    setIsSpeakingTTS(true);
+    window.speechSynthesis.speak(utterance);
+  }, []);
+
   // TTS helper: speak response aloud when input was voice
   const speakResponse = useCallback(async (text: string) => {
     try {
       // Stop any currently playing TTS before starting new one
+      window.speechSynthesis.cancel();
       if (ttsAudioRef.current) {
         ttsAudioRef.current.pause();
         ttsAudioRef.current.currentTime = 0;
@@ -357,7 +385,8 @@ const StudyCompanion = () => {
       );
 
       if (!response.ok) {
-        console.warn("TTS failed silently:", response.status);
+        console.warn("ElevenLabs TTS failed, falling back to browser speech:", response.status);
+        browserTTSFallback(cleaned);
         return;
       }
 
@@ -379,10 +408,15 @@ const StudyCompanion = () => {
 
       await audio.play();
     } catch {
-      // Silent fallback — just show text
-      setIsSpeakingTTS(false);
+      // Network error — fall back to browser speech
+      const cleaned = cleanForSpeech(text);
+      if (cleaned) {
+        browserTTSFallback(cleaned);
+      } else {
+        setIsSpeakingTTS(false);
+      }
     }
-  }, []);
+  }, [browserTTSFallback]);
 
   // Start voice conversation
   const startVoiceAgent = useCallback(async () => {
@@ -580,7 +614,8 @@ const StudyCompanion = () => {
   const sendMessage = useCallback(async (text: string) => {
     if (!text.trim() || isLoading) return;
 
-    // Stop any currently playing TTS when user sends new input
+    // Stop any currently playing TTS (ElevenLabs + browser) when user sends new input
+    window.speechSynthesis.cancel();
     if (ttsAudioRef.current) {
       ttsAudioRef.current.pause();
       ttsAudioRef.current = null;
