@@ -151,9 +151,20 @@ const StudyCompanion = () => {
   const [voiceQuizOpen, setVoiceQuizOpen] = useState(false);
   const [voiceQuizSubject, setVoiceQuizSubject] = useState("Mathematics");
 
+  // TTS playback state for voice-in = voice-out
+  const [isSpeakingTTS, setIsSpeakingTTS] = useState(false);
+  const ttsAudioRef = useRef<HTMLAudioElement | null>(null);
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Voice persistence refs
+  const userStoppedVoiceRef = useRef(false);
+  const reconnectAttemptsRef = useRef(0);
+
+  // Input mode tracking: voice transcription vs text typing
+  const inputModeRef = useRef<"text" | "voice">("text");
   const { user, fullName } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -167,8 +178,30 @@ const StudyCompanion = () => {
     },
     onDisconnect: () => {
       console.log("🔇 Disconnected from Buddy voice agent");
-      setVoiceMode(false);
       setIsConnecting(false);
+      
+      if (userStoppedVoiceRef.current) {
+        // User explicitly stopped — reset everything
+        setVoiceMode(false);
+        userStoppedVoiceRef.current = false;
+        reconnectAttemptsRef.current = 0;
+      } else if (reconnectAttemptsRef.current < 2) {
+        // Unexpected disconnect — try auto-reconnect
+        console.log(`🔄 Unexpected disconnect, attempting reconnect (${reconnectAttemptsRef.current + 1}/2)...`);
+        reconnectAttemptsRef.current += 1;
+        // Small delay before reconnecting
+        setTimeout(() => {
+          if (!userStoppedVoiceRef.current) {
+            startVoiceAgent();
+          }
+        }, 1500);
+      } else {
+        // Exhausted retries
+        console.log("❌ Max reconnect attempts reached, giving up");
+        setVoiceMode(false);
+        reconnectAttemptsRef.current = 0;
+        toast.error("Voice connection lost. Tap the phone icon to reconnect.");
+      }
     },
     onMessage: (message: any) => {
       if (message.type === "user_transcript") {
@@ -295,9 +328,60 @@ const StudyCompanion = () => {
     }
   }, [location.pathname, conversation.status]);
 
+  // TTS helper: speak response aloud when input was voice
+  const speakResponse = useCallback(async (text: string) => {
+    try {
+      const cleaned = cleanForSpeech(text);
+      if (!cleaned) return;
+
+      setIsSpeakingTTS(true);
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-tts-stream`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ text: cleaned }),
+        }
+      );
+
+      if (!response.ok) {
+        console.warn("TTS failed silently:", response.status);
+        return;
+      }
+
+      const audioBlob = await response.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+      ttsAudioRef.current = audio;
+
+      audio.onended = () => {
+        setIsSpeakingTTS(false);
+        URL.revokeObjectURL(audioUrl);
+        ttsAudioRef.current = null;
+      };
+      audio.onerror = () => {
+        setIsSpeakingTTS(false);
+        URL.revokeObjectURL(audioUrl);
+        ttsAudioRef.current = null;
+      };
+
+      await audio.play();
+    } catch {
+      // Silent fallback — just show text
+      setIsSpeakingTTS(false);
+    }
+  }, []);
+
   // Start voice conversation
   const startVoiceAgent = useCallback(async () => {
     setIsConnecting(true);
+    userStoppedVoiceRef.current = false;
+    reconnectAttemptsRef.current = 0;
     try {
       await navigator.mediaDevices.getUserMedia({ audio: true });
 
@@ -335,6 +419,13 @@ const StudyCompanion = () => {
 
   // Stop voice conversation
   const stopVoiceAgent = useCallback(async () => {
+    userStoppedVoiceRef.current = true;
+    // Stop any TTS playback
+    if (ttsAudioRef.current) {
+      ttsAudioRef.current.pause();
+      ttsAudioRef.current = null;
+      setIsSpeakingTTS(false);
+    }
     try {
       await conversation.endSession();
     } catch (e) {
@@ -589,6 +680,11 @@ const StudyCompanion = () => {
 
       if (assistantContent) {
         persistMessage({ role: "assistant", content: assistantContent }, sessionId);
+        
+        // Voice in = voice out: if user spoke, play response aloud
+        if (inputModeRef.current === "voice") {
+          speakResponse(assistantContent);
+        }
       }
     } catch (e) {
       console.error("Stream error:", e);
@@ -600,7 +696,7 @@ const StudyCompanion = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [messages, sessionId, isLoading, location.pathname]);
+  }, [messages, sessionId, isLoading, location.pathname, speakResponse]);
 
   const retryLastMessage = useCallback(() => {
     const lastUserMsg = [...messages].reverse().find(m => m.role === "user");
@@ -632,6 +728,7 @@ const StudyCompanion = () => {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
+      inputModeRef.current = "text";
       sendMessage(input);
     }
   };
@@ -909,7 +1006,10 @@ const StudyCompanion = () => {
                     disabled={isLoading}
                   />
                   <CompanionVoiceInput
-                    onTranscript={(text) => sendMessage(text)}
+                    onTranscript={(text) => {
+                      inputModeRef.current = "voice";
+                      sendMessage(text);
+                    }}
                     disabled={isLoading}
                     showLabel={!input.trim() && messages.length <= 1}
                   />
@@ -917,7 +1017,10 @@ const StudyCompanion = () => {
                     size="icon"
                     variant="ghost"
                     className="h-9 w-9 shrink-0"
-                    onClick={() => sendMessage(input)}
+                    onClick={() => {
+                      inputModeRef.current = "text";
+                      sendMessage(input);
+                    }}
                     disabled={!input.trim() || isLoading}
                   >
                     <Send className="h-4 w-4" />
