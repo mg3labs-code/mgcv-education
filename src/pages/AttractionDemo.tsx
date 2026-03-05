@@ -342,13 +342,32 @@ const AttractionDemo = () => {
           {messages.map((msg, i) => (
             <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
               <div
-                className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap
+                className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap relative group
                   ${msg.role === "user"
                     ? "bg-blue-600 text-white rounded-br-md"
                     : "bg-white/8 text-white/90 border border-white/10 rounded-bl-md"
                   }`}
               >
                 {msg.content}
+                {msg.role === "assistant" && (
+                  <button
+                    onClick={() => {
+                      if (speakingMsgIndex === i) {
+                        stopAudio();
+                      } else {
+                        speakText(msg.content, i);
+                      }
+                    }}
+                    className={`absolute -bottom-3 right-2 p-1 rounded-full border transition-all
+                      ${speakingMsgIndex === i
+                        ? "bg-amber-500/20 border-amber-500/40 text-amber-400"
+                        : "bg-white/5 border-white/10 text-white/30 opacity-0 group-hover:opacity-100 hover:text-white/70 hover:bg-white/10"
+                      }`}
+                    title={speakingMsgIndex === i ? "Stop speaking" : "Read aloud"}
+                  >
+                    <AudioLines className={`h-3.5 w-3.5 ${speakingMsgIndex === i ? "animate-pulse" : ""}`} />
+                  </button>
+                )}
               </div>
             </div>
           ))}
