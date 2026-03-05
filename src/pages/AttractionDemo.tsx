@@ -1,13 +1,15 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Send, RotateCcw, Sparkles, Zap, BookOpen, GitBranch, Lightbulb, Trophy, Volume2, VolumeX, AudioLines } from "lucide-react";
+import { Send, RotateCcw, Sparkles, Zap, BookOpen, GitBranch, Lightbulb, Trophy, Volume2, VolumeX, AudioLines, Phone, PhoneOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
+import { useConversation } from "@elevenlabs/react";
 import CompanionVoiceInput from "@/components/student/CompanionVoiceInput";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
 const TTS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-tts-stream`;
+const BUDDY_SESSION_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-buddy-session`;
 
 function cleanForSpeech(text: string) {
   return text
@@ -50,10 +52,94 @@ const AttractionDemo = () => {
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [speakingMsgIndex, setSpeakingMsgIndex] = useState<number | null>(null);
+  
+  // Live voice call state
+  const [isCallActive, setIsCallActive] = useState(false);
+  const [isCallConnecting, setIsCallConnecting] = useState(false);
+  const [callTranscripts, setCallTranscripts] = useState<Array<{ role: "user" | "agent"; text: string }>>([]);
+  const userStoppedCallRef = useRef(false);
+  const reconnectAttemptsRef = useRef(0);
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+
+  // ElevenLabs Conversational AI for live voice call
+  const conversation = useConversation({
+    onConnect: () => {
+      console.log("🎙️ Connected to voice agent");
+      setIsCallConnecting(false);
+      toast.success("Voice call connected! Start speaking.", { duration: 2000 });
+    },
+    onDisconnect: () => {
+      console.log("🔇 Disconnected from voice agent");
+      setIsCallConnecting(false);
+      if (userStoppedCallRef.current) {
+        setIsCallActive(false);
+        userStoppedCallRef.current = false;
+        reconnectAttemptsRef.current = 0;
+      } else if (reconnectAttemptsRef.current < 2) {
+        reconnectAttemptsRef.current += 1;
+        setTimeout(() => {
+          if (!userStoppedCallRef.current) startVoiceCall();
+        }, 1500);
+      } else {
+        setIsCallActive(false);
+        reconnectAttemptsRef.current = 0;
+        toast.error("Voice call lost. Tap the phone icon to reconnect.");
+      }
+    },
+    onMessage: (message: any) => {
+      if (message.type === "user_transcript") {
+        const text = message.user_transcription_event?.user_transcript;
+        if (text) setCallTranscripts(prev => [...prev, { role: "user", text }]);
+      } else if (message.type === "agent_response") {
+        const text = message.agent_response_event?.agent_response;
+        if (text) setCallTranscripts(prev => [...prev, { role: "agent", text }]);
+      }
+    },
+    onError: (error: any) => {
+      console.error("Voice call error:", error);
+      toast.error("Voice call error. Please try again.");
+      setIsCallConnecting(false);
+    },
+  });
+
+  const isVoiceActive = conversation.status === "connected";
+  const isBuddySpeaking = isVoiceActive && conversation.isSpeaking;
+
+  const startVoiceCall = useCallback(async () => {
+    setIsCallConnecting(true);
+    userStoppedCallRef.current = false;
+    reconnectAttemptsRef.current = 0;
+    try {
+      await navigator.mediaDevices.getUserMedia({ audio: true });
+      const response = await fetch(BUDDY_SESSION_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+      });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({ error: "Failed to start voice session" }));
+        throw new Error(err.error || "Failed to start voice session");
+      }
+      const data = await response.json();
+      if (!data.token) throw new Error("No conversation token received");
+      await conversation.startSession({
+        conversationToken: data.token,
+        connectionType: "webrtc",
+      });
+      setIsCallActive(true);
+      setCallTranscripts([]);
+    } catch (error: any) {
+      console.error("Failed to start voice call:", error);
+      toast.error(error.message || "Failed to start call. Check mic permissions.");
+      setIsCallConnecting(false);
+    }
+  }, [conversation]);
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -73,6 +159,18 @@ const AttractionDemo = () => {
     setIsSpeaking(false);
     setSpeakingMsgIndex(null);
   }, []);
+
+  const stopVoiceCall = useCallback(async () => {
+    userStoppedCallRef.current = true;
+    stopAudio();
+    try {
+      await conversation.endSession();
+    } catch (e) {
+      console.error("Error ending call:", e);
+    }
+    setIsCallActive(false);
+    setIsCallConnecting(false);
+  }, [conversation, stopAudio]);
 
   // Speak text via ElevenLabs TTS streaming
   const speakText = useCallback(async (text: string, msgIndex?: number) => {
@@ -261,6 +359,30 @@ const AttractionDemo = () => {
             <p className="text-xs text-white/50">Attraction System Demo — 6-Phase Flow</p>
           </div>
           <div className="flex items-center gap-1">
+            {/* Live Voice Call Button */}
+            <Button
+              variant={isVoiceActive ? "default" : "ghost"}
+              size="sm"
+              onClick={isVoiceActive ? stopVoiceCall : startVoiceCall}
+              disabled={isCallConnecting}
+              className={`${
+                isVoiceActive
+                  ? "bg-green-600 hover:bg-green-700 text-white"
+                  : "text-white/60 hover:text-white hover:bg-white/10"
+              }`}
+              title={isVoiceActive ? "End Voice Call" : "Start Live Voice Call"}
+            >
+              {isCallConnecting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : isVoiceActive ? (
+                <PhoneOff className="h-4 w-4" />
+              ) : (
+                <Phone className="h-4 w-4" />
+              )}
+              <span className="ml-1.5 hidden sm:inline">
+                {isCallConnecting ? "Connecting..." : isVoiceActive ? "End Call" : "Call"}
+              </span>
+            </Button>
             <Button
               variant="ghost"
               size="sm"
@@ -311,6 +433,34 @@ const AttractionDemo = () => {
                 {i}
               </span>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Live Call Transcript Overlay */}
+      {isVoiceActive && (
+        <div className="shrink-0 px-4 py-3 border-b border-green-500/20 bg-green-500/5">
+          <div className="max-w-3xl mx-auto">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="relative flex items-center gap-1.5">
+                <span className="flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500" />
+                </span>
+                <span className="text-xs font-medium text-green-400">
+                  {isBuddySpeaking ? "🔊 Speaking..." : "🎤 Listening..."}
+                </span>
+              </div>
+            </div>
+            {callTranscripts.length > 0 && (
+              <div className="space-y-1 max-h-24 overflow-y-auto">
+                {callTranscripts.slice(-4).map((t, i) => (
+                  <p key={i} className={`text-xs ${t.role === "user" ? "text-blue-400" : "text-white/70"}`}>
+                    <span className="font-medium">{t.role === "user" ? "You" : "AI"}:</span> {t.text}
+                  </p>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
