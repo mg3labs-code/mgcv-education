@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
-import { Send, RotateCcw, Sparkles, Zap, BookOpen, GitBranch, Lightbulb, Trophy, Volume2, VolumeX, AudioLines, Phone, PhoneOff, Loader2 } from "lucide-react";
+import { Send, RotateCcw, Sparkles, Zap, BookOpen, GitBranch, Lightbulb, Trophy, Volume2, VolumeX, AudioLines, Phone, PhoneOff, Loader2, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
@@ -12,6 +12,7 @@ type Msg = { role: "user" | "assistant"; content: string };
 
 const TTS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-tts-stream`;
 const ATTRACTION_VOICE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/attraction-voice-session`;
+const SARVAM_RELAY_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/sarvam-voice-relay`;
 
 function cleanForSpeech(text: string) {
   return text
@@ -62,12 +63,28 @@ const AttractionDemo = () => {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [speakingMsgIndex, setSpeakingMsgIndex] = useState<number | null>(null);
   
-  // Live voice call state
+  // ElevenLabs Live voice call state
   const [isCallActive, setIsCallActive] = useState(false);
   const [isCallConnecting, setIsCallConnecting] = useState(false);
   const [callTranscripts, setCallTranscripts] = useState<Array<{ role: "user" | "agent"; text: string }>>([]);
   const userStoppedCallRef = useRef(false);
   const reconnectAttemptsRef = useRef(0);
+
+  // Sarvam voice call state
+  const [isSarvamActive, setIsSarvamActive] = useState(false);
+  const [isSarvamProcessing, setIsSarvamProcessing] = useState(false);
+  const [isSarvamRecording, setIsSarvamRecording] = useState(false);
+  const [isSarvamSpeaking, setIsSarvamSpeaking] = useState(false);
+  const [sarvamTranscripts, setSarvamTranscripts] = useState<Array<{ role: "user" | "agent"; text: string }>>([]);
+  const sarvamConversationRef = useRef<Array<{ role: string; content: string }>>([]);
+  const sarvamRecorderRef = useRef<MediaRecorder | null>(null);
+  const sarvamStreamRef = useRef<MediaStream | null>(null);
+  const sarvamChunksRef = useRef<Blob[]>([]);
+  const sarvamAudioRef = useRef<HTMLAudioElement | null>(null);
+  const sarvamStoppedRef = useRef(false);
+  const sarvamAnalyserRef = useRef<AnalyserNode | null>(null);
+  const sarvamSilenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const sarvamVadFrameRef = useRef<number>(0);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -119,6 +136,9 @@ const AttractionDemo = () => {
   const isBuddySpeaking = isVoiceActive && conversation.isSpeaking;
 
   const startVoiceCall = useCallback(async () => {
+    // Stop Sarvam if active
+    if (isSarvamActive) stopSarvamCall();
+    
     setIsCallConnecting(true);
     userStoppedCallRef.current = false;
     reconnectAttemptsRef.current = 0;
@@ -148,7 +168,7 @@ const AttractionDemo = () => {
       toast.error(error.message || "Failed to start call. Check mic permissions.");
       setIsCallConnecting(false);
     }
-  }, [conversation]);
+  }, [conversation, isSarvamActive]);
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -180,6 +200,235 @@ const AttractionDemo = () => {
     setIsCallActive(false);
     setIsCallConnecting(false);
   }, [conversation, stopAudio]);
+
+  // ===== SARVAM VOICE CALL LOGIC =====
+
+  const stopSarvamCall = useCallback(() => {
+    sarvamStoppedRef.current = true;
+    if (sarvamRecorderRef.current?.state === "recording") {
+      sarvamRecorderRef.current.stop();
+    }
+    if (sarvamStreamRef.current) {
+      sarvamStreamRef.current.getTracks().forEach(t => t.stop());
+      sarvamStreamRef.current = null;
+    }
+    if (sarvamAudioRef.current) {
+      sarvamAudioRef.current.pause();
+      sarvamAudioRef.current = null;
+    }
+    if (sarvamSilenceTimerRef.current) {
+      clearTimeout(sarvamSilenceTimerRef.current);
+      sarvamSilenceTimerRef.current = null;
+    }
+    if (sarvamVadFrameRef.current) {
+      cancelAnimationFrame(sarvamVadFrameRef.current);
+      sarvamVadFrameRef.current = 0;
+    }
+    setIsSarvamActive(false);
+    setIsSarvamRecording(false);
+    setIsSarvamProcessing(false);
+    setIsSarvamSpeaking(false);
+  }, []);
+
+  const startSarvamRecording = useCallback(async () => {
+    if (sarvamStoppedRef.current) return;
+    
+    try {
+      let stream = sarvamStreamRef.current;
+      if (!stream || stream.getTracks().every(t => t.readyState === "ended")) {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        sarvamStreamRef.current = stream;
+      }
+      
+      const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+        ? "audio/webm;codecs=opus" : "audio/webm";
+      const recorder = new MediaRecorder(stream, { mimeType });
+      sarvamChunksRef.current = [];
+      
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) sarvamChunksRef.current.push(e.data);
+      };
+
+      // VAD: detect silence using Web Audio API
+      const audioCtx = new AudioContext();
+      const source = audioCtx.createMediaStreamSource(stream);
+      const analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 512;
+      source.connect(analyser);
+      sarvamAnalyserRef.current = analyser;
+
+      let speechDetected = false;
+      let silenceStart = 0;
+      const SILENCE_THRESHOLD = 15; // amplitude threshold
+      const SILENCE_DURATION = 1800; // ms of silence before auto-stop
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+      const checkVolume = () => {
+        if (sarvamStoppedRef.current || recorder.state !== "recording") {
+          audioCtx.close();
+          return;
+        }
+        analyser.getByteFrequencyData(dataArray);
+        const avg = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+
+        if (avg > SILENCE_THRESHOLD) {
+          speechDetected = true;
+          silenceStart = 0;
+        } else if (speechDetected) {
+          if (!silenceStart) silenceStart = Date.now();
+          else if (Date.now() - silenceStart > SILENCE_DURATION) {
+            // Silence detected after speech — stop recording
+            console.log("🔇 Sarvam VAD: silence detected, stopping");
+            if (recorder.state === "recording") recorder.stop();
+            audioCtx.close();
+            return;
+          }
+        }
+        sarvamVadFrameRef.current = requestAnimationFrame(checkVolume);
+      };
+
+      recorder.onstop = async () => {
+        audioCtx.close().catch(() => {});
+        setIsSarvamRecording(false);
+        
+        const blob = new Blob(sarvamChunksRef.current, { type: mimeType });
+        if (blob.size < 1000 || !speechDetected) {
+          // Too short or no speech — restart listening
+          if (!sarvamStoppedRef.current) {
+            setTimeout(() => startSarvamRecording(), 300);
+          }
+          return;
+        }
+        await processSarvamTurn(blob, mimeType);
+      };
+
+      sarvamRecorderRef.current = recorder;
+      recorder.start(250);
+      setIsSarvamRecording(true);
+      checkVolume();
+    } catch (err) {
+      console.error("Sarvam recording error:", err);
+      toast.error("Microphone access denied.");
+      stopSarvamCall();
+    }
+  }, [stopSarvamCall]);
+
+  const processSarvamTurn = useCallback(async (blob: Blob, mimeType: string) => {
+    if (sarvamStoppedRef.current) return;
+    setIsSarvamProcessing(true);
+
+    try {
+      // Convert blob to base64
+      const reader = new FileReader();
+      const base64 = await new Promise<string>((resolve) => {
+        reader.onloadend = () => {
+          const result = reader.result as string;
+          resolve(result.split(",")[1]);
+        };
+        reader.readAsDataURL(blob);
+      });
+
+      const resp = await fetch(SARVAM_RELAY_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({
+          audioBase64: base64,
+          mimeType,
+          conversationHistory: sarvamConversationRef.current,
+        }),
+      });
+
+      const data = await resp.json();
+
+      if (data.error === "silence" || !data.userTranscript) {
+        setIsSarvamProcessing(false);
+        if (!sarvamStoppedRef.current) startSarvamRecording();
+        return;
+      }
+
+      if (data.error) {
+        toast.error(data.error);
+        setIsSarvamProcessing(false);
+        if (!sarvamStoppedRef.current) startSarvamRecording();
+        return;
+      }
+
+      // Update conversation history
+      sarvamConversationRef.current.push(
+        { role: "user", content: data.userTranscript },
+        { role: "assistant", content: data.aiResponse }
+      );
+
+      // Update transcripts for display
+      setSarvamTranscripts(prev => [
+        ...prev,
+        { role: "user", text: data.userTranscript },
+        { role: "agent", text: data.aiResponse },
+      ]);
+
+      setIsSarvamProcessing(false);
+
+      // Play audio response
+      if (data.audioBase64 && !sarvamStoppedRef.current) {
+        setIsSarvamSpeaking(true);
+        const audioUrl = `data:audio/wav;base64,${data.audioBase64}`;
+        const audio = new Audio(audioUrl);
+        sarvamAudioRef.current = audio;
+
+        audio.onended = () => {
+          setIsSarvamSpeaking(false);
+          sarvamAudioRef.current = null;
+          // Auto-restart recording after playback
+          if (!sarvamStoppedRef.current) startSarvamRecording();
+        };
+        audio.onerror = () => {
+          setIsSarvamSpeaking(false);
+          sarvamAudioRef.current = null;
+          if (!sarvamStoppedRef.current) startSarvamRecording();
+        };
+        await audio.play();
+      } else {
+        // No audio — restart recording
+        if (!sarvamStoppedRef.current) startSarvamRecording();
+      }
+    } catch (err) {
+      console.error("Sarvam relay error:", err);
+      toast.error("Voice processing failed. Retrying...");
+      setIsSarvamProcessing(false);
+      if (!sarvamStoppedRef.current) {
+        setTimeout(() => startSarvamRecording(), 1000);
+      }
+    }
+  }, [startSarvamRecording, stopSarvamCall]);
+
+  const startSarvamCall = useCallback(async () => {
+    // Stop ElevenLabs if active
+    if (isVoiceActive) await stopVoiceCall();
+    stopAudio();
+
+    sarvamStoppedRef.current = false;
+    sarvamConversationRef.current = [];
+    setSarvamTranscripts([]);
+    setIsSarvamActive(true);
+    toast.success("Sarvam voice call started! Speak now.", { duration: 2000 });
+    
+    // Start first recording
+    startSarvamRecording();
+  }, [isVoiceActive, stopVoiceCall, stopAudio, startSarvamRecording]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      sarvamStoppedRef.current = true;
+      if (sarvamStreamRef.current) {
+        sarvamStreamRef.current.getTracks().forEach(t => t.stop());
+      }
+    };
+  }, []);
 
   // Speak text via ElevenLabs TTS streaming
   const speakText = useCallback(async (text: string, msgIndex?: number) => {
@@ -343,6 +592,7 @@ const AttractionDemo = () => {
 
   const reset = () => {
     stopAudio();
+    stopSarvamCall();
     setMessages([]);
     setCurrentPhase(1);
     setInterests([]);
@@ -358,6 +608,9 @@ const AttractionDemo = () => {
 
   const currentPhaseData = PHASES.find(p => p.id === currentPhase) || PHASES[0];
 
+  // Determine active call type
+  const anyCallActive = isVoiceActive || isSarvamActive;
+
   return (
     <div className="h-screen flex flex-col bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white">
       {/* Header */}
@@ -368,18 +621,18 @@ const AttractionDemo = () => {
             <p className="text-xs text-white/50">Attraction System Demo — 6-Phase Flow</p>
           </div>
           <div className="flex items-center gap-1">
-            {/* Live Voice Call Button */}
+            {/* ElevenLabs Live Voice Call Button */}
             <Button
               variant={isVoiceActive ? "default" : "ghost"}
               size="sm"
               onClick={isVoiceActive ? stopVoiceCall : startVoiceCall}
-              disabled={isCallConnecting}
+              disabled={isCallConnecting || isSarvamActive}
               className={`${
                 isVoiceActive
                   ? "bg-green-600 hover:bg-green-700 text-white"
                   : "text-white/60 hover:text-white hover:bg-white/10"
               }`}
-              title={isVoiceActive ? "End Voice Call" : "Start Live Voice Call"}
+              title={isVoiceActive ? "End ElevenLabs Call" : "Start ElevenLabs Voice Call"}
             >
               {isCallConnecting ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -392,6 +645,30 @@ const AttractionDemo = () => {
                 {isCallConnecting ? "Connecting..." : isVoiceActive ? "End Call" : "Call"}
               </span>
             </Button>
+
+            {/* Sarvam Voice Call Button */}
+            <Button
+              variant={isSarvamActive ? "default" : "ghost"}
+              size="sm"
+              onClick={isSarvamActive ? stopSarvamCall : startSarvamCall}
+              disabled={isCallConnecting || isVoiceActive}
+              className={`${
+                isSarvamActive
+                  ? "bg-orange-600 hover:bg-orange-700 text-white"
+                  : "text-white/60 hover:text-white hover:bg-white/10"
+              }`}
+              title={isSarvamActive ? "End Sarvam Call" : "Start Sarvam (Indian Voice) Call"}
+            >
+              {isSarvamActive ? (
+                <PhoneOff className="h-4 w-4" />
+              ) : (
+                <Globe className="h-4 w-4" />
+              )}
+              <span className="ml-1.5 hidden sm:inline">
+                {isSarvamActive ? "End" : "Sarvam"}
+              </span>
+            </Button>
+
             <Button
               variant="ghost"
               size="sm"
@@ -446,7 +723,7 @@ const AttractionDemo = () => {
         </div>
       )}
 
-      {/* Live Call Transcript Overlay with Waveform */}
+      {/* ElevenLabs Live Call Transcript Overlay with Waveform */}
       {isVoiceActive && (
         <div className="shrink-0 px-4 py-4 border-b border-green-500/20 bg-green-500/5">
           <div className="max-w-3xl mx-auto">
@@ -491,6 +768,67 @@ const AttractionDemo = () => {
             {callTranscripts.length > 0 && (
               <div className="space-y-1 max-h-24 overflow-y-auto">
                 {callTranscripts.slice(-4).map((t, i) => (
+                  <p key={i} className={`text-xs ${t.role === "user" ? "text-blue-400" : "text-white/70"}`}>
+                    <span className="font-medium">{t.role === "user" ? "You" : "AI"}:</span> {t.text}
+                  </p>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Sarvam Voice Call Overlay */}
+      {isSarvamActive && (
+        <div className="shrink-0 px-4 py-4 border-b border-orange-500/20 bg-orange-500/5">
+          <div className="max-w-3xl mx-auto">
+            {/* Status + Waveform */}
+            <div className="flex items-center gap-3 mb-3">
+              <div className="relative flex items-center gap-1.5">
+                <span className="flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-orange-500" />
+                </span>
+              </div>
+
+              {/* Audio Waveform Bars */}
+              <div className="flex items-center gap-[3px] h-8">
+                {Array.from({ length: 24 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className={`w-[3px] rounded-full transition-all duration-150 ${
+                      isSarvamSpeaking
+                        ? "bg-orange-400"
+                        : isSarvamRecording
+                          ? "bg-orange-300/60"
+                          : "bg-white/20"
+                    }`}
+                    style={{
+                      height: isSarvamSpeaking
+                        ? `${Math.max(4, Math.sin((Date.now() / (120 + i * 15)) + i * 0.7) * 14 + 16)}px`
+                        : isSarvamRecording
+                          ? `${Math.max(3, Math.sin((Date.now() / (200 + i * 20)) + i) * 6 + 10)}px`
+                          : `${Math.max(3, Math.sin(i * 0.9) * 3 + 5)}px`,
+                      animation: (isSarvamSpeaking || isSarvamRecording)
+                        ? `waveform-bar ${0.4 + (i % 5) * 0.12}s ease-in-out infinite alternate`
+                        : "none",
+                      animationDelay: `${i * 40}ms`,
+                    }}
+                  />
+                ))}
+              </div>
+
+              <span className="text-xs font-medium text-orange-400 ml-1">
+                {isSarvamSpeaking ? "Speaking (Sarvam)..." : isSarvamProcessing ? "Thinking..." : isSarvamRecording ? "Listening..." : "Starting..."}
+              </span>
+
+              {isSarvamProcessing && <Loader2 className="h-3.5 w-3.5 animate-spin text-orange-400" />}
+            </div>
+
+            {/* Transcripts */}
+            {sarvamTranscripts.length > 0 && (
+              <div className="space-y-1 max-h-24 overflow-y-auto">
+                {sarvamTranscripts.slice(-4).map((t, i) => (
                   <p key={i} className={`text-xs ${t.role === "user" ? "text-blue-400" : "text-white/70"}`}>
                     <span className="font-medium">{t.role === "user" ? "You" : "AI"}:</span> {t.text}
                   </p>
