@@ -359,6 +359,30 @@ const AttractionDemo = () => {
             <p className="text-xs text-white/50">Attraction System Demo — 6-Phase Flow</p>
           </div>
           <div className="flex items-center gap-1">
+            {/* Live Voice Call Button */}
+            <Button
+              variant={isVoiceActive ? "default" : "ghost"}
+              size="sm"
+              onClick={isVoiceActive ? stopVoiceCall : startVoiceCall}
+              disabled={isCallConnecting}
+              className={`${
+                isVoiceActive
+                  ? "bg-green-600 hover:bg-green-700 text-white"
+                  : "text-white/60 hover:text-white hover:bg-white/10"
+              }`}
+              title={isVoiceActive ? "End Voice Call" : "Start Live Voice Call"}
+            >
+              {isCallConnecting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : isVoiceActive ? (
+                <PhoneOff className="h-4 w-4" />
+              ) : (
+                <Phone className="h-4 w-4" />
+              )}
+              <span className="ml-1.5 hidden sm:inline">
+                {isCallConnecting ? "Connecting..." : isVoiceActive ? "End Call" : "Call"}
+              </span>
+            </Button>
             <Button
               variant="ghost"
               size="sm"
