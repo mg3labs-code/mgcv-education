@@ -47,8 +47,12 @@ const AttractionDemo = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [currentPhase, setCurrentPhase] = useState(1);
   const [interests, setInterests] = useState<string[]>([]);
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
