@@ -1,13 +1,15 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Send, RotateCcw, Sparkles, Zap, BookOpen, GitBranch, Lightbulb, Trophy, Volume2, VolumeX, AudioLines } from "lucide-react";
+import { Send, RotateCcw, Sparkles, Zap, BookOpen, GitBranch, Lightbulb, Trophy, Volume2, VolumeX, AudioLines, Phone, PhoneOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
+import { useConversation } from "@elevenlabs/react";
 import CompanionVoiceInput from "@/components/student/CompanionVoiceInput";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
 const TTS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-tts-stream`;
+const BUDDY_SESSION_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-buddy-session`;
 
 function cleanForSpeech(text: string) {
   return text
