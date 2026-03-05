@@ -19,7 +19,13 @@ serve(async (req) => {
 
     const { text, voiceId } = await req.json();
 
-    if (!text || !text.trim()) {
+    // Sanitize text: remove emojis, unpaired surrogates, and other problematic Unicode
+    const sanitized = (text || "")
+      .replace(/[\u{1F300}-\u{1FFFF}\u{2600}-\u{27BF}\u{FE00}-\u{FE0F}\u{200D}\u{20E3}\u{E0020}-\u{E007F}\u{2300}-\u{23FF}\u{2B50}-\u{2B55}\u{3030}\u{303D}\u{3297}\u{3299}]/gu, "")
+      .replace(/[\uD800-\uDFFF]/g, "")
+      .trim();
+
+    if (!sanitized) {
       return new Response(
         JSON.stringify({ error: "text is required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
