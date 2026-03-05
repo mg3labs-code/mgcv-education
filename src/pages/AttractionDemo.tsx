@@ -141,18 +141,6 @@ const AttractionDemo = () => {
     }
   }, [conversation]);
 
-  const stopVoiceCall = useCallback(async () => {
-    userStoppedCallRef.current = true;
-    stopAudio();
-    try {
-      await conversation.endSession();
-    } catch (e) {
-      console.error("Error ending call:", e);
-    }
-    setIsCallActive(false);
-    setIsCallConnecting(false);
-  }, [conversation]);
-
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -171,6 +159,18 @@ const AttractionDemo = () => {
     setIsSpeaking(false);
     setSpeakingMsgIndex(null);
   }, []);
+
+  const stopVoiceCall = useCallback(async () => {
+    userStoppedCallRef.current = true;
+    stopAudio();
+    try {
+      await conversation.endSession();
+    } catch (e) {
+      console.error("Error ending call:", e);
+    }
+    setIsCallActive(false);
+    setIsCallConnecting(false);
+  }, [conversation, stopAudio]);
 
   // Speak text via ElevenLabs TTS streaming
   const speakText = useCallback(async (text: string, msgIndex?: number) => {
