@@ -1,11 +1,26 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Send, RotateCcw, Sparkles, Zap, BookOpen, GitBranch, Lightbulb, Trophy } from "lucide-react";
+import { Send, RotateCcw, Sparkles, Zap, BookOpen, GitBranch, Lightbulb, Trophy, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import CompanionVoiceInput from "@/components/student/CompanionVoiceInput";
 
 type Msg = { role: "user" | "assistant"; content: string };
+
+const TTS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-tts-stream`;
+
+function cleanForSpeech(text: string) {
+  return text
+    .replace(/\[PHASE:\d\]\s*/g, "")
+    .replace(/\*\*(.+?)\*\*/g, "$1")
+    .replace(/\*(.+?)\*/g, "$1")
+    .replace(/`(.+?)`/g, "$1")
+    .replace(/^[•\-]\s*/gm, "")
+    .replace(/^\d+\.\s*/gm, "")
+    .replace(/#{1,6}\s*/g, "")
+    .replace(/[🏏⚽🎮🍳🔥💡✅❌🎯⚡🧠📚🏆]/g, "")
+    .trim();
+}
 
 const PHASES = [
   { id: 1, label: "Hook", icon: Sparkles, color: "text-amber-500", bg: "bg-amber-500/10", border: "border-amber-500/30" },
