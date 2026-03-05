@@ -437,21 +437,48 @@ const AttractionDemo = () => {
         </div>
       )}
 
-      {/* Live Call Transcript Overlay */}
+      {/* Live Call Transcript Overlay with Waveform */}
       {isVoiceActive && (
-        <div className="shrink-0 px-4 py-3 border-b border-green-500/20 bg-green-500/5">
+        <div className="shrink-0 px-4 py-4 border-b border-green-500/20 bg-green-500/5">
           <div className="max-w-3xl mx-auto">
-            <div className="flex items-center gap-2 mb-2">
+            {/* Waveform + Status */}
+            <div className="flex items-center gap-3 mb-3">
               <div className="relative flex items-center gap-1.5">
                 <span className="flex h-2.5 w-2.5">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
                   <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500" />
                 </span>
-                <span className="text-xs font-medium text-green-400">
-                  {isBuddySpeaking ? "🔊 Speaking..." : "🎤 Listening..."}
-                </span>
               </div>
+
+              {/* Audio Waveform Bars */}
+              <div className="flex items-center gap-[3px] h-8">
+                {Array.from({ length: 24 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className={`w-[3px] rounded-full transition-all duration-150 ${
+                      isBuddySpeaking
+                        ? "bg-green-400"
+                        : "bg-white/20"
+                    }`}
+                    style={{
+                      height: isBuddySpeaking
+                        ? `${Math.max(4, Math.sin((Date.now() / (120 + i * 15)) + i * 0.7) * 14 + 16)}px`
+                        : `${Math.max(3, Math.sin(i * 0.9) * 3 + 5)}px`,
+                      animation: isBuddySpeaking
+                        ? `waveform-bar ${0.4 + (i % 5) * 0.12}s ease-in-out infinite alternate`
+                        : "none",
+                      animationDelay: `${i * 40}ms`,
+                    }}
+                  />
+                ))}
+              </div>
+
+              <span className="text-xs font-medium text-green-400 ml-1">
+                {isBuddySpeaking ? "Speaking..." : "Listening..."}
+              </span>
             </div>
+
+            {/* Transcripts */}
             {callTranscripts.length > 0 && (
               <div className="space-y-1 max-h-24 overflow-y-auto">
                 {callTranscripts.slice(-4).map((t, i) => (
