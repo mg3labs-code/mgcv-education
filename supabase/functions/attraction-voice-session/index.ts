@@ -124,23 +124,35 @@ serve(async (req) => {
 
     const agentId = await getOrCreateAgent(supabaseAdmin, ELEVENLABS_API_KEY);
 
-    // Generate a conversation token
-    const tokenResponse = await fetch(
-      `https://api.elevenlabs.io/v1/convai/conversation/token?agent_id=${agentId}`,
-      {
-        headers: {
-          "xi-api-key": ELEVENLABS_API_KEY,
-        },
-      }
-    );
+    // Generate a conversation token with retry (ElevenLabs room creation can timeout)
+    let token: string | null = null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const tokenResponse = await fetch(
+        `https://api.elevenlabs.io/v1/convai/conversation/token?agent_id=${agentId}`,
+        {
+          headers: {
+            "xi-api-key": ELEVENLABS_API_KEY,
+          },
+        }
+      );
 
-    if (!tokenResponse.ok) {
+      if (tokenResponse.ok) {
+        const data = await tokenResponse.json();
+        token = data.token;
+        break;
+      }
+
       const errText = await tokenResponse.text();
-      console.error("Failed to get conversation token:", tokenResponse.status, errText);
-      throw new Error(`Failed to get token: ${tokenResponse.status}`);
+      console.error(`Token attempt ${attempt + 1}/3 failed:`, tokenResponse.status, errText);
+      
+      if (attempt < 2) {
+        await new Promise(r => setTimeout(r, 1500));
+      }
     }
 
-    const { token } = await tokenResponse.json();
+    if (!token) {
+      throw new Error("Failed to get conversation token after 3 attempts. ElevenLabs may be temporarily unavailable.");
+    }
 
     return new Response(
       JSON.stringify({ token, agentId }),
