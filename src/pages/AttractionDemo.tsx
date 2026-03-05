@@ -86,6 +86,7 @@ const AttractionDemo = () => {
 
     try {
       setIsSpeaking(true);
+      if (msgIndex !== undefined) setSpeakingMsgIndex(msgIndex);
       const resp = await fetch(TTS_URL, {
         method: "POST",
         headers: {
