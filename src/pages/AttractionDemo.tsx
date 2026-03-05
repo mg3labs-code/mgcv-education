@@ -115,7 +115,7 @@ const AttractionDemo = () => {
     reconnectAttemptsRef.current = 0;
     try {
       await navigator.mediaDevices.getUserMedia({ audio: true });
-      const response = await fetch(BUDDY_SESSION_URL, {
+      const response = await fetch(ATTRACTION_VOICE_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
