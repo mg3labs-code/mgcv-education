@@ -58,7 +58,74 @@ const AttractionDemo = () => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const streamChat = useCallback(async (allMessages: Msg[]) => {
+  // Stop any playing audio
+  const stopAudio = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.src = "";
+      audioRef.current = null;
+    }
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setIsSpeaking(false);
+  }, []);
+
+  // Speak text via ElevenLabs TTS streaming
+  const speakText = useCallback(async (text: string) => {
+    if (!voiceEnabled) return;
+    stopAudio();
+    
+    const cleaned = cleanForSpeech(text);
+    if (!cleaned || cleaned.length < 5) return;
+
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
+    try {
+      setIsSpeaking(true);
+      const resp = await fetch(TTS_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({ text: cleaned, voiceId: "EXAVITQu4vr4xnSDxMaL" }),
+        signal: controller.signal,
+      });
+
+      if (!resp.ok) {
+        console.error("TTS error:", resp.status);
+        setIsSpeaking(false);
+        return;
+      }
+
+      const blob = await resp.blob();
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      audioRef.current = audio;
+      
+      audio.onended = () => {
+        setIsSpeaking(false);
+        URL.revokeObjectURL(url);
+        audioRef.current = null;
+      };
+      audio.onerror = () => {
+        setIsSpeaking(false);
+        URL.revokeObjectURL(url);
+        audioRef.current = null;
+      };
+      
+      await audio.play();
+    } catch (e: any) {
+      if (e.name !== "AbortError") console.error("TTS playback error:", e);
+      setIsSpeaking(false);
+    }
+  }, [voiceEnabled, stopAudio]);
+
+  const streamChat = useCallback(async (allMessages: Msg[]): Promise<string> => {
     const resp = await fetch(CHAT_URL, {
       method: "POST",
       headers: {
@@ -69,10 +136,10 @@ const AttractionDemo = () => {
     });
 
     if (!resp.ok || !resp.body) {
-      if (resp.status === 429) { toast.error("Rate limited. Wait a moment."); return; }
-      if (resp.status === 402) { toast.error("AI usage limit reached."); return; }
+      if (resp.status === 429) { toast.error("Rate limited. Wait a moment."); return ""; }
+      if (resp.status === 402) { toast.error("AI usage limit reached."); return ""; }
       toast.error("Something went wrong. Try again.");
-      return;
+      return "";
     }
 
     const reader = resp.body.getReader();
@@ -99,7 +166,6 @@ const AttractionDemo = () => {
           const content = parsed.choices?.[0]?.delta?.content as string | undefined;
           if (content) {
             assistantText += content;
-            // Parse phase tag from accumulated text
             if (!phaseDetected) {
               const { cleanText, phase } = stripPhaseTag(assistantText);
               if (phase) {
@@ -123,6 +189,8 @@ const AttractionDemo = () => {
         }
       }
     }
+    
+    return phaseDetected ? assistantText : stripPhaseTag(assistantText).cleanText;
   }, []);
 
   const send = async (text?: string) => {
