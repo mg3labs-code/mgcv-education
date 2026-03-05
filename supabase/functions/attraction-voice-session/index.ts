@@ -68,7 +68,7 @@ async function getOrCreateAgent(supabaseAdmin: any, elevenlabsKey: string): Prom
             prompt: ATTRACTION_SYSTEM_PROMPT,
           },
           first_message: ATTRACTION_FIRST_MESSAGE,
-          language: "hi",
+          language: "te",
         },
         tts: {
           voice_id: "cgSgspJ2msm6clMCkdW9", // Jessica - warm, multilingual-friendly premade voice
