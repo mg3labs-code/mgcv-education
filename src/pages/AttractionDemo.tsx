@@ -52,6 +52,13 @@ const AttractionDemo = () => {
   const [currentPhase, setCurrentPhase] = useState(1);
   const [interests, setInterests] = useState<string[]>([]);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
+
+  // Compute matching visuals from latest assistant message
+  const currentVisuals = useMemo<TopicVisual[]>(() => {
+    const lastAssistant = [...messages].reverse().find(m => m.role === "assistant");
+    if (!lastAssistant) return [];
+    return findMatchingVisuals(lastAssistant.content).slice(0, 5);
+  }, [messages]);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [speakingMsgIndex, setSpeakingMsgIndex] = useState<number | null>(null);
   
