@@ -1,46 +1,55 @@
 
 
-# Show Related Images/GIFs While AI is Talking
+# Add Browser TTS Fallback for ElevenLabs Failures
 
-## Concept
-Add a visual panel that displays relevant images and GIFs alongside the AI conversation, triggered by topic keywords detected in the AI's responses. As the AI talks about cricket, physics, Magnus Effect, etc., matching visuals appear on screen to reinforce learning.
+## What Changes
 
-## Approach
+When ElevenLabs TTS returns any error (401, quota exceeded, network failure), automatically fall back to the browser's built-in `speechSynthesis` API so students always hear voice responses.
 
-### 1. Curated Visual Library (Static Mapping)
-Create a keyword-to-image map with free-to-use images from Unsplash and GIFs from Giphy (direct embed URLs — no API key needed for embedding). Topics covered:
+## How It Works
 
-| Keyword Group | Visuals |
-|---|---|
-| Cricket (Bumrah, Dhoni, IPL, bowling) | Cricket action shots, spin bowling GIF |
-| Physics (Magnus Effect, forces, motion) | Magnus effect diagram, projectile motion GIF |
-| Math (equations, graphs, speed) | Math visualization, graph animation GIF |
-| Science (electricity, circuits, energy) | Circuit diagram, lightning GIF |
-| General learning (textbook, NCERT) | Student studying, book animation |
+```text
+Voice input detected
+  --> speakResponse(text)
+    --> Try ElevenLabs TTS stream
+      --> Success? Play audio (current behavior)
+      --> Failed (401/quota/network)?
+        --> Fall back to browser speechSynthesis
+        --> Pick best available voice (prefer Google/Microsoft natural voices)
+        --> Speak the cleaned text
+        --> Student hears response either way
+```
 
-~30 curated URLs covering the main topics in the 6-phase flow.
+## Changes in `src/components/student/StudyCompanion.tsx`
 
-### 2. Keyword Extraction from AI Response
-As each assistant message streams in, scan for keywords and update a "current visuals" state. Show 1-2 images at a time, crossfading smoothly when new topics appear.
+### 1. Add a `browserTTSFallback` helper function
 
-### 3. UI: Visual Panel
-- On desktop: A side panel (right side) that slides in showing the current image/GIF with a subtle fade animation
-- On mobile: A compact strip above the chat messages showing a smaller image
-- Images crossfade with a smooth CSS transition when topics change
-- Caption shows the detected topic ("Magnus Effect in Cricket")
+A small helper that uses `window.speechSynthesis` to speak text:
+- Cancels any ongoing browser speech first
+- Selects the best available voice (prefers English voices from Google/Microsoft for quality, falls back to any English voice, then default)
+- Sets natural rate (0.95) and pitch (1.0)
+- Hooks into `onend`/`onerror` to reset `isSpeakingTTS` state
+- Tracks the utterance so it can be cancelled if user sends a new message
 
-### Files
+### 2. Update `speakResponse` to use fallback on error
 
-| File | Change |
-|---|---|
-| `src/data/topicVisuals.ts` | New — curated keyword-to-image/GIF URL mapping |
-| `src/components/student/TopicVisualPanel.tsx` | New — visual display component with crossfade animations |
-| `src/pages/AttractionDemo.tsx` | Add keyword extraction from streamed text, render TopicVisualPanel |
+Currently at line 359-362, the code just logs and returns on error. Change this to:
+- If ElevenLabs returns non-OK (401, 402, 429, 500, etc.), call `browserTTSFallback(cleaned)` instead of silently returning
+- If the fetch throws (network error), also call `browserTTSFallback(cleaned)` in the catch block
 
-### How It Works
-1. As `streamChat` builds `assistantText`, a `useEffect` scans it for keywords
-2. When a keyword matches, `currentVisual` state updates with the image URL + caption
-3. `TopicVisualPanel` renders with a CSS fade transition
-4. Multiple matches rotate every ~5 seconds using `setInterval`
-5. No API keys needed — all images are direct Unsplash/Giphy embed URLs
+### 3. Cancel browser speech on new input
+
+Update the TTS cancellation logic (already at top of `speakResponse` and `sendMessage`) to also call `window.speechSynthesis.cancel()` so browser fallback speech is also interrupted when:
+- A new message is sent
+- A new TTS playback starts
+
+### 4. No new dependencies needed
+
+`speechSynthesis` is built into all modern browsers -- no packages or edge functions required.
+
+## Result
+
+- **ElevenLabs working**: High-quality voice (no change from current behavior)
+- **ElevenLabs down/quota exceeded**: Browser voice kicks in seamlessly -- student still hears the response
+- **Interruption behavior preserved**: Both ElevenLabs audio AND browser speech are cancelled when new input arrives (latest-wins rule intact)
 

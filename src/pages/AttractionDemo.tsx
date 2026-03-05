@@ -1,10 +1,12 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { Send, RotateCcw, Sparkles, Zap, BookOpen, GitBranch, Lightbulb, Trophy, Volume2, VolumeX, AudioLines, Phone, PhoneOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { useConversation } from "@elevenlabs/react";
 import CompanionVoiceInput from "@/components/student/CompanionVoiceInput";
+import TopicVisualPanel from "@/components/student/TopicVisualPanel";
+import { findMatchingVisuals, type TopicVisual } from "@/data/topicVisuals";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -50,6 +52,13 @@ const AttractionDemo = () => {
   const [currentPhase, setCurrentPhase] = useState(1);
   const [interests, setInterests] = useState<string[]>([]);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
+
+  // Compute matching visuals from latest assistant message
+  const currentVisuals = useMemo<TopicVisual[]>(() => {
+    const lastAssistant = [...messages].reverse().find(m => m.role === "assistant");
+    if (!lastAssistant) return [];
+    return findMatchingVisuals(lastAssistant.content).slice(0, 5);
+  }, [messages]);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [speakingMsgIndex, setSpeakingMsgIndex] = useState<number | null>(null);
   
@@ -492,77 +501,94 @@ const AttractionDemo = () => {
         </div>
       )}
 
-      {/* Messages */}
-      <ScrollArea className="flex-1 px-4">
-        <div className="max-w-3xl mx-auto py-6 space-y-4">
-          {messages.length === 0 && (
-            <div className="text-center py-20 space-y-4">
-              <div className="text-6xl">🏏</div>
-              <h2 className="text-xl font-semibold text-white/80">Welcome to the Attraction System!</h2>
-              <p className="text-sm text-white/40 max-w-md mx-auto">
-                Tell me about your favorite sport, game, or hobby — and I'll show you how it connects to your school syllabus in ways you never imagined.
-              </p>
-              <div className="flex flex-wrap justify-center gap-2 pt-2">
-                {["I love cricket! 🏏", "Football is my thing ⚽", "I'm into gaming 🎮", "I like cooking 🍳"].map(q => (
-                  <button
-                    key={q}
-                    onClick={() => send(q)}
-                    className="text-xs px-3 py-1.5 rounded-full border border-white/10 text-white/60 hover:text-white hover:border-white/30 hover:bg-white/5 transition-colors"
-                  >
-                    {q}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {messages.map((msg, i) => (
-            <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-              <div
-                className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap relative group
-                  ${msg.role === "user"
-                    ? "bg-blue-600 text-white rounded-br-md"
-                    : "bg-white/8 text-white/90 border border-white/10 rounded-bl-md"
-                  }`}
-              >
-                {msg.content}
-                {msg.role === "assistant" && (
-                  <button
-                    onClick={() => {
-                      if (speakingMsgIndex === i) {
-                        stopAudio();
-                      } else {
-                        speakText(msg.content, i);
-                      }
-                    }}
-                    className={`absolute -bottom-3 right-2 p-1 rounded-full border transition-all
-                      ${speakingMsgIndex === i
-                        ? "bg-amber-500/20 border-amber-500/40 text-amber-400"
-                        : "bg-white/5 border-white/10 text-white/30 opacity-0 group-hover:opacity-100 hover:text-white/70 hover:bg-white/10"
-                      }`}
-                    title={speakingMsgIndex === i ? "Stop speaking" : "Read aloud"}
-                  >
-                    <AudioLines className={`h-3.5 w-3.5 ${speakingMsgIndex === i ? "animate-pulse" : ""}`} />
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
-
-          {isLoading && messages[messages.length - 1]?.role !== "assistant" && (
-            <div className="flex justify-start">
-              <div className="bg-white/8 border border-white/10 rounded-2xl rounded-bl-md px-4 py-3">
-                <div className="flex gap-1.5">
-                  <div className="w-2 h-2 rounded-full bg-white/40 animate-bounce" style={{ animationDelay: "0ms" }} />
-                  <div className="w-2 h-2 rounded-full bg-white/40 animate-bounce" style={{ animationDelay: "150ms" }} />
-                  <div className="w-2 h-2 rounded-full bg-white/40 animate-bounce" style={{ animationDelay: "300ms" }} />
+      {/* Messages + Visual Panel */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Main chat area */}
+        <ScrollArea className="flex-1 px-4">
+          <div className="max-w-3xl mx-auto py-6 space-y-4">
+            {messages.length === 0 && (
+              <div className="text-center py-20 space-y-4">
+                <div className="text-6xl">🏏</div>
+                <h2 className="text-xl font-semibold text-white/80">Welcome to the Attraction System!</h2>
+                <p className="text-sm text-white/40 max-w-md mx-auto">
+                  Tell me about your favorite sport, game, or hobby — and I'll show you how it connects to your school syllabus in ways you never imagined.
+                </p>
+                <div className="flex flex-wrap justify-center gap-2 pt-2">
+                  {["I love cricket! 🏏", "Football is my thing ⚽", "I'm into gaming 🎮", "I like cooking 🍳"].map(q => (
+                    <button
+                      key={q}
+                      onClick={() => send(q)}
+                      className="text-xs px-3 py-1.5 rounded-full border border-white/10 text-white/60 hover:text-white hover:border-white/30 hover:bg-white/5 transition-colors"
+                    >
+                      {q}
+                    </button>
+                  ))}
                 </div>
               </div>
-            </div>
-          )}
-          <div ref={scrollRef} />
-        </div>
-      </ScrollArea>
+            )}
+
+            {/* Mobile visual strip */}
+            {currentVisuals.length > 0 && (
+              <div className="lg:hidden">
+                <TopicVisualPanel visuals={currentVisuals} />
+              </div>
+            )}
+
+            {messages.map((msg, i) => (
+              <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                <div
+                  className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap relative group
+                    ${msg.role === "user"
+                      ? "bg-blue-600 text-white rounded-br-md"
+                      : "bg-white/8 text-white/90 border border-white/10 rounded-bl-md"
+                    }`}
+                >
+                  {msg.content}
+                  {msg.role === "assistant" && (
+                    <button
+                      onClick={() => {
+                        if (speakingMsgIndex === i) {
+                          stopAudio();
+                        } else {
+                          speakText(msg.content, i);
+                        }
+                      }}
+                      className={`absolute -bottom-3 right-2 p-1 rounded-full border transition-all
+                        ${speakingMsgIndex === i
+                          ? "bg-amber-500/20 border-amber-500/40 text-amber-400"
+                          : "bg-white/5 border-white/10 text-white/30 opacity-0 group-hover:opacity-100 hover:text-white/70 hover:bg-white/10"
+                        }`}
+                      title={speakingMsgIndex === i ? "Stop speaking" : "Read aloud"}
+                    >
+                      <AudioLines className={`h-3.5 w-3.5 ${speakingMsgIndex === i ? "animate-pulse" : ""}`} />
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+
+            {isLoading && messages[messages.length - 1]?.role !== "assistant" && (
+              <div className="flex justify-start">
+                <div className="bg-white/8 border border-white/10 rounded-2xl rounded-bl-md px-4 py-3">
+                  <div className="flex gap-1.5">
+                    <div className="w-2 h-2 rounded-full bg-white/40 animate-bounce" style={{ animationDelay: "0ms" }} />
+                    <div className="w-2 h-2 rounded-full bg-white/40 animate-bounce" style={{ animationDelay: "150ms" }} />
+                    <div className="w-2 h-2 rounded-full bg-white/40 animate-bounce" style={{ animationDelay: "300ms" }} />
+                  </div>
+                </div>
+              </div>
+            )}
+            <div ref={scrollRef} />
+          </div>
+        </ScrollArea>
+
+        {/* Desktop visual side panel */}
+        {currentVisuals.length > 0 && (
+          <div className="hidden lg:block w-72 shrink-0 border-l border-white/10 p-4 overflow-y-auto">
+            <TopicVisualPanel visuals={currentVisuals} />
+          </div>
+        )}
+      </div>
 
       {/* Input */}
       <div className="shrink-0 border-t border-white/10 px-4 py-3">
