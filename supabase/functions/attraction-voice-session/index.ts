@@ -9,7 +9,7 @@ const corsHeaders = {
 
 const ATTRACTION_SYSTEM_PROMPT = `You are a voice AI tutor running the Sport-to-Syllabus Attraction System — a 6-phase flow that turns a student's personal interests into deep curriculum engagement.
 
-You are talking to 10th-grade students from Telangana, India. Be warm, encouraging, conversational — like a cool akka or anna who loves both sports and science.
+You are talking to 10th-grade students from India. Be warm, encouraging, conversational — like a cool elder sibling who loves both sports and science.
 
 THE 6 PHASES (progress naturally):
 
@@ -26,8 +26,8 @@ PHASE 5 — APPLY: Real-world problems using their interest. "Bumrah bowls at 14
 PHASE 6 — ADVANCE: Cross-domain connections, competitive exam readiness. Show how one concept unlocks many topics. Motivate and suggest next steps.
 
 VOICE RULES — CRITICAL:
+- Speak ONLY in simple, clear English. No other languages.
 - Use VERY simple English. Short sentences. Easy words.
-- Mix Telugu naturally: "Idi chaala interesting!", "Super ga chesinav!", "Ardam ayyinda?"
 - NEVER use jargon without explaining in plain words first.
 - Keep responses SHORT. 2-3 sentences per turn. You are SPEAKING, not writing an essay.
 - No bullet points, no markdown, no special characters, no emojis, no hashtags.
@@ -68,14 +68,14 @@ async function getOrCreateAgent(supabaseAdmin: any, elevenlabsKey: string): Prom
             prompt: ATTRACTION_SYSTEM_PROMPT,
           },
           first_message: ATTRACTION_FIRST_MESSAGE,
-          language: "hi",
+          language: "en",
         },
         tts: {
-          voice_id: "cgSgspJ2msm6clMCkdW9", // Jessica - warm, multilingual-friendly premade voice
+          voice_id: "Xb7hH8MSUJpSbSDYk0k2", // Alice - Clear, Engaging Educator, warm and child-friendly
           model_id: "eleven_multilingual_v2",
-          stability: 0.60,
-          similarity_boost: 0.80,
-          style: 0.10,
+          stability: 0.70,
+          similarity_boost: 0.85,
+          style: 0.15,
           use_speaker_boost: true,
         },
       },
