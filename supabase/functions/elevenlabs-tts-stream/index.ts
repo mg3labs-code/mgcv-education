@@ -19,20 +19,30 @@ serve(async (req) => {
 
     const { text, voiceId } = await req.json();
 
-    // Sanitize text: remove emojis, unpaired surrogates, and other problematic Unicode
+    // Aggressive sanitization: strip emojis, surrogates, control chars, non-BMP
     const sanitized = (text || "")
       .replace(/[\u{1F300}-\u{1FFFF}\u{2600}-\u{27BF}\u{FE00}-\u{FE0F}\u{200D}\u{20E3}\u{E0020}-\u{E007F}\u{2300}-\u{23FF}\u{2B50}-\u{2B55}\u{3030}\u{303D}\u{3297}\u{3299}]/gu, "")
       .replace(/[\uD800-\uDFFF]/g, "")
-      .trim();
+      .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "")
+      .replace(/\[PHASE:\d\]\s*/g, "")
+      .replace(/\*\*(.+?)\*\*/g, "$1")
+      .replace(/\*(.+?)\*/g, "$1")
+      .replace(/`(.+?)`/g, "$1")
+      .replace(/#{1,6}\s*/g, "")
+      .trim()
+      .slice(0, 4500); // ElevenLabs limit is 5000, keep margin
 
-    if (!sanitized) {
+    console.log("TTS sanitized text length:", sanitized.length);
+
+    if (!sanitized || sanitized.length < 3) {
       return new Response(
         JSON.stringify({ error: "text is required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const voice = voiceId || "EXAVITQu4vr4xnSDxMaL"; // Sarah - warm, natural voice
+    // Default to Tripti voice (child-friendly Indian) if available, fallback to Sarah
+    const voice = voiceId || "EXAVITQu4vr4xnSDxMaL";
 
     const response = await fetch(
       `https://api.elevenlabs.io/v1/text-to-speech/${voice}/stream?output_format=mp3_44100_128`,
@@ -44,13 +54,13 @@ serve(async (req) => {
         },
         body: JSON.stringify({
           text: sanitized,
-          model_id: "eleven_turbo_v2_5",
+          model_id: "eleven_multilingual_v2",
           voice_settings: {
-            stability: 0.4,
-            similarity_boost: 0.75,
-            style: 0.3,
+            stability: 0.35,
+            similarity_boost: 0.7,
+            style: 0.25,
             use_speaker_boost: true,
-            speed: 1.05,
+            speed: 0.95,
           },
         }),
       }
@@ -65,7 +75,6 @@ serve(async (req) => {
       );
     }
 
-    // Stream the audio back to the client
     return new Response(response.body, {
       headers: {
         ...corsHeaders,

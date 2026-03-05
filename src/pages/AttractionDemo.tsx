@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Send, RotateCcw, Sparkles, Zap, BookOpen, GitBranch, Lightbulb, Trophy, Volume2, VolumeX } from "lucide-react";
+import { Send, RotateCcw, Sparkles, Zap, BookOpen, GitBranch, Lightbulb, Trophy, Volume2, VolumeX, AudioLines } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
@@ -49,6 +49,7 @@ const AttractionDemo = () => {
   const [interests, setInterests] = useState<string[]>([]);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [speakingMsgIndex, setSpeakingMsgIndex] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -70,11 +71,11 @@ const AttractionDemo = () => {
       abortControllerRef.current = null;
     }
     setIsSpeaking(false);
+    setSpeakingMsgIndex(null);
   }, []);
 
   // Speak text via ElevenLabs TTS streaming
-  const speakText = useCallback(async (text: string) => {
-    if (!voiceEnabled) return;
+  const speakText = useCallback(async (text: string, msgIndex?: number) => {
     stopAudio();
     
     const cleaned = cleanForSpeech(text);
@@ -85,6 +86,7 @@ const AttractionDemo = () => {
 
     try {
       setIsSpeaking(true);
+      if (msgIndex !== undefined) setSpeakingMsgIndex(msgIndex);
       const resp = await fetch(TTS_URL, {
         method: "POST",
         headers: {
@@ -109,11 +111,13 @@ const AttractionDemo = () => {
       
       audio.onended = () => {
         setIsSpeaking(false);
+        setSpeakingMsgIndex(null);
         URL.revokeObjectURL(url);
         audioRef.current = null;
       };
       audio.onerror = () => {
         setIsSpeaking(false);
+        setSpeakingMsgIndex(null);
         URL.revokeObjectURL(url);
         audioRef.current = null;
       };
@@ -122,8 +126,9 @@ const AttractionDemo = () => {
     } catch (e: any) {
       if (e.name !== "AbortError") console.error("TTS playback error:", e);
       setIsSpeaking(false);
+      setSpeakingMsgIndex(null);
     }
-  }, [voiceEnabled, stopAudio]);
+  }, [stopAudio]);
 
   const streamChat = useCallback(async (allMessages: Msg[]): Promise<string> => {
     const resp = await fetch(CHAT_URL, {
@@ -216,9 +221,10 @@ const AttractionDemo = () => {
 
     try {
       const finalText = await streamChat(newMessages);
-      // Speak the completed response
-      if (finalText) {
-        speakText(finalText);
+      // Auto-speak the completed response if voice is enabled
+      if (finalText && voiceEnabled) {
+        const newMsgIndex = messages.length + 1; // user msg + assistant msg
+        speakText(finalText, newMsgIndex);
       }
     } catch (e) {
       console.error(e);
@@ -336,13 +342,32 @@ const AttractionDemo = () => {
           {messages.map((msg, i) => (
             <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
               <div
-                className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap
+                className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap relative group
                   ${msg.role === "user"
                     ? "bg-blue-600 text-white rounded-br-md"
                     : "bg-white/8 text-white/90 border border-white/10 rounded-bl-md"
                   }`}
               >
                 {msg.content}
+                {msg.role === "assistant" && (
+                  <button
+                    onClick={() => {
+                      if (speakingMsgIndex === i) {
+                        stopAudio();
+                      } else {
+                        speakText(msg.content, i);
+                      }
+                    }}
+                    className={`absolute -bottom-3 right-2 p-1 rounded-full border transition-all
+                      ${speakingMsgIndex === i
+                        ? "bg-amber-500/20 border-amber-500/40 text-amber-400"
+                        : "bg-white/5 border-white/10 text-white/30 opacity-0 group-hover:opacity-100 hover:text-white/70 hover:bg-white/10"
+                      }`}
+                    title={speakingMsgIndex === i ? "Stop speaking" : "Read aloud"}
+                  >
+                    <AudioLines className={`h-3.5 w-3.5 ${speakingMsgIndex === i ? "animate-pulse" : ""}`} />
+                  </button>
+                )}
               </div>
             </div>
           ))}
