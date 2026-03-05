@@ -1,55 +1,54 @@
 
 
-# Add Browser TTS Fallback for ElevenLabs Failures
+# Sport-to-Syllabus Attraction System — Standalone Implementation
 
-## What Changes
+## Overview
+Build the 6-phase Joy-to-Curriculum flow as a **separate route** (`/attraction-demo`) with its own edge function (`attraction-flow`), completely isolated from the existing app. This lets you test and iterate safely before merging.
 
-When ElevenLabs TTS returns any error (401, quota exceeded, network failure), automatically fall back to the browser's built-in `speechSynthesis` API so students always hear voice responses.
+## What Gets Built
 
-## How It Works
+### 1. Edge Function: `supabase/functions/attraction-flow/index.ts`
+A dedicated AI endpoint with a specialized system prompt implementing all 6 phases:
 
-```text
-Voice input detected
-  --> speakResponse(text)
-    --> Try ElevenLabs TTS stream
-      --> Success? Play audio (current behavior)
-      --> Failed (401/quota/network)?
-        --> Fall back to browser speechSynthesis
-        --> Pick best available voice (prefer Google/Microsoft natural voices)
-        --> Speak the cleaned text
-        --> Student hears response either way
-```
+- **Phase 1 — Hook**: Discover student interests (cricket/football/etc), ask wonder questions
+- **Phase 2 — Bridge**: Connect interest to physics/math concepts (e.g., LED stumps → circuits, spin → Magnus Effect)
+- **Phase 3 — Ground**: Seamlessly reference NCERT textbook sections, read excerpts
+- **Phase 4 — Branch**: Detect knowledge level → Oxford Tutorial Defense (challenge) OR 6-step CTA (guided decode)
+- **Phase 5 — Apply**: Real-world problem solving, JEE-style questions
+- **Phase 6 — Advance**: Competitive exam readiness, cross-domain connections
 
-## Changes in `src/components/student/StudyCompanion.tsx`
+The system prompt will encode the branching logic, phase transitions, and pedagogical methods. The AI tracks which phase the student is in via conversation context and advances naturally.
 
-### 1. Add a `browserTTSFallback` helper function
+### 2. Page: `src/pages/AttractionDemo.tsx`
+A standalone chat interface at `/attraction-demo` with:
+- Full-screen conversational UI (no sidebar/nav — clean test environment)
+- Phase indicator bar showing current phase (Hook → Bridge → Ground → Branch → Apply → Advance)
+- Text input + voice input (reusing existing speech recognition pattern)
+- Streaming responses from the `attraction-flow` edge function
+- Visual phase transitions (color/icon changes as AI progresses)
+- Interest tags displayed as the AI discovers them
+- "Reset Session" button for repeated testing
 
-A small helper that uses `window.speechSynthesis` to speak text:
-- Cancels any ongoing browser speech first
-- Selects the best available voice (prefers English voices from Google/Microsoft for quality, falls back to any English voice, then default)
-- Sets natural rate (0.95) and pitch (1.0)
-- Hooks into `onend`/`onerror` to reset `isSpeakingTTS` state
-- Tracks the utterance so it can be cancelled if user sends a new message
+### 3. Route: Added to `src/App.tsx`
+A single public route `/attraction-demo` — no auth required for easy testing.
 
-### 2. Update `speakResponse` to use fallback on error
+### 4. Config: `supabase/config.toml` update
+Add `[functions.attraction-flow]` with `verify_jwt = false`.
 
-Currently at line 359-362, the code just logs and returns on error. Change this to:
-- If ElevenLabs returns non-OK (401, 402, 429, 500, etc.), call `browserTTSFallback(cleaned)` instead of silently returning
-- If the fetch throws (network error), also call `browserTTSFallback(cleaned)` in the catch block
+## Technical Approach
 
-### 3. Cancel browser speech on new input
+- **AI model**: `google/gemini-2.5-flash` via Lovable AI gateway (no API key needed)
+- **Phase tracking**: The system prompt instructs the AI to prepend phase metadata tags (`[PHASE:1]`, `[PHASE:2]`, etc.) which the frontend parses to update the phase indicator — invisible to the student
+- **Branching**: The AI autonomously detects student knowledge level from responses and chooses Tutorial Defense or CTA path
+- **No database needed**: Conversation state lives in React state only (test environment)
+- **Streaming**: Same SSE pattern as existing `study-companion`
 
-Update the TTS cancellation logic (already at top of `speakResponse` and `sendMessage`) to also call `window.speechSynthesis.cancel()` so browser fallback speech is also interrupted when:
-- A new message is sent
-- A new TTS playback starts
+## Files Changed/Created
 
-### 4. No new dependencies needed
-
-`speechSynthesis` is built into all modern browsers -- no packages or edge functions required.
-
-## Result
-
-- **ElevenLabs working**: High-quality voice (no change from current behavior)
-- **ElevenLabs down/quota exceeded**: Browser voice kicks in seamlessly -- student still hears the response
-- **Interruption behavior preserved**: Both ElevenLabs audio AND browser speech are cancelled when new input arrives (latest-wins rule intact)
+| File | Action |
+|---|---|
+| `supabase/functions/attraction-flow/index.ts` | **Create** — Dedicated edge function with 6-phase system prompt |
+| `src/pages/AttractionDemo.tsx` | **Create** — Standalone chat page with phase indicator |
+| `src/App.tsx` | **Edit** — Add `/attraction-demo` route (public, no ProtectedRoute) |
+| `supabase/config.toml` | **Auto-updated** — Add attraction-flow function config |
 
