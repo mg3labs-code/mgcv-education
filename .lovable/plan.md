@@ -1,35 +1,55 @@
 
 
-# Create Dedicated Voice Agent for Attraction Demo
+# Add Browser TTS Fallback for ElevenLabs Failures
 
-## Problem
-The Attraction Demo currently reuses `elevenlabs-buddy-session`, which creates a "Buddy" Study Companion agent with a completely different prompt (general study help). When a student starts a voice call in the Attraction Demo, they talk to Buddy instead of the 6-phase Sport-to-Syllabus tutor. The network logs also show a 404 from LiveKit, suggesting a session/agent mismatch.
+## What Changes
 
-## Solution
-Create a **separate edge function** (`attraction-voice-session`) with a dedicated ElevenLabs Conversational AI agent that uses the Attraction System's 6-phase prompt. This keeps the two features fully independent.
+When ElevenLabs TTS returns any error (401, quota exceeded, network failure), automatically fall back to the browser's built-in `speechSynthesis` API so students always hear voice responses.
 
-## Changes
+## How It Works
 
-### 1. New Edge Function: `supabase/functions/attraction-voice-session/index.ts`
-- Creates a dedicated ElevenLabs agent named "Sport-to-Syllabus Voice Tutor"
-- Uses the same 6-phase system prompt from `attraction-flow` (Hook, Bridge, Ground, Branch, Apply, Advance)
-- Stores agent ID in `app_config` table with key `attraction_agent_id` (separate from Buddy's `elevenlabs_agent_id`)
-- Returns a conversation token for WebRTC
-- Uses Tripti voice with `eleven_multilingual_v2` for Telugu + English support
+```text
+Voice input detected
+  --> speakResponse(text)
+    --> Try ElevenLabs TTS stream
+      --> Success? Play audio (current behavior)
+      --> Failed (401/quota/network)?
+        --> Fall back to browser speechSynthesis
+        --> Pick best available voice (prefer Google/Microsoft natural voices)
+        --> Speak the cleaned text
+        --> Student hears response either way
+```
 
-### 2. Update `supabase/config.toml`
-- Add `[functions.attraction-voice-session]` with `verify_jwt = false`
+## Changes in `src/components/student/StudyCompanion.tsx`
 
-### 3. Update `src/pages/AttractionDemo.tsx`
-- Change `BUDDY_SESSION_URL` to point to `attraction-voice-session` instead of `elevenlabs-buddy-session`
-- Remove dependency on Study Companion's session entirely
-- Keep all existing text chat + TTS + per-message speaker icon unchanged
+### 1. Add a `browserTTSFallback` helper function
 
-### Files Changed
+A small helper that uses `window.speechSynthesis` to speak text:
+- Cancels any ongoing browser speech first
+- Selects the best available voice (prefers English voices from Google/Microsoft for quality, falls back to any English voice, then default)
+- Sets natural rate (0.95) and pitch (1.0)
+- Hooks into `onend`/`onerror` to reset `isSpeakingTTS` state
+- Tracks the utterance so it can be cancelled if user sends a new message
 
-| File | Change |
-|---|---|
-| `supabase/functions/attraction-voice-session/index.ts` | New edge function with dedicated 6-phase voice agent |
-| `supabase/config.toml` | Add function config entry |
-| `src/pages/AttractionDemo.tsx` | Point voice call to new endpoint |
+### 2. Update `speakResponse` to use fallback on error
+
+Currently at line 359-362, the code just logs and returns on error. Change this to:
+- If ElevenLabs returns non-OK (401, 402, 429, 500, etc.), call `browserTTSFallback(cleaned)` instead of silently returning
+- If the fetch throws (network error), also call `browserTTSFallback(cleaned)` in the catch block
+
+### 3. Cancel browser speech on new input
+
+Update the TTS cancellation logic (already at top of `speakResponse` and `sendMessage`) to also call `window.speechSynthesis.cancel()` so browser fallback speech is also interrupted when:
+- A new message is sent
+- A new TTS playback starts
+
+### 4. No new dependencies needed
+
+`speechSynthesis` is built into all modern browsers -- no packages or edge functions required.
+
+## Result
+
+- **ElevenLabs working**: High-quality voice (no change from current behavior)
+- **ElevenLabs down/quota exceeded**: Browser voice kicks in seamlessly -- student still hears the response
+- **Interruption behavior preserved**: Both ElevenLabs audio AND browser speech are cancelled when new input arrives (latest-wins rule intact)
 
