@@ -1,0 +1,1 @@
+DELETE FROM app_config WHERE key = 'attraction_agent_id';
