@@ -29,6 +29,7 @@ import TextbookEpisode from "./pages/TextbookEpisode";
 import TextbookLab from "./pages/TextbookLab";
 import StudentDeepDive from "./pages/StudentDeepDive";
 import ResetPassword from "./pages/ResetPassword";
+import AttractionDemo from "./pages/AttractionDemo";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -51,6 +52,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/attraction-demo" element={<AttractionDemo />} />
             <Route path="/student" element={<ProtectedRoute><StudentDashboard /></ProtectedRoute>} />
             <Route path="/student/episode/:id" element={<ProtectedRoute><LearningEpisode /></ProtectedRoute>} />
             <Route path="/student/onboarding" element={<ProtectedRoute><StudentOnboarding /></ProtectedRoute>} />
