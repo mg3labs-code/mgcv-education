@@ -42,7 +42,7 @@ serve(async (req) => {
     }
 
     // Default to Tripti voice (child-friendly Indian) if available, fallback to Sarah
-    const voice = voiceId || "cgSgspJ2msm6clMCkdW9"; // Jessica - warm multilingual voice
+    const voice = voiceId || "Xb7hH8MSUJpSbSDYk0k2"; // Alice - Clear, Engaging Educator, warm and child-friendly
 
     const response = await fetch(
       `https://api.elevenlabs.io/v1/text-to-speech/${voice}/stream?output_format=mp3_44100_128`,
