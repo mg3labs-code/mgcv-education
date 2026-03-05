@@ -29,6 +29,7 @@ import TextbookEpisode from "./pages/TextbookEpisode";
 import TextbookLab from "./pages/TextbookLab";
 import StudentDeepDive from "./pages/StudentDeepDive";
 import ResetPassword from "./pages/ResetPassword";
+import AttractionDemo from "./pages/AttractionDemo";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
