@@ -68,7 +68,7 @@ async function getOrCreateAgent(supabaseAdmin: any, elevenlabsKey: string): Prom
             prompt: ATTRACTION_SYSTEM_PROMPT,
           },
           first_message: ATTRACTION_FIRST_MESSAGE,
-          language: "en",
+          language: "hi",
         },
         tts: {
           voice_id: "1Z7Y8o9cvUeWq8oLKgMY", // Tripti - child-friendly Indian voice
