@@ -52,10 +52,106 @@ const AttractionDemo = () => {
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [speakingMsgIndex, setSpeakingMsgIndex] = useState<number | null>(null);
+  
+  // Live voice call state
+  const [isCallActive, setIsCallActive] = useState(false);
+  const [isCallConnecting, setIsCallConnecting] = useState(false);
+  const [callTranscripts, setCallTranscripts] = useState<Array<{ role: "user" | "agent"; text: string }>>([]);
+  const userStoppedCallRef = useRef(false);
+  const reconnectAttemptsRef = useRef(0);
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+
+  // ElevenLabs Conversational AI for live voice call
+  const conversation = useConversation({
+    onConnect: () => {
+      console.log("🎙️ Connected to voice agent");
+      setIsCallConnecting(false);
+      toast.success("Voice call connected! Start speaking.", { duration: 2000 });
+    },
+    onDisconnect: () => {
+      console.log("🔇 Disconnected from voice agent");
+      setIsCallConnecting(false);
+      if (userStoppedCallRef.current) {
+        setIsCallActive(false);
+        userStoppedCallRef.current = false;
+        reconnectAttemptsRef.current = 0;
+      } else if (reconnectAttemptsRef.current < 2) {
+        reconnectAttemptsRef.current += 1;
+        setTimeout(() => {
+          if (!userStoppedCallRef.current) startVoiceCall();
+        }, 1500);
+      } else {
+        setIsCallActive(false);
+        reconnectAttemptsRef.current = 0;
+        toast.error("Voice call lost. Tap the phone icon to reconnect.");
+      }
+    },
+    onMessage: (message: any) => {
+      if (message.type === "user_transcript") {
+        const text = message.user_transcription_event?.user_transcript;
+        if (text) setCallTranscripts(prev => [...prev, { role: "user", text }]);
+      } else if (message.type === "agent_response") {
+        const text = message.agent_response_event?.agent_response;
+        if (text) setCallTranscripts(prev => [...prev, { role: "agent", text }]);
+      }
+    },
+    onError: (error: any) => {
+      console.error("Voice call error:", error);
+      toast.error("Voice call error. Please try again.");
+      setIsCallConnecting(false);
+    },
+  });
+
+  const isVoiceActive = conversation.status === "connected";
+  const isBuddySpeaking = isVoiceActive && conversation.isSpeaking;
+
+  const startVoiceCall = useCallback(async () => {
+    setIsCallConnecting(true);
+    userStoppedCallRef.current = false;
+    reconnectAttemptsRef.current = 0;
+    try {
+      await navigator.mediaDevices.getUserMedia({ audio: true });
+      const response = await fetch(BUDDY_SESSION_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+      });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({ error: "Failed to start voice session" }));
+        throw new Error(err.error || "Failed to start voice session");
+      }
+      const data = await response.json();
+      if (!data.token) throw new Error("No conversation token received");
+      await conversation.startSession({
+        conversationToken: data.token,
+        connectionType: "webrtc",
+      });
+      setIsCallActive(true);
+      setCallTranscripts([]);
+    } catch (error: any) {
+      console.error("Failed to start voice call:", error);
+      toast.error(error.message || "Failed to start call. Check mic permissions.");
+      setIsCallConnecting(false);
+    }
+  }, [conversation]);
+
+  const stopVoiceCall = useCallback(async () => {
+    userStoppedCallRef.current = true;
+    stopAudio();
+    try {
+      await conversation.endSession();
+    } catch (e) {
+      console.error("Error ending call:", e);
+    }
+    setIsCallActive(false);
+    setIsCallConnecting(false);
+  }, [conversation]);
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
