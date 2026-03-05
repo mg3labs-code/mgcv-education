@@ -197,6 +197,9 @@ const AttractionDemo = () => {
     const msg = text || input.trim();
     if (!msg || isLoading) return;
 
+    // Stop any currently playing audio when user sends new message
+    stopAudio();
+
     const userMsg: Msg = { role: "user", content: msg };
     const newMessages = [...messages, userMsg];
     setMessages(newMessages);
@@ -212,7 +215,11 @@ const AttractionDemo = () => {
     });
 
     try {
-      await streamChat(newMessages);
+      const finalText = await streamChat(newMessages);
+      // Speak the completed response
+      if (finalText) {
+        speakText(finalText);
+      }
     } catch (e) {
       console.error(e);
       toast.error("Connection failed. Try again.");
@@ -222,6 +229,7 @@ const AttractionDemo = () => {
   };
 
   const reset = () => {
+    stopAudio();
     setMessages([]);
     setCurrentPhase(1);
     setInterests([]);
