@@ -437,6 +437,34 @@ const AttractionDemo = () => {
         </div>
       )}
 
+      {/* Live Call Transcript Overlay */}
+      {isVoiceActive && (
+        <div className="shrink-0 px-4 py-3 border-b border-green-500/20 bg-green-500/5">
+          <div className="max-w-3xl mx-auto">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="relative flex items-center gap-1.5">
+                <span className="flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500" />
+                </span>
+                <span className="text-xs font-medium text-green-400">
+                  {isBuddySpeaking ? "🔊 Speaking..." : "🎤 Listening..."}
+                </span>
+              </div>
+            </div>
+            {callTranscripts.length > 0 && (
+              <div className="space-y-1 max-h-24 overflow-y-auto">
+                {callTranscripts.slice(-4).map((t, i) => (
+                  <p key={i} className={`text-xs ${t.role === "user" ? "text-blue-400" : "text-white/70"}`}>
+                    <span className="font-medium">{t.role === "user" ? "You" : "AI"}:</span> {t.text}
+                  </p>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Messages */}
       <ScrollArea className="flex-1 px-4">
         <div className="max-w-3xl mx-auto py-6 space-y-4">
