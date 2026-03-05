@@ -254,9 +254,20 @@ const AttractionDemo = () => {
             <h1 className="text-lg font-bold tracking-tight">🏏 Sport → Syllabus</h1>
             <p className="text-xs text-white/50">Attraction System Demo — 6-Phase Flow</p>
           </div>
-          <Button variant="ghost" size="sm" onClick={reset} className="text-white/60 hover:text-white hover:bg-white/10">
-            <RotateCcw className="h-4 w-4 mr-1.5" /> Reset
-          </Button>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => { if (isSpeaking) stopAudio(); setVoiceEnabled(v => !v); }}
+              className={`text-white/60 hover:text-white hover:bg-white/10 ${isSpeaking ? "text-amber-400" : ""}`}
+            >
+              {voiceEnabled ? <Volume2 className={`h-4 w-4 ${isSpeaking ? "animate-pulse" : ""}`} /> : <VolumeX className="h-4 w-4" />}
+              <span className="ml-1.5 hidden sm:inline">{voiceEnabled ? "Voice On" : "Muted"}</span>
+            </Button>
+            <Button variant="ghost" size="sm" onClick={reset} className="text-white/60 hover:text-white hover:bg-white/10">
+              <RotateCcw className="h-4 w-4 mr-1.5" /> Reset
+            </Button>
+          </div>
         </div>
       </header>
 
