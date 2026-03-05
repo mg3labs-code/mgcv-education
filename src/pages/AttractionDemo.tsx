@@ -111,11 +111,13 @@ const AttractionDemo = () => {
       
       audio.onended = () => {
         setIsSpeaking(false);
+        setSpeakingMsgIndex(null);
         URL.revokeObjectURL(url);
         audioRef.current = null;
       };
       audio.onerror = () => {
         setIsSpeaking(false);
+        setSpeakingMsgIndex(null);
         URL.revokeObjectURL(url);
         audioRef.current = null;
       };
