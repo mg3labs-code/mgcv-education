@@ -49,6 +49,7 @@ const AttractionDemo = () => {
   const [interests, setInterests] = useState<string[]>([]);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [speakingMsgIndex, setSpeakingMsgIndex] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
