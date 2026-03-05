@@ -1,11 +1,26 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Send, RotateCcw, Sparkles, Zap, BookOpen, GitBranch, Lightbulb, Trophy } from "lucide-react";
+import { Send, RotateCcw, Sparkles, Zap, BookOpen, GitBranch, Lightbulb, Trophy, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import CompanionVoiceInput from "@/components/student/CompanionVoiceInput";
 
 type Msg = { role: "user" | "assistant"; content: string };
+
+const TTS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-tts-stream`;
+
+function cleanForSpeech(text: string) {
+  return text
+    .replace(/\[PHASE:\d\]\s*/g, "")
+    .replace(/\*\*(.+?)\*\*/g, "$1")
+    .replace(/\*(.+?)\*/g, "$1")
+    .replace(/`(.+?)`/g, "$1")
+    .replace(/^[•\-]\s*/gm, "")
+    .replace(/^\d+\.\s*/gm, "")
+    .replace(/#{1,6}\s*/g, "")
+    .replace(/[🏏⚽🎮🍳🔥💡✅❌🎯⚡🧠📚🏆]/g, "")
+    .trim();
+}
 
 const PHASES = [
   { id: 1, label: "Hook", icon: Sparkles, color: "text-amber-500", bg: "bg-amber-500/10", border: "border-amber-500/30" },
@@ -32,14 +47,85 @@ const AttractionDemo = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [currentPhase, setCurrentPhase] = useState(1);
   const [interests, setInterests] = useState<string[]>([]);
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const streamChat = useCallback(async (allMessages: Msg[]) => {
+  // Stop any playing audio
+  const stopAudio = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.src = "";
+      audioRef.current = null;
+    }
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setIsSpeaking(false);
+  }, []);
+
+  // Speak text via ElevenLabs TTS streaming
+  const speakText = useCallback(async (text: string) => {
+    if (!voiceEnabled) return;
+    stopAudio();
+    
+    const cleaned = cleanForSpeech(text);
+    if (!cleaned || cleaned.length < 5) return;
+
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
+    try {
+      setIsSpeaking(true);
+      const resp = await fetch(TTS_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({ text: cleaned, voiceId: "EXAVITQu4vr4xnSDxMaL" }),
+        signal: controller.signal,
+      });
+
+      if (!resp.ok) {
+        console.error("TTS error:", resp.status);
+        setIsSpeaking(false);
+        return;
+      }
+
+      const blob = await resp.blob();
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      audioRef.current = audio;
+      
+      audio.onended = () => {
+        setIsSpeaking(false);
+        URL.revokeObjectURL(url);
+        audioRef.current = null;
+      };
+      audio.onerror = () => {
+        setIsSpeaking(false);
+        URL.revokeObjectURL(url);
+        audioRef.current = null;
+      };
+      
+      await audio.play();
+    } catch (e: any) {
+      if (e.name !== "AbortError") console.error("TTS playback error:", e);
+      setIsSpeaking(false);
+    }
+  }, [voiceEnabled, stopAudio]);
+
+  const streamChat = useCallback(async (allMessages: Msg[]): Promise<string> => {
     const resp = await fetch(CHAT_URL, {
       method: "POST",
       headers: {
@@ -50,10 +136,10 @@ const AttractionDemo = () => {
     });
 
     if (!resp.ok || !resp.body) {
-      if (resp.status === 429) { toast.error("Rate limited. Wait a moment."); return; }
-      if (resp.status === 402) { toast.error("AI usage limit reached."); return; }
+      if (resp.status === 429) { toast.error("Rate limited. Wait a moment."); return ""; }
+      if (resp.status === 402) { toast.error("AI usage limit reached."); return ""; }
       toast.error("Something went wrong. Try again.");
-      return;
+      return "";
     }
 
     const reader = resp.body.getReader();
@@ -80,7 +166,6 @@ const AttractionDemo = () => {
           const content = parsed.choices?.[0]?.delta?.content as string | undefined;
           if (content) {
             assistantText += content;
-            // Parse phase tag from accumulated text
             if (!phaseDetected) {
               const { cleanText, phase } = stripPhaseTag(assistantText);
               if (phase) {
@@ -104,11 +189,16 @@ const AttractionDemo = () => {
         }
       }
     }
+    
+    return phaseDetected ? assistantText : stripPhaseTag(assistantText).cleanText;
   }, []);
 
   const send = async (text?: string) => {
     const msg = text || input.trim();
     if (!msg || isLoading) return;
+
+    // Stop any currently playing audio when user sends new message
+    stopAudio();
 
     const userMsg: Msg = { role: "user", content: msg };
     const newMessages = [...messages, userMsg];
@@ -125,7 +215,11 @@ const AttractionDemo = () => {
     });
 
     try {
-      await streamChat(newMessages);
+      const finalText = await streamChat(newMessages);
+      // Speak the completed response
+      if (finalText) {
+        speakText(finalText);
+      }
     } catch (e) {
       console.error(e);
       toast.error("Connection failed. Try again.");
@@ -135,6 +229,7 @@ const AttractionDemo = () => {
   };
 
   const reset = () => {
+    stopAudio();
     setMessages([]);
     setCurrentPhase(1);
     setInterests([]);
@@ -159,9 +254,20 @@ const AttractionDemo = () => {
             <h1 className="text-lg font-bold tracking-tight">🏏 Sport → Syllabus</h1>
             <p className="text-xs text-white/50">Attraction System Demo — 6-Phase Flow</p>
           </div>
-          <Button variant="ghost" size="sm" onClick={reset} className="text-white/60 hover:text-white hover:bg-white/10">
-            <RotateCcw className="h-4 w-4 mr-1.5" /> Reset
-          </Button>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => { if (isSpeaking) stopAudio(); setVoiceEnabled(v => !v); }}
+              className={`text-white/60 hover:text-white hover:bg-white/10 ${isSpeaking ? "text-amber-400" : ""}`}
+            >
+              {voiceEnabled ? <Volume2 className={`h-4 w-4 ${isSpeaking ? "animate-pulse" : ""}`} /> : <VolumeX className="h-4 w-4" />}
+              <span className="ml-1.5 hidden sm:inline">{voiceEnabled ? "Voice On" : "Muted"}</span>
+            </Button>
+            <Button variant="ghost" size="sm" onClick={reset} className="text-white/60 hover:text-white hover:bg-white/10">
+              <RotateCcw className="h-4 w-4 mr-1.5" /> Reset
+            </Button>
+          </div>
         </div>
       </header>
 
