@@ -221,9 +221,10 @@ const AttractionDemo = () => {
 
     try {
       const finalText = await streamChat(newMessages);
-      // Speak the completed response
-      if (finalText) {
-        speakText(finalText);
+      // Auto-speak the completed response if voice is enabled
+      if (finalText && voiceEnabled) {
+        const newMsgIndex = messages.length + 1; // user msg + assistant msg
+        speakText(finalText, newMsgIndex);
       }
     } catch (e) {
       console.error(e);
