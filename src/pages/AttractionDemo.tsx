@@ -9,7 +9,7 @@ import CompanionVoiceInput from "@/components/student/CompanionVoiceInput";
 type Msg = { role: "user" | "assistant"; content: string };
 
 const TTS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-tts-stream`;
-const BUDDY_SESSION_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-buddy-session`;
+const ATTRACTION_VOICE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/attraction-voice-session`;
 
 function cleanForSpeech(text: string) {
   return text
