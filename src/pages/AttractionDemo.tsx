@@ -18,7 +18,7 @@ function cleanForSpeech(text: string) {
     .replace(/^[•\-]\s*/gm, "")
     .replace(/^\d+\.\s*/gm, "")
     .replace(/#{1,6}\s*/g, "")
-    .replace(/[🏏⚽🎮🍳🔥💡✅❌🎯⚡🧠📚🏆]/g, "")
+    .replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{27BF}\u{FE00}-\u{FE0F}\u{200D}\u{20E3}\u{E0020}-\u{E007F}]/gu, "")
     .trim();
 }
 
