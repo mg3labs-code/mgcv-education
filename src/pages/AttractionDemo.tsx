@@ -71,6 +71,7 @@ const AttractionDemo = () => {
       abortControllerRef.current = null;
     }
     setIsSpeaking(false);
+    setSpeakingMsgIndex(null);
   }, []);
 
   // Speak text via ElevenLabs TTS streaming
