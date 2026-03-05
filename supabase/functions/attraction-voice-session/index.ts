@@ -68,14 +68,14 @@ async function getOrCreateAgent(supabaseAdmin: any, elevenlabsKey: string): Prom
             prompt: ATTRACTION_SYSTEM_PROMPT,
           },
           first_message: ATTRACTION_FIRST_MESSAGE,
-          language: "hi",
+          language: "en",
         },
         tts: {
-          voice_id: "cgSgspJ2msm6clMCkdW9", // Jessica - warm, multilingual-friendly premade voice
+          voice_id: "Xb7hH8MSUJpSbSDYk0k2", // Alice - Clear, Engaging Educator, warm and child-friendly
           model_id: "eleven_multilingual_v2",
-          stability: 0.60,
-          similarity_boost: 0.80,
-          style: 0.10,
+          stability: 0.70,
+          similarity_boost: 0.85,
+          style: 0.15,
           use_speaker_boost: true,
         },
       },
