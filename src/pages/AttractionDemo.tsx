@@ -126,8 +126,9 @@ const AttractionDemo = () => {
     } catch (e: any) {
       if (e.name !== "AbortError") console.error("TTS playback error:", e);
       setIsSpeaking(false);
+      setSpeakingMsgIndex(null);
     }
-  }, [voiceEnabled, stopAudio]);
+  }, [stopAudio]);
 
   const streamChat = useCallback(async (allMessages: Msg[]): Promise<string> => {
     const resp = await fetch(CHAT_URL, {
