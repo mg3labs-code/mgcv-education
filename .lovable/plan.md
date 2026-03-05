@@ -1,27 +1,55 @@
 
 
-# Switch to a Better Voice for Telugu Pronunciation
+# Add Browser TTS Fallback for ElevenLabs Failures
 
-## Current Issue
-The "Tripti" voice (`1Z7Y8o9cvUeWq8oLKgMY`) is a community voice that may not be in your ElevenLabs account's "My Voices" library, which can cause `voice_not_found` errors. Additionally, it's likely English-primary, causing choppy Telugu output.
+## What Changes
 
-## Approach
+When ElevenLabs TTS returns any error (401, quota exceeded, network failure), automatically fall back to the browser's built-in `speechSynthesis` API so students always hear voice responses.
 
-ElevenLabs doesn't expose native Telugu voice IDs publicly -- they must be discovered through the [Voice Library](https://elevenlabs.io/voice-library). However, we can make two immediate improvements:
+## How It Works
 
-### 1. Switch to a reliable premade voice with strong multilingual support
-Use **"Jessica"** (`cgSgspJ2msm6clMCkdW9`) -- a premade voice available on all accounts with warm, playful tone that works well with `eleven_multilingual_v2` for Indian languages. Alternatively, **"Alice"** (`Xb7hH8MSUJpSbSDYk0k2`) is described as a "Clear, Engaging Educator" which fits the tutor use case.
+```text
+Voice input detected
+  --> speakResponse(text)
+    --> Try ElevenLabs TTS stream
+      --> Success? Play audio (current behavior)
+      --> Failed (401/quota/network)?
+        --> Fall back to browser speechSynthesis
+        --> Pick best available voice (prefer Google/Microsoft natural voices)
+        --> Speak the cleaned text
+        --> Student hears response either way
+```
 
-### 2. Set language to `"te"` (Telugu) instead of `"hi"` (Hindi)
-ElevenLabs multilingual_v2 supports Telugu directly. Using `"te"` gives better phoneme selection than the Hindi approximation.
+## Changes in `src/components/student/StudyCompanion.tsx`
 
-### Files Changed
+### 1. Add a `browserTTSFallback` helper function
 
-| File | Change |
-|---|---|
-| `supabase/functions/attraction-voice-session/index.ts` | Switch voice_id to `cgSgspJ2msm6clMCkdW9` (Jessica), set language to `"te"`, clear cached agent |
-| `supabase/functions/elevenlabs-tts-stream/index.ts` | Switch default voice_id to `cgSgspJ2msm6clMCkdW9` |
+A small helper that uses `window.speechSynthesis` to speak text:
+- Cancels any ongoing browser speech first
+- Selects the best available voice (prefers English voices from Google/Microsoft for quality, falls back to any English voice, then default)
+- Sets natural rate (0.95) and pitch (1.0)
+- Hooks into `onend`/`onerror` to reset `isSpeakingTTS` state
+- Tracks the utterance so it can be cancelled if user sends a new message
 
-### Finding a Native Telugu Voice (Manual Step)
-To get even better quality, you can browse the [ElevenLabs Voice Library](https://elevenlabs.io/voice-library), filter by **Telugu** language, find a voice you like, add it to "My Voices", copy its voice ID, and share it here so I can update the code.
+### 2. Update `speakResponse` to use fallback on error
+
+Currently at line 359-362, the code just logs and returns on error. Change this to:
+- If ElevenLabs returns non-OK (401, 402, 429, 500, etc.), call `browserTTSFallback(cleaned)` instead of silently returning
+- If the fetch throws (network error), also call `browserTTSFallback(cleaned)` in the catch block
+
+### 3. Cancel browser speech on new input
+
+Update the TTS cancellation logic (already at top of `speakResponse` and `sendMessage`) to also call `window.speechSynthesis.cancel()` so browser fallback speech is also interrupted when:
+- A new message is sent
+- A new TTS playback starts
+
+### 4. No new dependencies needed
+
+`speechSynthesis` is built into all modern browsers -- no packages or edge functions required.
+
+## Result
+
+- **ElevenLabs working**: High-quality voice (no change from current behavior)
+- **ElevenLabs down/quota exceeded**: Browser voice kicks in seamlessly -- student still hears the response
+- **Interruption behavior preserved**: Both ElevenLabs audio AND browser speech are cancelled when new input arrives (latest-wins rule intact)
 
