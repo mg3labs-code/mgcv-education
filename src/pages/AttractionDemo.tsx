@@ -75,8 +75,7 @@ const AttractionDemo = () => {
   }, []);
 
   // Speak text via ElevenLabs TTS streaming
-  const speakText = useCallback(async (text: string) => {
-    if (!voiceEnabled) return;
+  const speakText = useCallback(async (text: string, msgIndex?: number) => {
     stopAudio();
     
     const cleaned = cleanForSpeech(text);
