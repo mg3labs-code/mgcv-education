@@ -28,12 +28,10 @@ function cleanForSpeech(text: string) {
 }
 
 const PHASES = [
-  { id: 1, label: "Hook", icon: Sparkles, color: "text-amber-500", bg: "bg-amber-500/10", border: "border-amber-500/30" },
+  { id: 1, label: "Connect", icon: Sparkles, color: "text-amber-500", bg: "bg-amber-500/10", border: "border-amber-500/30" },
   { id: 2, label: "Bridge", icon: Zap, color: "text-blue-500", bg: "bg-blue-500/10", border: "border-blue-500/30" },
-  { id: 3, label: "Ground", icon: BookOpen, color: "text-emerald-500", bg: "bg-emerald-500/10", border: "border-emerald-500/30" },
-  { id: 4, label: "Branch", icon: GitBranch, color: "text-purple-500", bg: "bg-purple-500/10", border: "border-purple-500/30" },
-  { id: 5, label: "Apply", icon: Lightbulb, color: "text-orange-500", bg: "bg-orange-500/10", border: "border-orange-500/30" },
-  { id: 6, label: "Advance", icon: Trophy, color: "text-rose-500", bg: "bg-rose-500/10", border: "border-rose-500/30" },
+  { id: 3, label: "Explore", icon: Lightbulb, color: "text-emerald-500", bg: "bg-emerald-500/10", border: "border-emerald-500/30" },
+  { id: 4, label: "Wow", icon: Trophy, color: "text-rose-500", bg: "bg-rose-500/10", border: "border-rose-500/30" },
 ];
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/attraction-flow`;
