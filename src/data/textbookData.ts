@@ -279,6 +279,142 @@ export const chapters: Chapter[] = [
               ],
             } as ExerciseContent,
           },
+          // ── Layer 3: Reasoning ──
+          {
+            type: "reasoning",
+            title: "Why Does This Work?",
+            icon: "🤔",
+            content: {
+              centralQuestion: "Why do we need so many types of numbers? Why not just use natural numbers for everything?",
+              whyQuestions: [
+                {
+                  question: "Why can't natural numbers handle subtraction like 3 - 5?",
+                  hint: "Think about what happens when you take away more than you have.",
+                  deeperInsight: "This is exactly why integers were invented — to represent debts, temperatures below zero, and losses. Each number type was created to solve a problem the previous type couldn't handle."
+                },
+                {
+                  question: "Why do we need rational numbers when we already have integers?",
+                  hint: "Try dividing 1 pizza among 3 friends using only whole numbers.",
+                  deeperInsight: "Division doesn't always give whole numbers. Rational numbers let us express parts, shares, and measurements precisely. Without them, fair sharing would be impossible!"
+                },
+                {
+                  question: "Why is the containment chain N ⊂ W ⊂ Z ⊂ Q important?",
+                  hint: "What does it tell us about how number systems grew?",
+                  deeperInsight: "Each new number type INCLUDES all previous ones and adds something new. This shows mathematics grows by extension, not replacement — a powerful pattern you'll see again and again."
+                },
+              ],
+            } as ReasoningContent,
+          },
+          // ── Layer 4: Assumptions ──
+          {
+            type: "assumptions",
+            title: "Challenge Your Beliefs",
+            icon: "⚡",
+            content: {
+              concept: "Number Classification",
+              hiddenAssumptions: [
+                {
+                  assumption: "Zero is 'nothing' and doesn't really count as a number.",
+                  whyItMatters: "Zero is actually one of the most important mathematical discoveries. It took centuries for civilizations to accept it as a number!",
+                  challenge: "If zero is 'nothing', why does it change the value of 10, 100, 1000? Can 'nothing' be so powerful?"
+                },
+                {
+                  assumption: "Negative numbers are just 'made up' — they don't exist in real life.",
+                  whyItMatters: "Negative numbers represent real things: debts, temperatures below zero, depths below sea level, losses in business.",
+                  challenge: "If someone owes ₹500, how would you represent this without negative numbers? Is the debt any less real?"
+                },
+                {
+                  assumption: "Every number can be written as a fraction.",
+                  whyItMatters: "This assumption is WRONG! This is exactly what you'll discover in the next episode — some numbers cannot be written as p/q.",
+                  challenge: "Try writing √2 as a fraction. Can you? What does this mean for our number classification?"
+                },
+              ],
+              defensePrompt: "Defend this statement: 'The p/q definition of rational numbers is the BEST way to define them.' What are the alternatives? Why is this definition better?",
+            } as AssumptionsContent,
+          },
+          // ── Layer 5: Connections ──
+          {
+            type: "connections",
+            title: "Where Else Does This Appear?",
+            icon: "🌐",
+            content: {
+              concept: "Number Types & Classification",
+              connections: [
+                {
+                  domain: "Science",
+                  icon: "🔬",
+                  link: "Temperature scales use integers (including negatives). Absolute zero (-273°C) only makes sense because we have negative numbers.",
+                  explanation: "Without integers, we couldn't measure temperatures below freezing!"
+                },
+                {
+                  domain: "Banking & Finance",
+                  icon: "🏦",
+                  link: "Your bank balance can be positive (savings) or negative (overdraft). Rational numbers help calculate interest rates like 7.5%.",
+                  explanation: "Every financial transaction uses the number types you just learned."
+                },
+                {
+                  domain: "Computer Science",
+                  icon: "💻",
+                  link: "Computers store integers and rational numbers differently. An 'int' vs 'float' in programming directly mirrors N/Z vs Q.",
+                  explanation: "Programmers must choose the right number type — just like mathematicians!"
+                },
+                {
+                  domain: "History",
+                  icon: "📜",
+                  link: "Ancient Indians (Brahmagupta, 628 AD) were the first to formally use zero and negative numbers. Europe didn't accept negatives until the 1600s!",
+                  explanation: "The number types you learned today took humanity thousands of years to discover."
+                },
+                {
+                  domain: "Music",
+                  icon: "🎵",
+                  link: "Musical intervals are ratios (rational numbers). An octave is 2:1, a perfect fifth is 3:2. Music IS rational numbers in action.",
+                  explanation: "When you hear pleasant music, you're hearing rational numbers!"
+                },
+              ],
+            } as ConnectionsContent,
+          },
+          // ── Layer 6: Application (Harvard Case) ──
+          {
+            type: "application",
+            title: "Real-World Challenge",
+            icon: "🌍",
+            content: {
+              scenario: "The Cricket Score Problem",
+              context: "India is playing cricket. After 30 overs, the run rate is 4.5 runs per over. They need 225 runs to win in 50 overs. The coach needs to calculate: What should the run rate be in the remaining 20 overs?",
+              questions: [
+                {
+                  question: "How many runs has India scored in 30 overs at 4.5 runs/over? What number type is 4.5?",
+                  hint: "4.5 × 30 = ? Is 4.5 a rational number?"
+                },
+                {
+                  question: "How many more runs are needed? What run rate (runs per over) is required for the remaining 20 overs?",
+                  hint: "Remaining runs ÷ remaining overs = required rate"
+                },
+                {
+                  question: "The required rate comes out to 4.5. Is this a coincidence? Will the required rate always be rational if the target and overs are integers?",
+                  hint: "Think about integer ÷ integer..."
+                },
+              ],
+              realWorldWhy: "Sports analytics, business forecasting, and engineering all depend on rational number calculations. Understanding number types helps you know what kind of answer to expect.",
+            } as ApplicationContent,
+          },
+          // ── Layer 7: Implications (Oxford Essay) ──
+          {
+            type: "implications",
+            title: "The Bigger Picture",
+            icon: "🔮",
+            content: {
+              whatIfQuestion: "What if rational numbers were NEVER discovered? What if humans could only use whole numbers?",
+              reflectionPrompts: [
+                "Could we measure land accurately without fractions?",
+                "Could we share things fairly among people?",
+                "Would science work without decimals?",
+                "How would money and trade function?",
+              ],
+              essayPrompt: "Write a short reflection: 'How did the invention of each number type solve a real human problem?' Use at least 2 examples from different fields.",
+              wordLimit: 150,
+            } as ImplicationsContent,
+          },
         ],
       },
 
