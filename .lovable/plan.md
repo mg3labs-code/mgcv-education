@@ -1,67 +1,55 @@
 
 
-# Comparison: Current App vs HTML Reference
+# Add Browser TTS Fallback for ElevenLabs Failures
 
-## Verdict: The HTML is better for students. Here's why.
+## What Changes
 
-### Current App Problems
-1. **11 separate blocks shown one-at-a-time** with pill navigation — student sees tiny fragments, loses the big picture
-2. **Too many UI elements**: progress bar + percentage + pill row + block header + icon + label + "block type" subtitle — visual overload
-3. **Each layer feels disconnected** — clicking through 11 pills feels like a chore, not a learning journey
-4. **No visual hierarchy between layers** — Layer 1 (basic definition) looks identical to Layer 7 (deep reflection). No color differentiation, no sense of progression
+When ElevenLabs TTS returns any error (401, quota exceeded, network failure), automatically fall back to the browser's built-in `speechSynthesis` API so students always hear voice responses.
 
-### HTML Reference Strengths
-1. **Single scrollable page** — all 7 layers visible in one flow, student scrolls naturally like reading a textbook
-2. **Color-coded layers** — Layer 3 is warm yellow, Layer 4 is blue, Layer 5 is green, Layer 7 is indigo. Student instantly sees "I'm going deeper"
-3. **Minimal chrome** — no pill navigation, no block counters, no "block type" labels cluttering the UI
-4. **Completion actions at the bottom** — natural endpoint with 3 clear cards (Tutorial Defense, First Principles, Dashboard)
-5. **Everything feels like ONE episode**, not 11 disconnected screens
+## How It Works
 
-## Plan: Rebuild TextbookEpisode as a Single Scrollable Page
+```text
+Voice input detected
+  --> speakResponse(text)
+    --> Try ElevenLabs TTS stream
+      --> Success? Play audio (current behavior)
+      --> Failed (401/quota/network)?
+        --> Fall back to browser speechSynthesis
+        --> Pick best available voice (prefer Google/Microsoft natural voices)
+        --> Speak the cleaned text
+        --> Student hears response either way
+```
 
-### Design Approach
-Replace the one-block-at-a-time stepper with a **single scrollable page** showing all blocks in sequence. Keep the existing block renderers but wrap them in a continuous layout with:
+## Changes in `src/components/student/StudyCompanion.tsx`
 
-- **Layer number badges** (LAYER 1, LAYER 2, etc.) with color-coded backgrounds
-- **Smooth scroll** with a floating progress indicator (thin bar at top)
-- **Completion actions section** at the bottom (3 cards: Tutorial Defense, First Principles, View Growth)
-- **Sticky top bar** with episode title + back button only
+### 1. Add a `browserTTSFallback` helper function
 
-### Changes in `src/pages/TextbookEpisode.tsx`
+A small helper that uses `window.speechSynthesis` to speak text:
+- Cancels any ongoing browser speech first
+- Selects the best available voice (prefers English voices from Google/Microsoft for quality, falls back to any English voice, then default)
+- Sets natural rate (0.95) and pitch (1.0)
+- Hooks into `onend`/`onerror` to reset `isSpeakingTTS` state
+- Tracks the utterance so it can be cancelled if user sends a new message
 
-1. **Remove** the `currentBlock` state and one-at-a-time rendering
-2. **Remove** the pill navigation row
-3. **Render ALL blocks** in a vertical scroll layout with `episode.blocks.map()`
-4. **Add layer colors**: Map block types to background tints:
-   - `concept`, `activity` → white (Layers 1-2)
-   - `reasoning` → warm amber bg (`bg-amber-50`)
-   - `assumptions` → sky blue bg (`bg-sky-50`)
-   - `connections` → green bg (`bg-emerald-50`)
-   - `application` → warm amber bg (`bg-amber-50`)
-   - `implications` → indigo bg (`bg-indigo-50`)
-   - `recall`, `explain`, `assessment`, `exercise` → white
-5. **Add layer number badges** for layers 3-7 (the NEW blocks) — small colored badge saying "LAYER 3 · Reasoning"
-6. **Replace bottom navigation** (Previous/Next buttons) with a **Completion Actions** section: 3 cards (Tutorial Defense, First Principles, Continue to Next Episode)
-7. **Add scroll-based progress**: thin progress bar at top of page that fills as user scrolls down
-8. **Keep** all existing block renderer components unchanged — they work fine
+### 2. Update `speakResponse` to use fallback on error
 
-### What Gets Simpler
-- No state management for `currentBlock`
-- No pill navigation to maintain
-- No Previous/Next button logic
-- Student just scrolls — natural, familiar, zero learning curve
+Currently at line 359-362, the code just logs and returns on error. Change this to:
+- If ElevenLabs returns non-OK (401, 402, 429, 500, etc.), call `browserTTSFallback(cleaned)` instead of silently returning
+- If the fetch throws (network error), also call `browserTTSFallback(cleaned)` in the catch block
 
-### What Stays the Same
-- All 11 block renderers (ConceptBlock, ActivityBlock, etc.) — untouched
-- TutorialDefenseModal and FirstPrinciplesModal — untouched
-- Data model in textbookData.ts — untouched
-- All other pages — untouched
+### 3. Cancel browser speech on new input
 
-### File Changes
+Update the TTS cancellation logic (already at top of `speakResponse` and `sendMessage`) to also call `window.speechSynthesis.cancel()` so browser fallback speech is also interrupted when:
+- A new message is sent
+- A new TTS playback starts
 
-| File | Change |
-|---|---|
-| `src/pages/TextbookEpisode.tsx` | Rewrite layout from stepper → scrollable page with color-coded sections and completion actions |
+### 4. No new dependencies needed
 
-One file change. All block components reused as-is.
+`speechSynthesis` is built into all modern browsers -- no packages or edge functions required.
+
+## Result
+
+- **ElevenLabs working**: High-quality voice (no change from current behavior)
+- **ElevenLabs down/quota exceeded**: Browser voice kicks in seamlessly -- student still hears the response
+- **Interruption behavior preserved**: Both ElevenLabs audio AND browser speech are cancelled when new input arrives (latest-wins rule intact)
 
