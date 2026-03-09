@@ -1,11 +1,18 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import PageLayout from "@/components/PageLayout";
-import { chapters, ContentBlock, ConceptContent, ActivityContent, RecallContent, ExplainContent, AssessmentContent, ExerciseContent } from "@/data/textbookData";
-import { ArrowLeft, ArrowRight, BookOpen, Brain, CheckCircle2, ChevronRight, Eye, EyeOff, Lightbulb, MessageSquare, Mic, PenLine, Sparkles, X } from "lucide-react";
+import { chapters, ContentBlock, ConceptContent, ActivityContent, RecallContent, ExplainContent, AssessmentContent, ExerciseContent, ReasoningContent, AssumptionsContent, ConnectionsContent, ApplicationContent, ImplicationsContent } from "@/data/textbookData";
+import { ArrowLeft, ArrowRight, BookOpen, Brain, Briefcase, CheckCircle2, ChevronRight, Compass, Eye, EyeOff, Layers, Lightbulb, Link, MessageSquare, Mic, PenLine, Shield, Sparkles, X, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import VoiceExplainWidget from "@/components/textbook/VoiceExplainWidget";
+import ReasoningBlock from "@/components/textbook/ReasoningBlock";
+import AssumptionsBlock from "@/components/textbook/AssumptionsBlock";
+import ConnectionsBlock from "@/components/textbook/ConnectionsBlock";
+import ApplicationBlock from "@/components/textbook/ApplicationBlock";
+import ImplicationsBlock from "@/components/textbook/ImplicationsBlock";
+import TutorialDefenseModal from "@/components/textbook/TutorialDefenseModal";
+import FirstPrinciplesModal from "@/components/textbook/FirstPrinciplesModal";
 
 // ─── Block Renderers ───────────────────────────────────────
 
@@ -272,6 +279,11 @@ const blockIcons: Record<string, React.ElementType> = {
   explain: MessageSquare,
   assessment: CheckCircle2,
   exercise: Lightbulb,
+  reasoning: Zap,
+  assumptions: Shield,
+  connections: Link,
+  application: Briefcase,
+  implications: Compass,
 };
 
 const blockLabels: Record<string, string> = {
@@ -281,6 +293,11 @@ const blockLabels: Record<string, string> = {
   explain: "Explain",
   assessment: "Test",
   exercise: "Practice",
+  reasoning: "Why?",
+  assumptions: "Challenge",
+  connections: "Connect",
+  application: "Apply",
+  implications: "Reflect",
 };
 
 // ─── Main Component ─────────────────────────────────────────
@@ -289,6 +306,8 @@ const TextbookEpisode = () => {
   const { chapterId, episodeId } = useParams();
   const navigate = useNavigate();
   const [currentBlock, setCurrentBlock] = useState(0);
+  const [showDefense, setShowDefense] = useState(false);
+  const [showFirstPrinciples, setShowFirstPrinciples] = useState(false);
 
   const chapter = chapters.find((c) => c.id === chapterId);
   const episode = chapter?.episodes.find((e) => e.id === episodeId);
@@ -318,9 +337,16 @@ const TextbookEpisode = () => {
       case "explain": return <ExplainBlock content={block.content as ExplainContent} />;
       case "assessment": return <AssessmentBlock content={block.content as AssessmentContent} />;
       case "exercise": return <ExerciseBlock content={block.content as ExerciseContent} />;
+      case "reasoning": return <ReasoningBlock content={block.content as ReasoningContent} />;
+      case "assumptions": return <AssumptionsBlock content={block.content as AssumptionsContent} />;
+      case "connections": return <ConnectionsBlock content={block.content as ConnectionsContent} />;
+      case "application": return <ApplicationBlock content={block.content as ApplicationContent} />;
+      case "implications": return <ImplicationsBlock content={block.content as ImplicationsContent} />;
       default: return null;
     }
   };
+
+  const isLastBlock = currentBlock === episode.blocks.length - 1;
 
   return (
     <PageLayout role="student">
@@ -395,7 +421,7 @@ const TextbookEpisode = () => {
             <ArrowLeft className="h-4 w-4 mr-1" /> Previous
           </Button>
 
-          {currentBlock < episode.blocks.length - 1 ? (
+          {!isLastBlock ? (
             <Button
               size="sm"
               onClick={() => setCurrentBlock(currentBlock + 1)}
@@ -403,15 +429,47 @@ const TextbookEpisode = () => {
               Next <ArrowRight className="h-4 w-4 ml-1" />
             </Button>
           ) : (
-            <Button
-              size="sm"
-              onClick={() => navigate(`/student/textbook/${chapterId}`)}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              <CheckCircle2 className="h-4 w-4 mr-1" /> Complete Episode
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setShowDefense(true)}
+                className="border-primary/30 text-primary hover:bg-primary/5"
+              >
+                <Shield className="h-4 w-4 mr-1" /> Tutorial Defense
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setShowFirstPrinciples(true)}
+                className="border-accent text-foreground hover:bg-accent/10"
+              >
+                <Layers className="h-4 w-4 mr-1" /> First Principles
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => navigate(`/student/textbook/${chapterId}`)}
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
+                <CheckCircle2 className="h-4 w-4 mr-1" /> Complete
+              </Button>
+            </div>
           )}
         </div>
+
+        {/* Modals */}
+        <TutorialDefenseModal
+          open={showDefense}
+          onOpenChange={setShowDefense}
+          topic={episode.title}
+          episodeTitle={`${chapter.title} — ${episode.title}`}
+        />
+        <FirstPrinciplesModal
+          open={showFirstPrinciples}
+          onOpenChange={setShowFirstPrinciples}
+          topic={episode.title}
+          episodeTitle={`${chapter.title} — ${episode.title}`}
+        />
       </div>
     </PageLayout>
   );

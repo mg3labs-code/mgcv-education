@@ -23,3 +23,9 @@ verify_jwt = false
 
 [functions.study-companion]
 verify_jwt = false
+
+[functions.tutorial-defense]
+verify_jwt = false
+
+[functions.first-principles]
+verify_jwt = false
