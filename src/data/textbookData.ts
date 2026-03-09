@@ -2,10 +2,10 @@
 // Chapter & Episode structure with interactive content blocks
 
 export interface ContentBlock {
-  type: "concept" | "activity" | "recall" | "explain" | "assessment" | "exercise";
+  type: "concept" | "activity" | "recall" | "explain" | "assessment" | "exercise" | "reasoning" | "assumptions" | "connections" | "application" | "implications";
   title: string;
   icon: string;
-  content: ConceptContent | ActivityContent | RecallContent | ExplainContent | AssessmentContent | ExerciseContent;
+  content: ConceptContent | ActivityContent | RecallContent | ExplainContent | AssessmentContent | ExerciseContent | ReasoningContent | AssumptionsContent | ConnectionsContent | ApplicationContent | ImplicationsContent;
 }
 
 export interface ConceptContent {
