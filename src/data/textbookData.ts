@@ -45,6 +45,41 @@ export interface ExerciseContent {
   problems: { number: string; text: string; answer?: string }[];
 }
 
+// Layer 3: Reasoning (Cambridge-style "Why?" questions)
+export interface ReasoningContent {
+  centralQuestion: string;
+  whyQuestions: { question: string; hint?: string; deeperInsight: string }[];
+}
+
+// Layer 4: Assumptions (Oxford Tutorial Defense)
+export interface AssumptionsContent {
+  concept: string;
+  hiddenAssumptions: { assumption: string; whyItMatters: string; challenge: string }[];
+  defensePrompt: string;
+}
+
+// Layer 5: Connections (MIT Cross-Domain)
+export interface ConnectionsContent {
+  concept: string;
+  connections: { domain: string; icon: string; link: string; explanation: string }[];
+}
+
+// Layer 6: Application (Harvard Case Method)
+export interface ApplicationContent {
+  scenario: string;
+  context: string;
+  questions: { question: string; hint?: string }[];
+  realWorldWhy: string;
+}
+
+// Layer 7: Implications (Oxford Essay)
+export interface ImplicationsContent {
+  whatIfQuestion: string;
+  reflectionPrompts: string[];
+  essayPrompt: string;
+  wordLimit?: number;
+}
+
 export interface Episode {
   id: string;
   number: number;
