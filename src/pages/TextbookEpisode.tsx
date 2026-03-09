@@ -279,6 +279,11 @@ const blockIcons: Record<string, React.ElementType> = {
   explain: MessageSquare,
   assessment: CheckCircle2,
   exercise: Lightbulb,
+  reasoning: Zap,
+  assumptions: Shield,
+  connections: Link,
+  application: Briefcase,
+  implications: Compass,
 };
 
 const blockLabels: Record<string, string> = {
@@ -288,6 +293,11 @@ const blockLabels: Record<string, string> = {
   explain: "Explain",
   assessment: "Test",
   exercise: "Practice",
+  reasoning: "Why?",
+  assumptions: "Challenge",
+  connections: "Connect",
+  application: "Apply",
+  implications: "Reflect",
 };
 
 // ─── Main Component ─────────────────────────────────────────
