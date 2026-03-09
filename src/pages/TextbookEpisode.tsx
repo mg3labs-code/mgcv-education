@@ -306,6 +306,8 @@ const TextbookEpisode = () => {
   const { chapterId, episodeId } = useParams();
   const navigate = useNavigate();
   const [currentBlock, setCurrentBlock] = useState(0);
+  const [showDefense, setShowDefense] = useState(false);
+  const [showFirstPrinciples, setShowFirstPrinciples] = useState(false);
 
   const chapter = chapters.find((c) => c.id === chapterId);
   const episode = chapter?.episodes.find((e) => e.id === episodeId);
@@ -335,9 +337,16 @@ const TextbookEpisode = () => {
       case "explain": return <ExplainBlock content={block.content as ExplainContent} />;
       case "assessment": return <AssessmentBlock content={block.content as AssessmentContent} />;
       case "exercise": return <ExerciseBlock content={block.content as ExerciseContent} />;
+      case "reasoning": return <ReasoningBlock content={block.content as ReasoningContent} />;
+      case "assumptions": return <AssumptionsBlock content={block.content as AssumptionsContent} />;
+      case "connections": return <ConnectionsBlock content={block.content as ConnectionsContent} />;
+      case "application": return <ApplicationBlock content={block.content as ApplicationContent} />;
+      case "implications": return <ImplicationsBlock content={block.content as ImplicationsContent} />;
       default: return null;
     }
   };
+
+  const isLastBlock = currentBlock === episode.blocks.length - 1;
 
   return (
     <PageLayout role="student">
@@ -412,7 +421,7 @@ const TextbookEpisode = () => {
             <ArrowLeft className="h-4 w-4 mr-1" /> Previous
           </Button>
 
-          {currentBlock < episode.blocks.length - 1 ? (
+          {!isLastBlock ? (
             <Button
               size="sm"
               onClick={() => setCurrentBlock(currentBlock + 1)}
@@ -420,15 +429,47 @@ const TextbookEpisode = () => {
               Next <ArrowRight className="h-4 w-4 ml-1" />
             </Button>
           ) : (
-            <Button
-              size="sm"
-              onClick={() => navigate(`/student/textbook/${chapterId}`)}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              <CheckCircle2 className="h-4 w-4 mr-1" /> Complete Episode
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setShowDefense(true)}
+                className="border-primary/30 text-primary hover:bg-primary/5"
+              >
+                <Shield className="h-4 w-4 mr-1" /> Tutorial Defense
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setShowFirstPrinciples(true)}
+                className="border-accent text-foreground hover:bg-accent/10"
+              >
+                <Layers className="h-4 w-4 mr-1" /> First Principles
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => navigate(`/student/textbook/${chapterId}`)}
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
+                <CheckCircle2 className="h-4 w-4 mr-1" /> Complete
+              </Button>
+            </div>
           )}
         </div>
+
+        {/* Modals */}
+        <TutorialDefenseModal
+          open={showDefense}
+          onOpenChange={setShowDefense}
+          topic={episode.title}
+          episodeTitle={`${chapter.title} — ${episode.title}`}
+        />
+        <FirstPrinciplesModal
+          open={showFirstPrinciples}
+          onOpenChange={setShowFirstPrinciples}
+          topic={episode.title}
+          episodeTitle={`${chapter.title} — ${episode.title}`}
+        />
       </div>
     </PageLayout>
   );
