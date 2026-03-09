@@ -1,11 +1,18 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import PageLayout from "@/components/PageLayout";
-import { chapters, ContentBlock, ConceptContent, ActivityContent, RecallContent, ExplainContent, AssessmentContent, ExerciseContent } from "@/data/textbookData";
-import { ArrowLeft, ArrowRight, BookOpen, Brain, CheckCircle2, ChevronRight, Eye, EyeOff, Lightbulb, MessageSquare, Mic, PenLine, Sparkles, X } from "lucide-react";
+import { chapters, ContentBlock, ConceptContent, ActivityContent, RecallContent, ExplainContent, AssessmentContent, ExerciseContent, ReasoningContent, AssumptionsContent, ConnectionsContent, ApplicationContent, ImplicationsContent } from "@/data/textbookData";
+import { ArrowLeft, ArrowRight, BookOpen, Brain, Briefcase, CheckCircle2, ChevronRight, Compass, Eye, EyeOff, Layers, Lightbulb, Link, MessageSquare, Mic, PenLine, Shield, Sparkles, X, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import VoiceExplainWidget from "@/components/textbook/VoiceExplainWidget";
+import ReasoningBlock from "@/components/textbook/ReasoningBlock";
+import AssumptionsBlock from "@/components/textbook/AssumptionsBlock";
+import ConnectionsBlock from "@/components/textbook/ConnectionsBlock";
+import ApplicationBlock from "@/components/textbook/ApplicationBlock";
+import ImplicationsBlock from "@/components/textbook/ImplicationsBlock";
+import TutorialDefenseModal from "@/components/textbook/TutorialDefenseModal";
+import FirstPrinciplesModal from "@/components/textbook/FirstPrinciplesModal";
 
 // ─── Block Renderers ───────────────────────────────────────
 
