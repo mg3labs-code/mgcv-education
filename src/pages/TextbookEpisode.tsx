@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import PageLayout from "@/components/PageLayout";
 import { chapters, ContentBlock, ConceptContent, ActivityContent, RecallContent, ExplainContent, AssessmentContent, ExerciseContent, ReasoningContent, AssumptionsContent, ConnectionsContent, ApplicationContent, ImplicationsContent } from "@/data/textbookData";
@@ -196,18 +196,25 @@ const blockIcons: Record<string, React.ElementType> = {
   connections: Link, application: Briefcase, implications: Compass,
 };
 
-const layerMeta: Record<string, { bg: string; badge?: string; badgeColor?: string }> = {
-  concept:     { bg: "" },
-  activity:    { bg: "" },
-  recall:      { bg: "" },
-  explain:     { bg: "" },
-  assessment:  { bg: "" },
-  exercise:    { bg: "" },
-  reasoning:   { bg: "bg-amber-50 dark:bg-amber-950/20",   badge: "LAYER 3 · Reasoning",   badgeColor: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300" },
-  assumptions: { bg: "bg-sky-50 dark:bg-sky-950/20",       badge: "LAYER 4 · Assumptions",  badgeColor: "bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300" },
-  connections: { bg: "bg-emerald-50 dark:bg-emerald-950/20", badge: "LAYER 5 · Connections", badgeColor: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300" },
-  application: { bg: "bg-amber-50 dark:bg-amber-950/20",   badge: "LAYER 6 · Application",  badgeColor: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300" },
-  implications:{ bg: "bg-indigo-50 dark:bg-indigo-950/20",  badge: "LAYER 7 · Implications", badgeColor: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300" },
+const blockLabels: Record<string, string> = {
+  concept: "Learn", activity: "Do", recall: "Recall", explain: "Explain",
+  assessment: "Test", exercise: "Practice", reasoning: "Why?",
+  assumptions: "Challenge", connections: "Connect", application: "Apply",
+  implications: "Reflect",
+};
+
+const layerMeta: Record<string, { bg: string; badge?: string; badgeColor?: string; dotColor: string }> = {
+  concept:     { bg: "", dotColor: "bg-primary" },
+  activity:    { bg: "", dotColor: "bg-primary" },
+  recall:      { bg: "", dotColor: "bg-primary" },
+  explain:     { bg: "", dotColor: "bg-primary" },
+  assessment:  { bg: "", dotColor: "bg-primary" },
+  exercise:    { bg: "", dotColor: "bg-primary" },
+  reasoning:   { bg: "bg-amber-50 dark:bg-amber-950/20",   badge: "LAYER 3 · Reasoning",   badgeColor: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300", dotColor: "bg-amber-500" },
+  assumptions: { bg: "bg-sky-50 dark:bg-sky-950/20",       badge: "LAYER 4 · Assumptions",  badgeColor: "bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300", dotColor: "bg-sky-500" },
+  connections: { bg: "bg-emerald-50 dark:bg-emerald-950/20", badge: "LAYER 5 · Connections", badgeColor: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300", dotColor: "bg-emerald-500" },
+  application: { bg: "bg-amber-50 dark:bg-amber-950/20",   badge: "LAYER 6 · Application",  badgeColor: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300", dotColor: "bg-amber-500" },
+  implications:{ bg: "bg-indigo-50 dark:bg-indigo-950/20",  badge: "LAYER 7 · Implications", badgeColor: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300", dotColor: "bg-indigo-500" },
 };
 
 // ─── Main Component ─────────────────────────────────────────
@@ -218,6 +225,9 @@ const TextbookEpisode = () => {
   const [showDefense, setShowDefense] = useState(false);
   const [showFirstPrinciples, setShowFirstPrinciples] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [activeBlock, setActiveBlock] = useState(0);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const blockRefs = useRef<(HTMLDivElement | null)[]>([]);
   const contentRef = useRef<HTMLDivElement>(null);
 
   const chapter = chapters.find((c) => c.id === chapterId);
@@ -227,6 +237,7 @@ const TextbookEpisode = () => {
   const currentEpisodeIndex = chapter?.episodes.findIndex((e) => e.id === episodeId) ?? -1;
   const nextEpisode = chapter?.episodes[currentEpisodeIndex + 1];
 
+  // Scroll progress
   useEffect(() => {
     const handleScroll = () => {
       const scrollTop = window.scrollY;
@@ -235,6 +246,28 @@ const TextbookEpisode = () => {
     };
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // IntersectionObserver for active block tracking
+  useEffect(() => {
+    if (!episode) return;
+    const observers: IntersectionObserver[] = [];
+    blockRefs.current.forEach((ref, index) => {
+      if (!ref) return;
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) setActiveBlock(index);
+        },
+        { rootMargin: "-20% 0px -60% 0px", threshold: 0 }
+      );
+      observer.observe(ref);
+      observers.push(observer);
+    });
+    return () => observers.forEach((o) => o.disconnect());
+  }, [episode]);
+
+  const scrollToBlock = useCallback((index: number) => {
+    blockRefs.current[index]?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, []);
 
   if (!chapter || !episode) {
@@ -265,11 +298,62 @@ const TextbookEpisode = () => {
     }
   };
 
+  const defaultMeta = { bg: "", dotColor: "bg-primary" } as const;
+
   return (
     <PageLayout role="student">
       {/* Scroll Progress Bar */}
       <div className="fixed top-0 left-0 right-0 z-50 h-1 bg-muted">
         <div className="h-full bg-primary transition-all duration-150" style={{ width: `${scrollProgress}%` }} />
+      </div>
+
+      {/* Floating Layer Sidebar — Desktop only */}
+      <div className={`fixed top-1/2 -translate-y-1/2 z-40 transition-all duration-300 hidden lg:block ${sidebarOpen ? "left-4" : "-left-1"}`}>
+        {/* Toggle */}
+        <button
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className="absolute -right-8 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-card border border-border shadow-sm flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+          title={sidebarOpen ? "Hide navigation" : "Show navigation"}
+        >
+          {sidebarOpen ? (
+            <ArrowLeft className="h-3.5 w-3.5" />
+          ) : (
+            <Layers className="h-3.5 w-3.5" />
+          )}
+        </button>
+
+        {sidebarOpen && (
+          <div className="bg-card/95 backdrop-blur-sm border border-border rounded-xl shadow-lg p-3 w-44">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2 px-1">Layers</p>
+            <div className="space-y-0.5">
+              {episode.blocks.map((block, i) => {
+                const meta = layerMeta[block.type] || defaultMeta;
+                const BlockIcon = blockIcons[block.type] || BookOpen;
+                const isActive = i === activeBlock;
+                const isPast = i < activeBlock;
+
+                return (
+                  <button
+                    key={i}
+                    onClick={() => scrollToBlock(i)}
+                    className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left transition-all text-xs ${
+                      isActive
+                        ? "bg-primary/10 text-foreground font-medium"
+                        : isPast
+                        ? "text-muted-foreground/70"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                    }`}
+                  >
+                    <span className={`h-2 w-2 rounded-full shrink-0 transition-all ${isActive ? meta.dotColor + " scale-125" : isPast ? "bg-primary/30" : "bg-border"}`} />
+                    <BlockIcon className="h-3 w-3 shrink-0" />
+                    <span className="truncate">{blockLabels[block.type] || block.type}</span>
+                    {isActive && <span className="ml-auto h-1 w-1 rounded-full bg-primary animate-pulse" />}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="max-w-3xl mx-auto" ref={contentRef}>
@@ -288,14 +372,18 @@ const TextbookEpisode = () => {
         {/* All Blocks — Scrollable */}
         <div className="space-y-0">
           {episode.blocks.map((block, i) => {
-            const meta = layerMeta[block.type] || { bg: "" };
+            const meta = layerMeta[block.type] || defaultMeta;
             const BlockIcon = blockIcons[block.type] || BookOpen;
 
             return (
-              <div key={i} className={`rounded-2xl p-6 mb-5 ${meta.bg || "bg-card"} border border-border`}>
+              <div
+                key={i}
+                ref={(el) => { blockRefs.current[i] = el; }}
+                className={`rounded-2xl p-6 mb-5 ${meta.bg || "bg-card"} border border-border scroll-mt-24`}
+              >
                 {/* Layer Badge */}
-                {meta.badge && (
-                  <span className={`inline-block text-[11px] font-bold tracking-wide px-3 py-1 rounded-full mb-4 ${meta.badgeColor}`}>
+                {"badge" in meta && meta.badge && (
+                  <span className={`inline-block text-[11px] font-bold tracking-wide px-3 py-1 rounded-full mb-4 ${"badgeColor" in meta ? meta.badgeColor : ""}`}>
                     {meta.badge}
                   </span>
                 )}
