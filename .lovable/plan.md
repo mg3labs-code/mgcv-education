@@ -1,55 +1,64 @@
 
 
-# Add Browser TTS Fallback for ElevenLabs Failures
+# Rebuild TextbookEpisode to Match HTML Reference Exactly
 
-## What Changes
+## Problem
+Current implementation wraps every piece of content in heavy component cards with borders, icons, rounded corners, and nested wrappers. The HTML reference is much simpler — flat sections with direct content, colored backgrounds, and minimal chrome.
 
-When ElevenLabs TTS returns any error (401, quota exceeded, network failure), automatically fall back to the browser's built-in `speechSynthesis` API so students always hear voice responses.
+## Key Differences: Current vs HTML
 
-## How It Works
+| Element | Current (Too Complex) | HTML Reference (Clean) |
+|---|---|---|
+| Layer sections | Rounded card with border + icon box + badge + nested component cards | Simple colored div with layer-header (icon circle + title) |
+| Content text | Wrapped in `rounded-xl p-5 bg-muted/40 border` cards | Direct `.content` paragraphs, no wrapper |
+| Formulas | Mono font inside accent card wrapper | Simple centered `.equation` box |
+| Info boxes | Multiple nested card components | Simple `.box` with left-border accent |
+| Questions | Separate component with button + reveal state | Simple `.question` div with textarea + inline feedback |
+| Connections | Grid of individual card components with hover | Simple `.grid` of minimal `.card` divs |
 
-```text
-Voice input detected
-  --> speakResponse(text)
-    --> Try ElevenLabs TTS stream
-      --> Success? Play audio (current behavior)
-      --> Failed (401/quota/network)?
-        --> Fall back to browser speechSynthesis
-        --> Pick best available voice (prefer Google/Microsoft natural voices)
-        --> Speak the cleaned text
-        --> Student hears response either way
+## Plan: Flatten the Rendering
+
+### 1. Replace Block Renderers with HTML-Style Inline Rendering
+
+Instead of delegating to separate component files (`ReasoningBlock.tsx`, `AssumptionsBlock.tsx`, etc.), render content **inline** in `TextbookEpisode.tsx` using simple, flat HTML structures matching the reference:
+
+- **Concept blocks**: Direct paragraphs + `.box` style info panels + centered equation divs
+- **Reasoning blocks**: Simple question divs with textarea + always-visible hint feedback below
+- **Assumptions blocks**: Listed assumptions with inline explanations, single defense button
+- **Connections blocks**: Simple grid of icon+label cards + one info box with explanations
+- **Application blocks**: Scenario box + textarea question + inline feedback
+- **Implications blocks**: Three themed boxes (Mathematical/Future/Philosophical) + essay textarea
+
+### 2. Simplify Layer Wrapper
+
+Replace the current heavy wrapper:
+```
+rounded-2xl p-6 mb-5 bg-card border border-border → badge → icon-box + title → component
 ```
 
-## Changes in `src/components/student/StudyCompanion.tsx`
+With the HTML's flat style:
+```
+layer div with colored bg → layer-header (gradient icon circle + LAYER N label + title) → direct content
+```
 
-### 1. Add a `browserTTSFallback` helper function
+### 3. Style Classes to Add
 
-A small helper that uses `window.speechSynthesis` to speak text:
-- Cancels any ongoing browser speech first
-- Selects the best available voice (prefers English voices from Google/Microsoft for quality, falls back to any English voice, then default)
-- Sets natural rate (0.95) and pitch (1.0)
-- Hooks into `onend`/`onerror` to reset `isSpeakingTTS` state
-- Tracks the utterance so it can be cancelled if user sends a new message
+Match HTML reference styling:
+- `.layer` sections: `py-8 px-6 border-b-2 border-gray-100` (no card borders)
+- Layer icons: 50px gradient circles matching the HTML's `linear-gradient(135deg, ...)` per layer
+- `.box`: `bg-muted/40 border-l-4 border-primary p-5 rounded-lg` (left-border accent)
+- `.equation`: centered, larger font, primary color, gray background
+- Questions: simple border card with prompt + textarea + always-visible feedback hint
 
-### 2. Update `speakResponse` to use fallback on error
+### 4. Remove Unused Component Imports
 
-Currently at line 359-362, the code just logs and returns on error. Change this to:
-- If ElevenLabs returns non-OK (401, 402, 429, 500, etc.), call `browserTTSFallback(cleaned)` instead of silently returning
-- If the fetch throws (network error), also call `browserTTSFallback(cleaned)` in the catch block
+Stop importing `ReasoningBlock`, `AssumptionsBlock`, `ConnectionsBlock`, `ApplicationBlock`, `ImplicationsBlock` — their rendering moves inline, simplified.
 
-### 3. Cancel browser speech on new input
+### File Changes
 
-Update the TTS cancellation logic (already at top of `speakResponse` and `sendMessage`) to also call `window.speechSynthesis.cancel()` so browser fallback speech is also interrupted when:
-- A new message is sent
-- A new TTS playback starts
+| File | Change |
+|---|---|
+| `src/pages/TextbookEpisode.tsx` | Rewrite block rendering inline with flat HTML-style layout matching the reference. Remove complex component delegation for layers 3-7. Simplify layer wrappers. |
 
-### 4. No new dependencies needed
-
-`speechSynthesis` is built into all modern browsers -- no packages or edge functions required.
-
-## Result
-
-- **ElevenLabs working**: High-quality voice (no change from current behavior)
-- **ElevenLabs down/quota exceeded**: Browser voice kicks in seamlessly -- student still hears the response
-- **Interruption behavior preserved**: Both ElevenLabs audio AND browser speech are cancelled when new input arrives (latest-wins rule intact)
+Component files (`ReasoningBlock.tsx`, etc.) remain untouched but are no longer imported — can be cleaned up later.
 
