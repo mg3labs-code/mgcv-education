@@ -301,7 +301,7 @@ const TextbookEpisode = () => {
     }
   };
 
-  const defaultMeta = { bg: "", dotColor: "bg-primary" } as const;
+  const defaultMeta = { bg: "", dotColor: "bg-primary", badge: undefined, badgeColor: undefined } as const;
 
   return (
     <PageLayout role="student">
