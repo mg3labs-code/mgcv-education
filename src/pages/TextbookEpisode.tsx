@@ -203,9 +203,12 @@ const blockLabels: Record<string, string> = {
   implications: "Reflect",
 };
 
+const CORE_BLOCKS = new Set(["concept", "activity", "recall", "explain", "assessment", "exercise"]);
+const DEEP_BLOCKS = new Set(["reasoning", "assumptions", "connections", "application", "implications"]);
+
 const layerMeta: Record<string, { bg: string; badge?: string; badgeColor?: string; dotColor: string }> = {
-  concept:     { bg: "bg-violet-50 dark:bg-violet-950/20",  badge: "LAYER 1 · Definition",   badgeColor: "bg-violet-100 text-violet-800 dark:bg-violet-900/40 dark:text-violet-300", dotColor: "bg-violet-500" },
-  activity:    { bg: "bg-rose-50 dark:bg-rose-950/20",      badge: "LAYER 2 · Mechanism",    badgeColor: "bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300", dotColor: "bg-rose-500" },
+  concept:     { bg: "", dotColor: "bg-primary" },
+  activity:    { bg: "", dotColor: "bg-primary" },
   recall:      { bg: "", dotColor: "bg-primary" },
   explain:     { bg: "", dotColor: "bg-primary" },
   assessment:  { bg: "", dotColor: "bg-primary" },
@@ -213,7 +216,7 @@ const layerMeta: Record<string, { bg: string; badge?: string; badgeColor?: strin
   reasoning:   { bg: "bg-amber-50 dark:bg-amber-950/20",   badge: "LAYER 3 · Reasoning",   badgeColor: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300", dotColor: "bg-amber-500" },
   assumptions: { bg: "bg-sky-50 dark:bg-sky-950/20",       badge: "LAYER 4 · Assumptions",  badgeColor: "bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300", dotColor: "bg-sky-500" },
   connections: { bg: "bg-emerald-50 dark:bg-emerald-950/20", badge: "LAYER 5 · Connections", badgeColor: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300", dotColor: "bg-emerald-500" },
-  application: { bg: "bg-amber-50 dark:bg-amber-950/20",   badge: "LAYER 6 · Application",  badgeColor: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300", dotColor: "bg-amber-500" },
+  application: { bg: "bg-orange-50 dark:bg-orange-950/20",  badge: "LAYER 6 · Application",  badgeColor: "bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300", dotColor: "bg-orange-500" },
   implications:{ bg: "bg-indigo-50 dark:bg-indigo-950/20",  badge: "LAYER 7 · Implications", badgeColor: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300", dotColor: "bg-indigo-500" },
 };
 
