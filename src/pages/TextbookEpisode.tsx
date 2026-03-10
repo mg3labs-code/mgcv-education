@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, Fragment } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import PageLayout from "@/components/PageLayout";
 import { chapters, ContentBlock, ConceptContent, ActivityContent, RecallContent, ExplainContent, AssessmentContent, ExerciseContent, ReasoningContent, AssumptionsContent, ConnectionsContent, ApplicationContent, ImplicationsContent } from "@/data/textbookData";
@@ -203,9 +203,12 @@ const blockLabels: Record<string, string> = {
   implications: "Reflect",
 };
 
+const CORE_BLOCKS = new Set(["concept", "activity", "recall", "explain", "assessment", "exercise"]);
+const DEEP_BLOCKS = new Set(["reasoning", "assumptions", "connections", "application", "implications"]);
+
 const layerMeta: Record<string, { bg: string; badge?: string; badgeColor?: string; dotColor: string }> = {
-  concept:     { bg: "bg-violet-50 dark:bg-violet-950/20",  badge: "LAYER 1 · Definition",   badgeColor: "bg-violet-100 text-violet-800 dark:bg-violet-900/40 dark:text-violet-300", dotColor: "bg-violet-500" },
-  activity:    { bg: "bg-rose-50 dark:bg-rose-950/20",      badge: "LAYER 2 · Mechanism",    badgeColor: "bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300", dotColor: "bg-rose-500" },
+  concept:     { bg: "", dotColor: "bg-primary" },
+  activity:    { bg: "", dotColor: "bg-primary" },
   recall:      { bg: "", dotColor: "bg-primary" },
   explain:     { bg: "", dotColor: "bg-primary" },
   assessment:  { bg: "", dotColor: "bg-primary" },
@@ -213,7 +216,7 @@ const layerMeta: Record<string, { bg: string; badge?: string; badgeColor?: strin
   reasoning:   { bg: "bg-amber-50 dark:bg-amber-950/20",   badge: "LAYER 3 · Reasoning",   badgeColor: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300", dotColor: "bg-amber-500" },
   assumptions: { bg: "bg-sky-50 dark:bg-sky-950/20",       badge: "LAYER 4 · Assumptions",  badgeColor: "bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300", dotColor: "bg-sky-500" },
   connections: { bg: "bg-emerald-50 dark:bg-emerald-950/20", badge: "LAYER 5 · Connections", badgeColor: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300", dotColor: "bg-emerald-500" },
-  application: { bg: "bg-amber-50 dark:bg-amber-950/20",   badge: "LAYER 6 · Application",  badgeColor: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300", dotColor: "bg-amber-500" },
+  application: { bg: "bg-orange-50 dark:bg-orange-950/20",  badge: "LAYER 6 · Application",  badgeColor: "bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300", dotColor: "bg-orange-500" },
   implications:{ bg: "bg-indigo-50 dark:bg-indigo-950/20",  badge: "LAYER 7 · Implications", badgeColor: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300", dotColor: "bg-indigo-500" },
 };
 
@@ -298,7 +301,7 @@ const TextbookEpisode = () => {
     }
   };
 
-  const defaultMeta = { bg: "", dotColor: "bg-primary" } as const;
+  const defaultMeta = { bg: "", dotColor: "bg-primary", badge: undefined, badgeColor: undefined } as const;
 
   return (
     <PageLayout role="student">
@@ -374,31 +377,45 @@ const TextbookEpisode = () => {
           {episode.blocks.map((block, i) => {
             const meta = layerMeta[block.type] || defaultMeta;
             const BlockIcon = blockIcons[block.type] || BookOpen;
+            const isDeep = DEEP_BLOCKS.has(block.type);
+            const isFirstDeep = isDeep && !episode.blocks.slice(0, i).some(b => DEEP_BLOCKS.has(b.type));
 
             return (
-              <div
-                key={i}
-                ref={(el) => { blockRefs.current[i] = el; }}
-                className={`rounded-2xl p-6 mb-5 ${meta.bg || "bg-card"} border border-border scroll-mt-24`}
-              >
-                {/* Layer Badge */}
-                {"badge" in meta && meta.badge && (
-                  <span className={`inline-block text-[11px] font-bold tracking-wide px-3 py-1 rounded-full mb-4 ${"badgeColor" in meta ? meta.badgeColor : ""}`}>
-                    {meta.badge}
-                  </span>
+              <React.Fragment key={i}>
+                {/* Deep Mastery Divider — shown once before first deep block */}
+                {isFirstDeep && (
+                  <div className="flex items-center gap-3 my-8 px-2">
+                    <div className="h-px flex-1 bg-border" />
+                    <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                      🧠 Deep Mastery Layers
+                    </span>
+                    <div className="h-px flex-1 bg-border" />
+                  </div>
                 )}
 
-                {/* Block Header */}
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                    <BlockIcon className="h-4 w-4 text-primary" />
-                  </div>
-                  <h2 className="font-semibold text-foreground text-lg">{block.icon} {block.title}</h2>
-                </div>
+                <div
+                  ref={(el) => { blockRefs.current[i] = el; }}
+                  className={`rounded-2xl p-6 mb-5 ${isDeep ? (meta.bg || "bg-card") : "bg-card"} border border-border scroll-mt-24`}
+                >
+                  {/* Layer Badge — only for deep layers */}
+                  {isDeep && meta.badge && (
+                    <span className={`inline-block text-[11px] font-bold tracking-wide px-3 py-1 rounded-full mb-4 ${meta.badgeColor || ""}`}>
+                      {meta.badge}
+                    </span>
+                  )}
 
-                {/* Block Content */}
-                {renderBlock(block)}
-              </div>
+                  {/* Block Header */}
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                      <BlockIcon className="h-4 w-4 text-primary" />
+                    </div>
+                    <h2 className="font-semibold text-foreground text-lg">{block.icon} {block.title}</h2>
+                  </div>
+
+                  {/* Block Content */}
+                  {renderBlock(block)}
+                </div>
+              </React.Fragment>
             );
           })}
         </div>

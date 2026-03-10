@@ -1,62 +1,55 @@
 
 
-# Recheck: Layer 1 & Layer 2 Mapping is Wrong
+# Add Browser TTS Fallback for ElevenLabs Failures
 
-## The Problem
+## What Changes
 
-Looking at the HTML reference vs current data, the labeling is incorrect:
+When ElevenLabs TTS returns any error (401, quota exceeded, network failure), automatically fall back to the browser's built-in `speechSynthesis` API so students always hear voice responses.
 
-| Layer | HTML Reference | Current Data | Match? |
-|---|---|---|---|
-| Layer 1: Definition | Simplified definition + etymology + "Why it matters" — easy, friendly | `concept` block — heavy textbook content with multiple sections, formulas, examples | ❌ Too heavy |
-| Layer 2: Mechanism | Step-by-step worked example showing HOW it works | `activity` block — interactive classify/explore exercise | ❌ Wrong content type |
+## How It Works
 
-### What the HTML Does Right
+```text
+Voice input detected
+  --> speakResponse(text)
+    --> Try ElevenLabs TTS stream
+      --> Success? Play audio (current behavior)
+      --> Failed (401/quota/network)?
+        --> Fall back to browser speechSynthesis
+        --> Pick best available voice (prefer Google/Microsoft natural voices)
+        --> Speak the cleaned text
+        --> Student hears response either way
+```
 
-**Layer 1 (Definition):** Simple, short, friendly
-- One clear definition sentence
-- The key formula/equation
-- What each part means (simple bullets)
-- Etymology & History box (fun facts)
-- "Why This Matters" box (real-world relevance)
+## Changes in `src/components/student/StudyCompanion.tsx`
 
-**Layer 2 (Mechanism):** Step-by-step HOW
-- One worked example broken into numbered steps
-- "Key Pattern" summary
-- "Why does this work?" short explanation
+### 1. Add a `browserTTSFallback` helper function
 
-### What Current Data Does Wrong
+A small helper that uses `window.speechSynthesis` to speak text:
+- Cancels any ongoing browser speech first
+- Selects the best available voice (prefers English voices from Google/Microsoft for quality, falls back to any English voice, then default)
+- Sets natural rate (0.95) and pitch (1.0)
+- Hooks into `onend`/`onerror` to reset `isSpeakingTTS` state
+- Tracks the utterance so it can be cancelled if user sends a new message
 
-**`concept` block** has too much crammed in — multiple sections, key formulas array, worked examples array. It's the full textbook dump, not a simplified Layer 1.
+### 2. Update `speakResponse` to use fallback on error
 
-**`activity` block** is an interactive exercise (classify items, find q and r) — that's NOT a "mechanism." It's practice. Labeling it "LAYER 2 · Mechanism" is misleading.
+Currently at line 359-362, the code just logs and returns on error. Change this to:
+- If ElevenLabs returns non-OK (401, 402, 429, 500, etc.), call `browserTTSFallback(cleaned)` instead of silently returning
+- If the fetch throws (network error), also call `browserTTSFallback(cleaned)` in the catch block
 
-## Plan
+### 3. Cancel browser speech on new input
 
-### Option A: Fix the labels only (keep data, rename layers)
+Update the TTS cancellation logic (already at top of `speakResponse` and `sendMessage`) to also call `window.speechSynthesis.cancel()` so browser fallback speech is also interrupted when:
+- A new message is sent
+- A new TTS playback starts
 
-Remove "Layer 1/2" badges from `concept` and `activity` blocks. Only show layer badges for Layers 3–7 (the pedagogically distinct blocks). Treat `concept` + `activity` + `recall` + `explain` + `assessment` + `exercise` as the **"Core Learning"** section (no layer numbering), and Layers 3–7 as the **"Deep Mastery"** section.
+### 4. No new dependencies needed
 
-This is simpler and honest — the current data doesn't truly separate definition from mechanism.
+`speechSynthesis` is built into all modern browsers -- no packages or edge functions required.
 
-### Option B: Restructure data to match HTML layers exactly
+## Result
 
-Split each episode's `concept` block into two: a simplified `definition` block (Layer 1) and a `mechanism` block (Layer 2). This requires changing the data model and all episodes.
-
-**Recommendation: Option A** — it's truthful, fast, and doesn't require rewriting all episode data. The concept block already contains both definition and mechanism together, which works fine as a single "Learn the Concept" section.
-
-## Changes (Option A)
-
-**File: `src/pages/TextbookEpisode.tsx`**
-
-1. Remove layer badges from `concept`, `activity`, `recall`, `explain`, `assessment`, `exercise` — these are just "Core Learning" blocks, no layer number
-2. Keep layer badges only for `reasoning` (Layer 3), `assumptions` (Layer 4), `connections` (Layer 5), `application` (Layer 6), `implications` (Layer 7)
-3. Add a visual divider between the core blocks and the deep layers — a simple banner: "🧠 Deep Mastery Layers" before Layer 3 starts
-4. Remove colored backgrounds from `concept` and `activity` — keep them white like the HTML's Layers 1-2
-5. Keep colored backgrounds only for Layers 3-7
-
-This way:
-- Core content (concept → exercise) feels like natural textbook reading
-- Deep layers (3-7) are clearly marked as the "go deeper" section
-- No misleading "Layer 1 · Definition" / "Layer 2 · Mechanism" labels on content that doesn't match those descriptions
+- **ElevenLabs working**: High-quality voice (no change from current behavior)
+- **ElevenLabs down/quota exceeded**: Browser voice kicks in seamlessly -- student still hears the response
+- **Interruption behavior preserved**: Both ElevenLabs audio AND browser speech are cancelled when new input arrives (latest-wins rule intact)
 
