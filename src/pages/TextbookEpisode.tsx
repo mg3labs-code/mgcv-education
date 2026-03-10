@@ -377,31 +377,45 @@ const TextbookEpisode = () => {
           {episode.blocks.map((block, i) => {
             const meta = layerMeta[block.type] || defaultMeta;
             const BlockIcon = blockIcons[block.type] || BookOpen;
+            const isDeep = DEEP_BLOCKS.has(block.type);
+            const isFirstDeep = isDeep && !episode.blocks.slice(0, i).some(b => DEEP_BLOCKS.has(b.type));
 
             return (
-              <div
-                key={i}
-                ref={(el) => { blockRefs.current[i] = el; }}
-                className={`rounded-2xl p-6 mb-5 ${meta.bg || "bg-card"} border border-border scroll-mt-24`}
-              >
-                {/* Layer Badge */}
-                {"badge" in meta && meta.badge && (
-                  <span className={`inline-block text-[11px] font-bold tracking-wide px-3 py-1 rounded-full mb-4 ${"badgeColor" in meta ? meta.badgeColor : ""}`}>
-                    {meta.badge}
-                  </span>
+              <React.Fragment key={i}>
+                {/* Deep Mastery Divider — shown once before first deep block */}
+                {isFirstDeep && (
+                  <div className="flex items-center gap-3 my-8 px-2">
+                    <div className="h-px flex-1 bg-border" />
+                    <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                      🧠 Deep Mastery Layers
+                    </span>
+                    <div className="h-px flex-1 bg-border" />
+                  </div>
                 )}
 
-                {/* Block Header */}
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                    <BlockIcon className="h-4 w-4 text-primary" />
-                  </div>
-                  <h2 className="font-semibold text-foreground text-lg">{block.icon} {block.title}</h2>
-                </div>
+                <div
+                  ref={(el) => { blockRefs.current[i] = el; }}
+                  className={`rounded-2xl p-6 mb-5 ${isDeep ? (meta.bg || "bg-card") : "bg-card"} border border-border scroll-mt-24`}
+                >
+                  {/* Layer Badge — only for deep layers */}
+                  {isDeep && meta.badge && (
+                    <span className={`inline-block text-[11px] font-bold tracking-wide px-3 py-1 rounded-full mb-4 ${meta.badgeColor || ""}`}>
+                      {meta.badge}
+                    </span>
+                  )}
 
-                {/* Block Content */}
-                {renderBlock(block)}
-              </div>
+                  {/* Block Header */}
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                      <BlockIcon className="h-4 w-4 text-primary" />
+                    </div>
+                    <h2 className="font-semibold text-foreground text-lg">{block.icon} {block.title}</h2>
+                  </div>
+
+                  {/* Block Content */}
+                  {renderBlock(block)}
+                </div>
+              </React.Fragment>
             );
           })}
         </div>
