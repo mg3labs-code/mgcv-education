@@ -204,8 +204,8 @@ const blockLabels: Record<string, string> = {
 };
 
 const layerMeta: Record<string, { bg: string; badge?: string; badgeColor?: string; dotColor: string }> = {
-  concept:     { bg: "", dotColor: "bg-primary" },
-  activity:    { bg: "", dotColor: "bg-primary" },
+  concept:     { bg: "bg-violet-50 dark:bg-violet-950/20",  badge: "LAYER 1 · Definition",   badgeColor: "bg-violet-100 text-violet-800 dark:bg-violet-900/40 dark:text-violet-300", dotColor: "bg-violet-500" },
+  activity:    { bg: "bg-rose-50 dark:bg-rose-950/20",      badge: "LAYER 2 · Mechanism",    badgeColor: "bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300", dotColor: "bg-rose-500" },
   recall:      { bg: "", dotColor: "bg-primary" },
   explain:     { bg: "", dotColor: "bg-primary" },
   assessment:  { bg: "", dotColor: "bg-primary" },
