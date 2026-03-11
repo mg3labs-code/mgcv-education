@@ -574,11 +574,11 @@ const TextbookEpisode = () => {
 
         {/* All Blocks */}
         <div className="space-y-0">
-          {episode.blocks.map((block, i) => {
+          {blocks.map((block, i) => {
             const meta = layerMeta[block.type] || defaultMeta;
             const BlockIcon = blockIcons[block.type] || BookOpen;
             const isDeep = DEEP_BLOCKS.has(block.type);
-            const isFirstDeep = isDeep && !episode.blocks.slice(0, i).some(b => DEEP_BLOCKS.has(b.type));
+            const isFirstDeep = isDeep && !blocks.slice(0, i).some(b => DEEP_BLOCKS.has(b.type));
 
             return (
               <React.Fragment key={i}>
