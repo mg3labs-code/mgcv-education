@@ -3,8 +3,10 @@ import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 import { findTextbookMatch } from "@/data/topicTextbookMap";
 import PopQuizModal from "@/components/student/PopQuizModal";
+import { Skeleton } from "@/components/ui/skeleton";
 import { BookOpen, Brain, Eye, Zap, Heart, TrendingUp, Flame, Star, ChevronRight, GraduationCap, Target, Users, Lightbulb } from "lucide-react";
 
 interface ScheduleItem {
@@ -38,29 +40,21 @@ const BREAKS = [
 
 const calendarDays = ["S", "M", "T", "W", "T", "F", "S"];
 
-// Inner OS Dimensions data (mock)
-const INNER_OS_DIMENSIONS = [
-  { name: "Clarity", score: 78, trend: +5, icon: Eye, color: "from-sky-400 to-blue-500", bg: "bg-sky-50", border: "border-sky-200", text: "text-sky-700" },
-  { name: "Thinking", score: 72, trend: +3, icon: Brain, color: "from-purple-400 to-purple-600", bg: "bg-purple-50", border: "border-purple-200", text: "text-purple-700" },
-  { name: "Attention", score: 68, trend: -2, icon: Target, color: "from-amber-400 to-orange-500", bg: "bg-amber-50", border: "border-amber-200", text: "text-amber-700" },
-  { name: "Momentum", score: 81, trend: +7, icon: Zap, color: "from-emerald-400 to-teal-500", bg: "bg-emerald-50", border: "border-emerald-200", text: "text-emerald-700" },
-  { name: "Character", score: 75, trend: +4, icon: Heart, color: "from-rose-400 to-pink-500", bg: "bg-rose-50", border: "border-rose-200", text: "text-rose-700" },
-];
+// Dimension styling config (scores come from DB)
+const DIMENSION_CONFIG = [
+  { key: "clarity_score", name: "Clarity", icon: Eye, color: "from-sky-400 to-blue-500", bg: "bg-sky-50", border: "border-sky-200", text: "text-sky-700" },
+  { key: "thinking_score", name: "Thinking", icon: Brain, color: "from-purple-400 to-purple-600", bg: "bg-purple-50", border: "border-purple-200", text: "text-purple-700" },
+  { key: "attention_score", name: "Attention", icon: Target, color: "from-amber-400 to-orange-500", bg: "bg-amber-50", border: "border-amber-200", text: "text-amber-700" },
+  { key: "momentum_score", name: "Momentum", icon: Zap, color: "from-emerald-400 to-teal-500", bg: "bg-emerald-50", border: "border-emerald-200", text: "text-emerald-700" },
+  { key: "character_score", name: "Character", icon: Heart, color: "from-rose-400 to-pink-500", bg: "bg-rose-50", border: "border-rose-200", text: "text-rose-700" },
+] as const;
 
-const ELITE_METHODS = [
-  { name: "Tutorial Defense", desc: "Defend your reasoning like an Oxford scholar", icon: "🎓", available: true, sessions: 3 },
-  { name: "First Principles", desc: "Strip concepts to fundamentals like Feynman", icon: "🔬", available: true, sessions: 5 },
-  { name: "Case Study", desc: "Apply knowledge to real scenarios — Harvard style", icon: "📋", available: true, sessions: 2 },
-  { name: "Peer Teaching", desc: "Teach others to master it yourself", icon: "👥", available: false, sessions: 0 },
-];
-
-const BREAKTHROUGHS = [
-  { text: "Mastered Euclid's Division Algorithm reasoning", time: "2 hours ago", icon: "🏆" },
-  { text: "Completed First Principles on Real Numbers", time: "Yesterday", icon: "💡" },
-  { text: "7-day learning streak achieved!", time: "Today", icon: "🔥" },
-];
-
-const OVERALL_SCORE = 73;
+const ELITE_METHOD_META: Record<string, { name: string; desc: string; icon: string; available: boolean }> = {
+  tutorial_defense: { name: "Tutorial Defense", desc: "Defend your reasoning like an Oxford scholar", icon: "🎓", available: true },
+  first_principles: { name: "First Principles", desc: "Strip concepts to fundamentals like Feynman", icon: "🔬", available: true },
+  case_study: { name: "Case Study", desc: "Apply knowledge to real scenarios — Harvard style", icon: "📋", available: true },
+  peer_teaching: { name: "Peer Teaching", desc: "Teach others to master it yourself", icon: "👥", available: false },
+};
 
 const StudentDashboard = () => {
   const { fullName, user } = useAuth();
@@ -73,6 +67,58 @@ const StudentDashboard = () => {
   const [dailyQuizOpen, setDailyQuizOpen] = useState(false);
   const [dailyQuizScore, setDailyQuizScore] = useState<{ score: number; total: number } | null>(null);
   const [activeTab, setActiveTab] = useState<"overview" | "schedule">("overview");
+
+  // Fetch Inner OS scores from DB
+  const { data: innerOS, isLoading: innerOSLoading } = useQuery({
+    queryKey: ["student-inner-os", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("student_inner_os")
+        .select("*")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  // Fetch breakthroughs from DB
+  const { data: breakthroughs } = useQuery({
+    queryKey: ["student-breakthroughs", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("student_breakthroughs")
+        .select("*")
+        .eq("user_id", user!.id)
+        .order("created_at", { ascending: false })
+        .limit(5);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!user,
+  });
+
+  // Fetch method session counts
+  const { data: methodCounts } = useQuery({
+    queryKey: ["student-method-counts", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("method_sessions")
+        .select("method_type, completed")
+        .eq("user_id", user!.id);
+      if (error) throw error;
+      const counts: Record<string, number> = {};
+      (data ?? []).forEach((s) => { counts[s.method_type] = (counts[s.method_type] || 0) + 1; });
+      return counts;
+    },
+    enabled: !!user,
+  });
+
+  const overallScore = innerOS?.overall_score ?? 0;
+  const streakDays = innerOS?.streak_days ?? 0;
+  const userLevel = innerOS?.level ?? 1;
+  const weeklyGrowth = innerOS?.weekly_growth ?? 0;
 
   useEffect(() => {
     const fetchAllSchedules = async () => {
@@ -176,11 +222,11 @@ const StudentDashboard = () => {
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 bg-gradient-to-r from-amber-100 to-orange-100 border border-amber-300 rounded-full px-4 py-2">
               <Flame className="h-5 w-5 text-orange-500" />
-              <span className="font-bold text-orange-700">7 Day Streak</span>
+              <span className="font-bold text-orange-700">{streakDays} Day Streak</span>
             </div>
             <div className="flex items-center gap-2 bg-gradient-to-r from-yellow-100 to-amber-100 border border-yellow-300 rounded-full px-4 py-2">
               <Star className="h-5 w-5 text-yellow-500" />
-              <span className="font-bold text-yellow-700">Level 4</span>
+              <span className="font-bold text-yellow-700">Level {userLevel}</span>
             </div>
           </div>
         </div>
@@ -222,11 +268,11 @@ const StudentDashboard = () => {
                   <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
                     <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="10" />
                     <circle cx="60" cy="60" r="52" fill="none" stroke="white" strokeWidth="10" strokeLinecap="round"
-                      strokeDasharray={`${(OVERALL_SCORE / 100) * 327} 327`}
+                      strokeDasharray={`${(overallScore / 100) * 327} 327`}
                     />
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-3xl font-bold">{OVERALL_SCORE}%</span>
+                    <span className="text-3xl font-bold">{innerOSLoading ? "..." : `${overallScore}%`}</span>
                     <span className="text-xs text-white/70">Inner OS</span>
                   </div>
                 </div>
@@ -239,7 +285,7 @@ const StudentDashboard = () => {
                   </p>
                   <div className="flex items-center gap-2 justify-center md:justify-start">
                     <TrendingUp className="h-4 w-4 text-emerald-300" />
-                    <span className="text-emerald-300 font-semibold text-sm">+4.2% growth this week</span>
+                    <span className="text-emerald-300 font-semibold text-sm">{weeklyGrowth >= 0 ? "+" : ""}{weeklyGrowth}% growth this week</span>
                   </div>
                 </div>
               </div>
@@ -247,23 +293,27 @@ const StudentDashboard = () => {
 
             {/* ── 5 Dimension Cards ── */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-              {INNER_OS_DIMENSIONS.map((dim) => (
-                <div key={dim.name} className={`${dim.bg} ${dim.border} border rounded-xl p-4 transition-all hover:shadow-md hover:-translate-y-0.5`}>
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${dim.color} flex items-center justify-center`}>
-                      <dim.icon className="h-4 w-4 text-white" />
+              {innerOSLoading ? (
+                Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-36 rounded-xl" />)
+              ) : (
+                DIMENSION_CONFIG.map((dim) => {
+                  const score = innerOS ? (innerOS as any)[dim.key] ?? 0 : 0;
+                  return (
+                    <div key={dim.name} className={`${dim.bg} ${dim.border} border rounded-xl p-4 transition-all hover:shadow-md hover:-translate-y-0.5`}>
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${dim.color} flex items-center justify-center`}>
+                          <dim.icon className="h-4 w-4 text-white" />
+                        </div>
+                        <span className={`text-sm font-semibold ${dim.text}`}>{dim.name}</span>
+                      </div>
+                      <div className="text-2xl font-bold text-foreground mb-1">{score}%</div>
+                      <div className="w-full h-2 bg-white/60 rounded-full overflow-hidden mb-2">
+                        <div className={`h-full rounded-full bg-gradient-to-r ${dim.color}`} style={{ width: `${score}%` }} />
+                      </div>
                     </div>
-                    <span className={`text-sm font-semibold ${dim.text}`}>{dim.name}</span>
-                  </div>
-                  <div className="text-2xl font-bold text-foreground mb-1">{dim.score}%</div>
-                  <div className="w-full h-2 bg-white/60 rounded-full overflow-hidden mb-2">
-                    <div className={`h-full rounded-full bg-gradient-to-r ${dim.color}`} style={{ width: `${dim.score}%` }} />
-                  </div>
-                  <div className={`text-xs font-medium ${dim.trend >= 0 ? "text-emerald-600" : "text-red-500"}`}>
-                    {dim.trend >= 0 ? "↑" : "↓"} {Math.abs(dim.trend)}% this week
-                  </div>
-                </div>
-              ))}
+                  );
+                })
+              )}
             </div>
 
             {/* ── Main Grid: Continue Learning + Methods + Breakthroughs ── */}
@@ -302,28 +352,31 @@ const StudentDashboard = () => {
                   </h3>
                   <p className="text-sm text-muted-foreground mb-4">World-class thinking tools adapted for you</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {ELITE_METHODS.map((method) => (
-                      <div key={method.name}
-                        className={`border rounded-xl p-4 transition-all ${
-                          method.available
-                            ? "bg-card border-border hover:border-primary/30 hover:shadow-sm cursor-pointer"
-                            : "bg-muted/30 border-border opacity-60 cursor-not-allowed"
-                        }`}
-                      >
-                        <div className="flex items-start gap-3">
-                          <span className="text-2xl">{method.icon}</span>
-                          <div className="flex-1">
-                            <h4 className="font-semibold text-foreground text-sm">{method.name}</h4>
-                            <p className="text-xs text-muted-foreground mt-0.5">{method.desc}</p>
-                            {method.available ? (
-                              <span className="text-xs text-primary font-medium mt-2 block">{method.sessions} sessions completed</span>
-                            ) : (
-                              <span className="text-xs text-muted-foreground mt-2 block">🔒 Coming Soon</span>
-                            )}
+                    {Object.entries(ELITE_METHOD_META).map(([key, method]) => {
+                      const sessions = methodCounts?.[key] ?? 0;
+                      return (
+                        <div key={key}
+                          className={`border rounded-xl p-4 transition-all ${
+                            method.available
+                              ? "bg-card border-border hover:border-primary/30 hover:shadow-sm cursor-pointer"
+                              : "bg-muted/30 border-border opacity-60 cursor-not-allowed"
+                          }`}
+                        >
+                          <div className="flex items-start gap-3">
+                            <span className="text-2xl">{method.icon}</span>
+                            <div className="flex-1">
+                              <h4 className="font-semibold text-foreground text-sm">{method.name}</h4>
+                              <p className="text-xs text-muted-foreground mt-0.5">{method.desc}</p>
+                              {method.available ? (
+                                <span className="text-xs text-primary font-medium mt-2 block">{sessions} sessions completed</span>
+                              ) : (
+                                <span className="text-xs text-muted-foreground mt-2 block">🔒 Coming Soon</span>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               </div>
@@ -350,15 +403,19 @@ const StudentDashboard = () => {
                     <Star className="h-4 w-4 text-yellow-500" /> Recent Breakthroughs
                   </h3>
                   <div className="space-y-3">
-                    {BREAKTHROUGHS.map((b, i) => (
-                      <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
-                        <span className="text-lg">{b.icon}</span>
-                        <div>
-                          <p className="text-sm font-medium text-foreground">{b.text}</p>
-                          <p className="text-xs text-muted-foreground mt-0.5">{b.time}</p>
+                    {(breakthroughs ?? []).length === 0 ? (
+                      <p className="text-sm text-muted-foreground italic text-center py-4">Complete your first episode to earn breakthroughs!</p>
+                    ) : (
+                      (breakthroughs ?? []).map((b) => (
+                        <div key={b.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
+                          <span className="text-lg">{b.icon}</span>
+                          <div>
+                            <p className="text-sm font-medium text-foreground">{b.title}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">{new Date(b.created_at).toLocaleDateString()}</p>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))
+                    )}
                   </div>
                 </div>
 

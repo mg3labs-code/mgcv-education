@@ -2,15 +2,18 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Eye, Brain, Target, Heart, TrendingUp, TrendingDown, AlertTriangle, CheckCircle, Info, ChevronRight, GraduationCap, Users, BookOpen, ClipboardList, BarChart3, Bell, MessageSquare, Lightbulb, Zap, Shield } from "lucide-react";
 
-const CLASS_OPTIONS = ["Class 10-A", "Class 10-B", "Class 9-A"];
+const CLASS_OPTIONS = ["Class 10", "Class 9", "Class 8"];
 
-const STAT_CARDS = [
-  { label: "Avg Clarity", value: "76%", trend: +3, icon: Eye, borderColor: "border-l-sky-500", bg: "bg-sky-50", iconBg: "bg-sky-100", iconColor: "text-sky-600" },
-  { label: "Avg Reasoning", value: "71%", trend: +5, icon: Brain, borderColor: "border-l-purple-500", bg: "bg-purple-50", iconBg: "bg-purple-100", iconColor: "text-purple-600" },
-  { label: "Avg Attention", value: "68%", trend: -2, icon: Target, borderColor: "border-l-amber-500", bg: "bg-amber-50", iconBg: "bg-amber-100", iconColor: "text-amber-600" },
-  { label: "Avg Character", value: "74%", trend: +4, icon: Heart, borderColor: "border-l-rose-500", bg: "bg-rose-50", iconBg: "bg-rose-100", iconColor: "text-rose-600" },
+const STAT_CONFIG = [
+  { key: "avg_clarity", label: "Avg Clarity", icon: Eye, borderColor: "border-l-sky-500", bg: "bg-sky-50", iconBg: "bg-sky-100", iconColor: "text-sky-600" },
+  { key: "avg_thinking", label: "Avg Reasoning", icon: Brain, borderColor: "border-l-purple-500", bg: "bg-purple-50", iconBg: "bg-purple-100", iconColor: "text-purple-600" },
+  { key: "avg_attention", label: "Avg Attention", icon: Target, borderColor: "border-l-amber-500", bg: "bg-amber-50", iconBg: "bg-amber-100", iconColor: "text-amber-600" },
+  { key: "avg_character", label: "Avg Character", icon: Heart, borderColor: "border-l-rose-500", bg: "bg-rose-50", iconBg: "bg-rose-100", iconColor: "text-rose-600" },
 ];
 
 const CURRICULUM_INSIGHTS = [
@@ -53,18 +56,17 @@ const METHODS_PERFORMANCE = [
   { name: "Peer Teaching", usage: "34%", sessions: 42, icon: "👥" },
 ];
 
-const ALERTS = [
-  { type: "critical" as const, student: "Priya Sharma", message: "3 consecutive sessions with declining attention scores", action: "Schedule 1-on-1", icon: AlertTriangle },
-  { type: "warning" as const, student: "Rahul Kumar", message: "Skipping Layer 4 (Assumptions) consistently — avoiding critical thinking", action: "Assign Defense", icon: Info },
-  { type: "success" as const, student: "Arjun Reddy", message: "Breakthrough! Completed all 7 layers with 90%+ scores for 5 episodes", action: "Acknowledge", icon: CheckCircle },
-];
+const alertStyles = {
+  critical: { bg: "bg-red-50", border: "border-red-200", badge: "bg-red-100 text-red-700", dot: "bg-red-500" },
+  warning: { bg: "bg-amber-50", border: "border-amber-200", badge: "bg-amber-100 text-amber-700", dot: "bg-amber-500" },
+  success: { bg: "bg-emerald-50", border: "border-emerald-200", badge: "bg-emerald-100 text-emerald-700", dot: "bg-emerald-500" },
+};
 
-const AI_INSIGHTS = [
-  { label: "Class Strength", value: "Logical reasoning in number theory", icon: "💪" },
-  { label: "Needs Work", value: "Abstract thinking in geometry applications", icon: "🎯" },
-  { label: "Behavioral Pattern", value: "Attention drops 40% after 25 mins — suggest micro-breaks", icon: "📊" },
-  { label: "Time Saved", value: "AI grading saved 12 hours this week", icon: "⏱️" },
-];
+const alertIconMap: Record<string, typeof AlertTriangle> = {
+  critical: AlertTriangle,
+  warning: Info,
+  success: CheckCircle,
+};
 
 const QUICK_ACTIONS = [
   { label: "Grade Assignments", icon: ClipboardList, path: "/teacher/assignments", color: "from-blue-500 to-blue-600" },
@@ -75,17 +77,39 @@ const QUICK_ACTIONS = [
   { label: "Analytics", icon: Lightbulb, path: "/teacher/analytics", color: "from-rose-500 to-pink-500" },
 ];
 
-const alertStyles = {
-  critical: { bg: "bg-red-50", border: "border-red-200", badge: "bg-red-100 text-red-700", dot: "bg-red-500" },
-  warning: { bg: "bg-amber-50", border: "border-amber-200", badge: "bg-amber-100 text-amber-700", dot: "bg-amber-500" },
-  success: { bg: "bg-emerald-50", border: "border-emerald-200", badge: "bg-emerald-100 text-emerald-700", dot: "bg-emerald-500" },
-};
 
 const TeacherDashboard = () => {
-  const { fullName } = useAuth();
+  const { fullName, user } = useAuth();
   const navigate = useNavigate();
   const firstName = fullName?.split(" ")[0] || "Teacher";
   const [selectedClass, setSelectedClass] = useState(CLASS_OPTIONS[0]);
+
+  // Fetch class averages from DB
+  const { data: classAvg, isLoading: avgLoading } = useQuery({
+    queryKey: ["class-averages", selectedClass],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_class_averages", { _class_name: selectedClass });
+      if (error) throw error;
+      return (data as any)?.[0] ?? null;
+    },
+  });
+
+  // Fetch teacher alerts from DB
+  const { data: alerts } = useQuery({
+    queryKey: ["teacher-alerts", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("teacher_alerts")
+        .select("*")
+        .eq("teacher_id", user!.id)
+        .eq("is_dismissed", false)
+        .order("created_at", { ascending: false })
+        .limit(5);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!user,
+  });
 
   return (
     <DashboardLayout role="teacher">
@@ -125,21 +149,27 @@ const TeacherDashboard = () => {
 
         {/* ── 4 Stat Cards ── */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {STAT_CARDS.map((stat) => (
-            <div key={stat.label} className={`${stat.bg} border-l-4 ${stat.borderColor} rounded-xl p-5 transition-all hover:shadow-md`}>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-muted-foreground">{stat.label}</span>
-                <div className={`w-8 h-8 rounded-lg ${stat.iconBg} flex items-center justify-center`}>
-                  <stat.icon className={`h-4 w-4 ${stat.iconColor}`} />
+          {avgLoading ? (
+            Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-28 rounded-xl" />)
+          ) : (
+            STAT_CONFIG.map((stat) => {
+              const value = classAvg ? Math.round(Number(classAvg[stat.key]) || 0) : 0;
+              return (
+                <div key={stat.label} className={`${stat.bg} border-l-4 ${stat.borderColor} rounded-xl p-5 transition-all hover:shadow-md`}>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-muted-foreground">{stat.label}</span>
+                    <div className={`w-8 h-8 rounded-lg ${stat.iconBg} flex items-center justify-center`}>
+                      <stat.icon className={`h-4 w-4 ${stat.iconColor}`} />
+                    </div>
+                  </div>
+                  <div className="text-3xl font-bold text-foreground">{value}%</div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    {classAvg?.student_count ?? 0} students
+                  </div>
                 </div>
-              </div>
-              <div className="text-3xl font-bold text-foreground">{stat.value}</div>
-              <div className={`flex items-center gap-1 mt-1 text-sm font-medium ${stat.trend >= 0 ? "text-emerald-600" : "text-red-500"}`}>
-                {stat.trend >= 0 ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
-                {stat.trend >= 0 ? "+" : ""}{stat.trend}% this week
-              </div>
-            </div>
-          ))}
+              );
+            })
+          )}
         </div>
 
         {/* ── Main Grid: Intelligence + Alerts ── */}
@@ -194,46 +224,49 @@ const TeacherDashboard = () => {
               <Bell className="h-5 w-5 text-red-500" /> Needs Attention
             </h2>
 
-            {ALERTS.map((alert, i) => {
-              const style = alertStyles[alert.type];
-              return (
-                <div key={i} className={`${style.bg} ${style.border} border rounded-xl p-4`}>
-                  <div className="flex items-start gap-3">
-                    <div className={`w-2 h-2 rounded-full ${style.dot} mt-2 shrink-0`} />
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-semibold text-foreground text-sm">{alert.student}</span>
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${style.badge}`}>
-                          {alert.type}
-                        </span>
+            {(alerts ?? []).length === 0 ? (
+              <div className="bg-muted/30 rounded-xl p-6 text-center">
+                <p className="text-sm text-muted-foreground">No alerts right now — all students on track! 🎉</p>
+              </div>
+            ) : (
+              (alerts ?? []).map((alert) => {
+                const style = alertStyles[alert.alert_type as keyof typeof alertStyles] ?? alertStyles.warning;
+                return (
+                  <div key={alert.id} className={`${style.bg} ${style.border} border rounded-xl p-4`}>
+                    <div className="flex items-start gap-3">
+                      <div className={`w-2 h-2 rounded-full ${style.dot} mt-2 shrink-0`} />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-semibold text-foreground text-sm">{alert.title}</span>
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${style.badge}`}>
+                            {alert.alert_type}
+                          </span>
+                        </div>
+                        <p className="text-xs text-foreground/70 mb-3">{alert.message}</p>
+                        {alert.suggested_action && (
+                          <button className="text-xs font-semibold text-primary hover:underline bg-transparent border-none cursor-pointer p-0 flex items-center gap-1">
+                            {alert.suggested_action} <ChevronRight className="h-3 w-3" />
+                          </button>
+                        )}
                       </div>
-                      <p className="text-xs text-foreground/70 mb-3">{alert.message}</p>
-                      <button className="text-xs font-semibold text-primary hover:underline bg-transparent border-none cursor-pointer p-0 flex items-center gap-1">
-                        {alert.action} <ChevronRight className="h-3 w-3" />
-                      </button>
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
 
-            {/* AI Behavioral Insights */}
+            {/* AI Behavioral Insights - placeholder until AI generates them */}
             <div className="bg-gradient-to-br from-purple-600 to-indigo-700 rounded-xl p-5 text-white">
               <h3 className="font-bold text-base mb-4 flex items-center gap-2">
                 <Zap className="h-4 w-4" /> AI Behavioral Insights
               </h3>
               <div className="space-y-3">
-                {AI_INSIGHTS.map((insight, i) => (
-                  <div key={i} className="bg-white/10 rounded-lg p-3">
-                    <div className="flex items-start gap-2">
-                      <span className="text-lg">{insight.icon}</span>
-                      <div>
-                        <p className="text-xs text-white/70 font-medium">{insight.label}</p>
-                        <p className="text-sm text-white font-medium mt-0.5">{insight.value}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                <div className="bg-white/10 rounded-lg p-3">
+                  <p className="text-xs text-white/70 font-medium">Status</p>
+                  <p className="text-sm text-white font-medium mt-0.5">
+                    {classAvg?.student_count ? `Tracking ${classAvg.student_count} students in ${selectedClass}` : "No student data yet"}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
