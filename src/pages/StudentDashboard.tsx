@@ -313,6 +313,7 @@ const StudentDashboard = () => {
                     </div>
                   );
                 })
+              )}
             </div>
 
             {/* ── Main Grid: Continue Learning + Methods + Breakthroughs ── */}
