@@ -1,8 +1,16 @@
 import { useNavigate } from "react-router-dom";
 import PageLayout from "@/components/PageLayout";
 import { chapters } from "@/data/textbookData";
-import { BookOpen, Clock, FileText, Lock, ChevronRight } from "lucide-react";
+import { BookOpen, Clock, FileText, Lock, ChevronRight, ArrowRight } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+
+const JOURNEY_STEPS = [
+  { label: "Dashboard", emoji: "🧠", desc: "See your Inner OS" },
+  { label: "Learn Episode", emoji: "📚", desc: "7-layer deep learning" },
+  { label: "Apply Method", emoji: "🎓", desc: "Oxford & Harvard tools" },
+  { label: "Track Growth", emoji: "📈", desc: "Watch dimensions grow" },
+  { label: "Next Episode", emoji: "🚀", desc: "Keep the momentum" },
+];
 
 const StudentTextbook = () => {
   const navigate = useNavigate();
@@ -10,6 +18,28 @@ const StudentTextbook = () => {
   return (
     <PageLayout role="student">
       <div className="max-w-5xl mx-auto">
+
+        {/* ── Learning Journey Flow ── */}
+        <div className="mb-8 bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 border border-indigo-200 rounded-2xl p-5 md:p-6">
+          <h2 className="text-base font-bold text-foreground text-center mb-4">🗺️ Your Learning Journey</h2>
+          <div className="flex items-center justify-between overflow-x-auto gap-1 pb-1">
+            {JOURNEY_STEPS.map((step, i) => (
+              <div key={step.label} className="flex items-center min-w-0">
+                <div className="flex flex-col items-center text-center min-w-[80px]">
+                  <div className="w-11 h-11 rounded-full bg-white border-2 border-primary/30 flex items-center justify-center text-xl shadow-sm mb-1.5">
+                    {step.emoji}
+                  </div>
+                  <span className="text-xs font-semibold text-foreground">{step.label}</span>
+                  <span className="text-[10px] text-muted-foreground">{step.desc}</span>
+                </div>
+                {i < JOURNEY_STEPS.length - 1 && (
+                  <ArrowRight className="h-4 w-4 text-primary/40 shrink-0 mx-1" />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
@@ -44,15 +74,12 @@ const StudentTextbook = () => {
                 }`}
               >
                 <div className="flex items-center gap-4">
-                  {/* Chapter Number */}
                   <div
                     className="h-12 w-12 rounded-xl flex items-center justify-center text-white font-bold text-lg shrink-0"
                     style={{ backgroundColor: chapter.color }}
                   >
                     {chapter.number}
                   </div>
-
-                  {/* Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <h3 className="font-semibold text-foreground truncate">{chapter.title}</h3>
@@ -82,8 +109,6 @@ const StudentTextbook = () => {
                       </div>
                     )}
                   </div>
-
-                  {/* Arrow */}
                   {hasEpisodes && (
                     <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
                   )}
