@@ -149,20 +149,27 @@ const TeacherDashboard = () => {
 
         {/* ── 4 Stat Cards ── */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {STAT_CARDS.map((stat) => (
-            <div key={stat.label} className={`${stat.bg} border-l-4 ${stat.borderColor} rounded-xl p-5 transition-all hover:shadow-md`}>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-muted-foreground">{stat.label}</span>
-                <div className={`w-8 h-8 rounded-lg ${stat.iconBg} flex items-center justify-center`}>
-                  <stat.icon className={`h-4 w-4 ${stat.iconColor}`} />
+          {avgLoading ? (
+            Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-28 rounded-xl" />)
+          ) : (
+            STAT_CONFIG.map((stat) => {
+              const value = classAvg ? Math.round(Number(classAvg[stat.key]) || 0) : 0;
+              return (
+                <div key={stat.label} className={`${stat.bg} border-l-4 ${stat.borderColor} rounded-xl p-5 transition-all hover:shadow-md`}>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-muted-foreground">{stat.label}</span>
+                    <div className={`w-8 h-8 rounded-lg ${stat.iconBg} flex items-center justify-center`}>
+                      <stat.icon className={`h-4 w-4 ${stat.iconColor}`} />
+                    </div>
+                  </div>
+                  <div className="text-3xl font-bold text-foreground">{value}%</div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    {classAvg?.student_count ?? 0} students
+                  </div>
                 </div>
-              </div>
-              <div className="text-3xl font-bold text-foreground">{stat.value}</div>
-              <div className={`flex items-center gap-1 mt-1 text-sm font-medium ${stat.trend >= 0 ? "text-emerald-600" : "text-red-500"}`}>
-                {stat.trend >= 0 ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
-                {stat.trend >= 0 ? "+" : ""}{stat.trend}% this week
-              </div>
-            </div>
+              );
+            })
+          )}
           ))}
         </div>
 
