@@ -1,49 +1,55 @@
 
 
-# Restore Layer 1 & 2 Badges + Drag-Drop Activity + Better Typography & Theme
+# Add Browser TTS Fallback for ElevenLabs Failures
 
-## Summary
+## What Changes
 
-Three changes in one pass:
+When ElevenLabs TTS returns any error (401, quota exceeded, network failure), automatically fall back to the browser's built-in `speechSynthesis` API so students always hear voice responses.
 
-1. **Restore Layer 1 (Definition) & Layer 2 (Mechanism) badges** with proper color coding — the content already fits the vision (Layer 1 = simplified definitions, Layer 2 = step-by-step classification process = mechanism)
-2. **Convert Activity block to real drag-and-drop** — draggable number chips into category drop zones (N, W, Z, Q) with validation feedback, replacing the current textarea
-3. **Upgrade typography, spacing, and color theme** for long-term reading comfort — larger fonts, serif headings, warm cream backgrounds, colored left-border accents
+## How It Works
 
-## Changes
+```text
+Voice input detected
+  --> speakResponse(text)
+    --> Try ElevenLabs TTS stream
+      --> Success? Play audio (current behavior)
+      --> Failed (401/quota/network)?
+        --> Fall back to browser speechSynthesis
+        --> Pick best available voice (prefer Google/Microsoft natural voices)
+        --> Speak the cleaned text
+        --> Student hears response either way
+```
 
-### File: `src/pages/TextbookEpisode.tsx`
+## Changes in `src/components/student/StudyCompanion.tsx`
 
-**Layer badges restored:**
-- `concept` → `LAYER 1 · Definition` with violet badge/background (`bg-violet-50`)
-- `activity` → `LAYER 2 · Mechanism` with rose badge/background (`bg-rose-50`)
-- Remove the `CORE_BLOCKS` / `DEEP_BLOCKS` split logic — ALL blocks now get their layer badge and color
-- Keep Layers 3–7 as they are
-- Keep the "Deep Mastery" divider before Layer 3
+### 1. Add a `browserTTSFallback` helper function
 
-**ActivityBlock rewrite — real drag-and-drop:**
-- Render number chips as draggable elements (`draggable="true"`, `onDragStart`)
-- Render 4 drop zones (N, W, Z, Q) with `onDragOver`/`onDrop` handlers
-- Track placed items per category in state
-- On drop: validate against `item.categories` — show green border if correct, red if wrong
-- Items can be dragged to multiple zones (numbers can belong to multiple sets)
-- "Reset" button to clear placements
+A small helper that uses `window.speechSynthesis` to speak text:
+- Cancels any ongoing browser speech first
+- Selects the best available voice (prefers English voices from Google/Microsoft for quality, falls back to any English voice, then default)
+- Sets natural rate (0.95) and pitch (1.0)
+- Hooks into `onend`/`onerror` to reset `isSpeakingTTS` state
+- Tracks the utterance so it can be cancelled if user sends a new message
 
-**Typography & theme upgrade:**
-- Episode title: `text-xl` → `text-2xl font-serif`
-- Block titles: add `font-serif`
-- Body text in sections: `text-sm` → `text-base leading-relaxed`
-- Page wrapper: add `bg-[#faf9f7]` warm cream background
-- Concept sections: add `border-l-4 border-blue-400` accent style
-- Formula boxes: centered, larger mono font
-- All blocks: softer rounded cards with gentle color tints matching their layer
+### 2. Update `speakResponse` to use fallback on error
 
-**Top action bar (from screenshot):**
-- Add pill buttons below the sticky header: MINDMAP, PRACTICE, Q BANK, SEARCH
-- Styled as small gradient-tinted rounded pills
-- PRACTICE scrolls to the activity block; others are placeholder buttons for now
+Currently at line 359-362, the code just logs and returns on error. Change this to:
+- If ElevenLabs returns non-OK (401, 402, 429, 500, etc.), call `browserTTSFallback(cleaned)` instead of silently returning
+- If the fetch throws (network error), also call `browserTTSFallback(cleaned)` in the catch block
 
-### No data changes needed
+### 3. Cancel browser speech on new input
 
-The current `concept` block content works as Layer 1 (simplified definitions per number type) and the `activity` block content works as Layer 2 (mechanism = "how do you classify a number?" via drag-and-drop process). No changes to `textbookData.ts`.
+Update the TTS cancellation logic (already at top of `speakResponse` and `sendMessage`) to also call `window.speechSynthesis.cancel()` so browser fallback speech is also interrupted when:
+- A new message is sent
+- A new TTS playback starts
+
+### 4. No new dependencies needed
+
+`speechSynthesis` is built into all modern browsers -- no packages or edge functions required.
+
+## Result
+
+- **ElevenLabs working**: High-quality voice (no change from current behavior)
+- **ElevenLabs down/quota exceeded**: Browser voice kicks in seamlessly -- student still hears the response
+- **Interruption behavior preserved**: Both ElevenLabs audio AND browser speech are cancelled when new input arrives (latest-wins rule intact)
 
