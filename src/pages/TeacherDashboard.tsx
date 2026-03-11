@@ -225,46 +225,49 @@ const TeacherDashboard = () => {
               <Bell className="h-5 w-5 text-red-500" /> Needs Attention
             </h2>
 
-            {ALERTS.map((alert, i) => {
-              const style = alertStyles[alert.type];
-              return (
-                <div key={i} className={`${style.bg} ${style.border} border rounded-xl p-4`}>
-                  <div className="flex items-start gap-3">
-                    <div className={`w-2 h-2 rounded-full ${style.dot} mt-2 shrink-0`} />
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-semibold text-foreground text-sm">{alert.student}</span>
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${style.badge}`}>
-                          {alert.type}
-                        </span>
+            {(alerts ?? []).length === 0 ? (
+              <div className="bg-muted/30 rounded-xl p-6 text-center">
+                <p className="text-sm text-muted-foreground">No alerts right now — all students on track! 🎉</p>
+              </div>
+            ) : (
+              (alerts ?? []).map((alert) => {
+                const style = alertStyles[alert.alert_type as keyof typeof alertStyles] ?? alertStyles.warning;
+                return (
+                  <div key={alert.id} className={`${style.bg} ${style.border} border rounded-xl p-4`}>
+                    <div className="flex items-start gap-3">
+                      <div className={`w-2 h-2 rounded-full ${style.dot} mt-2 shrink-0`} />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-semibold text-foreground text-sm">{alert.title}</span>
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${style.badge}`}>
+                            {alert.alert_type}
+                          </span>
+                        </div>
+                        <p className="text-xs text-foreground/70 mb-3">{alert.message}</p>
+                        {alert.suggested_action && (
+                          <button className="text-xs font-semibold text-primary hover:underline bg-transparent border-none cursor-pointer p-0 flex items-center gap-1">
+                            {alert.suggested_action} <ChevronRight className="h-3 w-3" />
+                          </button>
+                        )}
                       </div>
-                      <p className="text-xs text-foreground/70 mb-3">{alert.message}</p>
-                      <button className="text-xs font-semibold text-primary hover:underline bg-transparent border-none cursor-pointer p-0 flex items-center gap-1">
-                        {alert.action} <ChevronRight className="h-3 w-3" />
-                      </button>
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
 
-            {/* AI Behavioral Insights */}
+            {/* AI Behavioral Insights - placeholder until AI generates them */}
             <div className="bg-gradient-to-br from-purple-600 to-indigo-700 rounded-xl p-5 text-white">
               <h3 className="font-bold text-base mb-4 flex items-center gap-2">
                 <Zap className="h-4 w-4" /> AI Behavioral Insights
               </h3>
               <div className="space-y-3">
-                {AI_INSIGHTS.map((insight, i) => (
-                  <div key={i} className="bg-white/10 rounded-lg p-3">
-                    <div className="flex items-start gap-2">
-                      <span className="text-lg">{insight.icon}</span>
-                      <div>
-                        <p className="text-xs text-white/70 font-medium">{insight.label}</p>
-                        <p className="text-sm text-white font-medium mt-0.5">{insight.value}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                <div className="bg-white/10 rounded-lg p-3">
+                  <p className="text-xs text-white/70 font-medium">Status</p>
+                  <p className="text-sm text-white font-medium mt-0.5">
+                    {classAvg?.student_count ? `Tracking ${classAvg.student_count} students in ${selectedClass}` : "No student data yet"}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
