@@ -399,6 +399,8 @@ export const chapters: Chapter[] = [
                 },
               ],
               realWorldWhy: "Sports analytics, business forecasting, and engineering all depend on rational number calculations. Understanding number types helps you know what kind of answer to expect.",
+              careers: ["Data Analyst", "Sports Statistician", "Financial Planner", "Civil Engineer", "Physicist", "Software Developer"],
+              harvardLabel: "The Cricket Score Problem",
             } as ApplicationContent,
           },
           // ── Layer 7: Implications (Oxford Essay) ──
@@ -416,6 +418,38 @@ export const chapters: Chapter[] = [
               ],
               essayPrompt: "Write a short reflection: 'How did the invention of each number type solve a real human problem?' Use at least 2 examples from different fields.",
               wordLimit: 150,
+              implications: [
+                {
+                  category: "Global Impact",
+                  icon: "🌍",
+                  color: "amber",
+                  points: [
+                    "International trade and currency exchange rely on rational numbers",
+                    "GPS navigation uses irrational numbers (π) for Earth's curvature calculations",
+                    "Every country's census data uses the full number system hierarchy",
+                  ],
+                },
+                {
+                  category: "Future Applications",
+                  icon: "🚀",
+                  color: "sky",
+                  points: [
+                    "Quantum computing uses complex numbers built on top of real numbers",
+                    "AI algorithms use rational number operations billions of times per second",
+                    "Space missions require irrational number precision for orbital mechanics",
+                  ],
+                },
+                {
+                  category: "Philosophical Questions",
+                  icon: "🤔",
+                  color: "purple",
+                  points: [
+                    "Do irrational numbers 'exist' or are they human inventions?",
+                    "Is mathematics discovered or created?",
+                    "Why does the universe follow mathematical patterns?",
+                  ],
+                },
+              ],
             } as ImplicationsContent,
           },
         ],
