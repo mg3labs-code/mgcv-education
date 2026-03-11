@@ -3,8 +3,10 @@ import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 import { findTextbookMatch } from "@/data/topicTextbookMap";
 import PopQuizModal from "@/components/student/PopQuizModal";
+import { Skeleton } from "@/components/ui/skeleton";
 import { BookOpen, Brain, Eye, Zap, Heart, TrendingUp, Flame, Star, ChevronRight, GraduationCap, Target, Users, Lightbulb } from "lucide-react";
 
 interface ScheduleItem {
