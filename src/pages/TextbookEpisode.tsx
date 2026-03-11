@@ -399,11 +399,17 @@ const TextbookEpisode = () => {
   const contentRef = useRef<HTMLDivElement>(null);
   const activityRef = useRef<HTMLDivElement>(null);
 
-  const chapter = chapters.find((c) => c.id === chapterId);
+  // DB-backed data with fallback
+  const { data: chapter, isLoading: chapterLoading } = useChapterEpisodes(chapterId);
+  const { data: dbBlocks, isLoading: blocksLoading } = useEpisodeBlocks(chapterId, episodeId);
+
   const episode = chapter?.episodes.find((e) => e.id === episodeId);
+  const blocks = dbBlocks && dbBlocks.length > 0 ? dbBlocks : (episode?.blocks || []);
 
   const currentEpisodeIndex = chapter?.episodes.findIndex((e) => e.id === episodeId) ?? -1;
   const nextEpisode = chapter?.episodes[currentEpisodeIndex + 1];
+  
+  const isLoading = chapterLoading || blocksLoading;
 
   // Scroll progress
   useEffect(() => {
