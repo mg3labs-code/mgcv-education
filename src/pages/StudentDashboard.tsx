@@ -268,11 +268,11 @@ const StudentDashboard = () => {
                   <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
                     <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="10" />
                     <circle cx="60" cy="60" r="52" fill="none" stroke="white" strokeWidth="10" strokeLinecap="round"
-                      strokeDasharray={`${(OVERALL_SCORE / 100) * 327} 327`}
+                      strokeDasharray={`${(overallScore / 100) * 327} 327`}
                     />
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-3xl font-bold">{OVERALL_SCORE}%</span>
+                    <span className="text-3xl font-bold">{innerOSLoading ? "..." : `${overallScore}%`}</span>
                     <span className="text-xs text-white/70">Inner OS</span>
                   </div>
                 </div>
@@ -285,7 +285,7 @@ const StudentDashboard = () => {
                   </p>
                   <div className="flex items-center gap-2 justify-center md:justify-start">
                     <TrendingUp className="h-4 w-4 text-emerald-300" />
-                    <span className="text-emerald-300 font-semibold text-sm">+4.2% growth this week</span>
+                    <span className="text-emerald-300 font-semibold text-sm">{weeklyGrowth >= 0 ? "+" : ""}{weeklyGrowth}% growth this week</span>
                   </div>
                 </div>
               </div>
