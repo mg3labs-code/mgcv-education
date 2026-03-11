@@ -424,7 +424,7 @@ const TextbookEpisode = () => {
 
   // IntersectionObserver for active block tracking
   useEffect(() => {
-    if (!episode) return;
+    if (!blocks || blocks.length === 0) return;
     const observers: IntersectionObserver[] = [];
     blockRefs.current.forEach((ref, index) => {
       if (!ref) return;
@@ -438,7 +438,7 @@ const TextbookEpisode = () => {
       observers.push(observer);
     });
     return () => observers.forEach((o) => o.disconnect());
-  }, [episode]);
+  }, [blocks]);
 
   const scrollToBlock = useCallback((index: number) => {
     blockRefs.current[index]?.scrollIntoView({ behavior: "smooth", block: "start" });
