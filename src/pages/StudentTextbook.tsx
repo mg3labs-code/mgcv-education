@@ -1,8 +1,10 @@
 import { useNavigate } from "react-router-dom";
 import PageLayout from "@/components/PageLayout";
-import { chapters } from "@/data/textbookData";
+import { useChapters, useSubjects } from "@/hooks/useTextbookData";
 import { BookOpen, Clock, FileText, Lock, ChevronRight, ArrowRight } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useState } from "react";
 
 const JOURNEY_STEPS = [
   { label: "Dashboard", emoji: "🧠", desc: "See your Inner OS" },
@@ -14,6 +16,11 @@ const JOURNEY_STEPS = [
 
 const StudentTextbook = () => {
   const navigate = useNavigate();
+  const { data: subjects, isLoading: subjectsLoading } = useSubjects();
+  const [selectedSubject, setSelectedSubject] = useState("Mathematics");
+  const { data: chapters, isLoading: chaptersLoading } = useChapters(selectedSubject);
+
+  const isLoading = subjectsLoading || chaptersLoading;
 
   return (
     <PageLayout role="student">
@@ -48,7 +55,7 @@ const StudentTextbook = () => {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-foreground">📚 My Textbook</h1>
-              <p className="text-sm text-muted-foreground">Class X Mathematics · Telangana State Board</p>
+              <p className="text-sm text-muted-foreground">Class X · Telangana State Board</p>
             </div>
           </div>
           <p className="text-muted-foreground mt-2 text-sm">
@@ -56,67 +63,97 @@ const StudentTextbook = () => {
           </p>
         </div>
 
-        {/* Chapter Grid */}
-        <div className="space-y-3">
-          {chapters.map((chapter) => {
-            const hasEpisodes = chapter.episodes.length > 0;
-            const episodeCount = chapter.episodes.length;
-
-            return (
+        {/* Subject Tabs */}
+        {subjects && subjects.length > 0 && (
+          <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+            {subjects.map((s) => (
               <button
-                key={chapter.id}
-                onClick={() => hasEpisodes && navigate(`/student/textbook/${chapter.id}`)}
-                disabled={!hasEpisodes}
-                className={`w-full text-left rounded-xl border p-5 transition-all group ${
-                  hasEpisodes
-                    ? "bg-card hover:shadow-md hover:border-primary/30 cursor-pointer"
-                    : "bg-muted/30 opacity-60 cursor-not-allowed"
+                key={s.id}
+                onClick={() => setSelectedSubject(s.name)}
+                className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
+                  selectedSubject === s.name
+                    ? "bg-primary text-primary-foreground shadow-md"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80"
                 }`}
               >
-                <div className="flex items-center gap-4">
-                  <div
-                    className="h-12 w-12 rounded-xl flex items-center justify-center text-white font-bold text-lg shrink-0"
-                    style={{ backgroundColor: chapter.color }}
-                  >
-                    {chapter.number}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-foreground truncate">{chapter.title}</h3>
-                      {!hasEpisodes && (
-                        <span className="inline-flex items-center gap-1 text-xs bg-muted px-2 py-0.5 rounded-full text-muted-foreground">
-                          <Lock className="h-3 w-3" /> Coming Soon
-                        </span>
-                      )}
+                {s.icon} {s.name}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Loading State */}
+        {isLoading && (
+          <div className="space-y-3">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <Skeleton key={i} className="h-24 w-full rounded-xl" />
+            ))}
+          </div>
+        )}
+
+        {/* Chapter Grid */}
+        {!isLoading && chapters && (
+          <div className="space-y-3">
+            {chapters.map((chapter) => {
+              const hasEpisodes = chapter.episodes.length > 0;
+              const episodeCount = chapter.episodes.length;
+
+              return (
+                <button
+                  key={chapter.id}
+                  onClick={() => hasEpisodes && navigate(`/student/textbook/${chapter.id}`)}
+                  disabled={!hasEpisodes}
+                  className={`w-full text-left rounded-xl border p-5 transition-all group ${
+                    hasEpisodes
+                      ? "bg-card hover:shadow-md hover:border-primary/30 cursor-pointer"
+                      : "bg-muted/30 opacity-60 cursor-not-allowed"
+                  }`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div
+                      className="h-12 w-12 rounded-xl flex items-center justify-center text-white font-bold text-lg shrink-0"
+                      style={{ backgroundColor: chapter.color }}
+                    >
+                      {chapter.number}
                     </div>
-                    <p className="text-xs text-muted-foreground mt-0.5 truncate">{chapter.subtitle}</p>
-                    <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" /> {chapter.periods} periods
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <FileText className="h-3 w-3" /> Pages {chapter.pageRange}
-                      </span>
-                      {hasEpisodes && (
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold text-foreground truncate">{chapter.title}</h3>
+                        {!hasEpisodes && (
+                          <span className="inline-flex items-center gap-1 text-xs bg-muted px-2 py-0.5 rounded-full text-muted-foreground">
+                            <Lock className="h-3 w-3" /> Coming Soon
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-0.5 truncate">{chapter.subtitle}</p>
+                      <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1">
-                          <BookOpen className="h-3 w-3" /> {episodeCount} episodes
+                          <Clock className="h-3 w-3" /> {chapter.periods} periods
                         </span>
+                        <span className="flex items-center gap-1">
+                          <FileText className="h-3 w-3" /> Pages {chapter.pageRange}
+                        </span>
+                        {hasEpisodes && (
+                          <span className="flex items-center gap-1">
+                            <BookOpen className="h-3 w-3" /> {episodeCount} episodes
+                          </span>
+                        )}
+                      </div>
+                      {hasEpisodes && (
+                        <div className="mt-2">
+                          <Progress value={0} className="h-1.5" />
+                        </div>
                       )}
                     </div>
                     {hasEpisodes && (
-                      <div className="mt-2">
-                        <Progress value={0} className="h-1.5" />
-                      </div>
+                      <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
                     )}
                   </div>
-                  {hasEpisodes && (
-                    <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
-                  )}
-                </div>
-              </button>
-            );
-          })}
-        </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
     </PageLayout>
   );
