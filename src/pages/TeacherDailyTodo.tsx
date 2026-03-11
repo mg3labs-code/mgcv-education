@@ -1,92 +1,57 @@
 import { useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
-import { ChevronDown, ChevronUp, BookOpen, Clock, MapPin, Lightbulb, FlaskConical, CheckCircle2 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ChevronDown, ChevronUp, BookOpen, Clock, MapPin, Lightbulb, FlaskConical, CheckCircle2, Plus } from "lucide-react";
+import { toast } from "sonner";
 
-interface TopicBreakdown {
-  heading: string;
-  points: string[];
-}
+const statusOptions = ["pending", "in_progress", "completed"] as const;
+const priorityOptions = ["low", "medium", "high"] as const;
 
-interface ScheduleItem {
-  time: string;
-  endTime: string;
-  class: string;
-  room: string;
-  topic: string;
-  chapter: string;
-  activity: "Topic" | "Practice" | "Revision" | "Test";
-  status: "completed" | "current" | "upcoming";
-  color: string;
-  breakdown: TopicBreakdown[];
-  keyFormulas?: string[];
-  teachingTip?: string;
-}
-
-const scheduleItems: ScheduleItem[] = [
-  {
-    time: "9:00 AM", endTime: "9:45 AM", class: "10th CBSE Mathematics", room: "Room 302",
-    topic: "Real Numbers – Euclid's Division Lemma", chapter: "Ch 1: Real Numbers",
-    activity: "Topic", status: "completed", color: "#4299e1",
-    breakdown: [
-      { heading: "Core Concept", points: ["a = bq + r where 0 ≤ r < b", "Used to find HCF of two positive integers", "Lemma vs Theorem distinction"] },
-      { heading: "Steps to Apply", points: ["Apply division to a and b (a > b)", "If r = 0, b is HCF", "Else apply lemma to b and r, repeat"] },
-    ],
-    keyFormulas: ["a = bq + r, 0 ≤ r < b", "HCF(a,b) = HCF(b,r)"],
-    teachingTip: "Use numerical example (455, 42) before abstract proof. Students struggle with 'why repeat?'"
-  },
-  {
-    time: "10:00 AM", endTime: "10:45 AM", class: "10th CBSE Mathematics", room: "Room 302",
-    topic: "Fundamental Theorem of Arithmetic", chapter: "Ch 1: Real Numbers",
-    activity: "Practice", status: "current", color: "#48bb78",
-    breakdown: [
-      { heading: "Core Concept", points: ["Every composite = product of primes (unique)", "Prime factorisation is unique ignoring order", "Applications: finding LCM & HCF"] },
-      { heading: "Method", points: ["Factor tree for prime factorisation", "HCF = smallest powers of common primes", "LCM = greatest powers of all primes"] },
-    ],
-    keyFormulas: ["HCF × LCM = Product of two numbers"],
-    teachingTip: "Common mistake: students multiply all primes for HCF. Stress 'smallest power of COMMON primes'."
-  },
-  {
-    time: "11:00 AM", endTime: "11:45 AM", class: "9th CBSE Mathematics", room: "Room 205",
-    topic: "Irrational Numbers", chapter: "Ch 1: Number Systems",
-    activity: "Topic", status: "upcoming", color: "#ed64a6",
-    breakdown: [
-      { heading: "What to Cover", points: ["Non-terminating, non-repeating decimals", "√2, √3, π — proof √2 is irrational", "Locating irrationals on number line"] },
-      { heading: "Key Distinctions", points: ["Rational: p/q form, terminating/repeating", "Irrational: cannot be p/q", "Together = Real Numbers ℝ"] },
-    ],
-    keyFormulas: ["√2 ≈ 1.414", "√3 ≈ 1.732"],
-    teachingTip: "Walk through proof by contradiction slowly — students find it abstract."
-  },
-  {
-    time: "12:00 PM", endTime: "12:45 PM", class: "8th CBSE Mathematics", room: "Room 101",
-    topic: "Properties of Rational Number Operations", chapter: "Ch 1: Rational Numbers",
-    activity: "Revision", status: "upcoming", color: "#9f7aea",
-    breakdown: [
-      { heading: "Properties", points: ["Closure: ✓ for +,−,× | ✗ for ÷ (by 0)", "Commutative: ✓ for +,× | ✗ for −,÷", "Associative: ✓ for +,× | ✗ for −,÷"] },
-      { heading: "Special Elements", points: ["Additive identity: 0", "Multiplicative identity: 1", "Inverse of a/b → -a/b and b/a"] },
-    ],
-    keyFormulas: ["a/b × b/a = 1"],
-    teachingTip: "Use ✓/✗ grid for all 4 operations × 3 properties — very visual."
-  },
-];
-
-const activityColors: Record<string, string> = {
-  "Topic": "bg-blue-100 text-blue-800",
-  "Practice": "bg-green-100 text-green-800",
-  "Revision": "bg-purple-100 text-purple-800",
-  "Test": "bg-red-100 text-red-800",
+const statusColors: Record<string, string> = {
+  pending: "bg-slate-100 text-slate-600",
+  in_progress: "bg-amber-100 text-amber-800 animate-pulse",
+  completed: "bg-green-100 text-green-800",
 };
+const statusLabels: Record<string, string> = { pending: "Next", in_progress: "Now", completed: "Done" };
+const priorityColors: Record<string, string> = { low: "#48bb78", medium: "#4299e1", high: "#ed64a6" };
 
 const TeacherDailyTodo = () => {
-  const [expandedSlot, setExpandedSlot] = useState<number | null>(
-    scheduleItems.findIndex(s => s.status === "current") >= 0
-      ? scheduleItems.findIndex(s => s.status === "current")
-      : 0
-  );
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const [expandedSlot, setExpandedSlot] = useState<number | null>(null);
+
+  const todayStr = new Date().toISOString().split("T")[0];
+
+  const { data: todos, isLoading } = useQuery({
+    queryKey: ["teacher-todos", user?.id, todayStr],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("teacher_todos")
+        .select("*")
+        .eq("teacher_id", user!.id)
+        .eq("date", todayStr)
+        .order("priority", { ascending: true })
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!user,
+  });
+
+  const updateStatus = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      const { error } = await supabase.from("teacher_todos").update({ status }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["teacher-todos"] }),
+  });
 
   const toggleSlot = (i: number) => setExpandedSlot(expandedSlot === i ? null : i);
-
-  const completedCount = scheduleItems.filter(s => s.status === "completed").length;
-  const totalCount = scheduleItems.length;
+  const completedCount = (todos ?? []).filter(t => t.status === "completed").length;
+  const totalCount = (todos ?? []).length;
 
   return (
     <DashboardLayout role="teacher">
