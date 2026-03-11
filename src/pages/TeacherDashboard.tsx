@@ -84,10 +84,37 @@ const alertStyles = {
 };
 
 const TeacherDashboard = () => {
-  const { fullName } = useAuth();
+  const { fullName, user } = useAuth();
   const navigate = useNavigate();
   const firstName = fullName?.split(" ")[0] || "Teacher";
   const [selectedClass, setSelectedClass] = useState(CLASS_OPTIONS[0]);
+
+  // Fetch class averages from DB
+  const { data: classAvg, isLoading: avgLoading } = useQuery({
+    queryKey: ["class-averages", selectedClass],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_class_averages", { _class_name: selectedClass });
+      if (error) throw error;
+      return (data as any)?.[0] ?? null;
+    },
+  });
+
+  // Fetch teacher alerts from DB
+  const { data: alerts } = useQuery({
+    queryKey: ["teacher-alerts", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("teacher_alerts")
+        .select("*")
+        .eq("teacher_id", user!.id)
+        .eq("is_dismissed", false)
+        .order("created_at", { ascending: false })
+        .limit(5);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!user,
+  });
 
   return (
     <DashboardLayout role="teacher">
