@@ -461,7 +461,7 @@ const TextbookEpisode = () => {
       case "assessment": return <AssessmentBlock content={block.content as AssessmentContent} />;
       case "exercise": return <ExerciseBlock content={block.content as ExerciseContent} />;
       case "reasoning": return <ReasoningBlock content={block.content as ReasoningContent} />;
-      case "assumptions": return <AssumptionsBlock content={block.content as AssumptionsContent} />;
+      case "assumptions": return <AssumptionsBlock content={block.content as AssumptionsContent} onStartDefense={() => setShowDefense(true)} />;
       case "connections": return <ConnectionsBlock content={block.content as ConnectionsContent} />;
       case "application": return <ApplicationBlock content={block.content as ApplicationContent} />;
       case "implications": return <ImplicationsBlock content={block.content as ImplicationsContent} />;
