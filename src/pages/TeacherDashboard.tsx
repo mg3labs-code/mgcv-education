@@ -56,18 +56,17 @@ const METHODS_PERFORMANCE = [
   { name: "Peer Teaching", usage: "34%", sessions: 42, icon: "👥" },
 ];
 
-const ALERTS = [
-  { type: "critical" as const, student: "Priya Sharma", message: "3 consecutive sessions with declining attention scores", action: "Schedule 1-on-1", icon: AlertTriangle },
-  { type: "warning" as const, student: "Rahul Kumar", message: "Skipping Layer 4 (Assumptions) consistently — avoiding critical thinking", action: "Assign Defense", icon: Info },
-  { type: "success" as const, student: "Arjun Reddy", message: "Breakthrough! Completed all 7 layers with 90%+ scores for 5 episodes", action: "Acknowledge", icon: CheckCircle },
-];
+const alertStyles = {
+  critical: { bg: "bg-red-50", border: "border-red-200", badge: "bg-red-100 text-red-700", dot: "bg-red-500" },
+  warning: { bg: "bg-amber-50", border: "border-amber-200", badge: "bg-amber-100 text-amber-700", dot: "bg-amber-500" },
+  success: { bg: "bg-emerald-50", border: "border-emerald-200", badge: "bg-emerald-100 text-emerald-700", dot: "bg-emerald-500" },
+};
 
-const AI_INSIGHTS = [
-  { label: "Class Strength", value: "Logical reasoning in number theory", icon: "💪" },
-  { label: "Needs Work", value: "Abstract thinking in geometry applications", icon: "🎯" },
-  { label: "Behavioral Pattern", value: "Attention drops 40% after 25 mins — suggest micro-breaks", icon: "📊" },
-  { label: "Time Saved", value: "AI grading saved 12 hours this week", icon: "⏱️" },
-];
+const alertIconMap: Record<string, typeof AlertTriangle> = {
+  critical: AlertTriangle,
+  warning: Info,
+  success: CheckCircle,
+};
 
 const QUICK_ACTIONS = [
   { label: "Grade Assignments", icon: ClipboardList, path: "/teacher/assignments", color: "from-blue-500 to-blue-600" },
