@@ -169,6 +169,7 @@ const TeacherDashboard = () => {
                 </div>
               );
             })
+          )}
         </div>
 
         {/* ── Main Grid: Intelligence + Alerts ── */}
