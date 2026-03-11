@@ -219,6 +219,47 @@ export type Database = {
         }
         Relationships: []
       }
+      content_blocks: {
+        Row: {
+          block_type: string
+          content: Json
+          created_at: string
+          episode_id: string
+          icon: string | null
+          id: string
+          sort_order: number
+          title: string | null
+        }
+        Insert: {
+          block_type: string
+          content?: Json
+          created_at?: string
+          episode_id: string
+          icon?: string | null
+          id?: string
+          sort_order?: number
+          title?: string | null
+        }
+        Update: {
+          block_type?: string
+          content?: Json
+          created_at?: string
+          episode_id?: string
+          icon?: string | null
+          id?: string
+          sort_order?: number
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_blocks_episode_id_fkey"
+            columns: ["episode_id"]
+            isOneToOne: false
+            referencedRelation: "tb_episodes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       daily_activity: {
         Row: {
           activity_date: string
@@ -631,6 +672,142 @@ export type Database = {
             columns: ["assignment_id"]
             isOneToOne: false
             referencedRelation: "assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subjects: {
+        Row: {
+          board: string
+          color: string | null
+          created_at: string
+          grade: number
+          icon: string | null
+          id: string
+          name: string
+          sort_order: number
+        }
+        Insert: {
+          board?: string
+          color?: string | null
+          created_at?: string
+          grade?: number
+          icon?: string | null
+          id?: string
+          name: string
+          sort_order?: number
+        }
+        Update: {
+          board?: string
+          color?: string | null
+          created_at?: string
+          grade?: number
+          icon?: string | null
+          id?: string
+          name?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
+      tb_chapters: {
+        Row: {
+          color: string | null
+          created_at: string
+          id: string
+          is_published: boolean
+          number: number
+          page_range: string | null
+          periods: number | null
+          slug: string
+          sort_order: number
+          subject_id: string
+          subtitle: string | null
+          title: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          number: number
+          page_range?: string | null
+          periods?: number | null
+          slug: string
+          sort_order?: number
+          subject_id: string
+          subtitle?: string | null
+          title: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          number?: number
+          page_range?: string | null
+          periods?: number | null
+          slug?: string
+          sort_order?: number
+          subject_id?: string
+          subtitle?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tb_chapters_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tb_episodes: {
+        Row: {
+          chapter_id: string
+          created_at: string
+          duration: string | null
+          id: string
+          is_published: boolean
+          number: number
+          slug: string
+          sort_order: number
+          subtitle: string | null
+          title: string
+          type: string
+        }
+        Insert: {
+          chapter_id: string
+          created_at?: string
+          duration?: string | null
+          id?: string
+          is_published?: boolean
+          number: number
+          slug: string
+          sort_order?: number
+          subtitle?: string | null
+          title: string
+          type?: string
+        }
+        Update: {
+          chapter_id?: string
+          created_at?: string
+          duration?: string | null
+          id?: string
+          is_published?: boolean
+          number?: number
+          slug?: string
+          sort_order?: number
+          subtitle?: string | null
+          title?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tb_episodes_chapter_id_fkey"
+            columns: ["chapter_id"]
+            isOneToOne: false
+            referencedRelation: "tb_chapters"
             referencedColumns: ["id"]
           },
         ]
