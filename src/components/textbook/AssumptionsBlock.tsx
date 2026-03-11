@@ -1,20 +1,25 @@
 import { useState } from "react";
 import { AssumptionsContent } from "@/data/textbookData";
-import { AlertTriangle, ChevronDown, ChevronUp, Shield } from "lucide-react";
+import { AlertTriangle, ChevronDown, ChevronUp, Shield, Timer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const AssumptionsBlock = ({ content }: { content: AssumptionsContent }) => {
+interface AssumptionsBlockProps {
+  content: AssumptionsContent;
+  onStartDefense?: () => void;
+}
+
+const AssumptionsBlock = ({ content, onStartDefense }: AssumptionsBlockProps) => {
   const [expanded, setExpanded] = useState<Record<number, boolean>>({});
   const [showDefense, setShowDefense] = useState(false);
 
   return (
     <div className="space-y-4">
       <div className="rounded-xl bg-destructive/5 border border-destructive/20 p-4">
-        <p className="text-sm font-semibold text-foreground flex items-center gap-2">
+        <p className="text-base font-semibold text-foreground flex items-center gap-2">
           <AlertTriangle className="h-4 w-4 text-destructive" />
           Hidden assumptions about: {content.concept}
         </p>
-        <p className="text-xs text-muted-foreground mt-1">
+        <p className="text-sm text-muted-foreground mt-1">
           These are beliefs most students hold without questioning. Can you spot the flaw?
         </p>
       </div>
@@ -30,7 +35,7 @@ const AssumptionsBlock = ({ content }: { content: AssumptionsContent }) => {
                 {i + 1}
               </span>
               <div>
-                <p className="text-sm font-medium text-foreground">"{a.assumption}"</p>
+                <p className="text-base font-medium text-foreground">"{a.assumption}"</p>
                 <p className="text-xs text-muted-foreground mt-0.5">Tap to examine this assumption</p>
               </div>
             </div>
@@ -45,11 +50,11 @@ const AssumptionsBlock = ({ content }: { content: AssumptionsContent }) => {
             <div className="px-4 pb-4 space-y-3 border-t pt-3">
               <div className="rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 p-3">
                 <p className="text-xs font-semibold text-amber-700 dark:text-amber-400 mb-1">Why this matters:</p>
-                <p className="text-sm text-amber-800 dark:text-amber-300">{a.whyItMatters}</p>
+                <p className="text-base text-amber-800 dark:text-amber-300">{a.whyItMatters}</p>
               </div>
               <div className="rounded-lg bg-primary/5 border border-primary/20 p-3">
                 <p className="text-xs font-semibold text-primary mb-1">🎯 Challenge:</p>
-                <p className="text-sm text-foreground">{a.challenge}</p>
+                <p className="text-base text-foreground">{a.challenge}</p>
               </div>
             </div>
           )}
@@ -61,11 +66,11 @@ const AssumptionsBlock = ({ content }: { content: AssumptionsContent }) => {
         <div className="flex items-start gap-3">
           <Shield className="h-5 w-5 text-primary mt-0.5 shrink-0" />
           <div>
-            <p className="text-sm font-semibold text-foreground mb-1">🎓 Oxford Tutorial Defense</p>
-            <p className="text-sm text-muted-foreground">{content.defensePrompt}</p>
+            <p className="text-base font-semibold font-serif text-foreground mb-1">🎓 Oxford Tutorial Defense</p>
+            <p className="text-base text-muted-foreground leading-relaxed">{content.defensePrompt}</p>
             {showDefense ? (
               <textarea
-                className="w-full mt-3 rounded-lg border bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/30 min-h-[100px]"
+                className="w-full mt-3 rounded-lg border bg-background px-3 py-2 text-base resize-none focus:outline-none focus:ring-2 focus:ring-primary/30 min-h-[100px]"
                 placeholder="Write your defense here... Think critically and argue your position."
               />
             ) : (
@@ -76,6 +81,26 @@ const AssumptionsBlock = ({ content }: { content: AssumptionsContent }) => {
           </div>
         </div>
       </div>
+
+      {/* Inline Tutorial Defense CTA */}
+      {onStartDefense && (
+        <div className="rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/20 border border-amber-200 dark:border-amber-800 p-5">
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 rounded-full bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center shrink-0">
+              <Shield className="h-6 w-6 text-amber-700 dark:text-amber-400" />
+            </div>
+            <div className="flex-1">
+              <p className="text-base font-bold font-serif text-foreground">Ready to defend your understanding?</p>
+              <p className="text-sm text-muted-foreground flex items-center gap-1 mt-0.5">
+                <Timer className="h-3.5 w-3.5" /> 5 min · AI tutor will challenge your reasoning
+              </p>
+            </div>
+            <Button onClick={onStartDefense} className="bg-amber-600 hover:bg-amber-700 text-white shrink-0">
+              <Shield className="h-4 w-4 mr-1" /> Start Tutorial Defense
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
