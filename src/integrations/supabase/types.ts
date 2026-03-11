@@ -772,6 +772,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_class_averages: {
+        Args: { _class_name: string }
+        Returns: {
+          avg_attention: number
+          avg_character: number
+          avg_clarity: number
+          avg_momentum: number
+          avg_overall: number
+          avg_thinking: number
+          student_count: number
+        }[]
+      }
+      get_student_streak: { Args: { _user_id: string }; Returns: number }
       get_user_class: { Args: { _user_id: string }; Returns: string }
       get_user_role: {
         Args: { _user_id: string }
