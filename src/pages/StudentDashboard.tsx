@@ -40,29 +40,21 @@ const BREAKS = [
 
 const calendarDays = ["S", "M", "T", "W", "T", "F", "S"];
 
-// Inner OS Dimensions data (mock)
-const INNER_OS_DIMENSIONS = [
-  { name: "Clarity", score: 78, trend: +5, icon: Eye, color: "from-sky-400 to-blue-500", bg: "bg-sky-50", border: "border-sky-200", text: "text-sky-700" },
-  { name: "Thinking", score: 72, trend: +3, icon: Brain, color: "from-purple-400 to-purple-600", bg: "bg-purple-50", border: "border-purple-200", text: "text-purple-700" },
-  { name: "Attention", score: 68, trend: -2, icon: Target, color: "from-amber-400 to-orange-500", bg: "bg-amber-50", border: "border-amber-200", text: "text-amber-700" },
-  { name: "Momentum", score: 81, trend: +7, icon: Zap, color: "from-emerald-400 to-teal-500", bg: "bg-emerald-50", border: "border-emerald-200", text: "text-emerald-700" },
-  { name: "Character", score: 75, trend: +4, icon: Heart, color: "from-rose-400 to-pink-500", bg: "bg-rose-50", border: "border-rose-200", text: "text-rose-700" },
-];
+// Dimension styling config (scores come from DB)
+const DIMENSION_CONFIG = [
+  { key: "clarity_score", name: "Clarity", icon: Eye, color: "from-sky-400 to-blue-500", bg: "bg-sky-50", border: "border-sky-200", text: "text-sky-700" },
+  { key: "thinking_score", name: "Thinking", icon: Brain, color: "from-purple-400 to-purple-600", bg: "bg-purple-50", border: "border-purple-200", text: "text-purple-700" },
+  { key: "attention_score", name: "Attention", icon: Target, color: "from-amber-400 to-orange-500", bg: "bg-amber-50", border: "border-amber-200", text: "text-amber-700" },
+  { key: "momentum_score", name: "Momentum", icon: Zap, color: "from-emerald-400 to-teal-500", bg: "bg-emerald-50", border: "border-emerald-200", text: "text-emerald-700" },
+  { key: "character_score", name: "Character", icon: Heart, color: "from-rose-400 to-pink-500", bg: "bg-rose-50", border: "border-rose-200", text: "text-rose-700" },
+] as const;
 
-const ELITE_METHODS = [
-  { name: "Tutorial Defense", desc: "Defend your reasoning like an Oxford scholar", icon: "🎓", available: true, sessions: 3 },
-  { name: "First Principles", desc: "Strip concepts to fundamentals like Feynman", icon: "🔬", available: true, sessions: 5 },
-  { name: "Case Study", desc: "Apply knowledge to real scenarios — Harvard style", icon: "📋", available: true, sessions: 2 },
-  { name: "Peer Teaching", desc: "Teach others to master it yourself", icon: "👥", available: false, sessions: 0 },
-];
-
-const BREAKTHROUGHS = [
-  { text: "Mastered Euclid's Division Algorithm reasoning", time: "2 hours ago", icon: "🏆" },
-  { text: "Completed First Principles on Real Numbers", time: "Yesterday", icon: "💡" },
-  { text: "7-day learning streak achieved!", time: "Today", icon: "🔥" },
-];
-
-const OVERALL_SCORE = 73;
+const ELITE_METHOD_META: Record<string, { name: string; desc: string; icon: string; available: boolean }> = {
+  tutorial_defense: { name: "Tutorial Defense", desc: "Defend your reasoning like an Oxford scholar", icon: "🎓", available: true },
+  first_principles: { name: "First Principles", desc: "Strip concepts to fundamentals like Feynman", icon: "🔬", available: true },
+  case_study: { name: "Case Study", desc: "Apply knowledge to real scenarios — Harvard style", icon: "📋", available: true },
+  peer_teaching: { name: "Peer Teaching", desc: "Teach others to master it yourself", icon: "👥", available: false },
+};
 
 const StudentDashboard = () => {
   const { fullName, user } = useAuth();
