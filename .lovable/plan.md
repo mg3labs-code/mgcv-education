@@ -1,55 +1,19 @@
 
+# Database-Driven Textbook with AI Content Generation — Status
 
-# Add Browser TTS Fallback for ElevenLabs Failures
+## ✅ Completed
 
-## What Changes
+1. **4 new DB tables** created: `subjects`, `tb_chapters`, `tb_episodes`, `content_blocks` with RLS
+2. **7 subjects seeded**: Mathematics (14ch), Physics (12ch), Chemistry (9ch), Biology (8ch), English (8ch), Telugu (6ch), Social Studies (14ch) = **71 chapters total**
+3. **Math Ch1**: 7 episodes + 11 content blocks (full 7-layer) for Episode 1 migrated to DB
+4. **Frontend updated**: StudentTextbook, TextbookChapter, TextbookEpisode now query DB with hardcoded fallback
+5. **Subject tabs** added to textbook page for switching between subjects
+6. **AI content generator** edge function built (`generate-chapter-content`) using Gemini
 
-When ElevenLabs TTS returns any error (401, quota exceeded, network failure), automatically fall back to the browser's built-in `speechSynthesis` API so students always hear voice responses.
+## 🔜 Next Steps
 
-## How It Works
-
-```text
-Voice input detected
-  --> speakResponse(text)
-    --> Try ElevenLabs TTS stream
-      --> Success? Play audio (current behavior)
-      --> Failed (401/quota/network)?
-        --> Fall back to browser speechSynthesis
-        --> Pick best available voice (prefer Google/Microsoft natural voices)
-        --> Speak the cleaned text
-        --> Student hears response either way
-```
-
-## Changes in `src/components/student/StudyCompanion.tsx`
-
-### 1. Add a `browserTTSFallback` helper function
-
-A small helper that uses `window.speechSynthesis` to speak text:
-- Cancels any ongoing browser speech first
-- Selects the best available voice (prefers English voices from Google/Microsoft for quality, falls back to any English voice, then default)
-- Sets natural rate (0.95) and pitch (1.0)
-- Hooks into `onend`/`onerror` to reset `isSpeakingTTS` state
-- Tracks the utterance so it can be cancelled if user sends a new message
-
-### 2. Update `speakResponse` to use fallback on error
-
-Currently at line 359-362, the code just logs and returns on error. Change this to:
-- If ElevenLabs returns non-OK (401, 402, 429, 500, etc.), call `browserTTSFallback(cleaned)` instead of silently returning
-- If the fetch throws (network error), also call `browserTTSFallback(cleaned)` in the catch block
-
-### 3. Cancel browser speech on new input
-
-Update the TTS cancellation logic (already at top of `speakResponse` and `sendMessage`) to also call `window.speechSynthesis.cancel()` so browser fallback speech is also interrupted when:
-- A new message is sent
-- A new TTS playback starts
-
-### 4. No new dependencies needed
-
-`speechSynthesis` is built into all modern browsers -- no packages or edge functions required.
-
-## Result
-
-- **ElevenLabs working**: High-quality voice (no change from current behavior)
-- **ElevenLabs down/quota exceeded**: Browser voice kicks in seamlessly -- student still hears the response
-- **Interruption behavior preserved**: Both ElevenLabs audio AND browser speech are cancelled when new input arrives (latest-wins rule intact)
-
+1. **Generate content for Math Ch1 Eps 2-7** elite layers (call the edge function)
+2. **Generate episodes + content for Math Ch2-14** (seed episodes, then call AI generator)
+3. **Generate episodes + content for all other subjects** (same pattern)
+4. **Add Chemistry chapters** to the physical science curriculum mapping
+5. **Teacher content review UI** — allow teachers to edit AI-generated content before publishing
