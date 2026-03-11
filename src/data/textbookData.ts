@@ -70,6 +70,8 @@ export interface ApplicationContent {
   context: string;
   questions: { question: string; hint?: string }[];
   realWorldWhy: string;
+  careers?: string[];
+  harvardLabel?: string;
 }
 
 // Layer 7: Implications (Oxford Essay)
@@ -78,6 +80,7 @@ export interface ImplicationsContent {
   reflectionPrompts: string[];
   essayPrompt: string;
   wordLimit?: number;
+  implications?: { category: string; icon: string; color: string; points: string[] }[];
 }
 
 export interface Episode {
