@@ -293,21 +293,27 @@ const StudentDashboard = () => {
 
             {/* ── 5 Dimension Cards ── */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-              {INNER_OS_DIMENSIONS.map((dim) => (
-                <div key={dim.name} className={`${dim.bg} ${dim.border} border rounded-xl p-4 transition-all hover:shadow-md hover:-translate-y-0.5`}>
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${dim.color} flex items-center justify-center`}>
-                      <dim.icon className="h-4 w-4 text-white" />
+              {innerOSLoading ? (
+                Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-36 rounded-xl" />)
+              ) : (
+                DIMENSION_CONFIG.map((dim) => {
+                  const score = innerOS ? (innerOS as any)[dim.key] ?? 0 : 0;
+                  return (
+                    <div key={dim.name} className={`${dim.bg} ${dim.border} border rounded-xl p-4 transition-all hover:shadow-md hover:-translate-y-0.5`}>
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${dim.color} flex items-center justify-center`}>
+                          <dim.icon className="h-4 w-4 text-white" />
+                        </div>
+                        <span className={`text-sm font-semibold ${dim.text}`}>{dim.name}</span>
+                      </div>
+                      <div className="text-2xl font-bold text-foreground mb-1">{score}%</div>
+                      <div className="w-full h-2 bg-white/60 rounded-full overflow-hidden mb-2">
+                        <div className={`h-full rounded-full bg-gradient-to-r ${dim.color}`} style={{ width: `${score}%` }} />
+                      </div>
                     </div>
-                    <span className={`text-sm font-semibold ${dim.text}`}>{dim.name}</span>
-                  </div>
-                  <div className="text-2xl font-bold text-foreground mb-1">{dim.score}%</div>
-                  <div className="w-full h-2 bg-white/60 rounded-full overflow-hidden mb-2">
-                    <div className={`h-full rounded-full bg-gradient-to-r ${dim.color}`} style={{ width: `${dim.score}%` }} />
-                  </div>
-                  <div className={`text-xs font-medium ${dim.trend >= 0 ? "text-emerald-600" : "text-red-500"}`}>
-                    {dim.trend >= 0 ? "↑" : "↓"} {Math.abs(dim.trend)}% this week
-                  </div>
+                  );
+                })
+              )}
                 </div>
               ))}
             </div>
