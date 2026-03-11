@@ -1,55 +1,67 @@
 
 
-# Add Browser TTS Fallback for ElevenLabs Failures
+# Missing Features from HTML Reference — Gap Analysis & Plan
 
-## What Changes
+## What's Missing (HTML vs Current)
 
-When ElevenLabs TTS returns any error (401, quota exceeded, network failure), automatically fall back to the browser's built-in `speechSynthesis` API so students always hear voice responses.
+| Feature | HTML Reference | Current | Status |
+|---|---|---|---|
+| **Harvard Case Method branding** (Layer 6) | Prominently labeled "🎓 Harvard Case Method" with warm orange bg | Generic "Scenario Card" with no Harvard label | Missing |
+| **Careers box** (Layer 6) | "💼 Careers Using This" list at bottom of Application layer | Not in data model or UI | Missing |
+| **3-category Implications** (Layer 7) | Three distinct boxes: Global, Future, Philosophical — each with unique bg/border color | Single `whatIfQuestion` + flat reflection prompts | Missing |
+| **Oxford Essay branding** (Layer 7) | Labeled "📝 Oxford Essay Question" with red accent bg | Generic textarea, no branding | Missing |
+| **Voice Essay button** (Layer 7) | "🎤 Record Voice Essay Instead" button next to essay | Not present | Missing |
+| **Tutorial Defense CTA inside Layer 4** | Inline amber card with "Start Tutorial Defense (5 min)" button | Only at bottom completion section | Missing |
+| **Horizontal Progress Tracker** | Dot-based layer tracker at top (completed/active/upcoming) | Sidebar-only tracker | Missing (low priority, sidebar works) |
 
-## How It Works
+## Plan
 
-```text
-Voice input detected
-  --> speakResponse(text)
-    --> Try ElevenLabs TTS stream
-      --> Success? Play audio (current behavior)
-      --> Failed (401/quota/network)?
-        --> Fall back to browser speechSynthesis
-        --> Pick best available voice (prefer Google/Microsoft natural voices)
-        --> Speak the cleaned text
-        --> Student hears response either way
+### 1. Update `ApplicationContent` data model + data (`textbookData.ts`)
+
+Add `careers` field to `ApplicationContent` interface:
+```ts
+careers?: string[];
 ```
+Add `harvardLabel?: string` for branding. Add careers data to Episode 1's application block.
 
-## Changes in `src/components/student/StudyCompanion.tsx`
+### 2. Upgrade `ApplicationBlock.tsx`
 
-### 1. Add a `browserTTSFallback` helper function
+- Add "🎓 Harvard Case Method" badge/header with warm orange gradient background on the scenario card
+- Add "💼 Careers Using This" box at bottom listing careers as pills/chips
+- Larger text sizes to match theme
 
-A small helper that uses `window.speechSynthesis` to speak text:
-- Cancels any ongoing browser speech first
-- Selects the best available voice (prefers English voices from Google/Microsoft for quality, falls back to any English voice, then default)
-- Sets natural rate (0.95) and pitch (1.0)
-- Hooks into `onend`/`onerror` to reset `isSpeakingTTS` state
-- Tracks the utterance so it can be cancelled if user sends a new message
+### 3. Update `ImplicationsContent` data model + data (`textbookData.ts`)
 
-### 2. Update `speakResponse` to use fallback on error
+Add structured implications:
+```ts
+implications?: { category: string; icon: string; color: string; points: string[] }[];
+```
+Add data for Episode 1: Global, Future, Philosophical implications.
 
-Currently at line 359-362, the code just logs and returns on error. Change this to:
-- If ElevenLabs returns non-OK (401, 402, 429, 500, etc.), call `browserTTSFallback(cleaned)` instead of silently returning
-- If the fetch throws (network error), also call `browserTTSFallback(cleaned)` in the catch block
+### 4. Upgrade `ImplicationsBlock.tsx`
 
-### 3. Cancel browser speech on new input
+- Render 3 distinct colored boxes (Global = amber, Future = sky, Philosophical = purple) matching HTML
+- Brand the essay as "📝 Oxford Essay Question" with red accent
+- Add "🎤 Record Voice Essay" button (connects to existing VoiceExplainWidget or placeholder)
+- Larger text, `font-serif` headings
 
-Update the TTS cancellation logic (already at top of `speakResponse` and `sendMessage`) to also call `window.speechSynthesis.cancel()` so browser fallback speech is also interrupted when:
-- A new message is sent
-- A new TTS playback starts
+### 5. Add inline Tutorial Defense CTA to `AssumptionsBlock.tsx`
 
-### 4. No new dependencies needed
+- Add an amber-tinted card at the bottom of assumptions with "Start Tutorial Defense (5 min)" button
+- This needs an `onStartDefense` callback prop passed from `TextbookEpisode.tsx`
 
-`speechSynthesis` is built into all modern browsers -- no packages or edge functions required.
+### 6. Typography pass on all layer blocks
 
-## Result
+- All block components: `text-sm` → `text-base`, headings get `font-serif`
+- Consistent with the warm theme already in `TextbookEpisode.tsx`
 
-- **ElevenLabs working**: High-quality voice (no change from current behavior)
-- **ElevenLabs down/quota exceeded**: Browser voice kicks in seamlessly -- student still hears the response
-- **Interruption behavior preserved**: Both ElevenLabs audio AND browser speech are cancelled when new input arrives (latest-wins rule intact)
+### Files Changed
+
+| File | Change |
+|---|---|
+| `src/data/textbookData.ts` | Add `careers` to `ApplicationContent`, add `implications` array to `ImplicationsContent`, populate Ep1 data |
+| `src/components/textbook/ApplicationBlock.tsx` | Harvard branding, careers box, larger text |
+| `src/components/textbook/ImplicationsBlock.tsx` | 3-category boxes, Oxford Essay branding, voice button |
+| `src/components/textbook/AssumptionsBlock.tsx` | Inline Tutorial Defense CTA |
+| `src/pages/TextbookEpisode.tsx` | Pass `onStartDefense` to AssumptionsBlock |
 
