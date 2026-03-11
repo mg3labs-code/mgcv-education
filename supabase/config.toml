@@ -29,3 +29,6 @@ verify_jwt = false
 
 [functions.first-principles]
 verify_jwt = false
+
+[functions.generate-chapter-content]
+verify_jwt = false

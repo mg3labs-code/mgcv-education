@@ -1,8 +1,9 @@
 import { useNavigate, useParams } from "react-router-dom";
 import PageLayout from "@/components/PageLayout";
-import { chapters } from "@/data/textbookData";
-import { ArrowLeft, Play, CheckCircle2, Clock, Sparkles } from "lucide-react";
+import { useChapterEpisodes } from "@/hooks/useTextbookData";
+import { ArrowLeft, Play, Clock, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const typeIcons: Record<string, string> = {
   Concept: "💡",
@@ -15,7 +16,21 @@ const typeIcons: Record<string, string> = {
 const TextbookChapter = () => {
   const { chapterId } = useParams();
   const navigate = useNavigate();
-  const chapter = chapters.find((c) => c.id === chapterId);
+  const { data: chapter, isLoading } = useChapterEpisodes(chapterId);
+
+  if (isLoading) {
+    return (
+      <PageLayout role="student">
+        <div className="max-w-4xl mx-auto space-y-4">
+          <Skeleton className="h-8 w-32" />
+          <Skeleton className="h-40 w-full rounded-2xl" />
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-24 w-full rounded-xl" />
+          ))}
+        </div>
+      </PageLayout>
+    );
+  }
 
   if (!chapter) {
     return (
@@ -57,22 +72,19 @@ const TextbookChapter = () => {
 
         {/* Episodes */}
         <div className="space-y-3">
-          {chapter.episodes.map((episode, idx) => (
+          {chapter.episodes.map((episode) => (
             <button
               key={episode.id}
               onClick={() => navigate(`/student/textbook/${chapterId}/${episode.id}`)}
               className="w-full text-left rounded-xl border bg-card p-5 hover:shadow-md hover:border-primary/30 transition-all group"
             >
               <div className="flex items-center gap-4">
-                {/* Number */}
                 <div
                   className="h-11 w-11 rounded-full flex items-center justify-center text-white font-bold text-lg shrink-0"
                   style={{ backgroundColor: chapter.color }}
                 >
                   {episode.number}
                 </div>
-
-                {/* Info */}
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-foreground">{episode.title}</h3>
                   <p className="text-xs text-muted-foreground mt-0.5">{episode.subtitle}</p>
@@ -86,8 +98,6 @@ const TextbookChapter = () => {
                     <span>{episode.blocks.length} blocks</span>
                   </div>
                 </div>
-
-                {/* Action */}
                 <div className="shrink-0">
                   <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors text-primary">
                     <Play className="h-4 w-4" />

@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import PageLayout from "@/components/PageLayout";
-import { chapters, ContentBlock, ConceptContent, ActivityContent, RecallContent, ExplainContent, AssessmentContent, ExerciseContent, ReasoningContent, AssumptionsContent, ConnectionsContent, ApplicationContent, ImplicationsContent } from "@/data/textbookData";
+import { ContentBlock, ConceptContent, ActivityContent, RecallContent, ExplainContent, AssessmentContent, ExerciseContent, ReasoningContent, AssumptionsContent, ConnectionsContent, ApplicationContent, ImplicationsContent } from "@/data/textbookData";
+import { useChapterEpisodes, useEpisodeBlocks } from "@/hooks/useTextbookData";
 import { ArrowLeft, BookOpen, Brain, Briefcase, CheckCircle2, Compass, Eye, Layers, Lightbulb, Link, Map, MessageSquare, Mic, PenLine, Search, Shield, Sparkles, Zap, RotateCcw, GripHorizontal } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import VoiceExplainWidget from "@/components/textbook/VoiceExplainWidget";
 import ReasoningBlock from "@/components/textbook/ReasoningBlock";
@@ -397,11 +399,17 @@ const TextbookEpisode = () => {
   const contentRef = useRef<HTMLDivElement>(null);
   const activityRef = useRef<HTMLDivElement>(null);
 
-  const chapter = chapters.find((c) => c.id === chapterId);
+  // DB-backed data with fallback
+  const { data: chapter, isLoading: chapterLoading } = useChapterEpisodes(chapterId);
+  const { data: dbBlocks, isLoading: blocksLoading } = useEpisodeBlocks(chapterId, episodeId);
+
   const episode = chapter?.episodes.find((e) => e.id === episodeId);
+  const blocks = dbBlocks && dbBlocks.length > 0 ? dbBlocks : (episode?.blocks || []);
 
   const currentEpisodeIndex = chapter?.episodes.findIndex((e) => e.id === episodeId) ?? -1;
   const nextEpisode = chapter?.episodes[currentEpisodeIndex + 1];
+  
+  const isLoading = chapterLoading || blocksLoading;
 
   // Scroll progress
   useEffect(() => {
@@ -416,7 +424,7 @@ const TextbookEpisode = () => {
 
   // IntersectionObserver for active block tracking
   useEffect(() => {
-    if (!episode) return;
+    if (!blocks || blocks.length === 0) return;
     const observers: IntersectionObserver[] = [];
     blockRefs.current.forEach((ref, index) => {
       if (!ref) return;
@@ -430,16 +438,30 @@ const TextbookEpisode = () => {
       observers.push(observer);
     });
     return () => observers.forEach((o) => o.disconnect());
-  }, [episode]);
+  }, [blocks]);
 
   const scrollToBlock = useCallback((index: number) => {
     blockRefs.current[index]?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, []);
 
   const scrollToActivity = useCallback(() => {
-    const actIdx = episode?.blocks.findIndex(b => b.type === "activity");
-    if (actIdx !== undefined && actIdx >= 0) scrollToBlock(actIdx);
-  }, [episode, scrollToBlock]);
+    const actIdx = blocks.findIndex(b => b.type === "activity");
+    if (actIdx >= 0) scrollToBlock(actIdx);
+  }, [blocks, scrollToBlock]);
+
+  if (isLoading) {
+    return (
+      <PageLayout role="student">
+        <div className="max-w-3xl mx-auto space-y-4 pt-8">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-6 w-64" />
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-48 w-full rounded-2xl" />
+          ))}
+        </div>
+      </PageLayout>
+    );
+  }
 
   if (!chapter || !episode) {
     return (
@@ -492,7 +514,7 @@ const TextbookEpisode = () => {
           <div className="bg-card/95 backdrop-blur-sm border border-border rounded-xl shadow-lg p-3 w-44">
             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2 px-1">Layers</p>
             <div className="space-y-0.5">
-              {episode.blocks.map((block, i) => {
+              {blocks.map((block, i) => {
                 const meta = layerMeta[block.type] || defaultMeta;
                 const BlockIcon = blockIcons[block.type] || BookOpen;
                 const isActive = i === activeBlock;
@@ -551,11 +573,11 @@ const TextbookEpisode = () => {
 
         {/* All Blocks */}
         <div className="space-y-0">
-          {episode.blocks.map((block, i) => {
+          {blocks.map((block, i) => {
             const meta = layerMeta[block.type] || defaultMeta;
             const BlockIcon = blockIcons[block.type] || BookOpen;
             const isDeep = DEEP_BLOCKS.has(block.type);
-            const isFirstDeep = isDeep && !episode.blocks.slice(0, i).some(b => DEEP_BLOCKS.has(b.type));
+            const isFirstDeep = isDeep && !blocks.slice(0, i).some(b => DEEP_BLOCKS.has(b.type));
 
             return (
               <React.Fragment key={i}>
