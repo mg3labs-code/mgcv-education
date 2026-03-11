@@ -354,28 +354,31 @@ const StudentDashboard = () => {
                   </h3>
                   <p className="text-sm text-muted-foreground mb-4">World-class thinking tools adapted for you</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {ELITE_METHODS.map((method) => (
-                      <div key={method.name}
-                        className={`border rounded-xl p-4 transition-all ${
-                          method.available
-                            ? "bg-card border-border hover:border-primary/30 hover:shadow-sm cursor-pointer"
-                            : "bg-muted/30 border-border opacity-60 cursor-not-allowed"
-                        }`}
-                      >
-                        <div className="flex items-start gap-3">
-                          <span className="text-2xl">{method.icon}</span>
-                          <div className="flex-1">
-                            <h4 className="font-semibold text-foreground text-sm">{method.name}</h4>
-                            <p className="text-xs text-muted-foreground mt-0.5">{method.desc}</p>
-                            {method.available ? (
-                              <span className="text-xs text-primary font-medium mt-2 block">{method.sessions} sessions completed</span>
-                            ) : (
-                              <span className="text-xs text-muted-foreground mt-2 block">🔒 Coming Soon</span>
-                            )}
+                    {Object.entries(ELITE_METHOD_META).map(([key, method]) => {
+                      const sessions = methodCounts?.[key] ?? 0;
+                      return (
+                        <div key={key}
+                          className={`border rounded-xl p-4 transition-all ${
+                            method.available
+                              ? "bg-card border-border hover:border-primary/30 hover:shadow-sm cursor-pointer"
+                              : "bg-muted/30 border-border opacity-60 cursor-not-allowed"
+                          }`}
+                        >
+                          <div className="flex items-start gap-3">
+                            <span className="text-2xl">{method.icon}</span>
+                            <div className="flex-1">
+                              <h4 className="font-semibold text-foreground text-sm">{method.name}</h4>
+                              <p className="text-xs text-muted-foreground mt-0.5">{method.desc}</p>
+                              {method.available ? (
+                                <span className="text-xs text-primary font-medium mt-2 block">{sessions} sessions completed</span>
+                              ) : (
+                                <span className="text-xs text-muted-foreground mt-2 block">🔒 Coming Soon</span>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               </div>
