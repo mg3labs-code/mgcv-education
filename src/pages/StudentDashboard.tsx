@@ -405,15 +405,19 @@ const StudentDashboard = () => {
                     <Star className="h-4 w-4 text-yellow-500" /> Recent Breakthroughs
                   </h3>
                   <div className="space-y-3">
-                    {BREAKTHROUGHS.map((b, i) => (
-                      <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
-                        <span className="text-lg">{b.icon}</span>
-                        <div>
-                          <p className="text-sm font-medium text-foreground">{b.text}</p>
-                          <p className="text-xs text-muted-foreground mt-0.5">{b.time}</p>
+                    {(breakthroughs ?? []).length === 0 ? (
+                      <p className="text-sm text-muted-foreground italic text-center py-4">Complete your first episode to earn breakthroughs!</p>
+                    ) : (
+                      (breakthroughs ?? []).map((b) => (
+                        <div key={b.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
+                          <span className="text-lg">{b.icon}</span>
+                          <div>
+                            <p className="text-sm font-medium text-foreground">{b.title}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">{new Date(b.created_at).toLocaleDateString()}</p>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))
+                    )}
                   </div>
                 </div>
 
