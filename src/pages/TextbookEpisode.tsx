@@ -445,9 +445,9 @@ const TextbookEpisode = () => {
   }, []);
 
   const scrollToActivity = useCallback(() => {
-    const actIdx = episode?.blocks.findIndex(b => b.type === "activity");
-    if (actIdx !== undefined && actIdx >= 0) scrollToBlock(actIdx);
-  }, [episode, scrollToBlock]);
+    const actIdx = blocks.findIndex(b => b.type === "activity");
+    if (actIdx >= 0) scrollToBlock(actIdx);
+  }, [blocks, scrollToBlock]);
 
   if (!chapter || !episode) {
     return (
