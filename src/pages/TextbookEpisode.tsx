@@ -473,7 +473,6 @@ const TextbookEpisode = () => {
       </PageLayout>
     );
   }
-  }
 
   const renderBlock = (block: ContentBlock) => {
     switch (block.type) {
