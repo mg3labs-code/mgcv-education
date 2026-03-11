@@ -68,6 +68,58 @@ const StudentDashboard = () => {
   const [dailyQuizScore, setDailyQuizScore] = useState<{ score: number; total: number } | null>(null);
   const [activeTab, setActiveTab] = useState<"overview" | "schedule">("overview");
 
+  // Fetch Inner OS scores from DB
+  const { data: innerOS, isLoading: innerOSLoading } = useQuery({
+    queryKey: ["student-inner-os", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("student_inner_os")
+        .select("*")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  // Fetch breakthroughs from DB
+  const { data: breakthroughs } = useQuery({
+    queryKey: ["student-breakthroughs", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("student_breakthroughs")
+        .select("*")
+        .eq("user_id", user!.id)
+        .order("created_at", { ascending: false })
+        .limit(5);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!user,
+  });
+
+  // Fetch method session counts
+  const { data: methodCounts } = useQuery({
+    queryKey: ["student-method-counts", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("method_sessions")
+        .select("method_type, completed")
+        .eq("user_id", user!.id);
+      if (error) throw error;
+      const counts: Record<string, number> = {};
+      (data ?? []).forEach((s) => { counts[s.method_type] = (counts[s.method_type] || 0) + 1; });
+      return counts;
+    },
+    enabled: !!user,
+  });
+
+  const overallScore = innerOS?.overall_score ?? 0;
+  const streakDays = innerOS?.streak_days ?? 0;
+  const userLevel = innerOS?.level ?? 1;
+  const weeklyGrowth = innerOS?.weekly_growth ?? 0;
+
   useEffect(() => {
     const fetchAllSchedules = async () => {
       if (!user) return;
