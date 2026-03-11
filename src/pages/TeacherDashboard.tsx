@@ -77,11 +77,6 @@ const QUICK_ACTIONS = [
   { label: "Analytics", icon: Lightbulb, path: "/teacher/analytics", color: "from-rose-500 to-pink-500" },
 ];
 
-const alertStyles = {
-  critical: { bg: "bg-red-50", border: "border-red-200", badge: "bg-red-100 text-red-700", dot: "bg-red-500" },
-  warning: { bg: "bg-amber-50", border: "border-amber-200", badge: "bg-amber-100 text-amber-700", dot: "bg-amber-500" },
-  success: { bg: "bg-emerald-50", border: "border-emerald-200", badge: "bg-emerald-100 text-emerald-700", dot: "bg-emerald-500" },
-};
 
 const TeacherDashboard = () => {
   const { fullName, user } = useAuth();
