@@ -515,7 +515,7 @@ const TextbookEpisode = () => {
           <div className="bg-card/95 backdrop-blur-sm border border-border rounded-xl shadow-lg p-3 w-44">
             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2 px-1">Layers</p>
             <div className="space-y-0.5">
-              {episode.blocks.map((block, i) => {
+              {blocks.map((block, i) => {
                 const meta = layerMeta[block.type] || defaultMeta;
                 const BlockIcon = blockIcons[block.type] || BookOpen;
                 const isActive = i === activeBlock;
