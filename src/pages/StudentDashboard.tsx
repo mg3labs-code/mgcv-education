@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { findTextbookMatch } from "@/data/topicTextbookMap";
 import PopQuizModal from "@/components/student/PopQuizModal";
+import { BookOpen, Brain, Eye, Zap, Heart, TrendingUp, Flame, Star, ChevronRight, GraduationCap, Target, Users, Lightbulb } from "lucide-react";
 
 interface ScheduleItem {
   type: string;
@@ -37,6 +38,30 @@ const BREAKS = [
 
 const calendarDays = ["S", "M", "T", "W", "T", "F", "S"];
 
+// Inner OS Dimensions data (mock)
+const INNER_OS_DIMENSIONS = [
+  { name: "Clarity", score: 78, trend: +5, icon: Eye, color: "from-sky-400 to-blue-500", bg: "bg-sky-50", border: "border-sky-200", text: "text-sky-700" },
+  { name: "Thinking", score: 72, trend: +3, icon: Brain, color: "from-purple-400 to-purple-600", bg: "bg-purple-50", border: "border-purple-200", text: "text-purple-700" },
+  { name: "Attention", score: 68, trend: -2, icon: Target, color: "from-amber-400 to-orange-500", bg: "bg-amber-50", border: "border-amber-200", text: "text-amber-700" },
+  { name: "Momentum", score: 81, trend: +7, icon: Zap, color: "from-emerald-400 to-teal-500", bg: "bg-emerald-50", border: "border-emerald-200", text: "text-emerald-700" },
+  { name: "Character", score: 75, trend: +4, icon: Heart, color: "from-rose-400 to-pink-500", bg: "bg-rose-50", border: "border-rose-200", text: "text-rose-700" },
+];
+
+const ELITE_METHODS = [
+  { name: "Tutorial Defense", desc: "Defend your reasoning like an Oxford scholar", icon: "🎓", available: true, sessions: 3 },
+  { name: "First Principles", desc: "Strip concepts to fundamentals like Feynman", icon: "🔬", available: true, sessions: 5 },
+  { name: "Case Study", desc: "Apply knowledge to real scenarios — Harvard style", icon: "📋", available: true, sessions: 2 },
+  { name: "Peer Teaching", desc: "Teach others to master it yourself", icon: "👥", available: false, sessions: 0 },
+];
+
+const BREAKTHROUGHS = [
+  { text: "Mastered Euclid's Division Algorithm reasoning", time: "2 hours ago", icon: "🏆" },
+  { text: "Completed First Principles on Real Numbers", time: "Yesterday", icon: "💡" },
+  { text: "7-day learning streak achieved!", time: "Today", icon: "🔥" },
+];
+
+const OVERALL_SCORE = 73;
+
 const StudentDashboard = () => {
   const { fullName, user } = useAuth();
   const navigate = useNavigate();
@@ -47,6 +72,7 @@ const StudentDashboard = () => {
   const [quizSubject, setQuizSubject] = useState<string | null>(null);
   const [dailyQuizOpen, setDailyQuizOpen] = useState(false);
   const [dailyQuizScore, setDailyQuizScore] = useState<{ score: number; total: number } | null>(null);
+  const [activeTab, setActiveTab] = useState<"overview" | "schedule">("overview");
 
   useEffect(() => {
     const fetchAllSchedules = async () => {
@@ -81,11 +107,8 @@ const StudentDashboard = () => {
   const today = new Date();
   const todayKey = today.toISOString().split("T")[0];
 
-  // Build today's dynamic schedule from all subjects
   const todayScheduleItems = useMemo(() => {
     const items: { time: string; subject: string; icon: string; topic: string; type: "class" | "break" | "holiday" | "practice" | "test" | "assignment"; color: string; chapterName?: string }[] = [];
-
-    // Sort subjects by their time slots
     const orderedSubjects = Object.keys(SUBJECT_META);
 
     orderedSubjects.forEach((subjectName) => {
@@ -97,15 +120,11 @@ const StudentDashboard = () => {
         const chapterName = todayItem.chapterId
           ? subSchedule?.chapters.find((c) => c.id === todayItem.chapterId)?.name
           : undefined;
-
         let topic = todayItem.title || todayItem.label || "Scheduled";
         if (chapterName) topic = `${chapterName}: ${topic}`;
 
         items.push({
-          time: meta.time,
-          subject: subjectName,
-          icon: meta.icon,
-          topic,
+          time: meta.time, subject: subjectName, icon: meta.icon, topic,
           type: todayItem.type as any,
           color: todayItem.chapterId
             ? (subSchedule?.chapters.find((c) => c.id === todayItem.chapterId)?.colorHex || meta.color)
@@ -113,24 +132,11 @@ const StudentDashboard = () => {
           chapterName,
         });
       } else {
-        // No schedule for this subject today - still show as regular class
-        items.push({
-          time: meta.time,
-          subject: subjectName,
-          icon: meta.icon,
-          topic: "Regular Class",
-          type: "class",
-          color: meta.color,
-        });
+        items.push({ time: meta.time, subject: subjectName, icon: meta.icon, topic: "Regular Class", type: "class", color: meta.color });
       }
 
-      // Insert breaks at appropriate positions
-      if (subjectName === "Science") {
-        items.push({ ...BREAKS[0], color: "#6b7280" });
-      }
-      if (subjectName === "English") {
-        items.push({ ...BREAKS[1], color: "#6b7280" });
-      }
+      if (subjectName === "Science") items.push({ ...BREAKS[0], color: "#6b7280" });
+      if (subjectName === "English") items.push({ ...BREAKS[1], color: "#6b7280" });
     });
 
     return items;
@@ -146,9 +152,6 @@ const StudentDashboard = () => {
   const completedClasses = completedItems.filter((i) => todayScheduleItems[i]?.type !== "break").length;
   const progressPercent = totalClasses > 0 ? Math.round((completedClasses / totalClasses) * 100) : 0;
 
-  // Find today's highlighted topic (first topic-type item)
-  const todayHighlight = todayScheduleItems.find((s) => (s.type as string) === "topic");
-
   const getTypeBadge = (type: string) => {
     switch (type) {
       case "topic": return { label: "📚 Topic", bg: "from-blue-50 to-blue-100", text: "text-blue-800", border: "border-blue-300" };
@@ -162,233 +165,380 @@ const StudentDashboard = () => {
 
   return (
     <DashboardLayout role="student">
-      <div className="p-[30px] space-y-6">
-        <div className="flex flex-col lg:flex-row gap-6 lg:gap-[30px]">
-          {/* Sidebar */}
-          <aside className="w-full lg:w-[350px] lg:flex-shrink-0">
-            {/* Calendar Card */}
-            <div className="bg-[#1a1a1a]/90 text-white rounded-2xl p-5 mb-5">
-              <div className="flex items-center justify-between mb-5">
-                <div>
-                  <div className="text-lg font-medium">Day {today.getDate()}</div>
-                  <div className="text-xs text-gray-500">{today.toLocaleDateString("en-US", { weekday: "long" })}</div>
-                </div>
-                <div className="flex items-center gap-4">
-                  <button className="text-gray-500 hover:text-white transition-colors text-lg bg-transparent border-none cursor-pointer">‹</button>
-                  <div className="bg-gradient-to-br from-gray-500 to-gray-600 border-2 border-yellow-400 rounded-xl py-2 px-3 flex items-center gap-2">
-                    <span className="text-base text-yellow-400 font-bold">{today.getDate()}</span>
-                    <span className="text-[10px] text-gray-300">{today.toLocaleDateString("en-US", { month: "short" }).toUpperCase()}</span>
+      <div className="p-4 md:p-8 max-w-[1400px] mx-auto space-y-6">
+
+        {/* ── Hero Header ── */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Hi, {firstName}! 👋</h1>
+            <p className="text-muted-foreground mt-1">Your Inner Operating System is growing stronger every day.</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 bg-gradient-to-r from-amber-100 to-orange-100 border border-amber-300 rounded-full px-4 py-2">
+              <Flame className="h-5 w-5 text-orange-500" />
+              <span className="font-bold text-orange-700">7 Day Streak</span>
+            </div>
+            <div className="flex items-center gap-2 bg-gradient-to-r from-yellow-100 to-amber-100 border border-yellow-300 rounded-full px-4 py-2">
+              <Star className="h-5 w-5 text-yellow-500" />
+              <span className="font-bold text-yellow-700">Level 4</span>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Tab Switcher ── */}
+        <div className="flex gap-2 bg-muted/50 rounded-xl p-1 w-fit">
+          <button
+            onClick={() => setActiveTab("overview")}
+            className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition-all border-none cursor-pointer ${
+              activeTab === "overview"
+                ? "bg-card text-foreground shadow-sm"
+                : "bg-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            🧠 Inner OS Overview
+          </button>
+          <button
+            onClick={() => setActiveTab("schedule")}
+            className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition-all border-none cursor-pointer ${
+              activeTab === "schedule"
+                ? "bg-card text-foreground shadow-sm"
+                : "bg-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            📅 Today's Schedule
+          </button>
+        </div>
+
+        {activeTab === "overview" ? (
+          <>
+            {/* ── Inner OS Score Card ── */}
+            <div className="bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-700 rounded-2xl p-6 md:p-8 text-white relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
+              <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
+              
+              <div className="relative z-10 flex flex-col md:flex-row items-center gap-6">
+                {/* Score Circle */}
+                <div className="relative w-32 h-32 shrink-0">
+                  <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
+                    <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="10" />
+                    <circle cx="60" cy="60" r="52" fill="none" stroke="white" strokeWidth="10" strokeLinecap="round"
+                      strokeDasharray={`${(OVERALL_SCORE / 100) * 327} 327`}
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-3xl font-bold">{OVERALL_SCORE}%</span>
+                    <span className="text-xs text-white/70">Inner OS</span>
                   </div>
-                  <button className="text-gray-500 hover:text-white transition-colors text-lg bg-transparent border-none cursor-pointer">›</button>
                 </div>
-              </div>
-
-              {/* Mini Calendar */}
-              <div className="mb-5">
-                <div className="text-sm text-gray-500 mb-2 text-center">
-                  {today.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
-                </div>
-                <div className="grid grid-cols-7 gap-1 mb-3">
-                  {calendarDays.map((d, i) => (
-                    <div key={i} className="text-center text-xs text-gray-500 py-2 font-medium">{d}</div>
-                  ))}
-                </div>
-                <div className="grid grid-cols-7 gap-1">
-                  {(() => {
-                    const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
-                    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1).getDay();
-                    const cells = [];
-                    for (let i = 0; i < firstDayOfMonth; i++) {
-                      cells.push(<div key={`e-${i}`} className="aspect-square" />);
-                    }
-                    for (let d = 1; d <= daysInMonth; d++) {
-                      const isToday = d === today.getDate();
-                      const isPast = d < today.getDate();
-                      cells.push(
-                        <button
-                          key={d}
-                          className={`aspect-square flex items-center justify-center rounded-lg text-sm font-medium cursor-pointer transition-all border-none relative
-                            ${isToday ? "bg-emerald-500 text-white" : ""}
-                            ${isPast ? "bg-gray-700/50 text-gray-400" : ""}
-                            ${!isToday && !isPast ? "bg-transparent text-white hover:bg-[#3a3a3a]" : ""}
-                          `}
-                        >
-                          {d}
-                        </button>
-                      );
-                    }
-                    return cells;
-                  })()}
+                
+                <div className="flex-1 text-center md:text-left">
+                  <h2 className="text-2xl font-bold mb-1">Your Inner Operating System</h2>
+                  <p className="text-white/80 text-sm mb-3">
+                    Your mind's core abilities — clarity, thinking, attention, momentum, and character — 
+                    all growing together to make you a stronger learner.
+                  </p>
+                  <div className="flex items-center gap-2 justify-center md:justify-start">
+                    <TrendingUp className="h-4 w-4 text-emerald-300" />
+                    <span className="text-emerald-300 font-semibold text-sm">+4.2% growth this week</span>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Today's Highlighted Topic */}
-            {todayHighlight && (
-              <div className="bg-white/95 backdrop-blur-[10px] p-6 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.1)] border border-white/20 mb-5">
-                <h3 className="mb-4 text-lg font-semibold border-b-[3px] border-blue-500 pb-2 bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
-                  📚 Today's Focus
-                </h3>
-                <div
-                  className="text-white text-sm px-3 py-2.5 rounded-xl text-center font-medium"
-                  style={{ backgroundColor: todayHighlight.color }}
-                >
-                  {todayHighlight.icon} {todayHighlight.subject}
-                </div>
-                <p className="text-sm text-muted-foreground mt-2 text-center">{todayHighlight.topic}</p>
-              </div>
-            )}
-
-            {/* Today's Info Card */}
-            <div className="bg-white/95 backdrop-blur-[10px] p-6 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.1)] border border-white/20 mb-5">
-              <h3 className="mb-4 text-lg font-semibold border-b-[3px] border-blue-500 pb-2 bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
-                📅 Today
-              </h3>
-              <div className="text-center text-lg font-semibold mb-4 bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
-                {today.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
-              </div>
-              <button className="w-full bg-gradient-to-r from-orange-50 to-pink-50 text-orange-700 p-4 rounded-xl border-l-4 border-orange-500 font-medium border-none text-left cursor-pointer hover:-translate-y-0.5 hover:shadow-md transition-all">
-                📝 Today's Draft
-              </button>
-
-              {/* Daily Knowledge Quiz - unlocks at 100% */}
-              {progressPercent >= 100 ? (
-                <button
-                  onClick={() => setDailyQuizOpen(true)}
-                  className="w-full mt-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white p-4 rounded-xl font-semibold border-none text-center cursor-pointer hover:-translate-y-0.5 hover:shadow-lg transition-all animate-pulse"
-                >
-                  🧠 Daily Knowledge Quiz — Unlocked! 🎉
-                </button>
-              ) : (
-                <div className="w-full mt-3 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-400 p-4 rounded-xl font-medium text-center cursor-not-allowed border-none">
-                  🔒 Daily Quiz — Complete all classes to unlock
-                </div>
-              )}
-            </div>
-
-            {/* Quick Stats */}
-            <div className="bg-white/95 backdrop-blur-[10px] p-6 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.1)] border border-white/20">
-              <h3 className="mb-4 text-lg font-semibold border-b-[3px] border-blue-500 pb-2 bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
-                📊 Quick Stats
-              </h3>
-              {[
-                { label: "Subjects Today:", value: String(totalClasses) },
-                { label: "Completed:", value: String(completedClasses) },
-                { label: "Remaining:", value: String(totalClasses - completedClasses) },
-                { label: "Progress:", value: `${progressPercent}%` },
-                ...(dailyQuizScore ? [{ label: "Daily Quiz:", value: `${dailyQuizScore.score}/${dailyQuizScore.total}` }] : []),
-              ].map((stat, i) => (
-                <div key={i} className="flex justify-between items-center py-3 border-b border-gray-100/50 last:border-none hover:bg-blue-500/5 hover:rounded-lg hover:px-2.5 transition-all">
-                  <span className="text-gray-500 text-sm font-medium">{stat.label}</span>
-                  <span className="font-bold text-lg bg-gradient-to-r from-blue-500 to-[#2c3e50] bg-clip-text text-transparent">{stat.value}</span>
+            {/* ── 5 Dimension Cards ── */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+              {INNER_OS_DIMENSIONS.map((dim) => (
+                <div key={dim.name} className={`${dim.bg} ${dim.border} border rounded-xl p-4 transition-all hover:shadow-md hover:-translate-y-0.5`}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${dim.color} flex items-center justify-center`}>
+                      <dim.icon className="h-4 w-4 text-white" />
+                    </div>
+                    <span className={`text-sm font-semibold ${dim.text}`}>{dim.name}</span>
+                  </div>
+                  <div className="text-2xl font-bold text-foreground mb-1">{dim.score}%</div>
+                  <div className="w-full h-2 bg-white/60 rounded-full overflow-hidden mb-2">
+                    <div className={`h-full rounded-full bg-gradient-to-r ${dim.color}`} style={{ width: `${dim.score}%` }} />
+                  </div>
+                  <div className={`text-xs font-medium ${dim.trend >= 0 ? "text-emerald-600" : "text-red-500"}`}>
+                    {dim.trend >= 0 ? "↑" : "↓"} {Math.abs(dim.trend)}% this week
+                  </div>
                 </div>
               ))}
             </div>
-          </aside>
 
-          {/* Main Content */}
-          <section className="flex-1">
-            <div className="bg-white/95 backdrop-blur-[10px] rounded-2xl p-8 shadow-[0_8px_32px_rgba(0,0,0,0.1)] border border-white/20 h-full">
-              <div className="mb-6 border-b-[3px] border-blue-500 pb-4">
-                <h2 className="text-[28px] bg-gradient-to-r from-[#2c3e50] to-blue-500 bg-clip-text text-transparent mb-1 font-bold">
-                  📝 Today's Class Schedule
-                </h2>
-                <p className="text-gray-500 text-base italic">
-                  {loading ? "Loading schedule..." : "Synced from your teacher's calendar — click to mark complete!"}
-                </p>
-              </div>
-
-              <div className="grid gap-5 grid-cols-[repeat(auto-fit,minmax(350px,1fr))] mb-8">
-                {todayScheduleItems.map((item, i) => {
-                  const isCompleted = completedItems.includes(i);
-                  const badge = getTypeBadge(item.type);
-
-                  return (
-                    <button
-                      key={i}
-                      onClick={() => toggleComplete(i)}
-                      className={`text-[#333] p-6 rounded-2xl cursor-pointer transition-all border-2 text-left relative overflow-hidden group
-                        ${isCompleted
-                          ? "bg-gradient-to-br from-green-100 to-green-50 border-emerald-500 scale-[0.98]"
-                          : "bg-gradient-to-br from-white to-gray-50 border-blue-500/20 hover:border-blue-500 hover:shadow-[0_8px_25px_rgba(52,152,219,0.25)] hover:-translate-y-1 hover:scale-[1.02]"
-                        }`}
-                    >
-                      {isCompleted && (
-                        <span className="absolute top-4 right-4 text-emerald-500 font-bold text-xl animate-scale-in">✓</span>
-                      )}
-
-                      {/* Type indicator bar */}
-                      <div className="absolute top-0 left-0 w-1 h-full rounded-l-2xl" style={{ backgroundColor: item.color }} />
-
-                      <span className="text-[13px] font-semibold text-gray-500 mb-1 block pl-3">{item.time}</span>
-                      <div className="text-lg font-bold text-[#2c3e50] mb-2 pl-3">
-                        {item.icon} {item.subject}
-                        {item.type === "break" && <span className="ml-2 text-xs font-normal text-gray-400 italic">Refresh and Energize</span>}
+            {/* ── Main Grid: Continue Learning + Methods + Breakthroughs ── */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Continue Learning */}
+              <div className="lg:col-span-2 space-y-6">
+                <div className="bg-card border border-border rounded-xl p-6">
+                  <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
+                    <BookOpen className="h-5 w-5 text-primary" /> Continue Learning
+                  </h3>
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-5 flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-2xl font-bold shrink-0">
+                      1
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-semibold text-foreground">Chapter 1: Real Numbers</h4>
+                      <p className="text-sm text-muted-foreground">Episode 1 — Euclid's Division Algorithm</p>
+                      <div className="w-full h-2 bg-blue-100 rounded-full overflow-hidden mt-2">
+                        <div className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full" style={{ width: "35%" }} />
                       </div>
-                      <span className="text-sm text-gray-500 italic py-1 px-2.5 bg-blue-500/10 rounded-full inline-block ml-3">{item.topic}</span>
-
-                      {item.type !== "break" && (
-                        <div className="flex gap-2 mt-3 pt-2 border-t border-blue-500/20 pl-3" onClick={(e) => e.stopPropagation()}>
-                          <span className={`py-1.5 px-3.5 rounded-full text-[11px] font-semibold uppercase tracking-wide bg-gradient-to-r ${badge.bg} ${badge.text} border ${badge.border} hover:-translate-y-0.5 hover:shadow-md transition-all cursor-pointer`}>
-                            {badge.label}
-                          </span>
-                          <span
-                            className="py-1.5 px-3.5 rounded-full text-[11px] font-semibold uppercase tracking-wide bg-gradient-to-r from-purple-50 to-purple-100 text-purple-800 border border-purple-300 hover:-translate-y-0.5 hover:shadow-md transition-all cursor-pointer"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              const topicMatch = findTextbookMatch(item.topic);
-                              navigate(`/student/deep-dive?topic=${encodeURIComponent(item.topic)}&subject=${encodeURIComponent(item.subject)}&date=${todayKey}${topicMatch ? `&chapter=${topicMatch.chapterId}` : ""}`);
-                            }}
-                          >
-                            🔍 Deep Dive
-                          </span>
-                          <span
-                            className="py-1.5 px-3.5 rounded-full text-[11px] font-semibold uppercase tracking-wide bg-gradient-to-r from-emerald-50 to-emerald-100 text-emerald-800 border border-emerald-300 hover:-translate-y-0.5 hover:shadow-md transition-all cursor-pointer"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setQuizSubject(item.subject);
-                            }}
-                          >
-                            ⚡ Pop Quiz
-                          </span>
-                        </div>
-                      )}
+                      <span className="text-xs text-muted-foreground mt-1 block">35% complete</span>
+                    </div>
+                    <button
+                      onClick={() => navigate("/student/textbook/ch1")}
+                      className="bg-primary text-primary-foreground px-4 py-2.5 rounded-lg text-sm font-semibold border-none cursor-pointer hover:opacity-90 transition-all flex items-center gap-1 shrink-0"
+                    >
+                      Continue <ChevronRight className="h-4 w-4" />
                     </button>
-                  );
-                })}
+                  </div>
+                </div>
+
+                {/* Elite University Methods */}
+                <div className="bg-card border border-border rounded-xl p-6">
+                  <h3 className="text-lg font-bold text-foreground mb-1 flex items-center gap-2">
+                    <GraduationCap className="h-5 w-5 text-primary" /> Elite University Methods
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-4">World-class thinking tools adapted for you</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {ELITE_METHODS.map((method) => (
+                      <div key={method.name}
+                        className={`border rounded-xl p-4 transition-all ${
+                          method.available
+                            ? "bg-card border-border hover:border-primary/30 hover:shadow-sm cursor-pointer"
+                            : "bg-muted/30 border-border opacity-60 cursor-not-allowed"
+                        }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <span className="text-2xl">{method.icon}</span>
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-foreground text-sm">{method.name}</h4>
+                            <p className="text-xs text-muted-foreground mt-0.5">{method.desc}</p>
+                            {method.available ? (
+                              <span className="text-xs text-primary font-medium mt-2 block">{method.sessions} sessions completed</span>
+                            ) : (
+                              <span className="text-xs text-muted-foreground mt-2 block">🔒 Coming Soon</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
 
-              {/* Progress Section */}
-              <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-6 rounded-2xl border border-blue-500/20 shadow-inner">
-                <h3 className="text-[#2c3e50] text-xl mb-4 text-center font-semibold">📈 Progress Today</h3>
-                <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden my-4 shadow-inner">
-                  <div className="h-full rounded-full bg-gradient-to-r from-blue-500 to-emerald-500 transition-all duration-600" style={{ width: `${progressPercent}%` }} />
+              {/* Right Sidebar: Today's Focus + Breakthroughs */}
+              <div className="space-y-5">
+                {/* Today's Focus */}
+                <div className="bg-card border border-border rounded-xl p-5">
+                  <h3 className="text-base font-bold text-foreground mb-3 flex items-center gap-2">
+                    <Lightbulb className="h-4 w-4 text-amber-500" /> Today's Focus
+                  </h3>
+                  <div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-lg p-4">
+                    <p className="font-semibold text-amber-900 text-sm">Real Numbers — Episode 1</p>
+                    <p className="text-xs text-amber-700 mt-1">Focus on understanding Euclid's Division Algorithm through the 7-layer framework</p>
+                    <div className="flex items-center gap-2 mt-3">
+                      <span className="text-xs bg-amber-200 text-amber-800 px-2 py-0.5 rounded-full font-medium">Layer 3: Reasoning</span>
+                    </div>
+                  </div>
                 </div>
-                <p className="text-center text-gray-500 text-base font-semibold">{progressPercent}% Complete</p>
+
+                {/* Recent Breakthroughs */}
+                <div className="bg-card border border-border rounded-xl p-5">
+                  <h3 className="text-base font-bold text-foreground mb-3 flex items-center gap-2">
+                    <Star className="h-4 w-4 text-yellow-500" /> Recent Breakthroughs
+                  </h3>
+                  <div className="space-y-3">
+                    {BREAKTHROUGHS.map((b, i) => (
+                      <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
+                        <span className="text-lg">{b.icon}</span>
+                        <div>
+                          <p className="text-sm font-medium text-foreground">{b.text}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">{b.time}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Quick Stats */}
+                <div className="bg-card border border-border rounded-xl p-5">
+                  <h3 className="text-base font-bold text-foreground mb-3">📊 Quick Stats</h3>
+                  {[
+                    { label: "Episodes Completed", value: "3" },
+                    { label: "Methods Used", value: "8" },
+                    { label: "Study Hours", value: "12.5h" },
+                    { label: "Weekly Gems", value: "45 💎" },
+                  ].map((stat, i) => (
+                    <div key={i} className="flex justify-between items-center py-2.5 border-b border-border last:border-none">
+                      <span className="text-sm text-muted-foreground">{stat.label}</span>
+                      <span className="text-sm font-bold text-foreground">{stat.value}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
-          </section>
-        </div>
+          </>
+        ) : (
+          /* ── Schedule Tab (existing functionality) ── */
+          <div className="flex flex-col lg:flex-row gap-6">
+            {/* Sidebar */}
+            <aside className="w-full lg:w-[350px] lg:flex-shrink-0 space-y-5">
+              {/* Calendar Card */}
+              <div className="bg-[#1a1a1a]/90 text-white rounded-2xl p-5">
+                <div className="flex items-center justify-between mb-5">
+                  <div>
+                    <div className="text-lg font-medium">Day {today.getDate()}</div>
+                    <div className="text-xs text-gray-500">{today.toLocaleDateString("en-US", { weekday: "long" })}</div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <button className="text-gray-500 hover:text-white transition-colors text-lg bg-transparent border-none cursor-pointer">‹</button>
+                    <div className="bg-gradient-to-br from-gray-500 to-gray-600 border-2 border-yellow-400 rounded-xl py-2 px-3 flex items-center gap-2">
+                      <span className="text-base text-yellow-400 font-bold">{today.getDate()}</span>
+                      <span className="text-[10px] text-gray-300">{today.toLocaleDateString("en-US", { month: "short" }).toUpperCase()}</span>
+                    </div>
+                    <button className="text-gray-500 hover:text-white transition-colors text-lg bg-transparent border-none cursor-pointer">›</button>
+                  </div>
+                </div>
+                <div className="mb-5">
+                  <div className="text-sm text-gray-500 mb-2 text-center">
+                    {today.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+                  </div>
+                  <div className="grid grid-cols-7 gap-1 mb-3">
+                    {calendarDays.map((d, i) => (
+                      <div key={i} className="text-center text-xs text-gray-500 py-2 font-medium">{d}</div>
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-7 gap-1">
+                    {(() => {
+                      const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+                      const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1).getDay();
+                      const cells = [];
+                      for (let i = 0; i < firstDayOfMonth; i++) cells.push(<div key={`e-${i}`} className="aspect-square" />);
+                      for (let d = 1; d <= daysInMonth; d++) {
+                        const isToday = d === today.getDate();
+                        const isPast = d < today.getDate();
+                        cells.push(
+                          <button key={d} className={`aspect-square flex items-center justify-center rounded-lg text-sm font-medium cursor-pointer transition-all border-none relative
+                            ${isToday ? "bg-emerald-500 text-white" : ""}
+                            ${isPast ? "bg-gray-700/50 text-gray-400" : ""}
+                            ${!isToday && !isPast ? "bg-transparent text-white hover:bg-[#3a3a3a]" : ""}`}>
+                            {d}
+                          </button>
+                        );
+                      }
+                      return cells;
+                    })()}
+                  </div>
+                </div>
+              </div>
+
+              {/* Today's Info */}
+              <div className="bg-card border border-border rounded-xl p-5">
+                <h3 className="text-base font-bold text-foreground mb-3">📅 Today</h3>
+                <div className="text-center text-base font-semibold mb-3 text-primary">
+                  {today.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
+                </div>
+                {progressPercent >= 100 ? (
+                  <button onClick={() => setDailyQuizOpen(true)}
+                    className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white p-4 rounded-xl font-semibold border-none text-center cursor-pointer hover:-translate-y-0.5 hover:shadow-lg transition-all animate-pulse">
+                    🧠 Daily Knowledge Quiz — Unlocked! 🎉
+                  </button>
+                ) : (
+                  <div className="w-full bg-muted text-muted-foreground p-4 rounded-xl font-medium text-center cursor-not-allowed">
+                    🔒 Daily Quiz — Complete all classes to unlock
+                  </div>
+                )}
+              </div>
+
+              {/* Quick Stats */}
+              <div className="bg-card border border-border rounded-xl p-5">
+                <h3 className="text-base font-bold text-foreground mb-3">📊 Progress</h3>
+                {[
+                  { label: "Subjects Today:", value: String(totalClasses) },
+                  { label: "Completed:", value: String(completedClasses) },
+                  { label: "Progress:", value: `${progressPercent}%` },
+                  ...(dailyQuizScore ? [{ label: "Daily Quiz:", value: `${dailyQuizScore.score}/${dailyQuizScore.total}` }] : []),
+                ].map((stat, i) => (
+                  <div key={i} className="flex justify-between items-center py-2.5 border-b border-border last:border-none">
+                    <span className="text-sm text-muted-foreground">{stat.label}</span>
+                    <span className="text-sm font-bold text-foreground">{stat.value}</span>
+                  </div>
+                ))}
+              </div>
+            </aside>
+
+            {/* Schedule Cards */}
+            <section className="flex-1">
+              <div className="bg-card border border-border rounded-xl p-6">
+                <h2 className="text-xl font-bold text-foreground mb-1">📝 Today's Class Schedule</h2>
+                <p className="text-sm text-muted-foreground mb-6">
+                  {loading ? "Loading schedule..." : "Synced from your teacher's calendar — click to mark complete!"}
+                </p>
+
+                <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(320px,1fr))] mb-6">
+                  {todayScheduleItems.map((item, i) => {
+                    const isCompleted = completedItems.includes(i);
+                    const badge = getTypeBadge(item.type);
+
+                    return (
+                      <button key={i} onClick={() => toggleComplete(i)}
+                        className={`text-foreground p-5 rounded-xl cursor-pointer transition-all border-2 text-left relative overflow-hidden group
+                          ${isCompleted
+                            ? "bg-gradient-to-br from-green-100 to-green-50 border-emerald-500 scale-[0.98]"
+                            : "bg-card border-border hover:border-primary/40 hover:shadow-md hover:-translate-y-0.5"}`}>
+                        {isCompleted && <span className="absolute top-3 right-3 text-emerald-500 font-bold text-xl">✓</span>}
+                        <div className="absolute top-0 left-0 w-1 h-full rounded-l-xl" style={{ backgroundColor: item.color }} />
+                        <span className="text-xs font-semibold text-muted-foreground mb-1 block pl-3">{item.time}</span>
+                        <div className="text-base font-bold text-foreground mb-2 pl-3">
+                          {item.icon} {item.subject}
+                          {item.type === "break" && <span className="ml-2 text-xs font-normal text-muted-foreground italic">Refresh</span>}
+                        </div>
+                        <span className="text-xs text-muted-foreground italic py-1 px-2.5 bg-primary/5 rounded-full inline-block ml-3">{item.topic}</span>
+
+                        {item.type !== "break" && (
+                          <div className="flex gap-2 mt-3 pt-2 border-t border-border pl-3" onClick={(e) => e.stopPropagation()}>
+                            <span className={`py-1.5 px-3 rounded-full text-[11px] font-semibold bg-gradient-to-r ${badge.bg} ${badge.text} border ${badge.border} cursor-pointer hover:-translate-y-0.5 transition-all`}>
+                              {badge.label}
+                            </span>
+                            <span className="py-1.5 px-3 rounded-full text-[11px] font-semibold bg-gradient-to-r from-purple-50 to-purple-100 text-purple-800 border border-purple-300 cursor-pointer hover:-translate-y-0.5 transition-all"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const topicMatch = findTextbookMatch(item.topic);
+                                navigate(`/student/deep-dive?topic=${encodeURIComponent(item.topic)}&subject=${encodeURIComponent(item.subject)}&date=${todayKey}${topicMatch ? `&chapter=${topicMatch.chapterId}` : ""}`);
+                              }}>
+                              🔍 Deep Dive
+                            </span>
+                            <span className="py-1.5 px-3 rounded-full text-[11px] font-semibold bg-gradient-to-r from-emerald-50 to-emerald-100 text-emerald-800 border border-emerald-300 cursor-pointer hover:-translate-y-0.5 transition-all"
+                              onClick={(e) => { e.stopPropagation(); setQuizSubject(item.subject); }}>
+                              ⚡ Pop Quiz
+                            </span>
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Progress Bar */}
+                <div className="bg-muted/30 p-5 rounded-xl border border-border">
+                  <h3 className="text-foreground text-base mb-3 text-center font-semibold">📈 Progress Today</h3>
+                  <div className="w-full h-2.5 bg-secondary rounded-full overflow-hidden mb-2">
+                    <div className="h-full rounded-full bg-gradient-to-r from-primary to-emerald-500 transition-all duration-500" style={{ width: `${progressPercent}%` }} />
+                  </div>
+                  <p className="text-center text-muted-foreground text-sm font-semibold">{progressPercent}% Complete</p>
+                </div>
+              </div>
+            </section>
+          </div>
+        )}
       </div>
 
-      {/* Pop Quiz Modal */}
-      {quizSubject && (
-        <PopQuizModal
-          open={!!quizSubject}
-          onClose={() => setQuizSubject(null)}
-          subject={quizSubject}
-        />
-      )}
-
-      {/* Daily Knowledge Quiz Modal */}
+      {quizSubject && <PopQuizModal open={!!quizSubject} onClose={() => setQuizSubject(null)} subject={quizSubject} />}
       {dailyQuizOpen && (
-        <PopQuizModal
-          open={dailyQuizOpen}
-          onClose={() => setDailyQuizOpen(false)}
-          subject="All Subjects"
-          mode="daily"
-          onComplete={(score, total) => setDailyQuizScore({ score, total })}
-        />
+        <PopQuizModal open={dailyQuizOpen} onClose={() => setDailyQuizOpen(false)} subject="All Subjects" mode="daily"
+          onComplete={(score, total) => setDailyQuizScore({ score, total })} />
       )}
     </DashboardLayout>
   );
