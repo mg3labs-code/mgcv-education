@@ -2,15 +2,18 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Eye, Brain, Target, Heart, TrendingUp, TrendingDown, AlertTriangle, CheckCircle, Info, ChevronRight, GraduationCap, Users, BookOpen, ClipboardList, BarChart3, Bell, MessageSquare, Lightbulb, Zap, Shield } from "lucide-react";
 
-const CLASS_OPTIONS = ["Class 10-A", "Class 10-B", "Class 9-A"];
+const CLASS_OPTIONS = ["Class 10", "Class 9", "Class 8"];
 
-const STAT_CARDS = [
-  { label: "Avg Clarity", value: "76%", trend: +3, icon: Eye, borderColor: "border-l-sky-500", bg: "bg-sky-50", iconBg: "bg-sky-100", iconColor: "text-sky-600" },
-  { label: "Avg Reasoning", value: "71%", trend: +5, icon: Brain, borderColor: "border-l-purple-500", bg: "bg-purple-50", iconBg: "bg-purple-100", iconColor: "text-purple-600" },
-  { label: "Avg Attention", value: "68%", trend: -2, icon: Target, borderColor: "border-l-amber-500", bg: "bg-amber-50", iconBg: "bg-amber-100", iconColor: "text-amber-600" },
-  { label: "Avg Character", value: "74%", trend: +4, icon: Heart, borderColor: "border-l-rose-500", bg: "bg-rose-50", iconBg: "bg-rose-100", iconColor: "text-rose-600" },
+const STAT_CONFIG = [
+  { key: "avg_clarity", label: "Avg Clarity", icon: Eye, borderColor: "border-l-sky-500", bg: "bg-sky-50", iconBg: "bg-sky-100", iconColor: "text-sky-600" },
+  { key: "avg_thinking", label: "Avg Reasoning", icon: Brain, borderColor: "border-l-purple-500", bg: "bg-purple-50", iconBg: "bg-purple-100", iconColor: "text-purple-600" },
+  { key: "avg_attention", label: "Avg Attention", icon: Target, borderColor: "border-l-amber-500", bg: "bg-amber-50", iconBg: "bg-amber-100", iconColor: "text-amber-600" },
+  { key: "avg_character", label: "Avg Character", icon: Heart, borderColor: "border-l-rose-500", bg: "bg-rose-50", iconBg: "bg-rose-100", iconColor: "text-rose-600" },
 ];
 
 const CURRICULUM_INSIGHTS = [
