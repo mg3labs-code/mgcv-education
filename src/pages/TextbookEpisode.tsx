@@ -449,6 +449,20 @@ const TextbookEpisode = () => {
     if (actIdx >= 0) scrollToBlock(actIdx);
   }, [blocks, scrollToBlock]);
 
+  if (isLoading) {
+    return (
+      <PageLayout role="student">
+        <div className="max-w-3xl mx-auto space-y-4 pt-8">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-6 w-64" />
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-48 w-full rounded-2xl" />
+          ))}
+        </div>
+      </PageLayout>
+    );
+  }
+
   if (!chapter || !episode) {
     return (
       <PageLayout role="student">
@@ -458,6 +472,7 @@ const TextbookEpisode = () => {
         </div>
       </PageLayout>
     );
+  }
   }
 
   const renderBlock = (block: ContentBlock) => {
