@@ -222,11 +222,11 @@ const StudentDashboard = () => {
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 bg-gradient-to-r from-amber-100 to-orange-100 border border-amber-300 rounded-full px-4 py-2">
               <Flame className="h-5 w-5 text-orange-500" />
-              <span className="font-bold text-orange-700">7 Day Streak</span>
+              <span className="font-bold text-orange-700">{streakDays} Day Streak</span>
             </div>
             <div className="flex items-center gap-2 bg-gradient-to-r from-yellow-100 to-amber-100 border border-yellow-300 rounded-full px-4 py-2">
               <Star className="h-5 w-5 text-yellow-500" />
-              <span className="font-bold text-yellow-700">Level 4</span>
+              <span className="font-bold text-yellow-700">Level {userLevel}</span>
             </div>
           </div>
         </div>
