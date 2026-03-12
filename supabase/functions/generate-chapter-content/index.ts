@@ -80,13 +80,13 @@ Return ONLY the JSON array, no markdown wrapping.`;
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "google/gemini-3-flash-preview",
+          model: "google/gemini-2.5-flash",
           messages: [
             { role: "system", content: systemPrompt },
             { role: "user", content: userPrompt },
           ],
           temperature: 0.7,
-          max_tokens: 8000,
+          max_tokens: 16000,
         }),
       });
 
