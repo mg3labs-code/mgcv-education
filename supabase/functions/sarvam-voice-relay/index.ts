@@ -83,9 +83,12 @@ serve(async (req) => {
 
     // ---- STEP 1: Sarvam STT (Speech-to-Text) ----
     const audioBytes = Uint8Array.from(atob(audioBase64), (c) => c.charCodeAt(0));
-    const ext = (mimeType || "audio/webm").includes("wav") ? "wav" : "webm";
+    // Sarvam API rejects codec-specific MIME types like "audio/webm;codecs=opus"
+    // Normalize to base MIME type that Sarvam accepts
+    const rawMime = (mimeType || "audio/webm").split(";")[0].trim();
+    const ext = rawMime.includes("wav") ? "wav" : "webm";
     const formData = new FormData();
-    formData.append("file", new Blob([audioBytes], { type: mimeType || "audio/webm" }), `audio.${ext}`);
+    formData.append("file", new Blob([audioBytes], { type: rawMime }), `audio.${ext}`);
     formData.append("model", "saaras:v3");
     formData.append("mode", "transcribe");
 
