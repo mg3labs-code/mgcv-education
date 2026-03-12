@@ -1,0 +1,1 @@
+DELETE FROM app_config WHERE key IN ('elevenlabs_agent_id', 'attraction_agent_id');
