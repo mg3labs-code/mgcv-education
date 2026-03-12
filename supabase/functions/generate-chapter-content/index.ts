@@ -111,13 +111,35 @@ Return ONLY the JSON array, no markdown wrapping.`;
       // Clean markdown wrapping if present
       contentText = contentText.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
       
+      // Try to extract JSON array even if truncated
+      if (!contentText.startsWith("[")) {
+        const arrStart = contentText.indexOf("[");
+        if (arrStart !== -1) contentText = contentText.slice(arrStart);
+      }
+      
       let generatedBlocks;
       try {
         generatedBlocks = JSON.parse(contentText);
       } catch (e) {
-        console.error(`JSON parse error for ep ${ep.number}:`, e);
-        results.push({ episode: ep.number, error: "Failed to parse AI response" });
-        continue;
+        // Try to recover truncated JSON by closing brackets
+        console.error(`JSON parse error for ep ${ep.number}, attempting recovery...`);
+        try {
+          // Count open/close braces and brackets to fix truncation
+          let fixed = contentText;
+          const openBraces = (fixed.match(/{/g) || []).length;
+          const closeBraces = (fixed.match(/}/g) || []).length;
+          const openBrackets = (fixed.match(/\[/g) || []).length;
+          const closeBrackets = (fixed.match(/]/g) || []).length;
+          // Remove trailing comma if any
+          fixed = fixed.replace(/,\s*$/, "");
+          for (let i = 0; i < openBraces - closeBraces; i++) fixed += "}";
+          for (let i = 0; i < openBrackets - closeBrackets; i++) fixed += "]";
+          generatedBlocks = JSON.parse(fixed);
+        } catch (e2) {
+          console.error(`JSON recovery failed for ep ${ep.number}:`, e2);
+          results.push({ episode: ep.number, error: "Failed to parse AI response" });
+          continue;
+        }
       }
 
       if (!Array.isArray(generatedBlocks)) {
