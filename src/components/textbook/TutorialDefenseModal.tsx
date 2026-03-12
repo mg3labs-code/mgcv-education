@@ -1,14 +1,20 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Shield, Send, Loader2, Mic, MicOff } from "lucide-react";
+import { Shield, Send, Loader2, Lightbulb, Trophy, Star } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 interface TutorialDefenseModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   topic: string;
   episodeTitle: string;
+  subject?: string;
+  chapterId?: string;
+  episodeId?: string;
 }
 
 interface Message {
@@ -16,26 +22,74 @@ interface Message {
   text: string;
 }
 
-const TutorialDefenseModal = ({ open, onOpenChange, topic, episodeTitle }: TutorialDefenseModalProps) => {
+const MAX_ROUNDS = 6;
+
+const TutorialDefenseModal = ({ open, onOpenChange, topic, episodeTitle, subject, chapterId, episodeId }: TutorialDefenseModalProps) => {
+  const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [started, setStarted] = useState(false);
+  const [exchangeCount, setExchangeCount] = useState(0);
+  const [confidence, setConfidence] = useState(20);
+  const [completed, setCompleted] = useState(false);
+  const [summary, setSummary] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const startTime = useRef<number>(0);
+
+  useEffect(() => {
+    if (started) startTime.current = Date.now();
+  }, [started]);
+
+  const callDefenseAPI = async (action: string, history: { role: string; content: string }[], count: number) => {
+    const res = await supabase.functions.invoke("tutorial-defense", {
+      body: { topic, episodeTitle, subject: subject || "General", action, history, exchangeCount: count },
+    });
+    if (res.error) throw res.error;
+    return res.data?.reply || "Tell me what you learned! 🎯";
+  };
 
   const startDefense = async () => {
     setStarted(true);
     setLoading(true);
     try {
-      const res = await supabase.functions.invoke("tutorial-defense", {
-        body: { topic, episodeTitle, action: "start", history: [] },
-      });
-      const tutorMsg = res.data?.reply || "Let's begin. Tell me what you understood about this topic.";
-      setMessages([{ role: "tutor", text: tutorMsg }]);
+      const reply = await callDefenseAPI("start", [], 0);
+      setMessages([{ role: "tutor", text: reply }]);
     } catch {
-      setMessages([{ role: "tutor", text: "Let's begin your Tutorial Defense. Explain what you learned about " + topic + " in your own words." }]);
+      setMessages([{ role: "tutor", text: `Let's begin your Tutorial Defense! 🎯 Tell me what you understood about ${topic} — in your own words.` }]);
     }
     setLoading(false);
+  };
+
+  const requestHint = async () => {
+    if (loading) return;
+    setLoading(true);
+    const history = messages.map(m => ({ role: m.role === "tutor" ? "assistant" : "user", content: m.text }));
+    try {
+      const reply = await callDefenseAPI("hint", history, exchangeCount);
+      setMessages(prev => [...prev, { role: "tutor", text: `💡 ${reply}` }]);
+    } catch {
+      setMessages(prev => [...prev, { role: "tutor", text: "💡 Think about the most basic version of this concept. What's the simplest thing you know for sure?" }]);
+    }
+    setLoading(false);
+    setTimeout(() => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" }), 100);
+  };
+
+  const trackSession = async () => {
+    if (!user) return;
+    try {
+      await supabase.from("method_sessions").insert({
+        user_id: user.id,
+        method_type: "tutorial_defense",
+        chapter_id: chapterId || null,
+        episode_id: episodeId || null,
+        duration_seconds: Math.round((Date.now() - startTime.current) / 1000),
+        completed: true,
+        score: Math.round(confidence),
+      });
+    } catch (e) {
+      console.error("Failed to track session:", e);
+    }
   };
 
   const sendMessage = async () => {
@@ -45,22 +99,28 @@ const TutorialDefenseModal = ({ open, onOpenChange, topic, episodeTitle }: Tutor
     const newMessages = [...messages, { role: "student" as const, text: studentMsg }];
     setMessages(newMessages);
     setLoading(true);
+    const newCount = exchangeCount + 1;
+    setExchangeCount(newCount);
+
+    // Boost confidence based on answer length/effort
+    const boost = Math.min(15, Math.max(5, studentMsg.split(" ").length));
+    setConfidence(prev => Math.min(100, prev + boost));
 
     setTimeout(() => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" }), 100);
 
     try {
-      const res = await supabase.functions.invoke("tutorial-defense", {
-        body: {
-          topic,
-          episodeTitle,
-          action: "respond",
-          history: newMessages.map(m => ({ role: m.role === "tutor" ? "assistant" : "user", content: m.text })),
-        },
-      });
-      const tutorReply = res.data?.reply || "Good point. Can you go deeper?";
-      setMessages([...newMessages, { role: "tutor", text: tutorReply }]);
+      const history = newMessages.map(m => ({ role: m.role === "tutor" ? "assistant" : "user", content: m.text }));
+      const reply = await callDefenseAPI("respond", history, newCount);
+      setMessages([...newMessages, { role: "tutor", text: reply }]);
+
+      // Check if this was the final round
+      if (newCount >= MAX_ROUNDS) {
+        setCompleted(true);
+        setSummary(reply);
+        await trackSession();
+      }
     } catch {
-      setMessages([...newMessages, { role: "tutor", text: "Interesting perspective. What evidence supports your claim?" }]);
+      setMessages([...newMessages, { role: "tutor", text: "Interesting thinking! What evidence supports that? 🤔" }]);
     }
     setLoading(false);
     setTimeout(() => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" }), 100);
@@ -71,6 +131,10 @@ const TutorialDefenseModal = ({ open, onOpenChange, topic, episodeTitle }: Tutor
     setMessages([]);
     setStarted(false);
     setInput("");
+    setExchangeCount(0);
+    setConfidence(20);
+    setCompleted(false);
+    setSummary(null);
   };
 
   return (
@@ -82,7 +146,7 @@ const TutorialDefenseModal = ({ open, onOpenChange, topic, episodeTitle }: Tutor
             Oxford Tutorial Defense
           </DialogTitle>
           <DialogDescription>
-            Defend your understanding of <span className="font-medium text-foreground">{topic}</span>. The AI tutor will challenge your reasoning.
+            Defend your understanding of <span className="font-medium text-foreground">{topic}</span>
           </DialogDescription>
         </DialogHeader>
 
@@ -92,7 +156,7 @@ const TutorialDefenseModal = ({ open, onOpenChange, topic, episodeTitle }: Tutor
               <Shield className="h-8 w-8 text-primary" />
             </div>
             <p className="text-sm text-muted-foreground text-center max-w-xs">
-              In an Oxford Tutorial, you must defend what you've learned. The tutor will question your reasoning and push you to think deeper.
+              Your tutor will challenge your thinking in 6 rounds of brainstorming. Think of it as a friendly debate — not a test! 🧠
             </p>
             <Button onClick={startDefense} disabled={loading}>
               {loading ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Shield className="h-4 w-4 mr-1" />}
@@ -101,10 +165,22 @@ const TutorialDefenseModal = ({ open, onOpenChange, topic, episodeTitle }: Tutor
           </div>
         ) : (
           <>
+            {/* Round counter + Confidence meter */}
+            <div className="flex items-center gap-3 px-1">
+              <span className="text-xs font-semibold text-muted-foreground whitespace-nowrap">
+                Round {Math.min(exchangeCount + 1, MAX_ROUNDS)}/{MAX_ROUNDS}
+              </span>
+              <div className="flex-1 flex items-center gap-2">
+                <Star className="h-3.5 w-3.5 text-amber-500" />
+                <Progress value={confidence} className="h-2 flex-1" />
+                <span className="text-xs font-medium text-amber-600 dark:text-amber-400">{Math.round(confidence)}%</span>
+              </div>
+            </div>
+
             <div ref={scrollRef} className="flex-1 overflow-y-auto space-y-3 py-3 min-h-[250px] max-h-[400px]">
               {messages.map((m, i) => (
                 <div key={i} className={`flex ${m.role === "student" ? "justify-end" : "justify-start"}`}>
-                  <div className={`max-w-[80%] rounded-xl px-4 py-2.5 text-sm ${
+                  <div className={`max-w-[80%] rounded-xl px-4 py-2.5 text-sm whitespace-pre-line ${
                     m.role === "student"
                       ? "bg-primary text-primary-foreground"
                       : "bg-muted text-foreground"
@@ -122,19 +198,33 @@ const TutorialDefenseModal = ({ open, onOpenChange, topic, episodeTitle }: Tutor
               )}
             </div>
 
-            <div className="flex gap-2 pt-2 border-t">
-              <input
-                className="flex-1 rounded-lg border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-                placeholder="Defend your understanding..."
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
-                disabled={loading}
-              />
-              <Button size="sm" onClick={sendMessage} disabled={loading || !input.trim()}>
-                <Send className="h-4 w-4" />
-              </Button>
-            </div>
+            {completed ? (
+              <div className="border-t pt-3 space-y-3">
+                <div className="rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 p-4 text-center">
+                  <Trophy className="h-8 w-8 text-amber-500 mx-auto mb-2" />
+                  <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">Defense Complete!</p>
+                  <p className="text-xs text-muted-foreground mt-1">Confidence: {Math.round(confidence)}%</p>
+                </div>
+                <Button className="w-full" onClick={handleClose}>Done</Button>
+              </div>
+            ) : (
+              <div className="flex gap-2 pt-2 border-t">
+                <Button size="sm" variant="outline" onClick={requestHint} disabled={loading} title="Get a hint">
+                  <Lightbulb className="h-4 w-4 text-amber-500" />
+                </Button>
+                <input
+                  className="flex-1 rounded-lg border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  placeholder="Defend your understanding..."
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
+                  disabled={loading}
+                />
+                <Button size="sm" onClick={sendMessage} disabled={loading || !input.trim()}>
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
           </>
         )}
       </DialogContent>
