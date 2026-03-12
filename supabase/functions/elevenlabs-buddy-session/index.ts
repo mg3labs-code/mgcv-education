@@ -164,11 +164,11 @@ async function getOrCreateAgent(supabaseAdmin: any, elevenlabsKey: string): Prom
           language: "en",
         },
         tts: {
-          voice_id: "1Z7Y8o9cvUeWq8oLKgMY", // Tripti - child-friendly Indian voice
+          voice_id: "cgSgspJ2msm6clMCkdW9", // Jessica - Playful, Bright, Warm
           model_id: "eleven_multilingual_v2",
-          stability: 0.35,
-          similarity_boost: 0.7,
-          style: 0.25,
+          stability: 0.45,
+          similarity_boost: 0.75,
+          style: 0.40,
           use_speaker_boost: true,
         },
       },
