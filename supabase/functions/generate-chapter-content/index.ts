@@ -147,6 +147,18 @@ Return ONLY the JSON array, no markdown wrapping.`;
         continue;
       }
 
+      // Check if blocks already exist for this episode (prevent duplicates)
+      const { count: existingCount } = await supabase
+        .from("content_blocks")
+        .select("id", { count: "exact", head: true })
+        .eq("episode_id", ep.id);
+
+      if (existingCount && existingCount > 0) {
+        console.log(`Episode ${ep.number} already has ${existingCount} blocks, skipping`);
+        results.push({ episode: ep.number, blocks: existingCount, status: "already_exists" });
+        continue;
+      }
+
       // Insert blocks into DB
       const blockInserts = generatedBlocks.map((block: any, idx: number) => ({
         episode_id: ep.id,
