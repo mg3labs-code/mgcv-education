@@ -169,12 +169,11 @@ serve(async (req) => {
         text: ttsText,
         target_language_code: "en-IN",
         model: "bulbul:v3",
-        speaker: "anushka",
+        speaker: "kavya",
         pace: 0.95,
-        pitch: 0.0,
-        loudness: 1.5,
+        temperature: 0.8,
         enable_preprocessing: true,
-        sample_rate: 22050,
+        sample_rate: 24000,
       }),
     });
 
