@@ -219,22 +219,22 @@ const ActivityBlock = ({ content }: { content: ActivityContent }) => {
 const RecallBlock = ({ content }: { content: RecallContent }) => {
   const [revealed, setRevealed] = useState<Record<number, boolean>>({});
   return (
-    <div className="space-y-3">
-      {content.questions.map((q, i) => (
-        <div key={i} className="rounded-xl border bg-card p-5">
-          <p className="text-base font-medium text-foreground mb-2">🧠 {q.question}</p>
-          {q.hint && !revealed[i] && <p className="text-sm text-muted-foreground italic mb-2">💡 Hint: {q.hint}</p>}
-          {revealed[i] ? (
-            <div className="rounded-lg bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 p-3 mt-2">
-              <p className="text-base text-green-800 dark:text-green-300">{q.answer}</p>
-            </div>
-          ) : (
-            <Button variant="outline" size="sm" onClick={() => setRevealed({ ...revealed, [i]: true })} className="mt-1">
-              <Eye className="h-3.5 w-3.5 mr-1" /> Reveal Answer
-            </Button>
-          )}
-        </div>
-      ))}
+    <div className="border-2 border-dashed border-amber-400 rounded-lg p-5 bg-amber-50/50 dark:bg-amber-950/10">
+      <h4 className="text-amber-600 dark:text-amber-400 font-semibold mb-4 flex items-center gap-2">🧠 Quick Check</h4>
+      <div className="space-y-3">
+        {content.questions.map((q, i) => (
+          <div key={i} className="bg-white dark:bg-card rounded-lg p-4 cursor-pointer hover:bg-amber-50/60 dark:hover:bg-amber-950/20 transition-colors" onClick={() => !revealed[i] && setRevealed({ ...revealed, [i]: true })}>
+            <p className="text-[0.95rem] font-medium text-foreground"><strong>Q{i + 1}:</strong> {q.question}</p>
+            {q.hint && !revealed[i] && <p className="text-sm text-muted-foreground italic mt-1">💡 Hint: {q.hint}</p>}
+            {revealed[i] && (
+              <div className="mt-2 p-3 bg-green-100 dark:bg-green-950/30 rounded-md text-green-800 dark:text-green-300 text-[0.95rem]">
+                ✓ {q.answer}
+              </div>
+            )}
+            {!revealed[i] && <p className="text-xs text-muted-foreground mt-2">Click to reveal answer</p>}
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
