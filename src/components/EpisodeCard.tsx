@@ -9,16 +9,17 @@ interface EpisodeCardProps {
   status: "locked" | "available" | "in-progress" | "completed";
   blocks: number;
   completedBlocks: number;
+  index?: number;
 }
 
 const statusConfig = {
   locked: { icon: Lock, label: "Locked", style: "opacity-50 cursor-not-allowed" },
-  available: { icon: Circle, label: "Start", style: "cursor-pointer hover:border-accent hover:shadow-md transition-all" },
-  "in-progress": { icon: Clock, label: "Continue", style: "cursor-pointer border-accent/50 hover:border-accent hover:shadow-md transition-all" },
-  completed: { icon: CheckCircle2, label: "Review", style: "cursor-pointer border-success/30 hover:shadow-md transition-all" },
+  available: { icon: Circle, label: "Start", style: "cursor-pointer hover:border-accent transition-all" },
+  "in-progress": { icon: Clock, label: "Continue", style: "cursor-pointer border-accent/50 hover:border-accent transition-all" },
+  completed: { icon: CheckCircle2, label: "Review", style: "cursor-pointer border-success/30 transition-all" },
 };
 
-const EpisodeCard = ({ id, number, title, duration, status, blocks, completedBlocks }: EpisodeCardProps) => {
+const EpisodeCard = ({ id, number, title, duration, status, blocks, completedBlocks, index = 0 }: EpisodeCardProps) => {
   const navigate = useNavigate();
   const config = statusConfig[status];
   const Icon = config.icon;
@@ -32,7 +33,8 @@ const EpisodeCard = ({ id, number, title, duration, status, blocks, completedBlo
   return (
     <div
       onClick={handleClick}
-      className={`rounded-lg border border-border bg-card p-5 ${config.style}`}
+      className={`rounded-lg border border-border bg-card p-5 ${config.style} ${status !== "locked" ? "card-hover-lift" : ""} animate-stagger-in`}
+      style={{ "--stagger-delay": `${index * 0.08}s` } as React.CSSProperties}
     >
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-3">
