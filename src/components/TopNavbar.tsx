@@ -110,6 +110,13 @@ const TopNavbar = ({ role }: TopNavbarProps) => {
             {menuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
 
+          <button
+            onClick={() => setDark(!dark)}
+            className="hidden md:flex items-center justify-center w-9 h-9 rounded-lg bg-white/10 hover:bg-white/20 border-none cursor-pointer text-white transition-all"
+            aria-label="Toggle dark mode"
+          >
+            {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </button>
           <kbd className="hidden md:inline-flex items-center gap-0.5 rounded-md border border-white/20 bg-white/10 px-2 py-1 text-[11px] font-mono text-white/60">
             ⌘K
           </kbd>

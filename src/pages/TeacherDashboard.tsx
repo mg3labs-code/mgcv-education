@@ -296,7 +296,8 @@ const TeacherDashboard = () => {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
             {QUICK_ACTIONS.map((action) => (
               <button key={action.label} onClick={() => navigate(action.path)}
-                className="flex flex-col items-center gap-3 p-5 rounded-xl bg-card border border-border hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer text-center group">
+                className="flex flex-col items-center gap-3 p-5 rounded-xl bg-card border border-border card-hover-lift card-interactive text-center group animate-stagger-in"
+                style={{ "--stagger-delay": `${i * 0.06}s` } as React.CSSProperties}>
                 <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${action.color} flex items-center justify-center`}>
                   <action.icon className="h-5 w-5 text-white" />
                 </div>
