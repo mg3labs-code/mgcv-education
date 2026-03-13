@@ -362,18 +362,18 @@ const blockLabels: Record<string, string> = {
 
 const DEEP_BLOCKS = new Set(["reasoning", "assumptions", "connections", "application", "implications"]);
 
-const layerMeta: Record<string, { bg: string; badge?: string; badgeColor?: string; dotColor: string }> = {
-  concept:     { bg: "bg-violet-50/60 dark:bg-violet-950/20",  badge: "LAYER 1 · Definition",  badgeColor: "bg-violet-100 text-violet-800 dark:bg-violet-900/40 dark:text-violet-300", dotColor: "bg-violet-500" },
-  activity:    { bg: "bg-rose-50/60 dark:bg-rose-950/20",      badge: "LAYER 2 · Mechanism",    badgeColor: "bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300", dotColor: "bg-rose-500" },
-  recall:      { bg: "", dotColor: "bg-primary" },
-  explain:     { bg: "", dotColor: "bg-primary" },
-  assessment:  { bg: "", dotColor: "bg-primary" },
-  exercise:    { bg: "", dotColor: "bg-primary" },
-  reasoning:   { bg: "bg-amber-50/60 dark:bg-amber-950/20",   badge: "LAYER 3 · Reasoning",   badgeColor: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300", dotColor: "bg-amber-500" },
-  assumptions: { bg: "bg-sky-50/60 dark:bg-sky-950/20",       badge: "LAYER 4 · Assumptions",  badgeColor: "bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300", dotColor: "bg-sky-500" },
-  connections: { bg: "bg-emerald-50/60 dark:bg-emerald-950/20", badge: "LAYER 5 · Connections", badgeColor: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300", dotColor: "bg-emerald-500" },
-  application: { bg: "bg-orange-50/60 dark:bg-orange-950/20",  badge: "LAYER 6 · Application",  badgeColor: "bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300", dotColor: "bg-orange-500" },
-  implications:{ bg: "bg-indigo-50/60 dark:bg-indigo-950/20",  badge: "LAYER 7 · Implications", badgeColor: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300", dotColor: "bg-indigo-500" },
+const layerMeta: Record<string, { border: string; bg: string; badge?: string; badgeColor?: string; dotColor: string }> = {
+  concept:     { border: "border-l-blue-600",    bg: "",  badge: "💡 Essential",  badgeColor: "bg-green-500 text-white", dotColor: "bg-blue-600" },
+  activity:    { border: "border-l-rose-500",    bg: "",  badge: "📝 Practice",   badgeColor: "bg-amber-500 text-white", dotColor: "bg-rose-500" },
+  recall:      { border: "border-l-amber-500",   bg: "",  badge: "🧠 Recall",     badgeColor: "bg-amber-500 text-white", dotColor: "bg-amber-500" },
+  explain:     { border: "border-l-purple-500",  bg: "",  badge: "💬 Explain",    badgeColor: "bg-purple-500 text-white", dotColor: "bg-purple-500" },
+  assessment:  { border: "border-l-emerald-500", bg: "",  badge: "✅ Test",       badgeColor: "bg-emerald-500 text-white", dotColor: "bg-emerald-500" },
+  exercise:    { border: "border-l-cyan-500",    bg: "",  badge: "💪 Practice",   badgeColor: "bg-cyan-600 text-white", dotColor: "bg-cyan-500" },
+  reasoning:   { border: "border-l-amber-600",   bg: "",  badge: "⚡ Important",  badgeColor: "bg-amber-500 text-white", dotColor: "bg-amber-600" },
+  assumptions: { border: "border-l-sky-500",     bg: "",  badge: "🛡️ Important",  badgeColor: "bg-amber-500 text-white", dotColor: "bg-sky-500" },
+  connections: { border: "border-l-emerald-600", bg: "",  badge: "🔗 Essential",  badgeColor: "bg-green-500 text-white", dotColor: "bg-emerald-600" },
+  application: { border: "border-l-orange-500",  bg: "",  badge: "🌍 Essential",  badgeColor: "bg-green-500 text-white", dotColor: "bg-orange-500" },
+  implications:{ border: "border-l-indigo-500",  bg: "",  badge: "🎓 Advanced",   badgeColor: "bg-red-500 text-white", dotColor: "bg-indigo-500" },
 };
 
 // ─── Action Bar Buttons ─────────────────────────────────────
