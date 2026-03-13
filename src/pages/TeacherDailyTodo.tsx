@@ -55,7 +55,7 @@ const TeacherDailyTodo = () => {
   const totalCount = (todos ?? []).length;
 
   return (
-    <DashboardLayout role="teacher">
+    <DashboardLayout role="teacher" breadcrumbItems={[{ label: "Dashboard", href: "/teacher" }, { label: "Daily Plan" }]}>
       <main className="p-8 max-w-[1200px] mx-auto">
         {/* Header */}
         <div className="mb-8">
