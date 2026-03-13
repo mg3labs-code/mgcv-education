@@ -4,7 +4,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ChevronDown, ChevronUp, BookOpen, Clock, MapPin, Lightbulb, FlaskConical, CheckCircle2, Plus } from "lucide-react";
+import { ChevronDown, ChevronUp, BookOpen, Clock, MapPin, Lightbulb, FlaskConical, CheckCircle2, Plus, ListTodo } from "lucide-react";
+import EmptyState from "@/components/EmptyState";
 import { toast } from "sonner";
 
 const statusOptions = ["pending", "in_progress", "completed"] as const;
