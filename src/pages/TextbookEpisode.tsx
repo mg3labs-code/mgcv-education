@@ -395,7 +395,17 @@ const TextbookEpisode = () => {
   const [scrollProgress, setScrollProgress] = useState(0);
   const [activeBlock, setActiveBlock] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [collapsedBlocks, setCollapsedBlocks] = useState<Set<number>>(new Set());
   const blockRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  const toggleBlock = useCallback((index: number) => {
+    setCollapsedBlocks(prev => {
+      const next = new Set(prev);
+      if (next.has(index)) next.delete(index);
+      else next.add(index);
+      return next;
+    });
+  }, []);
   const contentRef = useRef<HTMLDivElement>(null);
   const activityRef = useRef<HTMLDivElement>(null);
 
