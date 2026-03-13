@@ -392,6 +392,7 @@ const actionBarButtons = [
 const TextbookEpisode = () => {
   const { chapterId, episodeId } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [showDefense, setShowDefense] = useState(false);
   const [showFirstPrinciples, setShowFirstPrinciples] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
@@ -399,7 +400,10 @@ const TextbookEpisode = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [collapsedBlocks, setCollapsedBlocks] = useState<Set<number>>(new Set());
   const [understoodBlocks, setUnderstoodBlocks] = useState<Set<number>>(new Set());
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
   const blockRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const totalBlocksRef = useRef(0);
 
   const toggleBlock = useCallback((index: number) => {
     setCollapsedBlocks(prev => {
@@ -410,14 +414,38 @@ const TextbookEpisode = () => {
     });
   }, []);
 
+  // Persist understood blocks to DB (debounced)
+  const persistUnderstood = useCallback((understood: Set<number>) => {
+    if (!user || !chapterId || !episodeId) return;
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    setSaveStatus("saving");
+    saveTimerRef.current = setTimeout(async () => {
+      const arr = Array.from(understood);
+      const pct = totalBlocksRef.current > 0 ? Math.round((arr.length / totalBlocksRef.current) * 100) : 0;
+      const { error } = await supabase
+        .from("episode_progress")
+        .upsert({
+          user_id: user.id,
+          chapter_id: chapterId,
+          episode_id: episodeId,
+          layer_scores: { understood: arr },
+          completion_pct: pct,
+          completed_at: pct === 100 ? new Date().toISOString() : null,
+        }, { onConflict: "user_id,chapter_id,episode_id" });
+      setSaveStatus(error ? "idle" : "saved");
+      if (!error) setTimeout(() => setSaveStatus("idle"), 2000);
+    }, 500);
+  }, [user, chapterId, episodeId]);
+
   const toggleUnderstood = useCallback((index: number) => {
     setUnderstoodBlocks(prev => {
       const next = new Set(prev);
       if (next.has(index)) next.delete(index);
       else next.add(index);
+      persistUnderstood(next);
       return next;
     });
-  }, []);
+  }, [persistUnderstood]);
 
   const toggleAllCollapsed = useCallback((blocks: any[]) => {
     setCollapsedBlocks(prev => {
