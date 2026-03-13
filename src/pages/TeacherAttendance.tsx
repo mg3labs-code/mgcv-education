@@ -164,7 +164,7 @@ const TeacherAttendance = () => {
         </Card>
 
         {/* Stats */}
-        <div className="grid grid-cols-4 gap-3 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
           <Card className="p-3 text-center">
             <Users className="h-4 w-4 mx-auto mb-1 text-primary" />
             <p className="text-xl font-bold text-card-foreground">{stats.total}</p>
