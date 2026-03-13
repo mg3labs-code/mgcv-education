@@ -66,7 +66,7 @@ const TopNavbar = ({ role }: TopNavbarProps) => {
 
   return (
     <>
-      <nav className="bg-[#0f1419]/95 backdrop-blur-[10px] py-4 px-4 lg:px-8 flex justify-between items-center shadow-[0_4px_20px_rgba(0,0,0,0.1)] sticky top-0 z-[1000] animate-slide-down border-b-2 border-blue-500/30">
+      <nav role="navigation" aria-label="Main navigation" className="bg-[#0f1419]/95 backdrop-blur-[10px] py-4 px-4 lg:px-8 flex justify-between items-center shadow-[0_4px_20px_rgba(0,0,0,0.1)] sticky top-0 z-[1000] animate-slide-down border-b-2 border-blue-500/30">
         <a href="/" className="no-underline">
           <div className="text-2xl font-bold text-white flex items-center gap-2.5">
             EduTech
