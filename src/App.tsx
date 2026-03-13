@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import StudyCompanion from "./components/student/StudyCompanion";
+import CommandPalette from "./components/CommandPalette";
 import Index from "./pages/Index";
 
 import StudentDashboard from "./pages/StudentDashboard";
