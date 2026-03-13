@@ -88,7 +88,7 @@ const TeacherSchedule = () => {
 
   return (
     <DashboardLayout role="teacher" breadcrumbItems={[{ label: "Dashboard", href: "/teacher" }, { label: "Schedule" }]}>
-      <main className="p-8 max-w-[1400px] mx-auto">
+      <main className="p-4 md:p-8 max-w-[1400px] mx-auto">
         <TeachingCalendar 
           onSave={handleSave} 
           isSaving={isSaving} 

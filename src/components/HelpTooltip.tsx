@@ -18,14 +18,14 @@ const HelpTooltip = ({ content, className, side = "top" }: HelpTooltipProps) => 
       <TooltipTrigger asChild>
         <button
           type="button"
-          className={`inline-flex items-center justify-center w-4 h-4 rounded-full bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-help focus:outline-none ${className ?? ""}`}
+          className={`inline-flex items-center justify-center w-5 h-5 min-w-[20px] rounded-full bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-help focus:outline-none focus-visible:ring-2 focus-visible:ring-ring ${className ?? ""}`}
           tabIndex={0}
           aria-label="More info"
         >
           <HelpCircle className="h-3 w-3" />
         </button>
       </TooltipTrigger>
-      <TooltipContent side={side} className="max-w-[240px] text-xs leading-relaxed">
+      <TooltipContent side={side} className="max-w-[260px] text-xs leading-relaxed z-[60]">
         {content}
       </TooltipContent>
     </Tooltip>

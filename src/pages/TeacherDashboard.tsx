@@ -120,8 +120,8 @@ const TeacherDashboard = () => {
         {/* ── Header ── */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Good Morning, {firstName}! 👋</h1>
-            <p className="text-muted-foreground mt-1">Your students' Inner OS is evolving — here's what needs your attention.</p>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground">Good Morning, {firstName}! 👋</h1>
+            <p className="text-sm text-muted-foreground mt-1">Your students' Inner OS is evolving — here's what needs your attention.</p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             {CLASS_OPTIONS.map((cls) => (

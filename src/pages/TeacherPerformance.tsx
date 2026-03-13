@@ -129,10 +129,10 @@ const TeacherPerformance = () => {
 
   return (
     <DashboardLayout role="teacher" breadcrumbItems={[{ label: "Dashboard", href: "/teacher" }, { label: "Performance" }]}>
-      <main className="p-6 max-w-[1100px] mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground">📊 Performance Report</h1>
-          <p className="text-muted-foreground">Overview of student performance across your assignments</p>
+      <main className="p-4 md:p-6 max-w-[1100px] mx-auto">
+        <div className="mb-6">
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground">📊 Performance Report</h1>
+          <p className="text-sm text-muted-foreground mt-1">Overview of student performance across your assignments</p>
         </div>
 
         {/* Overview Stats */}

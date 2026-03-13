@@ -103,17 +103,17 @@ const TeacherInsights = () => {
 
   return (
     <DashboardLayout role="teacher" breadcrumbItems={[{ label: "Dashboard", href: "/teacher" }, { label: "Insights" }]}>
-      <main className="p-6 max-w-[1200px] mx-auto">
-        <div className="flex items-center justify-between mb-8">
+      <main className="p-4 md:p-6 max-w-[1200px] mx-auto">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">🧠 Class Insights</h1>
-            <p className="text-muted-foreground">Common mistakes, growth trends & actionable interventions</p>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground">🧠 Class Insights</h1>
+            <p className="text-sm text-muted-foreground mt-1">Common mistakes, growth trends & actionable interventions</p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={exportReport} className="gap-2">
-              <Download className="h-4 w-4" /> Export Report
+            <Button variant="outline" onClick={exportReport} className="gap-2" size="sm">
+              <Download className="h-4 w-4" /> Export
             </Button>
-            <Button variant="ghost" onClick={() => navigate("/teacher")}>
+            <Button variant="ghost" onClick={() => navigate("/teacher")} size="sm">
               <ArrowLeft className="h-4 w-4 mr-1" /> Dashboard
             </Button>
           </div>

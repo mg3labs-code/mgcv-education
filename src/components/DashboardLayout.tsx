@@ -11,7 +11,7 @@ const DashboardLayout = ({ role, children, breadcrumbItems }: DashboardLayoutPro
   <div className="gradient-bg min-h-screen" style={{ animation: "gradientShift 10s ease infinite" }}>
     <TopNavbar role={role} />
     {breadcrumbItems && breadcrumbItems.length > 0 && (
-      <div className="px-4 md:px-8 pt-4 max-w-[1400px] mx-auto">
+      <div className="px-4 md:px-8 pt-3 md:pt-4 max-w-[1400px] mx-auto">
         <Breadcrumbs items={breadcrumbItems} />
       </div>
     )}

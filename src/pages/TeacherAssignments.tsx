@@ -270,18 +270,18 @@ const TeacherAssignments = () => {
 
   return (
     <DashboardLayout role="teacher" breadcrumbItems={[{ label: "Dashboard", href: "/teacher" }, { label: "Assignments" }]}>
-      <main className="p-6 max-w-[1200px] mx-auto">
-        <div className="flex items-center justify-between mb-8">
+      <main className="p-4 md:p-6 max-w-[1200px] mx-auto">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">📝 Assignments</h1>
-            <p className="text-muted-foreground">Create, publish, and grade assignments</p>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground">📝 Assignments</h1>
+            <p className="text-sm text-muted-foreground mt-1">Create, publish, and grade assignments</p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => navigate("/teacher/insights")} className="gap-2">
-              <Brain className="h-4 w-4" /> Class Insights
+            <Button variant="outline" onClick={() => navigate("/teacher/insights")} className="gap-2" size="sm">
+              <Brain className="h-4 w-4" /> <span className="hidden sm:inline">Class </span>Insights
             </Button>
-            <Button onClick={() => setShowCreate(true)} className="gap-2">
-              <Plus className="h-4 w-4" /> Create Assignment
+            <Button onClick={() => setShowCreate(true)} className="gap-2" size="sm">
+              <Plus className="h-4 w-4" /> Create
             </Button>
           </div>
         </div>
