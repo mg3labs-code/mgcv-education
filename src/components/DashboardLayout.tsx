@@ -1,5 +1,6 @@
 import TopNavbar from "./TopNavbar";
 import Breadcrumbs, { type BreadcrumbEntry } from "./Breadcrumbs";
+import PageTransition from "./PageTransition";
 
 interface DashboardLayoutProps {
   role: "student" | "teacher" | "admin";
@@ -16,8 +17,10 @@ const DashboardLayout = ({ role, children, breadcrumbItems }: DashboardLayoutPro
         <Breadcrumbs items={breadcrumbItems} />
       </div>
     )}
-    <div id="main-content" className="animate-page-enter">
-      {children}
+    <div id="main-content">
+      <PageTransition>
+        {children}
+      </PageTransition>
     </div>
   </div>
 );
