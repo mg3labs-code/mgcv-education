@@ -82,8 +82,6 @@ const TeacherDailyTodo = () => {
               title="No Tasks for Today"
               description="Your daily teaching plan is clear. Add tasks or check back tomorrow!"
             />
-              <p className="text-sm text-muted-foreground mt-1">Tasks can be added from the schedule page.</p>
-            </div>
           ) : (
             (todos ?? []).map((item, i) => {
               const isExpanded = expandedSlot === i;
