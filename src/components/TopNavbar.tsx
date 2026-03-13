@@ -18,6 +18,17 @@ const TopNavbar = ({ role }: TopNavbarProps) => {
   const { signOut, fullName } = useAuth();
   const [activeModal, setActiveModal] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [dark, setDark] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("theme") === "dark" || document.documentElement.classList.contains("dark");
+    }
+    return false;
+  });
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", dark);
+    localStorage.setItem("theme", dark ? "dark" : "light");
+  }, [dark]);
 
   const handleSignOut = async () => {
     await signOut();
