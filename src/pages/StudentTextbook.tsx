@@ -3,7 +3,8 @@ import PageLayout from "@/components/PageLayout";
 import { useChapters, useSubjects } from "@/hooks/useTextbookData";
 import { BookOpen, Clock, FileText, Lock, ChevronRight, ArrowRight } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ListSkeleton } from "@/components/PageSkeleton";
+import EmptyState from "@/components/EmptyState";
 import { useState } from "react";
 
 const JOURNEY_STEPS = [
