@@ -157,10 +157,11 @@ const TeacherDashboard = () => {
           {avgLoading ? (
             Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-28 rounded-xl" />)
           ) : (
-            STAT_CONFIG.map((stat) => {
+            STAT_CONFIG.map((stat, idx) => {
               const value = classAvg ? Math.round(Number(classAvg[stat.key]) || 0) : 0;
               return (
-                <div key={stat.label} className={`${stat.bg} border-l-4 ${stat.borderColor} rounded-xl p-5 transition-all hover:shadow-md`}>
+                <div key={stat.label} className={`${stat.bg} border-l-4 ${stat.borderColor} rounded-xl p-5 card-hover-lift animate-stagger-in`}
+                  style={{ "--stagger-delay": `${idx * 0.08}s` } as React.CSSProperties}>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium text-muted-foreground flex items-center gap-1">
                       {stat.label}
