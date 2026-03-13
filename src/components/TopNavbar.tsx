@@ -98,6 +98,9 @@ const TopNavbar = ({ role }: TopNavbarProps) => {
             {menuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
 
+          <kbd className="hidden md:inline-flex items-center gap-0.5 rounded-md border border-white/20 bg-white/10 px-2 py-1 text-[11px] font-mono text-white/60">
+            ⌘K
+          </kbd>
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-400 to-pink-600 flex items-center justify-center text-white font-bold text-base">
             {initials}
           </div>
