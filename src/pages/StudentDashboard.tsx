@@ -7,7 +7,9 @@ import { useQuery } from "@tanstack/react-query";
 import { findTextbookMatch } from "@/data/topicTextbookMap";
 import PopQuizModal from "@/components/student/PopQuizModal";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BookOpen, Brain, Eye, Zap, Heart, TrendingUp, Flame, Star, ChevronRight, GraduationCap, Target, Users, Lightbulb } from "lucide-react";
+import { BookOpen, Brain, Eye, Zap, Heart, TrendingUp, Flame, Star, ChevronRight, GraduationCap, Target, Users, Lightbulb, Award } from "lucide-react";
+import HelpTooltip from "@/components/HelpTooltip";
+import EmptyState from "@/components/EmptyState";
 
 interface ScheduleItem {
   type: string;
