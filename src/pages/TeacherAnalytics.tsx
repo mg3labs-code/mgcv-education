@@ -166,7 +166,7 @@ const TeacherAnalytics = () => {
   const barColors = ["#4CAF50", "#66BB6A", "#81C784", "#A5D6A7", "#FFB74D", "#FF8A65", "#E57373"];
 
   return (
-    <DashboardLayout role="teacher">
+    <DashboardLayout role="teacher" breadcrumbItems={[{ label: "Dashboard", href: "/teacher" }, { label: "Analytics" }]}>
       <main className="p-8 max-w-[1400px] mx-auto">
         {/* Header */}
         <div className="text-center mb-10">

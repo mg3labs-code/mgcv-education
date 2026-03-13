@@ -235,9 +235,11 @@ const TeacherDashboard = () => {
             </h2>
 
             {(alerts ?? []).length === 0 ? (
-              <div className="bg-muted/30 rounded-xl p-6 text-center">
-                <p className="text-sm text-muted-foreground">No alerts right now — all students on track! 🎉</p>
-              </div>
+              <EmptyState
+                icon={Shield}
+                title="All Clear!"
+                description="No alerts right now — all students are on track. Great job! 🎉"
+              />
             ) : (
               (alerts ?? []).map((alert) => {
                 const style = alertStyles[alert.alert_type as keyof typeof alertStyles] ?? alertStyles.warning;

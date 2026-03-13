@@ -77,8 +77,11 @@ const TeacherDailyTodo = () => {
           {isLoading ? (
             Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)
           ) : totalCount === 0 ? (
-            <div className="bg-card border border-border rounded-xl p-12 text-center">
-              <p className="text-muted-foreground text-lg">No tasks for today yet.</p>
+            <EmptyState
+              icon={ListTodo}
+              title="No Tasks for Today"
+              description="Your daily teaching plan is clear. Add tasks or check back tomorrow!"
+            />
               <p className="text-sm text-muted-foreground mt-1">Tasks can be added from the schedule page.</p>
             </div>
           ) : (

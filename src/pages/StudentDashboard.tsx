@@ -418,7 +418,11 @@ const StudentDashboard = () => {
                   </h3>
                   <div className="space-y-3">
                     {(breakthroughs ?? []).length === 0 ? (
-                      <p className="text-sm text-muted-foreground italic text-center py-4">Complete your first episode to earn breakthroughs!</p>
+                      <EmptyState
+                        icon={Award}
+                        title="No Breakthroughs Yet"
+                        description="Complete your first episode to earn breakthroughs and track your growth!"
+                      />
                     ) : (
                       (breakthroughs ?? []).map((b) => (
                         <div key={b.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">

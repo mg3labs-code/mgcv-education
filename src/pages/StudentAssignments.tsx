@@ -207,7 +207,11 @@ const StudentAssignments = () => {
               </Card>
             ))}
             {(!assignments || assignments.length === 0) && !isLoading && (
-              <p className="text-center text-muted-foreground py-12">No assignments available yet</p>
+              <EmptyState
+                icon={ClipboardList}
+                title="No Assignments Yet"
+                description="Your teacher hasn't published any assignments yet. Check back soon!"
+              />
             )}
           </div>
         ) : (

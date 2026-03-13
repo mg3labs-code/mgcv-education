@@ -98,7 +98,7 @@ const TeacherParentConnect = () => {
   students?.forEach(s => { nameMap[s.user_id] = s.full_name; });
 
   return (
-    <DashboardLayout role="teacher">
+    <DashboardLayout role="teacher" breadcrumbItems={[{ label: "Dashboard", href: "/teacher" }, { label: "Parent Connect" }]}>
       <main className="p-6 max-w-[900px] mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div>

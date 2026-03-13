@@ -121,7 +121,7 @@ const StudentCalendar = () => {
   // Subject selection view
   if (!selectedSubject) {
     return (
-      <DashboardLayout role="student">
+      <DashboardLayout role="student" breadcrumbItems={[{ label: "Dashboard", href: "/student" }, { label: "Calendar" }]}>
         <div className="p-8 max-w-[1400px] mx-auto">
           {/* Header */}
           <div className="bg-gradient-to-r from-[#1e3c72] to-[#2a5298] text-white text-center py-10 px-8 rounded-2xl mb-8 relative overflow-hidden">

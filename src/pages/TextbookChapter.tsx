@@ -41,16 +41,15 @@ const TextbookChapter = () => {
     );
   }
 
+  const breadcrumbs = [
+    { label: "Dashboard", href: "/student" },
+    { label: "Textbook", href: "/student/textbook" },
+    { label: chapter.title },
+  ];
+
   return (
-    <PageLayout role="student">
+    <PageLayout role="student" breadcrumbItems={breadcrumbs}>
       <div className="max-w-4xl mx-auto">
-        {/* Back */}
-        <button
-          onClick={() => navigate("/student/textbook")}
-          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" /> All Chapters
-        </button>
 
         {/* Chapter Header */}
         <div className="rounded-2xl p-6 mb-8 text-white relative overflow-hidden" style={{ background: `linear-gradient(135deg, ${chapter.color}, ${chapter.color}cc)` }}>

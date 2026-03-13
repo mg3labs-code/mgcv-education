@@ -128,7 +128,7 @@ const TeacherPerformance = () => {
   const needsSupport = studentPerformance.filter(s => s.avg < 40).length;
 
   return (
-    <DashboardLayout role="teacher">
+    <DashboardLayout role="teacher" breadcrumbItems={[{ label: "Dashboard", href: "/teacher" }, { label: "Performance" }]}>
       <main className="p-6 max-w-[1100px] mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground">📊 Performance Report</h1>

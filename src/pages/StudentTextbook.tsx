@@ -89,13 +89,7 @@ const StudentTextbook = () => {
         )}
 
         {/* Loading State */}
-        {isLoading && (
-          <div className="space-y-3">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <Skeleton key={i} className="h-24 w-full rounded-xl" />
-            ))}
-          </div>
-        )}
+        {isLoading && <ListSkeleton rows={5} />}
 
         {/* Chapter Grid */}
         {!isLoading && chapters && (
