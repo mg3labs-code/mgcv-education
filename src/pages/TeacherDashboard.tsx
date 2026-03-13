@@ -141,14 +141,14 @@ const TeacherDashboard = () => {
         </div>
 
         {/* Pedagogy Badge */}
-        <div className="flex items-center gap-2">
-          <div className="bg-gradient-to-r from-purple-100 to-blue-100 border border-purple-200 rounded-full px-4 py-2 flex items-center gap-2">
-            <GraduationCap className="h-4 w-4 text-purple-600" />
-            <span className="text-sm font-semibold text-purple-700">Oxford & Harvard Pedagogy Active</span>
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="bg-gradient-to-r from-purple-100 to-blue-100 border border-purple-200 rounded-full px-3 md:px-4 py-1.5 md:py-2 flex items-center gap-2">
+            <GraduationCap className="h-4 w-4 text-purple-600 shrink-0" />
+            <span className="text-xs md:text-sm font-semibold text-purple-700">Oxford & Harvard Pedagogy</span>
           </div>
-          <div className="bg-gradient-to-r from-emerald-100 to-teal-100 border border-emerald-200 rounded-full px-4 py-2 flex items-center gap-2">
-            <Shield className="h-4 w-4 text-emerald-600" />
-            <span className="text-sm font-semibold text-emerald-700">7-Layer Framework Deployed</span>
+          <div className="bg-gradient-to-r from-emerald-100 to-teal-100 border border-emerald-200 rounded-full px-3 md:px-4 py-1.5 md:py-2 flex items-center gap-2">
+            <Shield className="h-4 w-4 text-emerald-600 shrink-0" />
+            <span className="text-xs md:text-sm font-semibold text-emerald-700">7-Layer Framework</span>
           </div>
         </div>
 
