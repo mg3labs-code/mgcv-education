@@ -555,7 +555,7 @@ const StudentDashboard = () => {
                   {loading ? "Loading schedule..." : "Synced from your teacher's calendar — click to mark complete!"}
                 </p>
 
-                <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(320px,1fr))] mb-6">
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-[repeat(auto-fit,minmax(300px,1fr))] mb-6">
                   {todayScheduleItems.map((item, i) => {
                     const isCompleted = completedItems.includes(i);
                     const badge = getTypeBadge(item.type);

@@ -164,7 +164,7 @@ const TeacherAttendance = () => {
         </Card>
 
         {/* Stats */}
-        <div className="grid grid-cols-4 gap-3 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
           <Card className="p-3 text-center">
             <Users className="h-4 w-4 mx-auto mb-1 text-primary" />
             <p className="text-xl font-bold text-card-foreground">{stats.total}</p>
@@ -188,12 +188,12 @@ const TeacherAttendance = () => {
         </div>
 
         {/* Quick Actions */}
-        <div className="flex gap-2 mb-6">
+        <div className="flex flex-wrap gap-2 mb-6">
           <Button variant="outline" size="sm" onClick={() => markAll("present")} className="gap-1">
-            <Check className="h-3.5 w-3.5" /> Mark All Present
+            <Check className="h-3.5 w-3.5" /> All Present
           </Button>
           <Button variant="outline" size="sm" onClick={() => markAll("absent")} className="gap-1">
-            <X className="h-3.5 w-3.5" /> Mark All Absent
+            <X className="h-3.5 w-3.5" /> All Absent
           </Button>
         </div>
 

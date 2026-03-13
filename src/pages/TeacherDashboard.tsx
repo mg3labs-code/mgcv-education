@@ -141,14 +141,14 @@ const TeacherDashboard = () => {
         </div>
 
         {/* Pedagogy Badge */}
-        <div className="flex items-center gap-2">
-          <div className="bg-gradient-to-r from-purple-100 to-blue-100 border border-purple-200 rounded-full px-4 py-2 flex items-center gap-2">
-            <GraduationCap className="h-4 w-4 text-purple-600" />
-            <span className="text-sm font-semibold text-purple-700">Oxford & Harvard Pedagogy Active</span>
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="bg-gradient-to-r from-purple-100 to-blue-100 border border-purple-200 rounded-full px-3 md:px-4 py-1.5 md:py-2 flex items-center gap-2">
+            <GraduationCap className="h-4 w-4 text-purple-600 shrink-0" />
+            <span className="text-xs md:text-sm font-semibold text-purple-700">Oxford & Harvard Pedagogy</span>
           </div>
-          <div className="bg-gradient-to-r from-emerald-100 to-teal-100 border border-emerald-200 rounded-full px-4 py-2 flex items-center gap-2">
-            <Shield className="h-4 w-4 text-emerald-600" />
-            <span className="text-sm font-semibold text-emerald-700">7-Layer Framework Deployed</span>
+          <div className="bg-gradient-to-r from-emerald-100 to-teal-100 border border-emerald-200 rounded-full px-3 md:px-4 py-1.5 md:py-2 flex items-center gap-2">
+            <Shield className="h-4 w-4 text-emerald-600 shrink-0" />
+            <span className="text-xs md:text-sm font-semibold text-emerald-700">7-Layer Framework</span>
           </div>
         </div>
 
@@ -213,7 +213,7 @@ const TeacherDashboard = () => {
               <h3 className="font-bold text-foreground text-base mb-4 flex items-center gap-2">
                 <GraduationCap className="h-4 w-4 text-primary" /> Elite Methods Performance
               </h3>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {METHODS_PERFORMANCE.map((method) => (
                   <div key={method.name} className="border border-border rounded-lg p-4 hover:shadow-sm transition-all">
                     <div className="flex items-center gap-2 mb-2">
@@ -307,7 +307,7 @@ const TeacherDashboard = () => {
 
         {/* ── Footer ── */}
         <footer className="bg-[#0f1419]/95 text-white py-6 rounded-2xl mt-4">
-          <div className="max-w-[1400px] mx-auto px-6 grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-6">
+          <div className="max-w-[1400px] mx-auto px-4 md:px-6 grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
             <div>
               <h4 className="mb-2 text-blue-400 text-sm">EduTech</h4>
               <p className="text-gray-400 text-xs leading-relaxed">Empowering education through innovative technology.</p>
