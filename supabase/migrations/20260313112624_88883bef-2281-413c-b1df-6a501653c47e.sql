@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX IF NOT EXISTS episode_progress_user_chapter_episode_idx ON public.episode_progress (user_id, chapter_id, episode_id);
