@@ -396,6 +396,7 @@ const TextbookEpisode = () => {
   const [activeBlock, setActiveBlock] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [collapsedBlocks, setCollapsedBlocks] = useState<Set<number>>(new Set());
+  const [understoodBlocks, setUnderstoodBlocks] = useState<Set<number>>(new Set());
   const blockRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const toggleBlock = useCallback((index: number) => {
@@ -404,6 +405,22 @@ const TextbookEpisode = () => {
       if (next.has(index)) next.delete(index);
       else next.add(index);
       return next;
+    });
+  }, []);
+
+  const toggleUnderstood = useCallback((index: number) => {
+    setUnderstoodBlocks(prev => {
+      const next = new Set(prev);
+      if (next.has(index)) next.delete(index);
+      else next.add(index);
+      return next;
+    });
+  }, []);
+
+  const toggleAllCollapsed = useCallback((blocks: any[]) => {
+    setCollapsedBlocks(prev => {
+      if (prev.size === blocks.length) return new Set();
+      return new Set(blocks.map((_, i) => i));
     });
   }, []);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -568,19 +585,31 @@ const TextbookEpisode = () => {
         </div>
 
         {/* Stats Bar */}
-        <div className="flex justify-between bg-muted/50 rounded-xl p-4 mb-6">
-          <div className="text-center">
-            <div className="text-xl font-bold text-primary">{blocks.length}</div>
-            <div className="text-xs text-muted-foreground mt-0.5">Total Sections</div>
+        <div className="flex items-center justify-between bg-muted/50 rounded-xl p-4 mb-6">
+          <div className="flex gap-6">
+            <div className="text-center">
+              <div className="text-xl font-bold text-primary">{blocks.length}</div>
+              <div className="text-xs text-muted-foreground mt-0.5">Total Sections</div>
+            </div>
+            <div className="text-center">
+              <div className="text-xl font-bold text-primary">{understoodBlocks.size}</div>
+              <div className="text-xs text-muted-foreground mt-0.5">Completed</div>
+            </div>
+            <div className="text-center">
+              <div className="text-xl font-bold text-primary">{episode.duration}</div>
+              <div className="text-xs text-muted-foreground mt-0.5">Estimated Time</div>
+            </div>
           </div>
-          <div className="text-center">
-            <div className="text-xl font-bold text-primary">0</div>
-            <div className="text-xs text-muted-foreground mt-0.5">Completed</div>
-          </div>
-          <div className="text-center">
-            <div className="text-xl font-bold text-primary">{episode.duration}</div>
-            <div className="text-xs text-muted-foreground mt-0.5">Estimated Time</div>
-          </div>
+          <button
+            onClick={() => toggleAllCollapsed(blocks)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+          >
+            {collapsedBlocks.size === blocks.length ? (
+              <><Eye className="h-3.5 w-3.5" /> Expand All</>
+            ) : (
+              <><ChevronDown className="h-3.5 w-3.5 -rotate-90" /> Collapse All</>
+            )}
+          </button>
         </div>
 
         {/* Action Bar */}
@@ -651,6 +680,21 @@ const TextbookEpisode = () => {
                     }}
                   >
                     {renderBlock(block)}
+
+                    {/* Mark as Understood */}
+                    <div className="mt-4 pt-3 border-t border-border flex justify-end">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); toggleUnderstood(i); }}
+                        className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                          understoodBlocks.has(i)
+                            ? "bg-primary/10 text-primary border border-primary/30"
+                            : "bg-muted text-muted-foreground hover:bg-muted/80 border border-border"
+                        }`}
+                      >
+                        <CheckCircle2 className={`h-4 w-4 ${understoodBlocks.has(i) ? "fill-primary" : ""}`} />
+                        {understoodBlocks.has(i) ? "Understood ✓" : "Mark as Understood"}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </React.Fragment>
