@@ -3,7 +3,9 @@ import { useNavigate, useParams } from "react-router-dom";
 import PageLayout from "@/components/PageLayout";
 import { ContentBlock, ConceptContent, ActivityContent, RecallContent, ExplainContent, AssessmentContent, ExerciseContent, ReasoningContent, AssumptionsContent, ConnectionsContent, ApplicationContent, ImplicationsContent } from "@/data/textbookData";
 import { useChapterEpisodes, useEpisodeBlocks } from "@/hooks/useTextbookData";
-import { ArrowLeft, BookOpen, Brain, Briefcase, CheckCircle2, ChevronDown, Compass, Eye, Layers, Lightbulb, Link, Map, MessageSquare, Mic, PenLine, Search, Shield, Sparkles, Zap, RotateCcw, GripHorizontal } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { ArrowLeft, BookOpen, Brain, Briefcase, Check, CheckCircle2, ChevronDown, Cloud, Compass, Eye, Layers, Lightbulb, Link, Map, MessageSquare, Mic, PenLine, Search, Shield, Sparkles, Zap, RotateCcw, GripHorizontal } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import VoiceExplainWidget from "@/components/textbook/VoiceExplainWidget";
@@ -390,6 +392,7 @@ const actionBarButtons = [
 const TextbookEpisode = () => {
   const { chapterId, episodeId } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [showDefense, setShowDefense] = useState(false);
   const [showFirstPrinciples, setShowFirstPrinciples] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
@@ -397,7 +400,10 @@ const TextbookEpisode = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [collapsedBlocks, setCollapsedBlocks] = useState<Set<number>>(new Set());
   const [understoodBlocks, setUnderstoodBlocks] = useState<Set<number>>(new Set());
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
   const blockRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const totalBlocksRef = useRef(0);
 
   const toggleBlock = useCallback((index: number) => {
     setCollapsedBlocks(prev => {
@@ -408,14 +414,38 @@ const TextbookEpisode = () => {
     });
   }, []);
 
+  // Persist understood blocks to DB (debounced)
+  const persistUnderstood = useCallback((understood: Set<number>) => {
+    if (!user || !chapterId || !episodeId) return;
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    setSaveStatus("saving");
+    saveTimerRef.current = setTimeout(async () => {
+      const arr = Array.from(understood);
+      const pct = totalBlocksRef.current > 0 ? Math.round((arr.length / totalBlocksRef.current) * 100) : 0;
+      const { error } = await supabase
+        .from("episode_progress")
+        .upsert({
+          user_id: user.id,
+          chapter_id: chapterId,
+          episode_id: episodeId,
+          layer_scores: { understood: arr },
+          completion_pct: pct,
+          completed_at: pct === 100 ? new Date().toISOString() : null,
+        }, { onConflict: "user_id,chapter_id,episode_id" });
+      setSaveStatus(error ? "idle" : "saved");
+      if (!error) setTimeout(() => setSaveStatus("idle"), 2000);
+    }, 500);
+  }, [user, chapterId, episodeId]);
+
   const toggleUnderstood = useCallback((index: number) => {
     setUnderstoodBlocks(prev => {
       const next = new Set(prev);
       if (next.has(index)) next.delete(index);
       else next.add(index);
+      persistUnderstood(next);
       return next;
     });
-  }, []);
+  }, [persistUnderstood]);
 
   const toggleAllCollapsed = useCallback((blocks: any[]) => {
     setCollapsedBlocks(prev => {
@@ -437,6 +467,29 @@ const TextbookEpisode = () => {
   const nextEpisode = chapter?.episodes[currentEpisodeIndex + 1];
   
   const isLoading = chapterLoading || blocksLoading;
+
+  // Keep totalBlocksRef in sync
+  useEffect(() => { totalBlocksRef.current = blocks.length; }, [blocks.length]);
+
+  // Load understood blocks from DB on mount
+  useEffect(() => {
+    if (!user || !chapterId || !episodeId) return;
+    supabase
+      .from("episode_progress")
+      .select("layer_scores")
+      .eq("user_id", user.id)
+      .eq("chapter_id", chapterId)
+      .eq("episode_id", episodeId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.layer_scores && typeof data.layer_scores === "object" && !Array.isArray(data.layer_scores)) {
+          const scores = data.layer_scores as Record<string, unknown>;
+          if (Array.isArray(scores.understood)) {
+            setUnderstoodBlocks(new Set(scores.understood as number[]));
+          }
+        }
+      });
+  }, [user, chapterId, episodeId]);
 
   // Scroll progress
   useEffect(() => {
@@ -600,16 +653,28 @@ const TextbookEpisode = () => {
               <div className="text-xs text-muted-foreground mt-0.5">Estimated Time</div>
             </div>
           </div>
-          <button
-            onClick={() => toggleAllCollapsed(blocks)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-          >
-            {collapsedBlocks.size === blocks.length ? (
-              <><Eye className="h-3.5 w-3.5" /> Expand All</>
-            ) : (
-              <><ChevronDown className="h-3.5 w-3.5 -rotate-90" /> Collapse All</>
+          <div className="flex items-center gap-3">
+            {saveStatus === "saving" && (
+              <span className="text-xs text-muted-foreground flex items-center gap-1 animate-pulse">
+                <Cloud className="h-3 w-3" /> Saving…
+              </span>
             )}
-          </button>
+            {saveStatus === "saved" && (
+              <span className="text-xs text-primary flex items-center gap-1">
+                <Check className="h-3 w-3" /> Saved
+              </span>
+            )}
+            <button
+              onClick={() => toggleAllCollapsed(blocks)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            >
+              {collapsedBlocks.size === blocks.length ? (
+                <><Eye className="h-3.5 w-3.5" /> Expand All</>
+              ) : (
+                <><ChevronDown className="h-3.5 w-3.5 -rotate-90" /> Collapse All</>
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Action Bar */}

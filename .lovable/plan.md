@@ -1,42 +1,25 @@
 
+# Database-Driven Textbook with AI Content Generation — Status
 
-# Persist "Mark as Understood" to Database
+## ✅ Completed
 
-## Approach
+1. **4 new DB tables** created: `subjects`, `tb_chapters`, `tb_episodes`, `content_blocks` with RLS
+2. **7 subjects seeded**: Mathematics (14ch), Physics (12ch), Chemistry (9ch), Biology (8ch), English (8ch), Telugu (6ch), Social Studies (14ch) = **71 chapters total**
+3. **Math Ch1**: 7 episodes + all 11 content blocks for Eps 1-3 (55 blocks)
+4. **Physics Ch1**: 2 episodes + 44 content blocks (full 7-layer)
+5. **Chemistry Ch1**: 2 episodes + 44 content blocks (full 7-layer)
+6. **Biology Ch1**: 2 episodes + 44 content blocks (full 7-layer)
+7. **English Ch1**: 2 episodes + 22 content blocks (full 7-layer)
+8. **Telugu Ch1**: 2 episodes + 22 content blocks (full 7-layer)
+9. **Social Studies Ch1**: 2 episodes + 22 content blocks (full 7-layer)
+10. **Oxford Tutorial Defense**: Edge function fixed (Lovable AI gateway), enhanced modal with round counter, confidence meter, hint button, score summary, session tracking
+11. **Feynman First Principles**: Edge function fixed (Lovable AI gateway), enhanced modal with encouragement, confidence checks, summary card, session tracking
+12. **AI content generator** improved with JSON recovery and higher token limit
 
-Use the existing `episode_progress` table which already has `layer_scores` (jsonb) and `completion_pct` columns. Store understood block indices in `layer_scores` and compute `completion_pct` from them.
+**Total content blocks in DB**: 253 across 7 subjects
 
-## Database
+## 🔜 Next Steps
 
-No schema changes needed. The `episode_progress` table already has:
-- `user_id`, `chapter_id`, `episode_id` — identifiers
-- `layer_scores` jsonb — will store `{ "understood": [0, 2, 5] }` (block indices)
-- `completion_pct` integer — auto-computed from understood count / total blocks
-- RLS: students can manage own rows ✓
-
-## Code Changes
-
-**File: `src/pages/TextbookEpisode.tsx`**
-
-1. Import `supabase` client and `useAuth` hook
-2. On mount (when `blocks` load), fetch existing `episode_progress` row for this user/chapter/episode and populate `understoodBlocks` state from `layer_scores.understood`
-3. Update `toggleUnderstood` to upsert `episode_progress` row:
-   - Set `layer_scores` to `{ understood: [...indices] }`
-   - Set `completion_pct` to `Math.round(understoodCount / totalBlocks * 100)`
-   - Use debounced save (300ms) to avoid rapid DB writes
-4. Show a subtle "Saved" indicator in the stats bar when synced
-
-## Flow
-
-```text
-Page loads → fetch episode_progress → populate understoodBlocks Set
-User clicks "Mark as Understood" → update local state → debounced upsert to episode_progress
-User returns later → understood blocks restored from DB
-```
-
-## Files Changed
-
-| File | Change |
-|---|---|
-| `src/pages/TextbookEpisode.tsx` | Add DB fetch on load, persist on toggle, import supabase + useAuth |
-
+1. **Generate content for Math Ch1 Eps 4-7** (4 episodes still need blocks)
+2. **Generate episodes + content for all Ch2+ across subjects**
+3. **Build teacher content review UI** — allow teachers to edit AI-generated content before publishing
