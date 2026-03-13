@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Eye, Brain, Target, Heart, TrendingUp, TrendingDown, AlertTriangle, CheckCircle, Info, ChevronRight, GraduationCap, Users, BookOpen, ClipboardList, BarChart3, Bell, MessageSquare, Lightbulb, Zap, Shield } from "lucide-react";
 import HelpTooltip from "@/components/HelpTooltip";
 import EmptyState from "@/components/EmptyState";
+import WelcomeBanner from "@/components/WelcomeBanner";
 
 const CLASS_OPTIONS = ["Class 10", "Class 9", "Class 8"];
 
