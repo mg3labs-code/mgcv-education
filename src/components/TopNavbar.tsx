@@ -42,6 +42,7 @@ const TopNavbar = ({ role }: TopNavbarProps) => {
   const teacherItems = [
     { label: "Dashboard", path: "/teacher", type: "nav" as const },
     { label: "Annual Schedule", path: "/teacher/schedule", type: "nav" as const },
+    { label: "Daily Plan", path: "/teacher/daily-todo", type: "nav" as const },
     { label: "Metrics", path: "/teacher/analytics", type: "nav" as const },
     { label: "Message Bar", modal: "message", type: "modal" as const },
   ];
