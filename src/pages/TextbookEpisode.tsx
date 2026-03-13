@@ -407,6 +407,22 @@ const TextbookEpisode = () => {
       return next;
     });
   }, []);
+
+  const toggleUnderstood = useCallback((index: number) => {
+    setUnderstoodBlocks(prev => {
+      const next = new Set(prev);
+      if (next.has(index)) next.delete(index);
+      else next.add(index);
+      return next;
+    });
+  }, []);
+
+  const toggleAllCollapsed = useCallback((blocks: any[]) => {
+    setCollapsedBlocks(prev => {
+      if (prev.size === blocks.length) return new Set();
+      return new Set(blocks.map((_, i) => i));
+    });
+  }, []);
   const contentRef = useRef<HTMLDivElement>(null);
   const activityRef = useRef<HTMLDivElement>(null);
 
