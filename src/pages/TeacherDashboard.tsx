@@ -159,7 +159,15 @@ const TeacherDashboard = () => {
               return (
                 <div key={stat.label} className={`${stat.bg} border-l-4 ${stat.borderColor} rounded-xl p-5 transition-all hover:shadow-md`}>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-muted-foreground">{stat.label}</span>
+                    <span className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+                      {stat.label}
+                      <HelpTooltip content={
+                        stat.label === "Avg Clarity" ? "Average concept understanding across your class — based on recall and explanation scores." :
+                        stat.label === "Avg Reasoning" ? "Average analytical thinking score — how well students reason through problems." :
+                        stat.label === "Avg Attention" ? "Average focus and engagement — consistency in completing learning layers." :
+                        "Average intellectual character — persistence, honesty, and growth mindset."
+                      } />
+                    </span>
                     <div className={`w-8 h-8 rounded-lg ${stat.iconBg} flex items-center justify-center`}>
                       <stat.icon className={`h-4 w-4 ${stat.iconColor}`} />
                     </div>
