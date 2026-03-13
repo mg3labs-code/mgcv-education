@@ -240,7 +240,7 @@ const StudentCalendar = () => {
   }
 
   return (
-    <DashboardLayout role="student">
+    <DashboardLayout role="student" breadcrumbItems={[{ label: "Dashboard", href: "/student" }, { label: "Calendar" }]}>
       <div className="p-8 max-w-[1400px] mx-auto">
         <div className="bg-card/95 backdrop-blur rounded-2xl overflow-hidden shadow-lg border border-border/20">
           {/* Header */}
