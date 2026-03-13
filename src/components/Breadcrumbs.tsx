@@ -45,12 +45,14 @@ const Breadcrumbs = ({ items, className }: BreadcrumbsProps) => {
     const segments = location.pathname.split("/").filter(Boolean);
     if (segments.length <= 1) return [];
     
-    return segments.slice(0, -1).map((seg, i) => ({
+    const result: BreadcrumbEntry[] = segments.slice(0, -1).map((seg, i) => ({
       label: ROUTE_LABELS[seg] || seg.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
       href: "/" + segments.slice(0, i + 1).join("/"),
-    })).concat({
+    }));
+    result.push({
       label: ROUTE_LABELS[segments[segments.length - 1]] || segments[segments.length - 1].replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
     });
+    return result;
   })();
 
   if (crumbs.length === 0) return null;
