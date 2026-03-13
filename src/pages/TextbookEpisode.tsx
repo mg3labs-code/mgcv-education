@@ -653,16 +653,28 @@ const TextbookEpisode = () => {
               <div className="text-xs text-muted-foreground mt-0.5">Estimated Time</div>
             </div>
           </div>
-          <button
-            onClick={() => toggleAllCollapsed(blocks)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-          >
-            {collapsedBlocks.size === blocks.length ? (
-              <><Eye className="h-3.5 w-3.5" /> Expand All</>
-            ) : (
-              <><ChevronDown className="h-3.5 w-3.5 -rotate-90" /> Collapse All</>
+          <div className="flex items-center gap-3">
+            {saveStatus === "saving" && (
+              <span className="text-xs text-muted-foreground flex items-center gap-1 animate-pulse">
+                <Cloud className="h-3 w-3" /> Saving…
+              </span>
             )}
-          </button>
+            {saveStatus === "saved" && (
+              <span className="text-xs text-primary flex items-center gap-1">
+                <Check className="h-3 w-3" /> Saved
+              </span>
+            )}
+            <button
+              onClick={() => toggleAllCollapsed(blocks)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            >
+              {collapsedBlocks.size === blocks.length ? (
+                <><Eye className="h-3.5 w-3.5" /> Expand All</>
+              ) : (
+                <><ChevronDown className="h-3.5 w-3.5 -rotate-90" /> Collapse All</>
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Action Bar */}
