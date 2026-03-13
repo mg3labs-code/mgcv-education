@@ -396,6 +396,7 @@ const TextbookEpisode = () => {
   const [activeBlock, setActiveBlock] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [collapsedBlocks, setCollapsedBlocks] = useState<Set<number>>(new Set());
+  const [understoodBlocks, setUnderstoodBlocks] = useState<Set<number>>(new Set());
   const blockRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const toggleBlock = useCallback((index: number) => {
