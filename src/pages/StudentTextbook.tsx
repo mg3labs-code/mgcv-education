@@ -23,8 +23,13 @@ const StudentTextbook = () => {
 
   const isLoading = subjectsLoading || chaptersLoading;
 
+  const breadcrumbs = [
+    { label: "Dashboard", href: "/student" },
+    { label: "Textbook" },
+  ];
+
   return (
-    <PageLayout role="student">
+    <PageLayout role="student" breadcrumbItems={breadcrumbs}>
       <div className="max-w-5xl mx-auto">
 
         {/* ── Learning Journey Flow ── */}
