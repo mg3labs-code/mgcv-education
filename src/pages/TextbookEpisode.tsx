@@ -18,27 +18,27 @@ import FirstPrinciplesModal from "@/components/textbook/FirstPrinciplesModal";
 // ─── Block Renderers ────────────────────────────────────────
 
 const ConceptBlock = ({ content }: { content: ConceptContent }) => (
-  <div className="space-y-6">
+  <div className="space-y-5">
     {content.sections.map((s, i) => (
-      <div key={i} className={`rounded-xl p-5 ${s.highlight ? "bg-primary/5 border-l-4 border-primary" : "bg-muted/30 border-l-4 border-muted-foreground/20"}`}>
-        <h4 className="font-semibold font-serif text-foreground text-lg mb-3">{s.heading}</h4>
-        <div className="text-base text-muted-foreground leading-relaxed whitespace-pre-line">{s.body}</div>
+      <div key={i}>
+        <h4 className="font-semibold text-foreground text-[1.1rem] mb-2">{s.heading}</h4>
+        <div className="text-[0.95rem] text-muted-foreground leading-[1.8] whitespace-pre-line">{s.body}</div>
       </div>
     ))}
     {content.keyFormulas && content.keyFormulas.length > 0 && (
-      <div className="rounded-xl bg-accent/20 border border-accent/40 p-5 text-center">
-        <h4 className="text-sm font-bold text-foreground mb-3 flex items-center justify-center gap-2">
-          <Sparkles className="h-4 w-4 text-primary" /> Key Formulas
+      <div className="rounded-lg bg-muted/40 border-2 border-primary/30 p-5 text-center">
+        <h4 className="text-sm font-semibold text-primary mb-3 flex items-center justify-center gap-2">
+          🎯 Key Formulas
         </h4>
         {content.keyFormulas.map((f, i) => (
-          <div key={i} className="font-mono text-base bg-background rounded-lg px-4 py-3 mt-2 text-foreground border inline-block">{f}</div>
+          <div key={i} className="font-mono text-lg font-semibold text-foreground mt-2">{f}</div>
         ))}
       </div>
     )}
     {content.example && content.example.map((ex, i) => (
-      <div key={i} className="rounded-xl border-l-4 border-warning bg-warning/5 p-5">
-        <p className="text-base font-medium text-foreground mb-2">📌 {ex.question}</p>
-        <p className="text-base text-muted-foreground leading-relaxed whitespace-pre-line">{ex.solution}</p>
+      <div key={i} className="rounded-lg border-l-4 border-green-500 bg-green-50 dark:bg-green-950/20 p-5">
+        <h4 className="text-green-700 dark:text-green-400 font-semibold mb-2 flex items-center gap-2">🎯 {ex.question}</h4>
+        <p className="text-[0.95rem] text-muted-foreground leading-[1.8] whitespace-pre-line">{ex.solution}</p>
       </div>
     ))}
   </div>
@@ -219,22 +219,22 @@ const ActivityBlock = ({ content }: { content: ActivityContent }) => {
 const RecallBlock = ({ content }: { content: RecallContent }) => {
   const [revealed, setRevealed] = useState<Record<number, boolean>>({});
   return (
-    <div className="space-y-3">
-      {content.questions.map((q, i) => (
-        <div key={i} className="rounded-xl border bg-card p-5">
-          <p className="text-base font-medium text-foreground mb-2">🧠 {q.question}</p>
-          {q.hint && !revealed[i] && <p className="text-sm text-muted-foreground italic mb-2">💡 Hint: {q.hint}</p>}
-          {revealed[i] ? (
-            <div className="rounded-lg bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 p-3 mt-2">
-              <p className="text-base text-green-800 dark:text-green-300">{q.answer}</p>
-            </div>
-          ) : (
-            <Button variant="outline" size="sm" onClick={() => setRevealed({ ...revealed, [i]: true })} className="mt-1">
-              <Eye className="h-3.5 w-3.5 mr-1" /> Reveal Answer
-            </Button>
-          )}
-        </div>
-      ))}
+    <div className="border-2 border-dashed border-amber-400 rounded-lg p-5 bg-amber-50/50 dark:bg-amber-950/10">
+      <h4 className="text-amber-600 dark:text-amber-400 font-semibold mb-4 flex items-center gap-2">🧠 Quick Check</h4>
+      <div className="space-y-3">
+        {content.questions.map((q, i) => (
+          <div key={i} className="bg-white dark:bg-card rounded-lg p-4 cursor-pointer hover:bg-amber-50/60 dark:hover:bg-amber-950/20 transition-colors" onClick={() => !revealed[i] && setRevealed({ ...revealed, [i]: true })}>
+            <p className="text-[0.95rem] font-medium text-foreground"><strong>Q{i + 1}:</strong> {q.question}</p>
+            {q.hint && !revealed[i] && <p className="text-sm text-muted-foreground italic mt-1">💡 Hint: {q.hint}</p>}
+            {revealed[i] && (
+              <div className="mt-2 p-3 bg-green-100 dark:bg-green-950/30 rounded-md text-green-800 dark:text-green-300 text-[0.95rem]">
+                ✓ {q.answer}
+              </div>
+            )}
+            {!revealed[i] && <p className="text-xs text-muted-foreground mt-2">Click to reveal answer</p>}
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
@@ -326,16 +326,16 @@ const ExerciseBlock = ({ content }: { content: ExerciseContent }) => {
   const [showAnswer, setShowAnswer] = useState<Record<number, boolean>>({});
   return (
     <div className="space-y-3">
-      <div className="rounded-lg bg-muted/40 px-4 py-2 text-sm text-muted-foreground">📖 {content.source}</div>
+      <div className="border-l-4 border-blue-500 bg-blue-50/60 dark:bg-blue-950/20 rounded-r-lg px-4 py-3 text-sm text-muted-foreground">📖 {content.source}</div>
       {content.problems.map((p, i) => (
-        <div key={i} className="rounded-xl border bg-card p-5">
-          <p className="text-base text-foreground"><span className="font-semibold">{p.number}.</span> {p.text}</p>
+        <div key={i} className="bg-white dark:bg-card rounded-lg border-l-3 border-green-500 p-4 cursor-pointer" onClick={() => !showAnswer[i] && setShowAnswer({ ...showAnswer, [i]: true })}>
+          <p className="text-[0.95rem] text-foreground leading-[1.8]"><span className="font-semibold">{p.number}.</span> {p.text}</p>
           {p.answer && (
             <div className="mt-2">
               {showAnswer[i] ? (
-                <div className="rounded-lg bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 p-2 text-base text-green-800 dark:text-green-300">Answer: {p.answer}</div>
+                <div className="rounded-md bg-green-100 dark:bg-green-950/30 p-3 text-[0.95rem] text-green-800 dark:text-green-300">✓ Answer: {p.answer}</div>
               ) : (
-                <Button variant="ghost" size="sm" onClick={() => setShowAnswer({ ...showAnswer, [i]: true })}><Eye className="h-3.5 w-3.5 mr-1" /> Show Answer</Button>
+                <p className="text-xs text-muted-foreground mt-1">Click to reveal answer</p>
               )}
             </div>
           )}
@@ -362,18 +362,18 @@ const blockLabels: Record<string, string> = {
 
 const DEEP_BLOCKS = new Set(["reasoning", "assumptions", "connections", "application", "implications"]);
 
-const layerMeta: Record<string, { bg: string; badge?: string; badgeColor?: string; dotColor: string }> = {
-  concept:     { bg: "bg-violet-50/60 dark:bg-violet-950/20",  badge: "LAYER 1 · Definition",  badgeColor: "bg-violet-100 text-violet-800 dark:bg-violet-900/40 dark:text-violet-300", dotColor: "bg-violet-500" },
-  activity:    { bg: "bg-rose-50/60 dark:bg-rose-950/20",      badge: "LAYER 2 · Mechanism",    badgeColor: "bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300", dotColor: "bg-rose-500" },
-  recall:      { bg: "", dotColor: "bg-primary" },
-  explain:     { bg: "", dotColor: "bg-primary" },
-  assessment:  { bg: "", dotColor: "bg-primary" },
-  exercise:    { bg: "", dotColor: "bg-primary" },
-  reasoning:   { bg: "bg-amber-50/60 dark:bg-amber-950/20",   badge: "LAYER 3 · Reasoning",   badgeColor: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300", dotColor: "bg-amber-500" },
-  assumptions: { bg: "bg-sky-50/60 dark:bg-sky-950/20",       badge: "LAYER 4 · Assumptions",  badgeColor: "bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300", dotColor: "bg-sky-500" },
-  connections: { bg: "bg-emerald-50/60 dark:bg-emerald-950/20", badge: "LAYER 5 · Connections", badgeColor: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300", dotColor: "bg-emerald-500" },
-  application: { bg: "bg-orange-50/60 dark:bg-orange-950/20",  badge: "LAYER 6 · Application",  badgeColor: "bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300", dotColor: "bg-orange-500" },
-  implications:{ bg: "bg-indigo-50/60 dark:bg-indigo-950/20",  badge: "LAYER 7 · Implications", badgeColor: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300", dotColor: "bg-indigo-500" },
+const layerMeta: Record<string, { border: string; bg: string; badge?: string; badgeColor?: string; dotColor: string }> = {
+  concept:     { border: "border-l-blue-600",    bg: "",  badge: "💡 Essential",  badgeColor: "bg-green-500 text-white", dotColor: "bg-blue-600" },
+  activity:    { border: "border-l-rose-500",    bg: "",  badge: "📝 Practice",   badgeColor: "bg-amber-500 text-white", dotColor: "bg-rose-500" },
+  recall:      { border: "border-l-amber-500",   bg: "",  badge: "🧠 Recall",     badgeColor: "bg-amber-500 text-white", dotColor: "bg-amber-500" },
+  explain:     { border: "border-l-purple-500",  bg: "",  badge: "💬 Explain",    badgeColor: "bg-purple-500 text-white", dotColor: "bg-purple-500" },
+  assessment:  { border: "border-l-emerald-500", bg: "",  badge: "✅ Test",       badgeColor: "bg-emerald-500 text-white", dotColor: "bg-emerald-500" },
+  exercise:    { border: "border-l-cyan-500",    bg: "",  badge: "💪 Practice",   badgeColor: "bg-cyan-600 text-white", dotColor: "bg-cyan-500" },
+  reasoning:   { border: "border-l-amber-600",   bg: "",  badge: "⚡ Important",  badgeColor: "bg-amber-500 text-white", dotColor: "bg-amber-600" },
+  assumptions: { border: "border-l-sky-500",     bg: "",  badge: "🛡️ Important",  badgeColor: "bg-amber-500 text-white", dotColor: "bg-sky-500" },
+  connections: { border: "border-l-emerald-600", bg: "",  badge: "🔗 Essential",  badgeColor: "bg-green-500 text-white", dotColor: "bg-emerald-600" },
+  application: { border: "border-l-orange-500",  bg: "",  badge: "🌍 Essential",  badgeColor: "bg-green-500 text-white", dotColor: "bg-orange-500" },
+  implications:{ border: "border-l-indigo-500",  bg: "",  badge: "🎓 Advanced",   badgeColor: "bg-red-500 text-white", dotColor: "bg-indigo-500" },
 };
 
 // ─── Action Bar Buttons ─────────────────────────────────────
@@ -491,7 +491,7 @@ const TextbookEpisode = () => {
     }
   };
 
-  const defaultMeta = { bg: "", dotColor: "bg-primary", badge: undefined, badgeColor: undefined } as const;
+  const defaultMeta = { border: "border-l-primary", bg: "", dotColor: "bg-primary", badge: undefined, badgeColor: undefined } as const;
 
   return (
     <PageLayout role="student">
@@ -545,16 +545,32 @@ const TextbookEpisode = () => {
       </div>
 
       <div className="max-w-3xl mx-auto" ref={contentRef}>
-        {/* Sticky Header */}
-        <div className="sticky top-1 z-40 bg-background/95 backdrop-blur-sm pb-3 pt-2 border-b border-border mb-4">
-          <div className="flex items-center justify-between">
-            <button onClick={() => navigate(`/student/textbook/${chapterId}`)} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-blue-800 to-indigo-800 rounded-2xl text-white p-6 mb-6">
+          <div className="flex items-center justify-between mb-3">
+            <button onClick={() => navigate(`/student/textbook/${chapterId}`)} className="flex items-center gap-2 text-sm text-white/70 hover:text-white transition-colors">
               <ArrowLeft className="h-4 w-4" /> {chapter.title}
             </button>
-            <span className="text-xs text-muted-foreground">Episode {episode.number} · {episode.duration}</span>
+            <span className="text-xs text-white/60 bg-white/10 px-3 py-1 rounded-full">⏱️ {episode.duration}</span>
           </div>
-          <h1 className="text-2xl font-bold font-serif text-foreground mt-2">{episode.title}</h1>
-          <p className="text-base text-muted-foreground leading-relaxed">{episode.subtitle}</p>
+          <h1 className="text-2xl font-light text-white">{episode.title}</h1>
+          {episode.subtitle && <p className="text-sm text-white/70 mt-1">{episode.subtitle}</p>}
+        </div>
+
+        {/* Stats Bar */}
+        <div className="flex justify-between bg-muted/50 rounded-xl p-4 mb-6">
+          <div className="text-center">
+            <div className="text-xl font-bold text-primary">{blocks.length}</div>
+            <div className="text-xs text-muted-foreground mt-0.5">Total Sections</div>
+          </div>
+          <div className="text-center">
+            <div className="text-xl font-bold text-primary">0</div>
+            <div className="text-xs text-muted-foreground mt-0.5">Completed</div>
+          </div>
+          <div className="text-center">
+            <div className="text-xl font-bold text-primary">{episode.duration}</div>
+            <div className="text-xs text-muted-foreground mt-0.5">Estimated Time</div>
+          </div>
         </div>
 
         {/* Action Bar */}
@@ -594,21 +610,21 @@ const TextbookEpisode = () => {
 
                 <div
                   ref={(el) => { blockRefs.current[i] = el; }}
-                  className={`rounded-2xl p-6 mb-5 scroll-mt-24 border border-border/60 ${meta.bg || "bg-card"}`}
+                  className={`bg-white dark:bg-card rounded-xl p-5 mb-5 scroll-mt-24 shadow-sm hover:shadow-md transition-all border-l-4 ${(meta as any).border || "border-l-primary"} hover:-translate-y-0.5`}
                 >
-                  {/* Layer Badge — for ALL layers that have one */}
-                  {meta.badge && (
-                    <span className={`inline-block text-[11px] font-bold tracking-wide px-3 py-1 rounded-full mb-4 ${meta.badgeColor || ""}`}>
-                      {meta.badge}
-                    </span>
-                  )}
-
-                  {/* Block Header */}
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                      <BlockIcon className="h-4 w-4 text-primary" />
+                  {/* Section Header */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <span className="text-xl">{block.icon}</span>
+                      <h2 className="text-[1.2rem] font-semibold text-foreground">{block.title}</h2>
                     </div>
-                    <h2 className="font-semibold font-serif text-foreground text-xl">{block.icon} {block.title}</h2>
+                    <div className="flex items-center gap-2">
+                      {meta.badge && (
+                        <span className={`text-[11px] font-semibold px-3 py-1 rounded-full ${meta.badgeColor || ""}`}>
+                          {meta.badge}
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   {/* Block Content */}
