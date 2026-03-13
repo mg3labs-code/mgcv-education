@@ -680,6 +680,21 @@ const TextbookEpisode = () => {
                     }}
                   >
                     {renderBlock(block)}
+
+                    {/* Mark as Understood */}
+                    <div className="mt-4 pt-3 border-t border-border flex justify-end">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); toggleUnderstood(i); }}
+                        className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                          understoodBlocks.has(i)
+                            ? "bg-primary/10 text-primary border border-primary/30"
+                            : "bg-muted text-muted-foreground hover:bg-muted/80 border border-border"
+                        }`}
+                      >
+                        <CheckCircle2 className={`h-4 w-4 ${understoodBlocks.has(i) ? "fill-primary" : ""}`} />
+                        {understoodBlocks.has(i) ? "Understood ✓" : "Mark as Understood"}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </React.Fragment>
