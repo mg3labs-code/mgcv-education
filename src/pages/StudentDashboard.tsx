@@ -309,7 +309,16 @@ const StudentDashboard = () => {
                         <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${dim.color} flex items-center justify-center`}>
                           <dim.icon className="h-4 w-4 text-white" />
                         </div>
-                        <span className={`text-sm font-semibold ${dim.text}`}>{dim.name}</span>
+                        <span className={`text-sm font-semibold ${dim.text} flex items-center gap-1`}>
+                          {dim.name}
+                          <HelpTooltip content={
+                            dim.name === "Clarity" ? "How well you understand core concepts — measured through recall and explanation quality." :
+                            dim.name === "Thinking" ? "Your reasoning and analytical ability — how deeply you process and connect ideas." :
+                            dim.name === "Attention" ? "Your focus and engagement — consistency in completing learning layers." :
+                            dim.name === "Momentum" ? "Your learning velocity — streak consistency and daily progress." :
+                            "Your intellectual character — persistence, honesty, and growth mindset."
+                          } />
+                        </span>
                       </div>
                       <div className="text-2xl font-bold text-foreground mb-1">{score}%</div>
                       <div className="w-full h-2 bg-white/60 rounded-full overflow-hidden mb-2">
