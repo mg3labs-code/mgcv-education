@@ -8,7 +8,8 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Upload, Send, CheckCircle, Clock, AlertTriangle, Loader2, FileImage, FileText, X } from "lucide-react";
+import { Upload, Send, CheckCircle, Clock, AlertTriangle, Loader2, FileImage, FileText, X, ClipboardList } from "lucide-react";
+import EmptyState from "@/components/EmptyState";
 
 const ACCEPTED_TYPES = "image/jpeg,image/png,image/webp,application/pdf";
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
