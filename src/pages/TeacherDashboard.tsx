@@ -307,7 +307,7 @@ const TeacherDashboard = () => {
 
         {/* ── Footer ── */}
         <footer className="bg-[#0f1419]/95 text-white py-6 rounded-2xl mt-4">
-          <div className="max-w-[1400px] mx-auto px-6 grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-6">
+          <div className="max-w-[1400px] mx-auto px-4 md:px-6 grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
             <div>
               <h4 className="mb-2 text-blue-400 text-sm">EduTech</h4>
               <p className="text-gray-400 text-xs leading-relaxed">Empowering education through innovative technology.</p>

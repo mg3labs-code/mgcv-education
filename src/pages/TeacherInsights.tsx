@@ -138,7 +138,7 @@ const TeacherInsights = () => {
             ) : (
               <div className="space-y-6">
                 {/* Summary Stats */}
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <Card className="p-4 text-center">
                     <Brain className="h-5 w-5 mx-auto mb-1 text-primary" />
                     <p className="text-2xl font-bold text-card-foreground">{mistakesData?.totalAnswers || 0}</p>

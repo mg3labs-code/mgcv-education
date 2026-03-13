@@ -111,7 +111,7 @@ const TeacherParentConnect = () => {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 mb-6">
           <Card className="p-4 text-center">
             <MessageSquare className="h-5 w-5 mx-auto mb-1 text-primary" />
             <p className="text-2xl font-bold text-card-foreground">{messages?.length || 0}</p>

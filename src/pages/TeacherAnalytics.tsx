@@ -265,7 +265,7 @@ const TeacherAnalytics = () => {
         {/* Student Selector */}
         <div className="bg-card border border-border rounded-2xl p-6 shadow-sm mb-10">
           <h3 className="text-lg font-semibold text-card-foreground mb-5">👥 Select a Student for Detailed Analysis</h3>
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-3 md:gap-4">
             {studentsData.map((student) => (
               <button
                 key={student.roll}

@@ -34,49 +34,49 @@ const AdminDashboard = () => {
 
   return (
     <DashboardLayout role="admin">
-      <main className="p-8 max-w-[1400px] mx-auto">
-        <div className="bg-white/10 backdrop-blur-[10px] rounded-[20px] p-8 mb-8 text-white text-center shadow-[0_8px_32px_rgba(0,0,0,0.1)]">
-          <h1 className="text-[2.5rem] mb-2">School Analytics</h1>
-          <p className="text-lg opacity-90 mb-6">Delhi Public School — Academic Year 2025–26</p>
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-6">
+      <main className="p-4 md:p-8 max-w-[1400px] mx-auto space-y-6">
+        <div className="bg-white/10 backdrop-blur-[10px] rounded-2xl p-5 md:p-8 text-white text-center shadow-[0_8px_32px_rgba(0,0,0,0.1)]">
+          <h1 className="text-2xl md:text-4xl font-bold mb-2">School Analytics</h1>
+          <p className="text-sm md:text-lg opacity-90 mb-6">Delhi Public School — Academic Year 2025–26</p>
+          <div className="grid grid-cols-2 gap-4 md:gap-6">
             {[
               { value: String(totalStudents), label: "Total Students" },
               { value: `${avgOverall}%`, label: "Avg. Overall Score" },
             ].map((s, i) => (
-              <div key={i} className="bg-white/20 rounded-2xl p-6 text-center backdrop-blur-[10px]">
-                <div className="text-[2.5rem] font-bold mb-2">{isLoading ? "..." : s.value}</div>
-                <div className="text-base opacity-90">{s.label}</div>
+              <div key={i} className="bg-white/20 rounded-2xl p-4 md:p-6 text-center backdrop-blur-[10px]">
+                <div className="text-2xl md:text-[2.5rem] font-bold mb-1 md:mb-2">{isLoading ? "..." : s.value}</div>
+                <div className="text-xs md:text-base opacity-90">{s.label}</div>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="glass-card p-8 mb-8">
-          <h2 className="text-2xl font-semibold text-[#2d3748] mb-6">Class Performance</h2>
-          <div className="overflow-x-auto">
+        <div className="bg-card border border-border rounded-2xl p-4 md:p-8">
+          <h2 className="text-xl md:text-2xl font-semibold text-foreground mb-4 md:mb-6">Class Performance</h2>
+          <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
             {isLoading ? (
               <Skeleton className="h-48 w-full rounded-xl" />
             ) : (
-              <table className="w-full text-sm">
+              <table className="w-full text-sm min-w-[500px]">
                 <thead>
-                  <tr className="border-b-2 border-gray-200 bg-gray-50">
-                    <th className="text-left p-3 font-semibold text-gray-600">Class</th>
-                    <th className="text-center p-3 font-semibold text-gray-600">Students</th>
-                    <th className="text-center p-3 font-semibold text-gray-600">Clarity</th>
-                    <th className="text-center p-3 font-semibold text-gray-600">Thinking</th>
-                    <th className="text-center p-3 font-semibold text-gray-600">Attention</th>
-                    <th className="text-center p-3 font-semibold text-gray-600">Overall</th>
+                  <tr className="border-b-2 border-border bg-muted/50">
+                    <th className="text-left p-2 md:p-3 font-semibold text-muted-foreground">Class</th>
+                    <th className="text-center p-2 md:p-3 font-semibold text-muted-foreground">Students</th>
+                    <th className="text-center p-2 md:p-3 font-semibold text-muted-foreground">Clarity</th>
+                    <th className="text-center p-2 md:p-3 font-semibold text-muted-foreground">Thinking</th>
+                    <th className="text-center p-2 md:p-3 font-semibold text-muted-foreground">Attention</th>
+                    <th className="text-center p-2 md:p-3 font-semibold text-muted-foreground">Overall</th>
                   </tr>
                 </thead>
                 <tbody>
                   {(classStats ?? []).map((c, i) => (
-                    <tr key={i} className="border-b border-gray-100 hover:bg-blue-50/50 transition-colors">
-                      <td className="p-3 font-medium text-[#2d3748]">{c.class}</td>
-                      <td className="p-3 text-center">{c.students}</td>
-                      <td className="p-3 text-center">{c.clarity}%</td>
-                      <td className="p-3 text-center">{c.thinking}%</td>
-                      <td className="p-3 text-center">{c.attention}%</td>
-                      <td className="p-3 text-center">{c.overall}%</td>
+                    <tr key={i} className="border-b border-border hover:bg-accent/50 transition-colors">
+                      <td className="p-2 md:p-3 font-medium text-foreground">{c.class}</td>
+                      <td className="p-2 md:p-3 text-center">{c.students}</td>
+                      <td className="p-2 md:p-3 text-center">{c.clarity}%</td>
+                      <td className="p-2 md:p-3 text-center">{c.thinking}%</td>
+                      <td className="p-2 md:p-3 text-center">{c.attention}%</td>
+                      <td className="p-2 md:p-3 text-center">{c.overall}%</td>
                     </tr>
                   ))}
                 </tbody>
