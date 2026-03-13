@@ -118,6 +118,8 @@ const TeacherDashboard = () => {
     <DashboardLayout role="teacher">
       <div className="p-4 md:p-8 max-w-[1400px] mx-auto space-y-6">
 
+        <WelcomeBanner role="teacher" name={firstName} studentCount={classAvg?.student_count} />
+
         {/* ── Header ── */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>

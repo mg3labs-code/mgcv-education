@@ -216,6 +216,8 @@ const StudentDashboard = () => {
     <DashboardLayout role="student">
       <div className="p-4 md:p-8 max-w-[1400px] mx-auto space-y-6">
 
+        <WelcomeBanner role="student" name={firstName} streak={streakDays} />
+
         {/* ── Hero Header ── */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>

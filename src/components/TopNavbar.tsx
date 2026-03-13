@@ -77,7 +77,7 @@ const TopNavbar = ({ role }: TopNavbarProps) => {
         <div className="hidden lg:flex gap-5 items-center">
           {items.map((item) =>
             item.type === "nav" ? (
-              <button key={item.label} onClick={() => navigate(item.path!)} className={`${btnBase} ${isActive(item.path) ? "ring-2 ring-white/60" : ""}`}>
+              <button key={item.label} onClick={() => navigate(item.path!)} aria-current={isActive(item.path) ? "page" : undefined} className={`${btnBase} ${isActive(item.path) ? "ring-2 ring-white/60" : ""}`}>
                 {item.label}
               </button>
             ) : (
