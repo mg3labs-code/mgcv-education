@@ -134,7 +134,7 @@ const TeacherAttendance = () => {
   };
 
   return (
-    <DashboardLayout role="teacher">
+    <DashboardLayout role="teacher" breadcrumbItems={[{ label: "Dashboard", href: "/teacher" }, { label: "Attendance" }]}>
       <main className="p-6 max-w-[900px] mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div>

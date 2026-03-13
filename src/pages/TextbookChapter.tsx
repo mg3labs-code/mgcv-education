@@ -1,9 +1,9 @@
 import { useNavigate, useParams } from "react-router-dom";
 import PageLayout from "@/components/PageLayout";
 import { useChapterEpisodes } from "@/hooks/useTextbookData";
-import { ArrowLeft, Play, Clock, Sparkles } from "lucide-react";
+import { Play, Clock, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { DetailSkeleton } from "@/components/PageSkeleton";
 
 const typeIcons: Record<string, string> = {
   Concept: "💡",
@@ -21,12 +21,8 @@ const TextbookChapter = () => {
   if (isLoading) {
     return (
       <PageLayout role="student">
-        <div className="max-w-4xl mx-auto space-y-4">
-          <Skeleton className="h-8 w-32" />
-          <Skeleton className="h-40 w-full rounded-2xl" />
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-24 w-full rounded-xl" />
-          ))}
+        <div className="max-w-4xl mx-auto">
+          <DetailSkeleton />
         </div>
       </PageLayout>
     );
@@ -45,16 +41,15 @@ const TextbookChapter = () => {
     );
   }
 
+  const breadcrumbs = [
+    { label: "Dashboard", href: "/student" },
+    { label: "Textbook", href: "/student/textbook" },
+    { label: chapter.title },
+  ];
+
   return (
-    <PageLayout role="student">
+    <PageLayout role="student" breadcrumbItems={breadcrumbs}>
       <div className="max-w-4xl mx-auto">
-        {/* Back */}
-        <button
-          onClick={() => navigate("/student/textbook")}
-          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" /> All Chapters
-        </button>
 
         {/* Chapter Header */}
         <div className="rounded-2xl p-6 mb-8 text-white relative overflow-hidden" style={{ background: `linear-gradient(135deg, ${chapter.color}, ${chapter.color}cc)` }}>

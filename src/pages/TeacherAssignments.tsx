@@ -269,7 +269,7 @@ const TeacherAssignments = () => {
   };
 
   return (
-    <DashboardLayout role="teacher">
+    <DashboardLayout role="teacher" breadcrumbItems={[{ label: "Dashboard", href: "/teacher" }, { label: "Assignments" }]}>
       <main className="p-6 max-w-[1200px] mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div>

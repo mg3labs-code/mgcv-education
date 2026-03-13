@@ -7,7 +7,9 @@ import { useQuery } from "@tanstack/react-query";
 import { findTextbookMatch } from "@/data/topicTextbookMap";
 import PopQuizModal from "@/components/student/PopQuizModal";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BookOpen, Brain, Eye, Zap, Heart, TrendingUp, Flame, Star, ChevronRight, GraduationCap, Target, Users, Lightbulb } from "lucide-react";
+import { BookOpen, Brain, Eye, Zap, Heart, TrendingUp, Flame, Star, ChevronRight, GraduationCap, Target, Users, Lightbulb, Award } from "lucide-react";
+import HelpTooltip from "@/components/HelpTooltip";
+import EmptyState from "@/components/EmptyState";
 
 interface ScheduleItem {
   type: string;
@@ -278,7 +280,10 @@ const StudentDashboard = () => {
                 </div>
                 
                 <div className="flex-1 text-center md:text-left">
-                  <h2 className="text-2xl font-bold mb-1">Your Inner Operating System</h2>
+                  <h2 className="text-2xl font-bold mb-1 flex items-center gap-2">
+                    Your Inner Operating System
+                    <HelpTooltip content="Your Inner OS tracks five core dimensions of your mind — clarity, thinking, attention, momentum, and character — to help you grow as a complete learner." />
+                  </h2>
                   <p className="text-white/80 text-sm mb-3">
                     Your mind's core abilities — clarity, thinking, attention, momentum, and character — 
                     all growing together to make you a stronger learner.
@@ -304,7 +309,16 @@ const StudentDashboard = () => {
                         <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${dim.color} flex items-center justify-center`}>
                           <dim.icon className="h-4 w-4 text-white" />
                         </div>
-                        <span className={`text-sm font-semibold ${dim.text}`}>{dim.name}</span>
+                        <span className={`text-sm font-semibold ${dim.text} flex items-center gap-1`}>
+                          {dim.name}
+                          <HelpTooltip content={
+                            dim.name === "Clarity" ? "How well you understand core concepts — measured through recall and explanation quality." :
+                            dim.name === "Thinking" ? "Your reasoning and analytical ability — how deeply you process and connect ideas." :
+                            dim.name === "Attention" ? "Your focus and engagement — consistency in completing learning layers." :
+                            dim.name === "Momentum" ? "Your learning velocity — streak consistency and daily progress." :
+                            "Your intellectual character — persistence, honesty, and growth mindset."
+                          } />
+                        </span>
                       </div>
                       <div className="text-2xl font-bold text-foreground mb-1">{score}%</div>
                       <div className="w-full h-2 bg-white/60 rounded-full overflow-hidden mb-2">
@@ -404,7 +418,11 @@ const StudentDashboard = () => {
                   </h3>
                   <div className="space-y-3">
                     {(breakthroughs ?? []).length === 0 ? (
-                      <p className="text-sm text-muted-foreground italic text-center py-4">Complete your first episode to earn breakthroughs!</p>
+                      <EmptyState
+                        icon={Award}
+                        title="No Breakthroughs Yet"
+                        description="Complete your first episode to earn breakthroughs and track your growth!"
+                      />
                     ) : (
                       (breakthroughs ?? []).map((b) => (
                         <div key={b.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">

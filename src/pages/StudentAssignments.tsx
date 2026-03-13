@@ -8,7 +8,8 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Upload, Send, CheckCircle, Clock, AlertTriangle, Loader2, FileImage, FileText, X } from "lucide-react";
+import { Upload, Send, CheckCircle, Clock, AlertTriangle, Loader2, FileImage, FileText, X, ClipboardList } from "lucide-react";
+import EmptyState from "@/components/EmptyState";
 
 const ACCEPTED_TYPES = "image/jpeg,image/png,image/webp,application/pdf";
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -179,7 +180,7 @@ const StudentAssignments = () => {
   };
 
   return (
-    <DashboardLayout role="student">
+    <DashboardLayout role="student" breadcrumbItems={[{ label: "Dashboard", href: "/student" }, { label: "Assignments" }]}>
       <main className="p-6 max-w-[1000px] mx-auto">
         <h1 className="text-3xl font-bold text-foreground mb-2">📝 My Assignments</h1>
         <p className="text-muted-foreground mb-8">View and submit your assignments</p>
@@ -206,7 +207,11 @@ const StudentAssignments = () => {
               </Card>
             ))}
             {(!assignments || assignments.length === 0) && !isLoading && (
-              <p className="text-center text-muted-foreground py-12">No assignments available yet</p>
+              <EmptyState
+                icon={ClipboardList}
+                title="No Assignments Yet"
+                description="Your teacher hasn't published any assignments yet. Check back soon!"
+              />
             )}
           </div>
         ) : (

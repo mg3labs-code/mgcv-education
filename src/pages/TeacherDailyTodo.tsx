@@ -4,7 +4,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ChevronDown, ChevronUp, BookOpen, Clock, MapPin, Lightbulb, FlaskConical, CheckCircle2, Plus } from "lucide-react";
+import { ChevronDown, ChevronUp, BookOpen, Clock, MapPin, Lightbulb, FlaskConical, CheckCircle2, Plus, ListTodo } from "lucide-react";
+import EmptyState from "@/components/EmptyState";
 import { toast } from "sonner";
 
 const statusOptions = ["pending", "in_progress", "completed"] as const;
@@ -54,7 +55,7 @@ const TeacherDailyTodo = () => {
   const totalCount = (todos ?? []).length;
 
   return (
-    <DashboardLayout role="teacher">
+    <DashboardLayout role="teacher" breadcrumbItems={[{ label: "Dashboard", href: "/teacher" }, { label: "Daily Plan" }]}>
       <main className="p-8 max-w-[1200px] mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -76,10 +77,11 @@ const TeacherDailyTodo = () => {
           {isLoading ? (
             Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)
           ) : totalCount === 0 ? (
-            <div className="bg-card border border-border rounded-xl p-12 text-center">
-              <p className="text-muted-foreground text-lg">No tasks for today yet.</p>
-              <p className="text-sm text-muted-foreground mt-1">Tasks can be added from the schedule page.</p>
-            </div>
+            <EmptyState
+              icon={ListTodo}
+              title="No Tasks for Today"
+              description="Your daily teaching plan is clear. Add tasks or check back tomorrow!"
+            />
           ) : (
             (todos ?? []).map((item, i) => {
               const isExpanded = expandedSlot === i;

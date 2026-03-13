@@ -3,7 +3,8 @@ import PageLayout from "@/components/PageLayout";
 import { useChapters, useSubjects } from "@/hooks/useTextbookData";
 import { BookOpen, Clock, FileText, Lock, ChevronRight, ArrowRight } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ListSkeleton } from "@/components/PageSkeleton";
+import EmptyState from "@/components/EmptyState";
 import { useState } from "react";
 
 const JOURNEY_STEPS = [
@@ -22,8 +23,13 @@ const StudentTextbook = () => {
 
   const isLoading = subjectsLoading || chaptersLoading;
 
+  const breadcrumbs = [
+    { label: "Dashboard", href: "/student" },
+    { label: "Textbook" },
+  ];
+
   return (
-    <PageLayout role="student">
+    <PageLayout role="student" breadcrumbItems={breadcrumbs}>
       <div className="max-w-5xl mx-auto">
 
         {/* ── Learning Journey Flow ── */}
@@ -83,13 +89,7 @@ const StudentTextbook = () => {
         )}
 
         {/* Loading State */}
-        {isLoading && (
-          <div className="space-y-3">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <Skeleton key={i} className="h-24 w-full rounded-xl" />
-            ))}
-          </div>
-        )}
+        {isLoading && <ListSkeleton rows={5} />}
 
         {/* Chapter Grid */}
         {!isLoading && chapters && (

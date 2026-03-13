@@ -573,8 +573,15 @@ const TextbookEpisode = () => {
 
   const defaultMeta = { border: "border-l-primary", bg: "", dotColor: "bg-primary", badge: undefined, badgeColor: undefined } as const;
 
+  const breadcrumbs = [
+    { label: "Dashboard", href: "/student" },
+    { label: "Textbook", href: "/student/textbook" },
+    { label: chapter.title, href: `/student/textbook/${chapterId}` },
+    { label: episode.title },
+  ];
+
   return (
-    <PageLayout role="student">
+    <PageLayout role="student" breadcrumbItems={breadcrumbs}>
       {/* Scroll Progress Bar */}
       <div className="fixed top-0 left-0 right-0 z-50 h-1 bg-muted">
         <div className="h-full bg-primary transition-all duration-150" style={{ width: `${scrollProgress}%` }} />

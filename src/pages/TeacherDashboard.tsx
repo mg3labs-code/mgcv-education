@@ -6,6 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Eye, Brain, Target, Heart, TrendingUp, TrendingDown, AlertTriangle, CheckCircle, Info, ChevronRight, GraduationCap, Users, BookOpen, ClipboardList, BarChart3, Bell, MessageSquare, Lightbulb, Zap, Shield } from "lucide-react";
+import HelpTooltip from "@/components/HelpTooltip";
+import EmptyState from "@/components/EmptyState";
 
 const CLASS_OPTIONS = ["Class 10", "Class 9", "Class 8"];
 
@@ -157,7 +159,15 @@ const TeacherDashboard = () => {
               return (
                 <div key={stat.label} className={`${stat.bg} border-l-4 ${stat.borderColor} rounded-xl p-5 transition-all hover:shadow-md`}>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-muted-foreground">{stat.label}</span>
+                    <span className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+                      {stat.label}
+                      <HelpTooltip content={
+                        stat.label === "Avg Clarity" ? "Average concept understanding across your class — based on recall and explanation scores." :
+                        stat.label === "Avg Reasoning" ? "Average analytical thinking score — how well students reason through problems." :
+                        stat.label === "Avg Attention" ? "Average focus and engagement — consistency in completing learning layers." :
+                        "Average intellectual character — persistence, honesty, and growth mindset."
+                      } />
+                    </span>
                     <div className={`w-8 h-8 rounded-lg ${stat.iconBg} flex items-center justify-center`}>
                       <stat.icon className={`h-4 w-4 ${stat.iconColor}`} />
                     </div>
@@ -225,9 +235,11 @@ const TeacherDashboard = () => {
             </h2>
 
             {(alerts ?? []).length === 0 ? (
-              <div className="bg-muted/30 rounded-xl p-6 text-center">
-                <p className="text-sm text-muted-foreground">No alerts right now — all students on track! 🎉</p>
-              </div>
+              <EmptyState
+                icon={Shield}
+                title="All Clear!"
+                description="No alerts right now — all students are on track. Great job! 🎉"
+              />
             ) : (
               (alerts ?? []).map((alert) => {
                 const style = alertStyles[alert.alert_type as keyof typeof alertStyles] ?? alertStyles.warning;
