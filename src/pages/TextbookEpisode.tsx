@@ -585,19 +585,31 @@ const TextbookEpisode = () => {
         </div>
 
         {/* Stats Bar */}
-        <div className="flex justify-between bg-muted/50 rounded-xl p-4 mb-6">
-          <div className="text-center">
-            <div className="text-xl font-bold text-primary">{blocks.length}</div>
-            <div className="text-xs text-muted-foreground mt-0.5">Total Sections</div>
+        <div className="flex items-center justify-between bg-muted/50 rounded-xl p-4 mb-6">
+          <div className="flex gap-6">
+            <div className="text-center">
+              <div className="text-xl font-bold text-primary">{blocks.length}</div>
+              <div className="text-xs text-muted-foreground mt-0.5">Total Sections</div>
+            </div>
+            <div className="text-center">
+              <div className="text-xl font-bold text-primary">{understoodBlocks.size}</div>
+              <div className="text-xs text-muted-foreground mt-0.5">Completed</div>
+            </div>
+            <div className="text-center">
+              <div className="text-xl font-bold text-primary">{episode.duration}</div>
+              <div className="text-xs text-muted-foreground mt-0.5">Estimated Time</div>
+            </div>
           </div>
-          <div className="text-center">
-            <div className="text-xl font-bold text-primary">0</div>
-            <div className="text-xs text-muted-foreground mt-0.5">Completed</div>
-          </div>
-          <div className="text-center">
-            <div className="text-xl font-bold text-primary">{episode.duration}</div>
-            <div className="text-xs text-muted-foreground mt-0.5">Estimated Time</div>
-          </div>
+          <button
+            onClick={() => toggleAllCollapsed(blocks)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+          >
+            {collapsedBlocks.size === blocks.length ? (
+              <><Eye className="h-3.5 w-3.5" /> Expand All</>
+            ) : (
+              <><ChevronDown className="h-3.5 w-3.5 -rotate-90" /> Collapse All</>
+            )}
+          </button>
         </div>
 
         {/* Action Bar */}
