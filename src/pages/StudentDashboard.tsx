@@ -218,8 +218,8 @@ const StudentDashboard = () => {
         {/* ── Hero Header ── */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Hi, {firstName}! 👋</h1>
-            <p className="text-muted-foreground mt-1">Your Inner Operating System is growing stronger every day.</p>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground">Hi, {firstName}! 👋</h1>
+            <p className="text-sm text-muted-foreground mt-1">Your Inner Operating System is growing stronger every day.</p>
           </div>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 bg-gradient-to-r from-amber-100 to-orange-100 border border-amber-300 rounded-full px-4 py-2">
