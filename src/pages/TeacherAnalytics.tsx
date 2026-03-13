@@ -167,14 +167,14 @@ const TeacherAnalytics = () => {
 
   return (
     <DashboardLayout role="teacher" breadcrumbItems={[{ label: "Dashboard", href: "/teacher" }, { label: "Analytics" }]}>
-      <main className="p-8 max-w-[1400px] mx-auto">
+      <main className="p-4 md:p-8 max-w-[1400px] mx-auto">
         {/* Header */}
-        <div className="text-center mb-10">
-          <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-[#667eea] to-[#764ba2] bg-clip-text text-transparent">
+        <div className="mb-6 md:mb-8">
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground">
             📊 Student Performance Analytics
           </h1>
-          <p className="text-muted-foreground text-lg">
-            Comprehensive analysis of student performance, strengths, and areas for improvement
+          <p className="text-sm text-muted-foreground mt-1">
+            Comprehensive analysis of performance, strengths, and areas for improvement
           </p>
         </div>
 

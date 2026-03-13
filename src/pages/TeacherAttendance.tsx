@@ -135,15 +135,15 @@ const TeacherAttendance = () => {
 
   return (
     <DashboardLayout role="teacher" breadcrumbItems={[{ label: "Dashboard", href: "/teacher" }, { label: "Attendance" }]}>
-      <main className="p-6 max-w-[900px] mx-auto">
-        <div className="flex items-center justify-between mb-8">
+      <main className="p-4 md:p-6 max-w-[900px] mx-auto">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">📋 Take Attendance</h1>
-            <p className="text-muted-foreground">{profile?.class_name || "Loading..."}</p>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground">📋 Take Attendance</h1>
+            <p className="text-sm text-muted-foreground mt-1">{profile?.class_name || "Loading..."}</p>
           </div>
-          <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending} className="gap-2">
+          <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending} className="gap-2 w-fit" size="sm">
             <Save className="h-4 w-4" />
-            {saveMutation.isPending ? "Saving..." : "Save Attendance"}
+            {saveMutation.isPending ? "Saving..." : "Save"}
           </Button>
         </div>
 

@@ -56,11 +56,11 @@ const TeacherDailyTodo = () => {
 
   return (
     <DashboardLayout role="teacher" breadcrumbItems={[{ label: "Dashboard", href: "/teacher" }, { label: "Daily Plan" }]}>
-      <main className="p-8 max-w-[1200px] mx-auto">
+      <main className="p-4 md:p-8 max-w-[1200px] mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-1">Today's Teaching Plan</h1>
-          <p className="text-muted-foreground">Your daily tasks and class preparation items</p>
+        <div className="mb-6">
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-1">Today's Teaching Plan</h1>
+          <p className="text-sm text-muted-foreground">Your daily tasks and class preparation items</p>
           <div className="flex items-center gap-4 mt-4">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <CheckCircle2 className="h-4 w-4 text-green-600" />
