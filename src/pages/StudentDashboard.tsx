@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { BookOpen, Brain, Eye, Zap, Heart, TrendingUp, Flame, Star, ChevronRight, GraduationCap, Target, Users, Lightbulb, Award } from "lucide-react";
 import HelpTooltip from "@/components/HelpTooltip";
 import EmptyState from "@/components/EmptyState";
+import WelcomeBanner from "@/components/WelcomeBanner";
 
 interface ScheduleItem {
   type: string;
