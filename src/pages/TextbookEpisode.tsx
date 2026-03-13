@@ -18,27 +18,27 @@ import FirstPrinciplesModal from "@/components/textbook/FirstPrinciplesModal";
 // ─── Block Renderers ────────────────────────────────────────
 
 const ConceptBlock = ({ content }: { content: ConceptContent }) => (
-  <div className="space-y-6">
+  <div className="space-y-5">
     {content.sections.map((s, i) => (
-      <div key={i} className={`rounded-xl p-5 ${s.highlight ? "bg-primary/5 border-l-4 border-primary" : "bg-muted/30 border-l-4 border-muted-foreground/20"}`}>
-        <h4 className="font-semibold font-serif text-foreground text-lg mb-3">{s.heading}</h4>
-        <div className="text-base text-muted-foreground leading-relaxed whitespace-pre-line">{s.body}</div>
+      <div key={i}>
+        <h4 className="font-semibold text-foreground text-[1.1rem] mb-2">{s.heading}</h4>
+        <div className="text-[0.95rem] text-muted-foreground leading-[1.8] whitespace-pre-line">{s.body}</div>
       </div>
     ))}
     {content.keyFormulas && content.keyFormulas.length > 0 && (
-      <div className="rounded-xl bg-accent/20 border border-accent/40 p-5 text-center">
-        <h4 className="text-sm font-bold text-foreground mb-3 flex items-center justify-center gap-2">
-          <Sparkles className="h-4 w-4 text-primary" /> Key Formulas
+      <div className="rounded-lg bg-muted/40 border-2 border-primary/30 p-5 text-center">
+        <h4 className="text-sm font-semibold text-primary mb-3 flex items-center justify-center gap-2">
+          🎯 Key Formulas
         </h4>
         {content.keyFormulas.map((f, i) => (
-          <div key={i} className="font-mono text-base bg-background rounded-lg px-4 py-3 mt-2 text-foreground border inline-block">{f}</div>
+          <div key={i} className="font-mono text-lg font-semibold text-foreground mt-2">{f}</div>
         ))}
       </div>
     )}
     {content.example && content.example.map((ex, i) => (
-      <div key={i} className="rounded-xl border-l-4 border-warning bg-warning/5 p-5">
-        <p className="text-base font-medium text-foreground mb-2">📌 {ex.question}</p>
-        <p className="text-base text-muted-foreground leading-relaxed whitespace-pre-line">{ex.solution}</p>
+      <div key={i} className="rounded-lg border-l-4 border-green-500 bg-green-50 dark:bg-green-950/20 p-5">
+        <h4 className="text-green-700 dark:text-green-400 font-semibold mb-2 flex items-center gap-2">🎯 {ex.question}</h4>
+        <p className="text-[0.95rem] text-muted-foreground leading-[1.8] whitespace-pre-line">{ex.solution}</p>
       </div>
     ))}
   </div>
