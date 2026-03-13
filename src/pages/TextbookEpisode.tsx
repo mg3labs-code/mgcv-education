@@ -610,21 +610,21 @@ const TextbookEpisode = () => {
 
                 <div
                   ref={(el) => { blockRefs.current[i] = el; }}
-                  className={`rounded-2xl p-6 mb-5 scroll-mt-24 border border-border/60 ${meta.bg || "bg-card"}`}
+                  className={`bg-white dark:bg-card rounded-xl p-5 mb-5 scroll-mt-24 shadow-sm hover:shadow-md transition-all border-l-4 ${(meta as any).border || "border-l-primary"} hover:-translate-y-0.5`}
                 >
-                  {/* Layer Badge — for ALL layers that have one */}
-                  {meta.badge && (
-                    <span className={`inline-block text-[11px] font-bold tracking-wide px-3 py-1 rounded-full mb-4 ${meta.badgeColor || ""}`}>
-                      {meta.badge}
-                    </span>
-                  )}
-
-                  {/* Block Header */}
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                      <BlockIcon className="h-4 w-4 text-primary" />
+                  {/* Section Header */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <span className="text-xl">{block.icon}</span>
+                      <h2 className="text-[1.2rem] font-semibold text-foreground">{block.title}</h2>
                     </div>
-                    <h2 className="font-semibold font-serif text-foreground text-xl">{block.icon} {block.title}</h2>
+                    <div className="flex items-center gap-2">
+                      {meta.badge && (
+                        <span className={`text-[11px] font-semibold px-3 py-1 rounded-full ${meta.badgeColor || ""}`}>
+                          {meta.badge}
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   {/* Block Content */}
