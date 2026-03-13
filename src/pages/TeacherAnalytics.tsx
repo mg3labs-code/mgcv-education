@@ -179,7 +179,7 @@ const TeacherAnalytics = () => {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-5 mb-10">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-5 mb-8 md:mb-10">
           {[
             { value: stats.total, label: "Total Students" },
             { value: stats.avg, label: "Average Score" },
