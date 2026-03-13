@@ -213,7 +213,7 @@ const TeacherDashboard = () => {
               <h3 className="font-bold text-foreground text-base mb-4 flex items-center gap-2">
                 <GraduationCap className="h-4 w-4 text-primary" /> Elite Methods Performance
               </h3>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {METHODS_PERFORMANCE.map((method) => (
                   <div key={method.name} className="border border-border rounded-lg p-4 hover:shadow-sm transition-all">
                     <div className="flex items-center gap-2 mb-2">
