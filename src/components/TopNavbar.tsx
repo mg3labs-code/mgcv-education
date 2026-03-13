@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Sun, Moon } from "lucide-react";
 import AssignmentsModal from "./student/AssignmentsModal";
 import ProgressModal from "./student/ProgressModal";
 import MessageModal from "./student/MessageModal";
@@ -18,6 +18,17 @@ const TopNavbar = ({ role }: TopNavbarProps) => {
   const { signOut, fullName } = useAuth();
   const [activeModal, setActiveModal] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [dark, setDark] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("theme") === "dark" || document.documentElement.classList.contains("dark");
+    }
+    return false;
+  });
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", dark);
+    localStorage.setItem("theme", dark ? "dark" : "light");
+  }, [dark]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -99,6 +110,13 @@ const TopNavbar = ({ role }: TopNavbarProps) => {
             {menuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
 
+          <button
+            onClick={() => setDark(!dark)}
+            className="hidden md:flex items-center justify-center w-9 h-9 rounded-lg bg-white/10 hover:bg-white/20 border-none cursor-pointer text-white transition-all"
+            aria-label="Toggle dark mode"
+          >
+            {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </button>
           <kbd className="hidden md:inline-flex items-center gap-0.5 rounded-md border border-white/20 bg-white/10 px-2 py-1 text-[11px] font-mono text-white/60">
             ⌘K
           </kbd>

@@ -304,10 +304,11 @@ const StudentDashboard = () => {
               {innerOSLoading ? (
                 Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-36 rounded-xl" />)
               ) : (
-                DIMENSION_CONFIG.map((dim) => {
+                DIMENSION_CONFIG.map((dim, idx) => {
                   const score = innerOS ? (innerOS as any)[dim.key] ?? 0 : 0;
                   return (
-                    <div key={dim.name} className={`${dim.bg} ${dim.border} border rounded-xl p-4 transition-all hover:shadow-md hover:-translate-y-0.5`}>
+                    <div key={dim.name} className={`${dim.bg} ${dim.border} border rounded-xl p-4 card-hover-lift animate-stagger-in`}
+                      style={{ "--stagger-delay": `${idx * 0.08}s` } as React.CSSProperties}>
                       <div className="flex items-center gap-2 mb-3">
                         <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${dim.color} flex items-center justify-center`}>
                           <dim.icon className="h-4 w-4 text-white" />

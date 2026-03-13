@@ -157,10 +157,11 @@ const TeacherDashboard = () => {
           {avgLoading ? (
             Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-28 rounded-xl" />)
           ) : (
-            STAT_CONFIG.map((stat) => {
+            STAT_CONFIG.map((stat, idx) => {
               const value = classAvg ? Math.round(Number(classAvg[stat.key]) || 0) : 0;
               return (
-                <div key={stat.label} className={`${stat.bg} border-l-4 ${stat.borderColor} rounded-xl p-5 transition-all hover:shadow-md`}>
+                <div key={stat.label} className={`${stat.bg} border-l-4 ${stat.borderColor} rounded-xl p-5 card-hover-lift animate-stagger-in`}
+                  style={{ "--stagger-delay": `${idx * 0.08}s` } as React.CSSProperties}>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium text-muted-foreground flex items-center gap-1">
                       {stat.label}
@@ -293,9 +294,10 @@ const TeacherDashboard = () => {
             <Zap className="h-5 w-5 text-primary" /> Quick Actions
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-            {QUICK_ACTIONS.map((action) => (
+            {QUICK_ACTIONS.map((action, i) => (
               <button key={action.label} onClick={() => navigate(action.path)}
-                className="flex flex-col items-center gap-3 p-5 rounded-xl bg-card border border-border hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer text-center group">
+                className="flex flex-col items-center gap-3 p-5 rounded-xl bg-card border border-border card-hover-lift card-interactive text-center group animate-stagger-in"
+                style={{ "--stagger-delay": `${i * 0.06}s` } as React.CSSProperties}>
                 <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${action.color} flex items-center justify-center`}>
                   <action.icon className="h-5 w-5 text-white" />
                 </div>

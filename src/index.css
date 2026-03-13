@@ -80,6 +80,74 @@
     --navy: 220 50% 30%;
     --navy-light: 220 35% 50%;
   }
+
+  .dark {
+    --background: 220 20% 10%;
+    --foreground: 210 20% 92%;
+
+    --card: 220 18% 14%;
+    --card-foreground: 210 20% 92%;
+
+    --popover: 220 18% 14%;
+    --popover-foreground: 210 20% 92%;
+
+    --primary: 162 55% 45%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 15% 22%;
+    --secondary-foreground: 210 20% 85%;
+
+    --muted: 220 14% 18%;
+    --muted-foreground: 220 10% 58%;
+
+    --accent: 162 45% 40%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 55% 48%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 15% 22%;
+    --input: 220 15% 20%;
+    --ring: 162 55% 45%;
+
+    --success: 152 45% 42%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 80% 48%;
+    --warning-foreground: 38 90% 90%;
+    --info: 210 65% 52%;
+    --info-foreground: 0 0% 100%;
+
+    --teal: 162 55% 45%;
+    --teal-light: 162 40% 55%;
+    --dark-bg: 220 20% 10%;
+    --dark-surface: 220 18% 14%;
+
+    --gradient-start: 162 45% 38%;
+    --gradient-end: 210 55% 45%;
+
+    --sidebar-background: 220 22% 8%;
+    --sidebar-foreground: 210 20% 88%;
+    --sidebar-primary: 162 55% 45%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 18% 16%;
+    --sidebar-accent-foreground: 210 20% 88%;
+    --sidebar-border: 220 15% 18%;
+    --sidebar-ring: 162 55% 45%;
+
+    --dashboard-card: 220 18% 14%;
+    --dashboard-card-foreground: 210 20% 92%;
+    --navbar-bg: 220 22% 8% / 0.98;
+
+    --metric-critical-thinking: 280 50% 58%;
+    --metric-conceptual-clarity: 162 55% 48%;
+    --metric-retention: 38 75% 55%;
+    --metric-pattern: 210 60% 55%;
+
+    --gold: 38 75% 55%;
+    --gold-light: 38 60% 60%;
+    --navy: 220 40% 45%;
+    --navy-light: 220 30% 55%;
+  }
 }
 
 @layer base {
@@ -243,4 +311,60 @@
   outline: 2px solid hsl(var(--ring));
   outline-offset: 2px;
   border-radius: 4px;
+}
+
+/* ── Phase 3: Micro-Animations ── */
+
+/* Staggered fade-in */
+@keyframes staggerFadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-stagger-in {
+  opacity: 0;
+  animation: staggerFadeIn 0.45s ease-out forwards;
+  animation-delay: var(--stagger-delay, 0s);
+}
+
+/* Card hover lift */
+.card-hover-lift {
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.card-hover-lift:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px hsl(var(--foreground) / 0.08);
+}
+
+.card-hover-lift:active {
+  transform: translateY(-1px);
+}
+
+/* Card interactive (for clickable cards) */
+.card-interactive {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  cursor: pointer;
+}
+
+.card-interactive:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px hsl(var(--foreground) / 0.07);
+  border-color: hsl(var(--primary) / 0.3);
+}
+
+.card-interactive:active {
+  transform: translateY(0);
+}
+
+/* Shimmer loading */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, hsl(var(--muted)) 25%, hsl(var(--muted-foreground) / 0.08) 50%, hsl(var(--muted)) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
 }
