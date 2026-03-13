@@ -326,16 +326,16 @@ const ExerciseBlock = ({ content }: { content: ExerciseContent }) => {
   const [showAnswer, setShowAnswer] = useState<Record<number, boolean>>({});
   return (
     <div className="space-y-3">
-      <div className="rounded-lg bg-muted/40 px-4 py-2 text-sm text-muted-foreground">📖 {content.source}</div>
+      <div className="border-l-4 border-blue-500 bg-blue-50/60 dark:bg-blue-950/20 rounded-r-lg px-4 py-3 text-sm text-muted-foreground">📖 {content.source}</div>
       {content.problems.map((p, i) => (
-        <div key={i} className="rounded-xl border bg-card p-5">
-          <p className="text-base text-foreground"><span className="font-semibold">{p.number}.</span> {p.text}</p>
+        <div key={i} className="bg-white dark:bg-card rounded-lg border-l-3 border-green-500 p-4 cursor-pointer" onClick={() => !showAnswer[i] && setShowAnswer({ ...showAnswer, [i]: true })}>
+          <p className="text-[0.95rem] text-foreground leading-[1.8]"><span className="font-semibold">{p.number}.</span> {p.text}</p>
           {p.answer && (
             <div className="mt-2">
               {showAnswer[i] ? (
-                <div className="rounded-lg bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 p-2 text-base text-green-800 dark:text-green-300">Answer: {p.answer}</div>
+                <div className="rounded-md bg-green-100 dark:bg-green-950/30 p-3 text-[0.95rem] text-green-800 dark:text-green-300">✓ Answer: {p.answer}</div>
               ) : (
-                <Button variant="ghost" size="sm" onClick={() => setShowAnswer({ ...showAnswer, [i]: true })}><Eye className="h-3.5 w-3.5 mr-1" /> Show Answer</Button>
+                <p className="text-xs text-muted-foreground mt-1">Click to reveal answer</p>
               )}
             </div>
           )}
