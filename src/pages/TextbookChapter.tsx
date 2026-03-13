@@ -1,9 +1,9 @@
 import { useNavigate, useParams } from "react-router-dom";
 import PageLayout from "@/components/PageLayout";
 import { useChapterEpisodes } from "@/hooks/useTextbookData";
-import { ArrowLeft, Play, Clock, Sparkles } from "lucide-react";
+import { Play, Clock, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { DetailSkeleton } from "@/components/PageSkeleton";
 
 const typeIcons: Record<string, string> = {
   Concept: "💡",
