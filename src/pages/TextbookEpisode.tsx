@@ -545,16 +545,32 @@ const TextbookEpisode = () => {
       </div>
 
       <div className="max-w-3xl mx-auto" ref={contentRef}>
-        {/* Sticky Header */}
-        <div className="sticky top-1 z-40 bg-background/95 backdrop-blur-sm pb-3 pt-2 border-b border-border mb-4">
-          <div className="flex items-center justify-between">
-            <button onClick={() => navigate(`/student/textbook/${chapterId}`)} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-blue-800 to-indigo-800 rounded-2xl text-white p-6 mb-6">
+          <div className="flex items-center justify-between mb-3">
+            <button onClick={() => navigate(`/student/textbook/${chapterId}`)} className="flex items-center gap-2 text-sm text-white/70 hover:text-white transition-colors">
               <ArrowLeft className="h-4 w-4" /> {chapter.title}
             </button>
-            <span className="text-xs text-muted-foreground">Episode {episode.number} · {episode.duration}</span>
+            <span className="text-xs text-white/60 bg-white/10 px-3 py-1 rounded-full">⏱️ {episode.duration}</span>
           </div>
-          <h1 className="text-2xl font-bold font-serif text-foreground mt-2">{episode.title}</h1>
-          <p className="text-base text-muted-foreground leading-relaxed">{episode.subtitle}</p>
+          <h1 className="text-2xl font-light text-white">{episode.title}</h1>
+          {episode.subtitle && <p className="text-sm text-white/70 mt-1">{episode.subtitle}</p>}
+        </div>
+
+        {/* Stats Bar */}
+        <div className="flex justify-between bg-muted/50 rounded-xl p-4 mb-6">
+          <div className="text-center">
+            <div className="text-xl font-bold text-primary">{blocks.length}</div>
+            <div className="text-xs text-muted-foreground mt-0.5">Total Sections</div>
+          </div>
+          <div className="text-center">
+            <div className="text-xl font-bold text-primary">0</div>
+            <div className="text-xs text-muted-foreground mt-0.5">Completed</div>
+          </div>
+          <div className="text-center">
+            <div className="text-xl font-bold text-primary">{episode.duration}</div>
+            <div className="text-xs text-muted-foreground mt-0.5">Estimated Time</div>
+          </div>
         </div>
 
         {/* Action Bar */}
