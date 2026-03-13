@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import PageLayout from "@/components/PageLayout";
 import { ContentBlock, ConceptContent, ActivityContent, RecallContent, ExplainContent, AssessmentContent, ExerciseContent, ReasoningContent, AssumptionsContent, ConnectionsContent, ApplicationContent, ImplicationsContent } from "@/data/textbookData";
 import { useChapterEpisodes, useEpisodeBlocks } from "@/hooks/useTextbookData";
-import { ArrowLeft, BookOpen, Brain, Briefcase, CheckCircle2, Compass, Eye, Layers, Lightbulb, Link, Map, MessageSquare, Mic, PenLine, Search, Shield, Sparkles, Zap, RotateCcw, GripHorizontal } from "lucide-react";
+import { ArrowLeft, BookOpen, Brain, Briefcase, CheckCircle2, ChevronDown, Compass, Eye, Layers, Lightbulb, Link, Map, MessageSquare, Mic, PenLine, Search, Shield, Sparkles, Zap, RotateCcw, GripHorizontal } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import VoiceExplainWidget from "@/components/textbook/VoiceExplainWidget";
@@ -395,7 +395,17 @@ const TextbookEpisode = () => {
   const [scrollProgress, setScrollProgress] = useState(0);
   const [activeBlock, setActiveBlock] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [collapsedBlocks, setCollapsedBlocks] = useState<Set<number>>(new Set());
   const blockRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  const toggleBlock = useCallback((index: number) => {
+    setCollapsedBlocks(prev => {
+      const next = new Set(prev);
+      if (next.has(index)) next.delete(index);
+      else next.add(index);
+      return next;
+    });
+  }, []);
   const contentRef = useRef<HTMLDivElement>(null);
   const activityRef = useRef<HTMLDivElement>(null);
 
@@ -610,13 +620,16 @@ const TextbookEpisode = () => {
 
                 <div
                   ref={(el) => { blockRefs.current[i] = el; }}
-                  className={`bg-white dark:bg-card rounded-xl p-5 mb-5 scroll-mt-24 shadow-sm hover:shadow-md transition-all border-l-4 ${(meta as any).border || "border-l-primary"} hover:-translate-y-0.5`}
+                  className={`bg-white dark:bg-card rounded-xl mb-5 scroll-mt-24 shadow-sm hover:shadow-md transition-all border-l-4 ${(meta as any).border || "border-l-primary"} hover:-translate-y-0.5`}
                 >
-                  {/* Section Header */}
-                  <div className="flex items-center justify-between mb-4">
+                  {/* Section Header — clickable to collapse/expand */}
+                  <button
+                    onClick={() => toggleBlock(i)}
+                    className="w-full flex items-center justify-between p-5 pb-0 cursor-pointer select-none group"
+                  >
                     <div className="flex items-center gap-3">
                       <span className="text-xl">{block.icon}</span>
-                      <h2 className="text-[1.2rem] font-semibold text-foreground">{block.title}</h2>
+                      <h2 className="text-[1.2rem] font-semibold text-foreground text-left">{block.title}</h2>
                     </div>
                     <div className="flex items-center gap-2">
                       {meta.badge && (
@@ -624,11 +637,21 @@ const TextbookEpisode = () => {
                           {meta.badge}
                         </span>
                       )}
+                      <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform duration-300 ${collapsedBlocks.has(i) ? "-rotate-90" : "rotate-0"}`} />
                     </div>
-                  </div>
+                  </button>
 
-                  {/* Block Content */}
-                  {renderBlock(block)}
+                  {/* Block Content — collapsible with smooth animation */}
+                  <div
+                    className="overflow-hidden transition-all duration-300 ease-in-out"
+                    style={{
+                      maxHeight: collapsedBlocks.has(i) ? "0px" : "5000px",
+                      opacity: collapsedBlocks.has(i) ? 0 : 1,
+                      padding: collapsedBlocks.has(i) ? "0 1.25rem" : "1.25rem",
+                    }}
+                  >
+                    {renderBlock(block)}
+                  </div>
                 </div>
               </React.Fragment>
             );
