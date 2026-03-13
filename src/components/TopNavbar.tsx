@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Sun, Moon } from "lucide-react";
 import AssignmentsModal from "./student/AssignmentsModal";
 import ProgressModal from "./student/ProgressModal";
 import MessageModal from "./student/MessageModal";
