@@ -280,7 +280,10 @@ const StudentDashboard = () => {
                 </div>
                 
                 <div className="flex-1 text-center md:text-left">
-                  <h2 className="text-2xl font-bold mb-1">Your Inner Operating System</h2>
+                  <h2 className="text-2xl font-bold mb-1 flex items-center gap-2">
+                    Your Inner Operating System
+                    <HelpTooltip content="Your Inner OS tracks five core dimensions of your mind — clarity, thinking, attention, momentum, and character — to help you grow as a complete learner." />
+                  </h2>
                   <p className="text-white/80 text-sm mb-3">
                     Your mind's core abilities — clarity, thinking, attention, momentum, and character — 
                     all growing together to make you a stronger learner.
