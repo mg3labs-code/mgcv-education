@@ -21,12 +21,8 @@ const TextbookChapter = () => {
   if (isLoading) {
     return (
       <PageLayout role="student">
-        <div className="max-w-4xl mx-auto space-y-4">
-          <Skeleton className="h-8 w-32" />
-          <Skeleton className="h-40 w-full rounded-2xl" />
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-24 w-full rounded-xl" />
-          ))}
+        <div className="max-w-4xl mx-auto">
+          <DetailSkeleton />
         </div>
       </PageLayout>
     );
