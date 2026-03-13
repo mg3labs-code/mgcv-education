@@ -468,6 +468,29 @@ const TextbookEpisode = () => {
   
   const isLoading = chapterLoading || blocksLoading;
 
+  // Keep totalBlocksRef in sync
+  useEffect(() => { totalBlocksRef.current = blocks.length; }, [blocks.length]);
+
+  // Load understood blocks from DB on mount
+  useEffect(() => {
+    if (!user || !chapterId || !episodeId) return;
+    supabase
+      .from("episode_progress")
+      .select("layer_scores")
+      .eq("user_id", user.id)
+      .eq("chapter_id", chapterId)
+      .eq("episode_id", episodeId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.layer_scores && typeof data.layer_scores === "object" && !Array.isArray(data.layer_scores)) {
+          const scores = data.layer_scores as Record<string, unknown>;
+          if (Array.isArray(scores.understood)) {
+            setUnderstoodBlocks(new Set(scores.understood as number[]));
+          }
+        }
+      });
+  }, [user, chapterId, episodeId]);
+
   // Scroll progress
   useEffect(() => {
     const handleScroll = () => {
