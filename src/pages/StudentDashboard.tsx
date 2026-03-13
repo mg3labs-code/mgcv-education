@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { BookOpen, Brain, Eye, Zap, Heart, TrendingUp, Flame, Star, ChevronRight, GraduationCap, Target, Users, Lightbulb, Award } from "lucide-react";
 import HelpTooltip from "@/components/HelpTooltip";
 import EmptyState from "@/components/EmptyState";
+import WelcomeBanner from "@/components/WelcomeBanner";
 
 interface ScheduleItem {
   type: string;
@@ -214,6 +215,8 @@ const StudentDashboard = () => {
   return (
     <DashboardLayout role="student">
       <div className="p-4 md:p-8 max-w-[1400px] mx-auto space-y-6">
+
+        <WelcomeBanner role="student" name={firstName} streak={streakDays} />
 
         {/* ── Hero Header ── */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">

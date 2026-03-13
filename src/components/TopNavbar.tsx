@@ -66,7 +66,7 @@ const TopNavbar = ({ role }: TopNavbarProps) => {
 
   return (
     <>
-      <nav className="bg-[#0f1419]/95 backdrop-blur-[10px] py-4 px-4 lg:px-8 flex justify-between items-center shadow-[0_4px_20px_rgba(0,0,0,0.1)] sticky top-0 z-[1000] animate-slide-down border-b-2 border-blue-500/30">
+      <nav role="navigation" aria-label="Main navigation" className="bg-[#0f1419]/95 backdrop-blur-[10px] py-4 px-4 lg:px-8 flex justify-between items-center shadow-[0_4px_20px_rgba(0,0,0,0.1)] sticky top-0 z-[1000] animate-slide-down border-b-2 border-blue-500/30">
         <a href="/" className="no-underline">
           <div className="text-2xl font-bold text-white flex items-center gap-2.5">
             EduTech
@@ -77,7 +77,7 @@ const TopNavbar = ({ role }: TopNavbarProps) => {
         <div className="hidden lg:flex gap-5 items-center">
           {items.map((item) =>
             item.type === "nav" ? (
-              <button key={item.label} onClick={() => navigate(item.path!)} className={`${btnBase} ${isActive(item.path) ? "ring-2 ring-white/60" : ""}`}>
+              <button key={item.label} onClick={() => navigate(item.path!)} aria-current={isActive(item.path) ? "page" : undefined} className={`${btnBase} ${isActive(item.path) ? "ring-2 ring-white/60" : ""}`}>
                 {item.label}
               </button>
             ) : (
@@ -98,6 +98,9 @@ const TopNavbar = ({ role }: TopNavbarProps) => {
             {menuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
 
+          <kbd className="hidden md:inline-flex items-center gap-0.5 rounded-md border border-white/20 bg-white/10 px-2 py-1 text-[11px] font-mono text-white/60">
+            ⌘K
+          </kbd>
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-400 to-pink-600 flex items-center justify-center text-white font-bold text-base">
             {initials}
           </div>

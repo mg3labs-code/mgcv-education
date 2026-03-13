@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Eye, Brain, Target, Heart, TrendingUp, TrendingDown, AlertTriangle, CheckCircle, Info, ChevronRight, GraduationCap, Users, BookOpen, ClipboardList, BarChart3, Bell, MessageSquare, Lightbulb, Zap, Shield } from "lucide-react";
 import HelpTooltip from "@/components/HelpTooltip";
 import EmptyState from "@/components/EmptyState";
+import WelcomeBanner from "@/components/WelcomeBanner";
 
 const CLASS_OPTIONS = ["Class 10", "Class 9", "Class 8"];
 
@@ -116,6 +117,8 @@ const TeacherDashboard = () => {
   return (
     <DashboardLayout role="teacher">
       <div className="p-4 md:p-8 max-w-[1400px] mx-auto space-y-6">
+
+        <WelcomeBanner role="teacher" name={firstName} studentCount={classAvg?.student_count} />
 
         {/* ── Header ── */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
