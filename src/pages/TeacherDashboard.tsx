@@ -294,7 +294,7 @@ const TeacherDashboard = () => {
             <Zap className="h-5 w-5 text-primary" /> Quick Actions
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-            {QUICK_ACTIONS.map((action) => (
+            {QUICK_ACTIONS.map((action, i) => (
               <button key={action.label} onClick={() => navigate(action.path)}
                 className="flex flex-col items-center gap-3 p-5 rounded-xl bg-card border border-border card-hover-lift card-interactive text-center group animate-stagger-in"
                 style={{ "--stagger-delay": `${i * 0.06}s` } as React.CSSProperties}>
