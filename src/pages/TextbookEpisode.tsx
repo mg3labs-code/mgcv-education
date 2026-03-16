@@ -356,51 +356,27 @@ const blockIcons: Record<string, React.ElementType> = {
 };
 
 const blockLabels: Record<string, string> = {
-  concept: "What's the big idea?", activity: "Try it yourself!", recall: "Can you remember?",
-  explain: "Teach your friend", assessment: "Prove it!", exercise: "Level up",
-  reasoning: "But WHY though?", assumptions: "What if we're wrong?",
-  connections: "Where else does this hide?", application: "Use it in real life",
-  implications: "What does this change?",
-};
-
-const blockSubtitles: Record<string, string> = {
-  concept: "The core idea, made simple",
-  activity: "Get your hands dirty",
-  exercise: "Practice makes permanent",
-  recall: "No peeking allowed!",
-  assessment: "Show what you really know",
-  explain: "If you can explain it, you own it",
-  reasoning: "The reason behind the rule",
-  assumptions: "Challenge what everyone assumes",
-  connections: "Surprising links you didn't expect",
-  application: "How the real world uses this",
-  implications: "How this idea shapes tomorrow",
+  concept: "Definition", activity: "Mechanism", recall: "Recall", explain: "Explain",
+  assessment: "Test", exercise: "Practice", reasoning: "Reasoning",
+  assumptions: "Assumptions", connections: "Connections", application: "Application",
+  implications: "Implications",
 };
 
 const DEEP_BLOCKS = new Set(["reasoning", "assumptions", "connections", "application", "implications"]);
-const DISCOVER_BLOCKS = new Set(["concept", "activity", "exercise"]);
-const PROVE_BLOCKS = new Set(["recall", "assessment", "explain"]);
 
 const layerMeta: Record<string, { border: string; bg: string; badge?: string; badgeColor?: string; dotColor: string }> = {
-  concept:     { border: "border-l-blue-600",    bg: "",  badge: "🔍 Discover",     badgeColor: "bg-amber-500 text-white", dotColor: "bg-blue-600" },
-  activity:    { border: "border-l-rose-500",    bg: "",  badge: "🎮 Play",         badgeColor: "bg-rose-500 text-white", dotColor: "bg-rose-500" },
-  recall:      { border: "border-l-amber-500",   bg: "",  badge: "🧩 Challenge",    badgeColor: "bg-amber-500 text-white", dotColor: "bg-amber-500" },
-  explain:     { border: "border-l-purple-500",  bg: "",  badge: "🗣️ Your Turn",    badgeColor: "bg-purple-500 text-white", dotColor: "bg-purple-500" },
-  assessment:  { border: "border-l-emerald-500", bg: "",  badge: "🏆 Quiz Time",    badgeColor: "bg-emerald-500 text-white", dotColor: "bg-emerald-500" },
-  exercise:    { border: "border-l-cyan-500",    bg: "",  badge: "💪 Workout",      badgeColor: "bg-cyan-600 text-white", dotColor: "bg-cyan-500" },
-  reasoning:   { border: "border-l-amber-600",   bg: "",  badge: "🤔 Think Deeper", badgeColor: "bg-amber-600 text-white", dotColor: "bg-amber-600" },
-  assumptions: { border: "border-l-sky-500",     bg: "",  badge: "🕵️ Investigate",  badgeColor: "bg-sky-500 text-white", dotColor: "bg-sky-500" },
-  connections: { border: "border-l-emerald-600", bg: "",  badge: "🌐 Connect",      badgeColor: "bg-emerald-600 text-white", dotColor: "bg-emerald-600" },
-  application: { border: "border-l-orange-500",  bg: "",  badge: "🚀 Apply",        badgeColor: "bg-orange-500 text-white", dotColor: "bg-orange-500" },
-  implications:{ border: "border-l-indigo-500",  bg: "",  badge: "🔮 Imagine",      badgeColor: "bg-indigo-500 text-white", dotColor: "bg-indigo-500" },
+  concept:     { border: "border-l-blue-600",    bg: "",  badge: "💡 Essential",  badgeColor: "bg-green-500 text-white", dotColor: "bg-blue-600" },
+  activity:    { border: "border-l-rose-500",    bg: "",  badge: "📝 Practice",   badgeColor: "bg-amber-500 text-white", dotColor: "bg-rose-500" },
+  recall:      { border: "border-l-amber-500",   bg: "",  badge: "🧠 Recall",     badgeColor: "bg-amber-500 text-white", dotColor: "bg-amber-500" },
+  explain:     { border: "border-l-purple-500",  bg: "",  badge: "💬 Explain",    badgeColor: "bg-purple-500 text-white", dotColor: "bg-purple-500" },
+  assessment:  { border: "border-l-emerald-500", bg: "",  badge: "✅ Test",       badgeColor: "bg-emerald-500 text-white", dotColor: "bg-emerald-500" },
+  exercise:    { border: "border-l-cyan-500",    bg: "",  badge: "💪 Practice",   badgeColor: "bg-cyan-600 text-white", dotColor: "bg-cyan-500" },
+  reasoning:   { border: "border-l-amber-600",   bg: "",  badge: "⚡ Important",  badgeColor: "bg-amber-500 text-white", dotColor: "bg-amber-600" },
+  assumptions: { border: "border-l-sky-500",     bg: "",  badge: "🛡️ Important",  badgeColor: "bg-amber-500 text-white", dotColor: "bg-sky-500" },
+  connections: { border: "border-l-emerald-600", bg: "",  badge: "🔗 Essential",  badgeColor: "bg-green-500 text-white", dotColor: "bg-emerald-600" },
+  application: { border: "border-l-orange-500",  bg: "",  badge: "🌍 Essential",  badgeColor: "bg-green-500 text-white", dotColor: "bg-orange-500" },
+  implications:{ border: "border-l-indigo-500",  bg: "",  badge: "🎓 Advanced",   badgeColor: "bg-red-500 text-white", dotColor: "bg-indigo-500" },
 };
-
-// Phase config
-const phases = [
-  { id: "discover", label: "🔍 Discover & Explore", subtitle: "Learn the big ideas and try them out", className: "phase-discover", blockSet: DISCOVER_BLOCKS },
-  { id: "prove", label: "🧩 Prove You Know It", subtitle: "Test yourself — can you recall, explain & apply?", className: "phase-prove", blockSet: PROVE_BLOCKS },
-  { id: "deeper", label: "🚀 Go Deeper — The Fun Part", subtitle: "Ask why, challenge assumptions, see connections", className: "phase-deeper", blockSet: DEEP_BLOCKS },
-];
 
 // ─── Action Bar Buttons ─────────────────────────────────────
 
@@ -622,45 +598,35 @@ const TextbookEpisode = () => {
         </button>
 
         {sidebarOpen && (
-          <div className="bg-card/95 backdrop-blur-sm border border-border rounded-xl shadow-lg p-3 w-48">
-            {phases.map((phase) => {
-              const phaseBlocks = blocks.map((b, i) => ({ block: b, index: i })).filter(({ block }) => phase.blockSet.has(block.type));
-              if (phaseBlocks.length === 0) return null;
-              const phaseUnderstood = phaseBlocks.filter(({ index }) => understoodBlocks.has(index)).length;
-              const phaseComplete = phaseUnderstood === phaseBlocks.length && phaseBlocks.length > 0;
-              return (
-                <div key={phase.id} className="mb-2">
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1 px-1 flex items-center gap-1">
-                    {phase.label.split(" ")[0]} {phase.label.split(" ").slice(1).join(" ")}
-                    {phaseComplete && <Check className="h-3 w-3 text-primary" />}
-                  </p>
-                  <div className="space-y-0.5">
-                    {phaseBlocks.map(({ block, index: i }) => {
-                      const meta = layerMeta[block.type] || defaultMeta;
-                      const BlockIcon = blockIcons[block.type] || BookOpen;
-                      const isActive = i === activeBlock;
-                      const isPast = i < activeBlock;
-                      return (
-                        <button
-                          key={i}
-                          onClick={() => scrollToBlock(i)}
-                          className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left transition-all text-xs ${
-                            isActive ? "bg-primary/10 text-foreground font-medium"
-                              : isPast ? "text-muted-foreground/70"
-                              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                          }`}
-                        >
-                          <span className={`h-2 w-2 rounded-full shrink-0 transition-all ${isActive ? meta.dotColor + " scale-125" : isPast ? "bg-primary/30" : "bg-border"}`} />
-                          <BlockIcon className="h-3 w-3 shrink-0" />
-                          <span className="truncate">{blockLabels[block.type] || block.type}</span>
-                          {understoodBlocks.has(i) && <Check className="h-3 w-3 ml-auto text-primary shrink-0" />}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
+          <div className="bg-card/95 backdrop-blur-sm border border-border rounded-xl shadow-lg p-3 w-44">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2 px-1">Layers</p>
+            <div className="space-y-0.5">
+              {blocks.map((block, i) => {
+                const meta = layerMeta[block.type] || defaultMeta;
+                const BlockIcon = blockIcons[block.type] || BookOpen;
+                const isActive = i === activeBlock;
+                const isPast = i < activeBlock;
+
+                return (
+                  <button
+                    key={i}
+                    onClick={() => scrollToBlock(i)}
+                    className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left transition-all text-xs ${
+                      isActive
+                        ? "bg-primary/10 text-foreground font-medium"
+                        : isPast
+                        ? "text-muted-foreground/70"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                    }`}
+                  >
+                    <span className={`h-2 w-2 rounded-full shrink-0 transition-all ${isActive ? meta.dotColor + " scale-125" : isPast ? "bg-primary/30" : "bg-border"}`} />
+                    <BlockIcon className="h-3 w-3 shrink-0" />
+                    <span className="truncate">{blockLabels[block.type] || block.type}</span>
+                    {isActive && <span className="ml-auto h-1 w-1 rounded-full bg-primary animate-pulse" />}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         )}
       </div>
@@ -732,128 +698,104 @@ const TextbookEpisode = () => {
           ))}
         </div>
 
-        {/* Blocks grouped by Phase */}
-        <div className="space-y-8">
-          {phases.map((phase) => {
-            const phaseBlocks = blocks
-              .map((b, i) => ({ block: b, index: i }))
-              .filter(({ block }) => phase.blockSet.has(block.type));
-            if (phaseBlocks.length === 0) return null;
-
-            const phaseUnderstood = phaseBlocks.filter(({ index }) => understoodBlocks.has(index)).length;
-            const phaseComplete = phaseUnderstood === phaseBlocks.length;
+        {/* All Blocks */}
+        <div className="space-y-0">
+          {blocks.map((block, i) => {
+            const meta = layerMeta[block.type] || defaultMeta;
+            const BlockIcon = blockIcons[block.type] || BookOpen;
+            const isDeep = DEEP_BLOCKS.has(block.type);
+            const isFirstDeep = isDeep && !blocks.slice(0, i).some(b => DEEP_BLOCKS.has(b.type));
 
             return (
-              <div key={phase.id} className={phase.className}>
-                {/* Phase Header */}
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
-                      {phase.label}
-                      {phaseComplete && <span className="text-primary text-sm">✓ Complete</span>}
-                    </h3>
-                    <p className="text-sm text-muted-foreground mt-0.5">{phase.subtitle}</p>
+              <React.Fragment key={i}>
+                {/* Deep Mastery Divider */}
+                {isFirstDeep && (
+                  <div className="flex items-center gap-3 my-8 px-2">
+                    <div className="h-px flex-1 bg-border" />
+                    <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                      🧠 Deep Mastery Layers
+                    </span>
+                    <div className="h-px flex-1 bg-border" />
                   </div>
-                  <span className="text-xs font-semibold text-muted-foreground bg-background/60 px-3 py-1 rounded-full">
-                    {phaseUnderstood}/{phaseBlocks.length}
-                  </span>
-                </div>
+                )}
 
-                {/* Phase Blocks */}
-                <div className="space-y-4">
-                  {phaseBlocks.map(({ block, index: i }) => {
-                    const meta = layerMeta[block.type] || defaultMeta;
-                    const BlockIcon = blockIcons[block.type] || BookOpen;
-                    const isCollapsed = collapsedBlocks.has(i);
+                <div
+                  ref={(el) => { blockRefs.current[i] = el; }}
+                  className={`bg-white dark:bg-card rounded-xl mb-5 scroll-mt-24 shadow-sm hover:shadow-md transition-all border-l-4 ${(meta as any).border || "border-l-primary"} hover:-translate-y-0.5`}
+                >
+                  {/* Section Header — clickable to collapse/expand */}
+                  <button
+                    onClick={() => toggleBlock(i)}
+                    className="w-full flex items-center justify-between p-5 pb-0 cursor-pointer select-none group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-xl">{block.icon}</span>
+                      <h2 className="text-[1.2rem] font-semibold text-foreground text-left">{block.title}</h2>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {meta.badge && (
+                        <span className={`text-[11px] font-semibold px-3 py-1 rounded-full ${meta.badgeColor || ""}`}>
+                          {meta.badge}
+                        </span>
+                      )}
+                      <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform duration-300 ${collapsedBlocks.has(i) ? "-rotate-90" : "rotate-0"}`} />
+                    </div>
+                  </button>
 
-                    return (
-                      <div
-                        key={i}
-                        ref={(el) => { blockRefs.current[i] = el; }}
-                        className={`bg-card rounded-xl scroll-mt-24 shadow-sm hover:shadow-md transition-all border-l-4 ${(meta as any).border || "border-l-primary"} hover:-translate-y-0.5 ${
-                          !isCollapsed ? "animate-block-unlock" : ""
+                  {/* Block Content — collapsible with smooth animation */}
+                  <div
+                    className="overflow-hidden transition-all duration-300 ease-in-out"
+                    style={{
+                      maxHeight: collapsedBlocks.has(i) ? "0px" : "5000px",
+                      opacity: collapsedBlocks.has(i) ? 0 : 1,
+                      padding: collapsedBlocks.has(i) ? "0 1.25rem" : "1.25rem",
+                    }}
+                  >
+                    {renderBlock(block)}
+
+                    {/* Mark as Understood */}
+                    <div className="mt-4 pt-3 border-t border-border flex justify-end">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); toggleUnderstood(i); }}
+                        className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                          understoodBlocks.has(i)
+                            ? "bg-primary/10 text-primary border border-primary/30"
+                            : "bg-muted text-muted-foreground hover:bg-muted/80 border border-border"
                         }`}
                       >
-                        {/* Section Header */}
-                        <button
-                          onClick={() => toggleBlock(i)}
-                          className="w-full flex items-center justify-between p-5 pb-3 cursor-pointer select-none group"
-                        >
-                          <div className="flex items-center gap-3 min-w-0">
-                            <span className="text-xl shrink-0">{block.icon}</span>
-                            <div className="text-left min-w-0">
-                              <h2 className="text-[1.1rem] font-semibold text-foreground truncate">{block.title}</h2>
-                              <p className="text-xs text-muted-foreground italic mt-0.5">{blockSubtitles[block.type] || ""}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2 shrink-0">
-                            {meta.badge && (
-                              <span className={`text-[11px] font-semibold px-3 py-1 rounded-full ${meta.badgeColor || ""} hidden sm:inline-flex`}>
-                                {meta.badge}
-                              </span>
-                            )}
-                            {understoodBlocks.has(i) && <Check className="h-4 w-4 text-primary" />}
-                            <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform duration-300 ${isCollapsed ? "-rotate-90" : "rotate-0"}`} />
-                          </div>
-                        </button>
-
-                        {/* Block Content — collapsible */}
-                        <div
-                          className="overflow-hidden transition-all duration-300 ease-in-out"
-                          style={{
-                            maxHeight: isCollapsed ? "0px" : "5000px",
-                            opacity: isCollapsed ? 0 : 1,
-                            padding: isCollapsed ? "0 1.25rem" : "1.25rem",
-                          }}
-                        >
-                          {renderBlock(block)}
-
-                          {/* Got it! button */}
-                          <div className="mt-4 pt-3 border-t border-border flex justify-end">
-                            <button
-                              onClick={(e) => { e.stopPropagation(); toggleUnderstood(i); }}
-                              className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                                understoodBlocks.has(i)
-                                  ? "bg-primary/10 text-primary border border-primary/30 animate-got-it"
-                                  : "bg-muted text-muted-foreground hover:bg-muted/80 border border-border"
-                              }`}
-                            >
-                              <CheckCircle2 className={`h-4 w-4 ${understoodBlocks.has(i) ? "fill-primary" : ""}`} />
-                              {understoodBlocks.has(i) ? "Nailed it! 🎯" : "Got it! ✓"}
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
+                        <CheckCircle2 className={`h-4 w-4 ${understoodBlocks.has(i) ? "fill-primary" : ""}`} />
+                        {understoodBlocks.has(i) ? "Understood ✓" : "Mark as Understood"}
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              </React.Fragment>
             );
           })}
         </div>
 
         {/* Completion Actions */}
         <div className="mt-10 mb-8 rounded-2xl bg-muted/50 border border-border p-8 text-center">
-          <h2 className="text-2xl font-bold font-serif text-foreground mb-2">You crushed it! 🎉</h2>
-          <p className="text-base text-muted-foreground mb-8">What do you want to try next?</p>
+          <h2 className="text-2xl font-bold font-serif text-foreground mb-2">🎉 Episode Complete!</h2>
+          <p className="text-base text-muted-foreground mb-8">Choose your next step to deepen understanding</p>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
             <button onClick={() => setShowDefense(true)} className="bg-card border-2 border-border hover:border-primary rounded-xl p-6 text-center transition-all hover:-translate-y-1">
               <div className="text-4xl mb-3">🎓</div>
-              <h3 className="font-bold font-serif text-foreground mb-1">Can you defend it?</h3>
-              <p className="text-xs text-muted-foreground">Friendly debate, not a test · 5 min</p>
+              <h3 className="font-bold font-serif text-foreground mb-1">Tutorial Defense</h3>
+              <p className="text-xs text-muted-foreground">Oxford-style challenge · 5 min</p>
             </button>
 
             <button onClick={() => setShowFirstPrinciples(true)} className="bg-card border-2 border-border hover:border-primary rounded-xl p-6 text-center transition-all hover:-translate-y-1">
               <div className="text-4xl mb-3">💡</div>
-              <h3 className="font-bold font-serif text-foreground mb-1">Break it to basics</h3>
-              <p className="text-xs text-muted-foreground">Strip it down, rebuild smarter · 10 min</p>
+              <h3 className="font-bold font-serif text-foreground mb-1">First Principles</h3>
+              <p className="text-xs text-muted-foreground">Strip & rebuild · 10 min</p>
             </button>
 
             <button onClick={() => navigate("/student/dashboard")} className="bg-card border-2 border-border hover:border-primary rounded-xl p-6 text-center transition-all hover:-translate-y-1">
               <div className="text-4xl mb-3">📊</div>
-              <h3 className="font-bold font-serif text-foreground mb-1">See how far you've come</h3>
-              <p className="text-xs text-muted-foreground">Track your growth</p>
+              <h3 className="font-bold font-serif text-foreground mb-1">View Growth</h3>
+              <p className="text-xs text-muted-foreground">See your progress</p>
             </button>
           </div>
 
