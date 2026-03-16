@@ -167,18 +167,39 @@
   min-height: 100vh;
 }
 
-/* Glassmorphism card */
+/* ── Premium Glass Morphism ── */
+.glass-premium {
+  background: hsl(var(--card) / 0.7);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border: 1px solid hsl(var(--border) / 0.5);
+  box-shadow:
+    0 4px 24px hsl(var(--foreground) / 0.04),
+    0 1px 2px hsl(var(--foreground) / 0.06),
+    inset 0 1px 0 hsl(var(--card) / 0.5);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.glass-premium:hover {
+  box-shadow:
+    0 8px 32px hsl(var(--foreground) / 0.07),
+    0 2px 4px hsl(var(--foreground) / 0.08),
+    inset 0 1px 0 hsl(var(--card) / 0.5);
+}
+
+/* Legacy glass card (compatible) */
 .glass-card {
-  background: hsl(var(--card));
-  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card) / 0.7);
+  backdrop-filter: blur(16px);
+  border: 1px solid hsl(var(--border) / 0.5);
   border-radius: 20px;
-  box-shadow: 0 4px 20px hsl(220 25% 18% / 0.06);
+  box-shadow: 0 4px 20px hsl(var(--foreground) / 0.06);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .glass-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 10px 30px hsl(220 25% 18% / 0.1);
+  box-shadow: 0 10px 30px hsl(var(--foreground) / 0.1);
 }
 
 /* Dark glassmorphism */
@@ -188,6 +209,28 @@
   border: 1px solid hsl(220 15% 32%);
   color: hsl(210 20% 92%);
 }
+
+/* ── Mesh gradient floats ── */
+@keyframes meshFloat1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(3%, -5%) scale(1.05); }
+  66% { transform: translate(-2%, 3%) scale(0.97); }
+}
+
+@keyframes meshFloat2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(-4%, 3%) scale(0.96); }
+  66% { transform: translate(2%, -4%) scale(1.04); }
+}
+
+@keyframes meshFloat3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(3%, 4%) scale(1.03); }
+}
+
+.animate-mesh-float-1 { animation: meshFloat1 18s ease-in-out infinite; }
+.animate-mesh-float-2 { animation: meshFloat2 22s ease-in-out infinite; }
+.animate-mesh-float-3 { animation: meshFloat3 26s ease-in-out infinite; }
 
 /* Floating squares animation */
 @keyframes floatSquares {
