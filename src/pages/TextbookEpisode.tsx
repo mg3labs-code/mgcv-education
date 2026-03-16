@@ -732,104 +732,128 @@ const TextbookEpisode = () => {
           ))}
         </div>
 
-        {/* All Blocks */}
-        <div className="space-y-0">
-          {blocks.map((block, i) => {
-            const meta = layerMeta[block.type] || defaultMeta;
-            const BlockIcon = blockIcons[block.type] || BookOpen;
-            const isDeep = DEEP_BLOCKS.has(block.type);
-            const isFirstDeep = isDeep && !blocks.slice(0, i).some(b => DEEP_BLOCKS.has(b.type));
+        {/* Blocks grouped by Phase */}
+        <div className="space-y-8">
+          {phases.map((phase) => {
+            const phaseBlocks = blocks
+              .map((b, i) => ({ block: b, index: i }))
+              .filter(({ block }) => phase.blockSet.has(block.type));
+            if (phaseBlocks.length === 0) return null;
+
+            const phaseUnderstood = phaseBlocks.filter(({ index }) => understoodBlocks.has(index)).length;
+            const phaseComplete = phaseUnderstood === phaseBlocks.length;
 
             return (
-              <React.Fragment key={i}>
-                {/* Deep Mastery Divider */}
-                {isFirstDeep && (
-                  <div className="flex items-center gap-3 my-8 px-2">
-                    <div className="h-px flex-1 bg-border" />
-                    <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                      🧠 Deep Mastery Layers
-                    </span>
-                    <div className="h-px flex-1 bg-border" />
+              <div key={phase.id} className={phase.className}>
+                {/* Phase Header */}
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+                      {phase.label}
+                      {phaseComplete && <span className="text-primary text-sm">✓ Complete</span>}
+                    </h3>
+                    <p className="text-sm text-muted-foreground mt-0.5">{phase.subtitle}</p>
                   </div>
-                )}
+                  <span className="text-xs font-semibold text-muted-foreground bg-background/60 px-3 py-1 rounded-full">
+                    {phaseUnderstood}/{phaseBlocks.length}
+                  </span>
+                </div>
 
-                <div
-                  ref={(el) => { blockRefs.current[i] = el; }}
-                  className={`bg-white dark:bg-card rounded-xl mb-5 scroll-mt-24 shadow-sm hover:shadow-md transition-all border-l-4 ${(meta as any).border || "border-l-primary"} hover:-translate-y-0.5`}
-                >
-                  {/* Section Header — clickable to collapse/expand */}
-                  <button
-                    onClick={() => toggleBlock(i)}
-                    className="w-full flex items-center justify-between p-5 pb-0 cursor-pointer select-none group"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-xl">{block.icon}</span>
-                      <h2 className="text-[1.2rem] font-semibold text-foreground text-left">{block.title}</h2>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {meta.badge && (
-                        <span className={`text-[11px] font-semibold px-3 py-1 rounded-full ${meta.badgeColor || ""}`}>
-                          {meta.badge}
-                        </span>
-                      )}
-                      <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform duration-300 ${collapsedBlocks.has(i) ? "-rotate-90" : "rotate-0"}`} />
-                    </div>
-                  </button>
+                {/* Phase Blocks */}
+                <div className="space-y-4">
+                  {phaseBlocks.map(({ block, index: i }) => {
+                    const meta = layerMeta[block.type] || defaultMeta;
+                    const BlockIcon = blockIcons[block.type] || BookOpen;
+                    const isCollapsed = collapsedBlocks.has(i);
 
-                  {/* Block Content — collapsible with smooth animation */}
-                  <div
-                    className="overflow-hidden transition-all duration-300 ease-in-out"
-                    style={{
-                      maxHeight: collapsedBlocks.has(i) ? "0px" : "5000px",
-                      opacity: collapsedBlocks.has(i) ? 0 : 1,
-                      padding: collapsedBlocks.has(i) ? "0 1.25rem" : "1.25rem",
-                    }}
-                  >
-                    {renderBlock(block)}
-
-                    {/* Mark as Understood */}
-                    <div className="mt-4 pt-3 border-t border-border flex justify-end">
-                      <button
-                        onClick={(e) => { e.stopPropagation(); toggleUnderstood(i); }}
-                        className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                          understoodBlocks.has(i)
-                            ? "bg-primary/10 text-primary border border-primary/30"
-                            : "bg-muted text-muted-foreground hover:bg-muted/80 border border-border"
+                    return (
+                      <div
+                        key={i}
+                        ref={(el) => { blockRefs.current[i] = el; }}
+                        className={`bg-card rounded-xl scroll-mt-24 shadow-sm hover:shadow-md transition-all border-l-4 ${(meta as any).border || "border-l-primary"} hover:-translate-y-0.5 ${
+                          !isCollapsed ? "animate-block-unlock" : ""
                         }`}
                       >
-                        <CheckCircle2 className={`h-4 w-4 ${understoodBlocks.has(i) ? "fill-primary" : ""}`} />
-                        {understoodBlocks.has(i) ? "Understood ✓" : "Mark as Understood"}
-                      </button>
-                    </div>
-                  </div>
+                        {/* Section Header */}
+                        <button
+                          onClick={() => toggleBlock(i)}
+                          className="w-full flex items-center justify-between p-5 pb-3 cursor-pointer select-none group"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <span className="text-xl shrink-0">{block.icon}</span>
+                            <div className="text-left min-w-0">
+                              <h2 className="text-[1.1rem] font-semibold text-foreground truncate">{block.title}</h2>
+                              <p className="text-xs text-muted-foreground italic mt-0.5">{blockSubtitles[block.type] || ""}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            {meta.badge && (
+                              <span className={`text-[11px] font-semibold px-3 py-1 rounded-full ${meta.badgeColor || ""} hidden sm:inline-flex`}>
+                                {meta.badge}
+                              </span>
+                            )}
+                            {understoodBlocks.has(i) && <Check className="h-4 w-4 text-primary" />}
+                            <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform duration-300 ${isCollapsed ? "-rotate-90" : "rotate-0"}`} />
+                          </div>
+                        </button>
+
+                        {/* Block Content — collapsible */}
+                        <div
+                          className="overflow-hidden transition-all duration-300 ease-in-out"
+                          style={{
+                            maxHeight: isCollapsed ? "0px" : "5000px",
+                            opacity: isCollapsed ? 0 : 1,
+                            padding: isCollapsed ? "0 1.25rem" : "1.25rem",
+                          }}
+                        >
+                          {renderBlock(block)}
+
+                          {/* Got it! button */}
+                          <div className="mt-4 pt-3 border-t border-border flex justify-end">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); toggleUnderstood(i); }}
+                              className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                                understoodBlocks.has(i)
+                                  ? "bg-primary/10 text-primary border border-primary/30 animate-got-it"
+                                  : "bg-muted text-muted-foreground hover:bg-muted/80 border border-border"
+                              }`}
+                            >
+                              <CheckCircle2 className={`h-4 w-4 ${understoodBlocks.has(i) ? "fill-primary" : ""}`} />
+                              {understoodBlocks.has(i) ? "Nailed it! 🎯" : "Got it! ✓"}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-              </React.Fragment>
+              </div>
             );
           })}
         </div>
 
         {/* Completion Actions */}
         <div className="mt-10 mb-8 rounded-2xl bg-muted/50 border border-border p-8 text-center">
-          <h2 className="text-2xl font-bold font-serif text-foreground mb-2">🎉 Episode Complete!</h2>
-          <p className="text-base text-muted-foreground mb-8">Choose your next step to deepen understanding</p>
+          <h2 className="text-2xl font-bold font-serif text-foreground mb-2">You crushed it! 🎉</h2>
+          <p className="text-base text-muted-foreground mb-8">What do you want to try next?</p>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
             <button onClick={() => setShowDefense(true)} className="bg-card border-2 border-border hover:border-primary rounded-xl p-6 text-center transition-all hover:-translate-y-1">
               <div className="text-4xl mb-3">🎓</div>
-              <h3 className="font-bold font-serif text-foreground mb-1">Tutorial Defense</h3>
-              <p className="text-xs text-muted-foreground">Oxford-style challenge · 5 min</p>
+              <h3 className="font-bold font-serif text-foreground mb-1">Can you defend it?</h3>
+              <p className="text-xs text-muted-foreground">Friendly debate, not a test · 5 min</p>
             </button>
 
             <button onClick={() => setShowFirstPrinciples(true)} className="bg-card border-2 border-border hover:border-primary rounded-xl p-6 text-center transition-all hover:-translate-y-1">
               <div className="text-4xl mb-3">💡</div>
-              <h3 className="font-bold font-serif text-foreground mb-1">First Principles</h3>
-              <p className="text-xs text-muted-foreground">Strip & rebuild · 10 min</p>
+              <h3 className="font-bold font-serif text-foreground mb-1">Break it to basics</h3>
+              <p className="text-xs text-muted-foreground">Strip it down, rebuild smarter · 10 min</p>
             </button>
 
             <button onClick={() => navigate("/student/dashboard")} className="bg-card border-2 border-border hover:border-primary rounded-xl p-6 text-center transition-all hover:-translate-y-1">
               <div className="text-4xl mb-3">📊</div>
-              <h3 className="font-bold font-serif text-foreground mb-1">View Growth</h3>
-              <p className="text-xs text-muted-foreground">See your progress</p>
+              <h3 className="font-bold font-serif text-foreground mb-1">See how far you've come</h3>
+              <p className="text-xs text-muted-foreground">Track your growth</p>
             </button>
           </div>
 
