@@ -3,7 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import ForgotPasswordModal from "@/components/ForgotPasswordModal";
-import { Menu, X } from "lucide-react";
+import GradientMeshBg from "@/components/landing/GradientMeshBg";
+import TrustBadges from "@/components/landing/TrustBadges";
+import FeatureShowcase from "@/components/landing/FeatureShowcase";
+import LoadingScreen from "@/components/LoadingScreen";
+import { Menu, X, ArrowRight } from "lucide-react";
+import { motion } from "framer-motion";
 
 type LoginType = "student" | "teacher" | "";
 type ModalType = "login" | "about" | "contact" | "";
@@ -55,6 +60,7 @@ const Index = () => {
     setPassword("");
     setFullName("");
     setClassName("");
+    setLoginError(null);
   }, []);
 
   useEffect(() => {
@@ -68,7 +74,6 @@ const Index = () => {
   const parseError = (err: any): { message: string; code?: string; suggestion: string } => {
     const msg = err?.message || "Unknown error";
     const code = err?.code || err?.status?.toString() || undefined;
-
     if (msg.includes("Failed to fetch") || msg.includes("NetworkError")) {
       return { message: msg, code: "NETWORK_ERROR", suggestion: "Network issue detected. Try opening the app in a new tab or check your internet connection." };
     }
@@ -91,7 +96,6 @@ const Index = () => {
     e.preventDefault();
     setSubmitting(true);
     setLoginError(null);
-
     try {
       if (authMode === "signup") {
         const selectedRole = loginType === "teacher" ? "teacher" : "student";
@@ -111,314 +115,309 @@ const Index = () => {
     }
   };
 
-  if (loading) return null;
+  if (loading) return <LoadingScreen />;
   if (user && role) return null;
 
+  const inputClass = "w-full py-4 px-5 rounded-xl bg-white/10 text-white text-sm outline-none border border-white/15 transition-all placeholder:text-white/50 focus:bg-white/15 focus:border-primary focus:shadow-[0_0_20px_hsl(162_65%_38%/0.2)]";
+
   return (
-    <div className="min-h-screen bg-[#0f1419] text-white overflow-x-hidden">
-      {/* Iframe Banner - Prominent */}
+    <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
+      {/* Iframe Banner */}
       {inIframe && (
-        <div className="fixed top-0 left-0 right-0 z-[1100] bg-gradient-to-r from-amber-600 to-red-600 text-white text-center py-4 px-4 shadow-lg">
+        <div className="fixed top-0 left-0 right-0 z-[1100] bg-gradient-to-r from-warning to-destructive text-white text-center py-4 px-4 shadow-lg">
           <div className="max-w-xl mx-auto">
             <p className="font-bold text-base mb-1">⚠️ Preview Mode — Login may not work here</p>
-            <p className="text-sm text-white/90 mb-2">Browser security blocks authentication inside iframes. Open the app directly to sign in.</p>
-            <a
-              href="https://mind-map-academy.lovable.app"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block bg-white text-red-700 font-bold px-6 py-2 rounded-full text-sm hover:bg-white/90 transition-all shadow-md"
-            >
-              🚀 Open Live App in New Tab ↗
+            <p className="text-sm text-white/90 mb-2">Browser security blocks authentication inside iframes.</p>
+            <a href="https://mind-map-academy.lovable.app" target="_blank" rel="noopener noreferrer"
+              className="inline-block bg-white text-destructive font-bold px-6 py-2 rounded-full text-sm hover:bg-white/90 transition-all shadow-md">
+              🚀 Open Live App ↗
             </a>
           </div>
         </div>
       )}
 
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-[1000] bg-[#0f1419]/95 backdrop-blur-[20px] py-4 md:py-5 border-b border-white/10" style={{ top: inIframe ? '100px' : 0 }}>
+      <header className="fixed top-0 left-0 right-0 z-[1000] bg-background/80 backdrop-blur-xl py-4 border-b border-border/50" style={{ top: inIframe ? '100px' : 0 }}>
         <div className="max-w-[1400px] mx-auto flex justify-between items-center px-4 md:px-10">
-          <div className="text-2xl md:text-[32px] font-light tracking-wide">EduTech</div>
+          <div className="text-2xl md:text-[28px] font-bold tracking-tight">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-info">Edu</span>
+            <span className="text-foreground">Tech</span>
+          </div>
 
-          {/* Mobile menu toggle */}
-          <button
-            className="md:hidden text-white/80 bg-transparent border-none"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label="Toggle menu"
-          >
+          <button className="md:hidden text-muted-foreground" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} aria-label="Toggle menu">
             {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
 
-          {/* Desktop nav */}
-          <nav className="hidden md:flex list-none gap-12 items-center">
-            <button onClick={() => openModal("student")} className="text-white/80 text-base font-normal transition-colors hover:text-teal cursor-pointer bg-transparent border-none">
-              Student Login
-            </button>
-            <button onClick={() => openModal("teacher")} className="text-white/80 text-base font-normal transition-colors hover:text-teal cursor-pointer bg-transparent border-none">
-              Teacher Login
-            </button>
-            <button onClick={() => openModal("about")} className="text-white/80 text-base font-normal transition-colors hover:text-teal cursor-pointer bg-transparent border-none">
-              About
-            </button>
-            <button
-              onClick={() => openModal("contact")}
-              className="bg-teal text-white px-8 py-3 rounded-full font-semibold transition-all hover:bg-teal-light hover:-translate-y-0.5 hover:shadow-[0_10px_25px_rgba(0,212,170,0.3)]"
-            >
-              CONTACT
+          <nav className="hidden md:flex gap-8 items-center">
+            {["Student Login", "Teacher Login", "About"].map((label) => {
+              const key = label === "Student Login" ? "student" : label === "Teacher Login" ? "teacher" : "about";
+              return (
+                <button key={key} onClick={() => openModal(key as any)}
+                  className="text-muted-foreground text-sm font-medium transition-colors hover:text-foreground cursor-pointer bg-transparent border-none relative group">
+                  {label}
+                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full" />
+                </button>
+              );
+            })}
+            <button onClick={() => openModal("contact")}
+              className="bg-primary text-primary-foreground px-6 py-2.5 rounded-full font-semibold text-sm transition-all hover:shadow-[0_8px_25px_hsl(162_65%_38%/0.3)] hover:-translate-y-0.5">
+              Contact Us
             </button>
           </nav>
         </div>
 
-        {/* Mobile nav dropdown */}
         {mobileMenuOpen && (
-          <div className="md:hidden bg-[#0f1419]/98 border-t border-white/10 px-4 py-4 flex flex-col gap-3 animate-slide-down">
-            <button onClick={() => openModal("student")} className="text-white/80 text-base py-2 text-left bg-transparent border-none">
-              Student Login
-            </button>
-            <button onClick={() => openModal("teacher")} className="text-white/80 text-base py-2 text-left bg-transparent border-none">
-              Teacher Login
-            </button>
-            <button onClick={() => openModal("about")} className="text-white/80 text-base py-2 text-left bg-transparent border-none">
-              About
-            </button>
-            <button onClick={() => openModal("contact")} className="bg-teal text-white px-6 py-3 rounded-full font-semibold text-center">
-              CONTACT
+          <div className="md:hidden border-t border-border/50 px-4 py-4 flex flex-col gap-2 bg-background/95 backdrop-blur-xl animate-slide-down">
+            {(["student", "teacher", "about"] as const).map((key) => (
+              <button key={key} onClick={() => openModal(key)}
+                className="text-muted-foreground text-sm py-2.5 text-left bg-transparent border-none hover:text-foreground">
+                {key === "student" ? "Student Login" : key === "teacher" ? "Teacher Login" : "About"}
+              </button>
+            ))}
+            <button onClick={() => openModal("contact")}
+              className="bg-primary text-primary-foreground px-6 py-3 rounded-full font-semibold text-sm text-center mt-1">
+              Contact Us
             </button>
           </div>
         )}
       </header>
 
-      {/* Main Content */}
-      <main className="min-h-screen flex items-center relative overflow-hidden pt-24 md:pt-[100px]">
-        <div className="max-w-[1400px] mx-auto px-4 md:px-10 grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-[100px] items-center w-full">
-          <div className="z-10">
-            <div className="text-lg md:text-2xl text-teal mb-3 md:mb-5 font-light italic">Empowering Minds.</div>
-            <h1 className="text-4xl md:text-[72px] font-bold leading-[1.1] mb-5 md:mb-8 text-white">
-              The Right Learning.<br />
-              The Right Future.™
-            </h1>
-            <p className="text-base md:text-xl text-white/70 leading-relaxed font-light">
-              A trusted educational technology platform that bridges the gap between students and teachers, fostering collaborative learning for tomorrow's leaders.
-            </p>
-            {/* Mobile CTA buttons */}
-            <div className="flex flex-col sm:flex-row gap-3 mt-8 md:hidden">
-              <button onClick={() => openModal("student")} className="bg-teal text-white px-6 py-4 rounded-full font-semibold text-base">
-                Student Login
+      {/* Hero Section */}
+      <main className="relative min-h-screen flex items-center pt-20 md:pt-0">
+        <GradientMeshBg />
+
+        <div className="max-w-[1400px] mx-auto px-4 md:px-10 w-full relative z-10">
+          <div className="max-w-3xl">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: "easeOut" as const }}>
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-6">
+                <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                <span className="text-xs font-semibold text-primary uppercase tracking-wider">Now with AI-Powered Learning</span>
+              </div>
+            </motion.div>
+
+            <motion.h1
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.1, ease: "easeOut" as const }}
+              className="text-4xl sm:text-5xl md:text-7xl font-bold leading-[1.08] mb-6 text-foreground"
+            >
+              The Right Learning.{" "}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent to-info">
+                The Right Future.
+              </span>
+            </motion.h1>
+
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.25, ease: "easeOut" as const }}
+              className="text-base md:text-xl text-muted-foreground leading-relaxed mb-8 max-w-xl"
+            >
+              An AI-powered educational platform that builds cognitive muscle — not just grades. Designed for students who think deeply and teachers who lead boldly.
+            </motion.p>
+
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.4, ease: "easeOut" as const }}
+              className="flex flex-col sm:flex-row gap-3"
+            >
+              <button onClick={() => openModal("student")}
+                className="group bg-primary text-primary-foreground px-8 py-4 rounded-full font-semibold text-base transition-all hover:shadow-[0_12px_30px_hsl(162_65%_38%/0.35)] hover:-translate-y-0.5 flex items-center justify-center gap-2">
+                Start Learning
+                <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
               </button>
-              <button onClick={() => openModal("teacher")} className="bg-white/10 text-white px-6 py-4 rounded-full font-semibold text-base border border-white/20">
-                Teacher Login
+              <button onClick={() => openModal("teacher")}
+                className="bg-secondary text-secondary-foreground px-8 py-4 rounded-full font-semibold text-base border border-border transition-all hover:bg-accent/10 hover:-translate-y-0.5">
+                Teacher Portal
               </button>
-            </div>
+            </motion.div>
           </div>
         </div>
 
-        {/* Background Animation - hidden on mobile for performance */}
-        <div className="absolute top-0 right-0 w-[60%] h-full z-[1] hidden md:block">
-          <div className="absolute w-full h-full opacity-10">
-            {[...Array(9)].map((_, i) => (
-              <div
-                key={i}
-                className="absolute bg-teal"
-                style={{
-                  width: `${[8, 12, 6, 10, 8, 14, 6, 10, 8][i]}px`,
-                  height: `${[8, 12, 6, 10, 8, 14, 6, 10, 8][i]}px`,
-                  left: `${(i + 1) * 10}%`,
-                  animation: `floatSquares 20s infinite linear`,
-                  animationDelay: `${-i * 2}s`,
-                }}
-              />
-            ))}
-          </div>
-
-          <svg className="absolute top-1/2 right-0 w-[800px] h-[600px] -translate-y-1/2 z-[2]" viewBox="0 0 800 600">
+        {/* Abstract SVG decoration - desktop only */}
+        <div className="absolute top-0 right-0 w-[50%] h-full z-[1] hidden lg:block pointer-events-none">
+          <svg className="absolute top-1/2 right-0 w-[700px] h-[500px] -translate-y-1/2 opacity-20" viewBox="0 0 800 600">
             <defs>
-              <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#00d4aa" />
-                <stop offset="50%" stopColor="#0984e3" />
-                <stop offset="100%" stopColor="#6c5ce7" />
+              <linearGradient id="hero-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="hsl(162 65% 38%)" />
+                <stop offset="50%" stopColor="hsl(210 65% 52%)" />
+                <stop offset="100%" stopColor="hsl(280 60% 55%)" />
               </linearGradient>
             </defs>
             {[
               "M 100 100 Q 300 50 500 150 T 700 200 Q 650 300 500 350 T 200 400 Q 150 500 300 550",
               "M 150 80 Q 350 30 550 130 T 750 180 Q 700 280 550 330 T 250 380 Q 200 480 350 530",
               "M 200 120 Q 400 70 600 170 T 800 220 Q 750 320 600 370 T 300 420 Q 250 520 400 570",
-              "M 50 140 Q 250 90 450 190 T 650 240 Q 600 340 450 390 T 150 440 Q 100 540 250 590",
             ].map((d, i) => (
-              <path
-                key={i}
-                d={d}
-                strokeWidth={2}
-                fill="none"
-                stroke="url(#gradient)"
-                opacity={0.8}
-                style={{ animation: `drawLine 8s ease-in-out infinite`, animationDelay: `${-i * 2}s` }}
-              />
+              <path key={i} d={d} strokeWidth={1.5} fill="none" stroke="url(#hero-grad)" opacity={0.6}
+                style={{ animation: `drawLine 10s ease-in-out infinite`, animationDelay: `${-i * 3}s` }} />
             ))}
           </svg>
         </div>
       </main>
 
+      {/* Trust Badges / Stats */}
+      <TrustBadges />
+
+      {/* Feature Showcase */}
+      <FeatureShowcase />
+
+      {/* CTA Section */}
+      <section className="relative z-10 py-20 md:py-28">
+        <div className="max-w-[800px] mx-auto px-4 md:px-10 text-center">
+          <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-4">
+            Ready to transform education?
+          </h2>
+          <p className="text-muted-foreground text-base md:text-lg mb-8 max-w-lg mx-auto">
+            Join thousands of students and teachers already building a better future with EduTech.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <button onClick={() => openModal("student")}
+              className="bg-primary text-primary-foreground px-8 py-4 rounded-full font-semibold text-base transition-all hover:shadow-[0_12px_30px_hsl(162_65%_38%/0.35)] hover:-translate-y-0.5">
+              Get Started — Free
+            </button>
+            <button onClick={() => openModal("contact")}
+              className="bg-secondary text-secondary-foreground px-8 py-4 rounded-full font-semibold text-base border border-border transition-all hover:bg-accent/10">
+              Talk to Us
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="relative z-10 border-t border-border/50 py-8">
+        <div className="max-w-[1400px] mx-auto px-4 md:px-10 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <div className="text-sm text-muted-foreground">© 2026 EduTech by MG3 Labs. All rights reserved.</div>
+          <div className="flex gap-6">
+            <button onClick={() => openModal("about")} className="text-sm text-muted-foreground hover:text-foreground bg-transparent border-none cursor-pointer">About</button>
+            <button onClick={() => openModal("contact")} className="text-sm text-muted-foreground hover:text-foreground bg-transparent border-none cursor-pointer">Contact</button>
+          </div>
+        </div>
+      </footer>
+
       {/* Login Modal */}
       {modalType === "login" && (
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-[10px] z-[2000] flex justify-center items-center p-4" onClick={(e) => e.target === e.currentTarget && closeModal()}>
-          <div className="glass-dark rounded-[20px] p-8 md:p-[50px] w-full max-w-[450px] text-center animate-modal-in relative">
-            <button onClick={closeModal} className="absolute top-4 right-5 text-3xl cursor-pointer text-white/70 hover:text-white bg-transparent border-none">
-              &times;
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-xl z-[2000] flex justify-center items-center p-4" onClick={(e) => e.target === e.currentTarget && closeModal()}>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.3, ease: "easeOut" as const }}
+            className="glass-premium rounded-2xl p-8 md:p-10 w-full max-w-[440px] text-center relative border border-border/50 shadow-2xl"
+          >
+            <button onClick={closeModal} className="absolute top-4 right-5 text-2xl cursor-pointer text-muted-foreground hover:text-foreground bg-transparent border-none">
+              ×
             </button>
-            <h2 className="text-2xl md:text-[2.5rem] mb-2 text-teal font-light">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-info/10 flex items-center justify-center mx-auto mb-4">
+              <span className="text-xl font-bold text-primary">{loginType === "student" ? "S" : "T"}</span>
+            </div>
+            <h2 className="text-xl md:text-2xl font-bold text-foreground mb-1">
               {loginType === "student" ? "Student Portal" : "Teacher Portal"}
             </h2>
 
             {showForgot ? (
-              <div className="mt-8">
+              <div className="mt-6">
                 <ForgotPasswordModal onBack={() => setShowForgot(false)} variant="glass" />
               </div>
             ) : (
               <>
-                <p className="text-white/80 mb-6 md:mb-10 text-sm md:text-base">
+                <p className="text-muted-foreground mb-6 text-sm">
                   {authMode === "login"
                     ? loginType === "student" ? "Access your learning dashboard" : "Manage your classroom"
                     : "Create your account"}
                 </p>
 
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={handleSubmit} className="space-y-3">
                   {authMode === "signup" && (
                     <>
-                      <div className="mb-4 md:mb-6">
-                        <input
-                          type="text"
-                          value={fullName}
-                          onChange={(e) => setFullName(e.target.value)}
-                          required
-                          placeholder="👤 Enter your full name"
-                          className="w-full py-4 md:py-[18px] px-5 md:px-6 border-none rounded-full bg-white/15 text-white text-sm md:text-base outline-none border-2 border-transparent transition-all placeholder:text-white/60 focus:bg-white/20 focus:border-teal focus:shadow-[0_0_20px_rgba(0,212,170,0.3)]"
-                        />
-                      </div>
-                      <div className="mb-4 md:mb-6">
-                        <input
-                          type="text"
-                          value={className}
-                          onChange={(e) => setClassName(e.target.value)}
-                          placeholder="🏫 Enter your class (e.g. 9th CBSE)"
-                          className="w-full py-4 md:py-[18px] px-5 md:px-6 border-none rounded-full bg-white/15 text-white text-sm md:text-base outline-none border-2 border-transparent transition-all placeholder:text-white/60 focus:bg-white/20 focus:border-teal focus:shadow-[0_0_20px_rgba(0,212,170,0.3)]"
-                        />
-                      </div>
+                      <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} required
+                        placeholder="Full name" className={inputClass} />
+                      <input type="text" value={className} onChange={(e) => setClassName(e.target.value)}
+                        placeholder="Class (e.g. 9th CBSE)" className={inputClass} />
                     </>
                   )}
-                  <div className="mb-4 md:mb-6">
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      placeholder="📧 Enter your email"
-                      className="w-full py-4 md:py-[18px] px-5 md:px-6 border-none rounded-full bg-white/15 text-white text-sm md:text-base outline-none border-2 border-transparent transition-all placeholder:text-white/60 focus:bg-white/20 focus:border-teal focus:shadow-[0_0_20px_rgba(0,212,170,0.3)]"
-                    />
-                  </div>
-                  <div className="mb-4 md:mb-6">
-                    <input
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      minLength={6}
-                      placeholder="🔒 Enter your password"
-                      className="w-full py-4 md:py-[18px] px-5 md:px-6 border-none rounded-full bg-white/15 text-white text-sm md:text-base outline-none border-2 border-transparent transition-all placeholder:text-white/60 focus:bg-white/20 focus:border-teal focus:shadow-[0_0_20px_rgba(0,212,170,0.3)]"
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    disabled={submitting}
-                    className="w-full py-4 md:py-[18px] border-none rounded-full bg-gradient-to-br from-teal to-teal-light text-white text-base md:text-lg font-semibold cursor-pointer transition-all mt-3 md:mt-5 hover:-translate-y-0.5 hover:shadow-[0_15px_35px_rgba(0,212,170,0.4)] disabled:opacity-50"
-                  >
-                    {submitting ? "⏳ Authenticating..." : authMode === "login" ? "🚀 Access Portal" : "🚀 Create Account"}
+                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required
+                    placeholder="Email address" className={inputClass} />
+                  <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6}
+                    placeholder="Password" className={inputClass} />
+                  <button type="submit" disabled={submitting}
+                    className="w-full py-4 rounded-xl bg-primary text-primary-foreground text-sm font-semibold transition-all mt-2 hover:shadow-[0_10px_30px_hsl(162_65%_38%/0.3)] disabled:opacity-50">
+                    {submitting ? "Authenticating..." : authMode === "login" ? "Sign In" : "Create Account"}
                   </button>
 
-                  {/* Inline error display */}
                   {loginError && (
-                    <div className="mt-4 bg-red-500/20 border border-red-400/40 rounded-xl p-4 text-left animate-modal-in">
-                      <div className="flex items-start gap-2">
-                        <span className="text-red-400 text-lg mt-0.5">⚠️</span>
-                        <div className="flex-1">
-                          <p className="text-red-300 font-semibold text-sm">{loginError.message}</p>
-                          {loginError.code && (
-                            <p className="text-red-400/70 text-xs mt-1 font-mono">Code: {loginError.code}</p>
-                          )}
-                          <p className="text-white/80 text-xs mt-2">{loginError.suggestion}</p>
-                        </div>
-                      </div>
+                    <div className="mt-3 bg-destructive/10 border border-destructive/20 rounded-xl p-4 text-left">
+                      <p className="text-destructive text-sm font-medium">{loginError.message}</p>
+                      <p className="text-muted-foreground text-xs mt-1">{loginError.suggestion}</p>
                     </div>
                   )}
                 </form>
 
-                <div className="flex justify-between mt-5 md:mt-6">
-                  <button
-                    onClick={() => setShowForgot(true)}
-                    className="text-white/70 text-xs md:text-sm transition-colors hover:text-teal bg-transparent border-none cursor-pointer"
-                  >
+                <div className="flex justify-between mt-5">
+                  <button onClick={() => setShowForgot(true)}
+                    className="text-muted-foreground text-xs hover:text-primary bg-transparent border-none cursor-pointer transition-colors">
                     Forgot Password?
                   </button>
-                  <button
-                    onClick={() => setAuthMode(authMode === "login" ? "signup" : "login")}
-                    className="text-white/70 text-xs md:text-sm transition-colors hover:text-teal bg-transparent border-none cursor-pointer"
-                  >
-                    {authMode === "login" ? "Register Now" : "Sign In Instead"}
+                  <button onClick={() => setAuthMode(authMode === "login" ? "signup" : "login")}
+                    className="text-muted-foreground text-xs hover:text-primary bg-transparent border-none cursor-pointer transition-colors">
+                    {authMode === "login" ? "Create Account" : "Sign In Instead"}
                   </button>
                 </div>
               </>
             )}
-          </div>
+          </motion.div>
         </div>
       )}
 
       {/* About Modal */}
       {modalType === "about" && (
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-[10px] z-[2000] flex justify-center items-center p-4" onClick={(e) => e.target === e.currentTarget && closeModal()}>
-          <div className="glass-dark rounded-[20px] p-8 md:p-[50px] w-full max-w-[600px] max-h-[80vh] overflow-y-auto text-left animate-modal-in relative">
-            <button onClick={closeModal} className="absolute top-4 right-5 text-3xl cursor-pointer text-white/70 hover:text-white bg-transparent border-none">
-              &times;
-            </button>
-            <h2 className="text-2xl md:text-[2.5rem] mb-5 text-teal font-light text-center">About EduTech</h2>
-            <div className="text-white/90 leading-relaxed text-sm md:text-base space-y-5">
-              <p>
-                <strong className="text-teal">EduTech</strong> is a cutting-edge educational technology platform designed to revolutionize the way students learn and teachers educate.
-              </p>
-              <p>
-                Built with modern web technologies and user-centered design principles, EduTech offers separate, tailored experiences for both students and educators.
-              </p>
-              <p>
-                Our platform emphasizes <strong className="text-teal">collaborative learning</strong>, <strong className="text-teal">data-driven insights</strong>, and <strong className="text-teal">personalized education paths</strong>.
-              </p>
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-xl z-[2000] flex justify-center items-center p-4" onClick={(e) => e.target === e.currentTarget && closeModal()}>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3, ease: "easeOut" as const }}
+            className="glass-premium rounded-2xl p-8 md:p-10 w-full max-w-[600px] max-h-[80vh] overflow-y-auto text-left relative border border-border/50 shadow-2xl"
+          >
+            <button onClick={closeModal} className="absolute top-4 right-5 text-2xl cursor-pointer text-muted-foreground hover:text-foreground bg-transparent border-none">×</button>
+            <h2 className="text-2xl font-bold text-foreground mb-5 text-center">About EduTech</h2>
+            <div className="text-muted-foreground leading-relaxed text-sm space-y-4">
+              <p><strong className="text-primary">EduTech</strong> is a cutting-edge educational technology platform designed to revolutionize the way students learn and teachers educate.</p>
+              <p>Built with modern web technologies and user-centered design principles, EduTech offers separate, tailored experiences for both students and educators.</p>
+              <p>Our platform emphasizes <strong className="text-primary">collaborative learning</strong>, <strong className="text-primary">data-driven insights</strong>, and <strong className="text-primary">personalized education paths</strong>.</p>
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
 
       {/* Contact Modal */}
       {modalType === "contact" && (
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-[10px] z-[2000] flex justify-center items-center p-4" onClick={(e) => e.target === e.currentTarget && closeModal()}>
-          <div className="glass-dark rounded-[20px] p-8 md:p-[50px] w-full max-w-[550px] text-center animate-modal-in relative">
-            <button onClick={closeModal} className="absolute top-4 right-5 text-3xl cursor-pointer text-white/70 hover:text-white bg-transparent border-none">
-              &times;
-            </button>
-            <h2 className="text-2xl md:text-[2.5rem] mb-6 md:mb-8 text-teal font-light">Get in Touch</h2>
-            <div className="text-white/90 leading-relaxed text-sm md:text-base text-left space-y-4 md:space-y-5">
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-xl z-[2000] flex justify-center items-center p-4" onClick={(e) => e.target === e.currentTarget && closeModal()}>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3, ease: "easeOut" as const }}
+            className="glass-premium rounded-2xl p-8 md:p-10 w-full max-w-[550px] text-center relative border border-border/50 shadow-2xl"
+          >
+            <button onClick={closeModal} className="absolute top-4 right-5 text-2xl cursor-pointer text-muted-foreground hover:text-foreground bg-transparent border-none">×</button>
+            <h2 className="text-2xl font-bold text-foreground mb-6">Get in Touch</h2>
+            <div className="text-left space-y-3">
               {[
                 { icon: "📧", title: "Developer Email", desc: "mg3labs@gmail.com" },
                 { icon: "🚀", title: "MG3 Labs", desc: "Innovation in Educational Technology" },
-                { icon: "💡", title: "Support & Inquiries", desc: "For technical support, feature requests, or partnership opportunities" },
+                { icon: "💡", title: "Support & Inquiries", desc: "Feature requests, partnerships, or support" },
                 { icon: "⚡", title: "Response Time", desc: "We typically respond within 24-48 hours" },
-                { icon: "🌐", title: "Available Services", desc: "Custom development, integration support, and consultation" },
+                { icon: "🌐", title: "Available Services", desc: "Custom development and consultation" },
               ].map((item, i) => (
-                <div key={i} className="flex items-center p-3 md:p-4 bg-white/5 rounded-[10px] border border-white/10">
-                  <div className="text-xl md:text-2xl mr-3 md:mr-4 text-teal w-8">{item.icon}</div>
+                <div key={i} className="flex items-center p-4 bg-muted/30 rounded-xl border border-border/50">
+                  <div className="text-xl mr-4 w-8">{item.icon}</div>
                   <div>
-                    <h4 className="text-teal mb-0.5 md:mb-1 text-base md:text-lg">{item.title}</h4>
-                    <p className="text-white/80 text-xs md:text-sm">{item.desc}</p>
+                    <h4 className="text-foreground font-semibold text-sm">{item.title}</h4>
+                    <p className="text-muted-foreground text-xs">{item.desc}</p>
                   </div>
                 </div>
               ))}
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
     </div>
