@@ -356,27 +356,51 @@ const blockIcons: Record<string, React.ElementType> = {
 };
 
 const blockLabels: Record<string, string> = {
-  concept: "Definition", activity: "Mechanism", recall: "Recall", explain: "Explain",
-  assessment: "Test", exercise: "Practice", reasoning: "Reasoning",
-  assumptions: "Assumptions", connections: "Connections", application: "Application",
-  implications: "Implications",
+  concept: "What's the big idea?", activity: "Try it yourself!", recall: "Can you remember?",
+  explain: "Teach your friend", assessment: "Prove it!", exercise: "Level up",
+  reasoning: "But WHY though?", assumptions: "What if we're wrong?",
+  connections: "Where else does this hide?", application: "Use it in real life",
+  implications: "What does this change?",
+};
+
+const blockSubtitles: Record<string, string> = {
+  concept: "The core idea, made simple",
+  activity: "Get your hands dirty",
+  exercise: "Practice makes permanent",
+  recall: "No peeking allowed!",
+  assessment: "Show what you really know",
+  explain: "If you can explain it, you own it",
+  reasoning: "The reason behind the rule",
+  assumptions: "Challenge what everyone assumes",
+  connections: "Surprising links you didn't expect",
+  application: "How the real world uses this",
+  implications: "How this idea shapes tomorrow",
 };
 
 const DEEP_BLOCKS = new Set(["reasoning", "assumptions", "connections", "application", "implications"]);
+const DISCOVER_BLOCKS = new Set(["concept", "activity", "exercise"]);
+const PROVE_BLOCKS = new Set(["recall", "assessment", "explain"]);
 
 const layerMeta: Record<string, { border: string; bg: string; badge?: string; badgeColor?: string; dotColor: string }> = {
-  concept:     { border: "border-l-blue-600",    bg: "",  badge: "💡 Essential",  badgeColor: "bg-green-500 text-white", dotColor: "bg-blue-600" },
-  activity:    { border: "border-l-rose-500",    bg: "",  badge: "📝 Practice",   badgeColor: "bg-amber-500 text-white", dotColor: "bg-rose-500" },
-  recall:      { border: "border-l-amber-500",   bg: "",  badge: "🧠 Recall",     badgeColor: "bg-amber-500 text-white", dotColor: "bg-amber-500" },
-  explain:     { border: "border-l-purple-500",  bg: "",  badge: "💬 Explain",    badgeColor: "bg-purple-500 text-white", dotColor: "bg-purple-500" },
-  assessment:  { border: "border-l-emerald-500", bg: "",  badge: "✅ Test",       badgeColor: "bg-emerald-500 text-white", dotColor: "bg-emerald-500" },
-  exercise:    { border: "border-l-cyan-500",    bg: "",  badge: "💪 Practice",   badgeColor: "bg-cyan-600 text-white", dotColor: "bg-cyan-500" },
-  reasoning:   { border: "border-l-amber-600",   bg: "",  badge: "⚡ Important",  badgeColor: "bg-amber-500 text-white", dotColor: "bg-amber-600" },
-  assumptions: { border: "border-l-sky-500",     bg: "",  badge: "🛡️ Important",  badgeColor: "bg-amber-500 text-white", dotColor: "bg-sky-500" },
-  connections: { border: "border-l-emerald-600", bg: "",  badge: "🔗 Essential",  badgeColor: "bg-green-500 text-white", dotColor: "bg-emerald-600" },
-  application: { border: "border-l-orange-500",  bg: "",  badge: "🌍 Essential",  badgeColor: "bg-green-500 text-white", dotColor: "bg-orange-500" },
-  implications:{ border: "border-l-indigo-500",  bg: "",  badge: "🎓 Advanced",   badgeColor: "bg-red-500 text-white", dotColor: "bg-indigo-500" },
+  concept:     { border: "border-l-blue-600",    bg: "",  badge: "🔍 Discover",     badgeColor: "bg-amber-500 text-white", dotColor: "bg-blue-600" },
+  activity:    { border: "border-l-rose-500",    bg: "",  badge: "🎮 Play",         badgeColor: "bg-rose-500 text-white", dotColor: "bg-rose-500" },
+  recall:      { border: "border-l-amber-500",   bg: "",  badge: "🧩 Challenge",    badgeColor: "bg-amber-500 text-white", dotColor: "bg-amber-500" },
+  explain:     { border: "border-l-purple-500",  bg: "",  badge: "🗣️ Your Turn",    badgeColor: "bg-purple-500 text-white", dotColor: "bg-purple-500" },
+  assessment:  { border: "border-l-emerald-500", bg: "",  badge: "🏆 Quiz Time",    badgeColor: "bg-emerald-500 text-white", dotColor: "bg-emerald-500" },
+  exercise:    { border: "border-l-cyan-500",    bg: "",  badge: "💪 Workout",      badgeColor: "bg-cyan-600 text-white", dotColor: "bg-cyan-500" },
+  reasoning:   { border: "border-l-amber-600",   bg: "",  badge: "🤔 Think Deeper", badgeColor: "bg-amber-600 text-white", dotColor: "bg-amber-600" },
+  assumptions: { border: "border-l-sky-500",     bg: "",  badge: "🕵️ Investigate",  badgeColor: "bg-sky-500 text-white", dotColor: "bg-sky-500" },
+  connections: { border: "border-l-emerald-600", bg: "",  badge: "🌐 Connect",      badgeColor: "bg-emerald-600 text-white", dotColor: "bg-emerald-600" },
+  application: { border: "border-l-orange-500",  bg: "",  badge: "🚀 Apply",        badgeColor: "bg-orange-500 text-white", dotColor: "bg-orange-500" },
+  implications:{ border: "border-l-indigo-500",  bg: "",  badge: "🔮 Imagine",      badgeColor: "bg-indigo-500 text-white", dotColor: "bg-indigo-500" },
 };
+
+// Phase config
+const phases = [
+  { id: "discover", label: "🔍 Discover & Explore", subtitle: "Learn the big ideas and try them out", className: "phase-discover", blockSet: DISCOVER_BLOCKS },
+  { id: "prove", label: "🧩 Prove You Know It", subtitle: "Test yourself — can you recall, explain & apply?", className: "phase-prove", blockSet: PROVE_BLOCKS },
+  { id: "deeper", label: "🚀 Go Deeper — The Fun Part", subtitle: "Ask why, challenge assumptions, see connections", className: "phase-deeper", blockSet: DEEP_BLOCKS },
+];
 
 // ─── Action Bar Buttons ─────────────────────────────────────
 
