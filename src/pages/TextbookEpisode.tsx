@@ -622,35 +622,45 @@ const TextbookEpisode = () => {
         </button>
 
         {sidebarOpen && (
-          <div className="bg-card/95 backdrop-blur-sm border border-border rounded-xl shadow-lg p-3 w-44">
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2 px-1">Layers</p>
-            <div className="space-y-0.5">
-              {blocks.map((block, i) => {
-                const meta = layerMeta[block.type] || defaultMeta;
-                const BlockIcon = blockIcons[block.type] || BookOpen;
-                const isActive = i === activeBlock;
-                const isPast = i < activeBlock;
-
-                return (
-                  <button
-                    key={i}
-                    onClick={() => scrollToBlock(i)}
-                    className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left transition-all text-xs ${
-                      isActive
-                        ? "bg-primary/10 text-foreground font-medium"
-                        : isPast
-                        ? "text-muted-foreground/70"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                    }`}
-                  >
-                    <span className={`h-2 w-2 rounded-full shrink-0 transition-all ${isActive ? meta.dotColor + " scale-125" : isPast ? "bg-primary/30" : "bg-border"}`} />
-                    <BlockIcon className="h-3 w-3 shrink-0" />
-                    <span className="truncate">{blockLabels[block.type] || block.type}</span>
-                    {isActive && <span className="ml-auto h-1 w-1 rounded-full bg-primary animate-pulse" />}
-                  </button>
-                );
-              })}
-            </div>
+          <div className="bg-card/95 backdrop-blur-sm border border-border rounded-xl shadow-lg p-3 w-48">
+            {phases.map((phase) => {
+              const phaseBlocks = blocks.map((b, i) => ({ block: b, index: i })).filter(({ block }) => phase.blockSet.has(block.type));
+              if (phaseBlocks.length === 0) return null;
+              const phaseUnderstood = phaseBlocks.filter(({ index }) => understoodBlocks.has(index)).length;
+              const phaseComplete = phaseUnderstood === phaseBlocks.length && phaseBlocks.length > 0;
+              return (
+                <div key={phase.id} className="mb-2">
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1 px-1 flex items-center gap-1">
+                    {phase.label.split(" ")[0]} {phase.label.split(" ").slice(1).join(" ")}
+                    {phaseComplete && <Check className="h-3 w-3 text-primary" />}
+                  </p>
+                  <div className="space-y-0.5">
+                    {phaseBlocks.map(({ block, index: i }) => {
+                      const meta = layerMeta[block.type] || defaultMeta;
+                      const BlockIcon = blockIcons[block.type] || BookOpen;
+                      const isActive = i === activeBlock;
+                      const isPast = i < activeBlock;
+                      return (
+                        <button
+                          key={i}
+                          onClick={() => scrollToBlock(i)}
+                          className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left transition-all text-xs ${
+                            isActive ? "bg-primary/10 text-foreground font-medium"
+                              : isPast ? "text-muted-foreground/70"
+                              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                          }`}
+                        >
+                          <span className={`h-2 w-2 rounded-full shrink-0 transition-all ${isActive ? meta.dotColor + " scale-125" : isPast ? "bg-primary/30" : "bg-border"}`} />
+                          <BlockIcon className="h-3 w-3 shrink-0" />
+                          <span className="truncate">{blockLabels[block.type] || block.type}</span>
+                          {understoodBlocks.has(i) && <Check className="h-3 w-3 ml-auto text-primary shrink-0" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
