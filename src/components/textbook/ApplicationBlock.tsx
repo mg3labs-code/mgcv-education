@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ApplicationContent } from "@/data/textbookData";
-import { Briefcase, Eye, GraduationCap } from "lucide-react";
+import { Briefcase, Eye, Rocket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -10,12 +10,12 @@ const ApplicationBlock = ({ content }: { content: ApplicationContent }) => {
 
   return (
     <div className="space-y-5">
-      {/* Harvard Case Method Branding */}
+      {/* Real Life Mission Branding */}
       <div className="rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/20 border border-amber-200 dark:border-amber-800 p-5">
         <div className="flex items-center gap-2 mb-3">
-          <GraduationCap className="h-5 w-5 text-amber-700 dark:text-amber-400" />
+          <Rocket className="h-5 w-5 text-amber-700 dark:text-amber-400" />
           <span className="text-xs font-bold uppercase tracking-wide text-amber-700 dark:text-amber-400">
-            🎓 Harvard Case Method
+            🚀 Real Life Mission
           </span>
         </div>
         <div className="flex items-start gap-3">
@@ -25,6 +25,7 @@ const ApplicationBlock = ({ content }: { content: ApplicationContent }) => {
               {content.harvardLabel || content.scenario}
             </p>
             <p className="text-base text-muted-foreground leading-relaxed">{content.context}</p>
+            <p className="text-xs text-muted-foreground mt-1 italic">This isn't just textbook stuff — people actually use this!</p>
           </div>
         </div>
       </div>
@@ -44,7 +45,7 @@ const ApplicationBlock = ({ content }: { content: ApplicationContent }) => {
           <textarea
             className="w-full ml-9 max-w-[calc(100%-2.25rem)] rounded-lg border bg-background px-3 py-2.5 text-base resize-none focus:outline-none focus:ring-2 focus:ring-primary/30"
             rows={2}
-            placeholder="Work it out here..."
+            placeholder="Write your answer here — there's no wrong answer! ✍️"
             value={answers[i] || ""}
             onChange={(e) => setAnswers({ ...answers, [i]: e.target.value })}
           />
@@ -55,12 +56,12 @@ const ApplicationBlock = ({ content }: { content: ApplicationContent }) => {
       <div className="rounded-xl border-2 border-dashed border-accent bg-accent/10 p-5">
         {showWhy ? (
           <div>
-            <p className="text-xs font-semibold text-primary mb-1">🌍 Why this matters in real life:</p>
+            <p className="text-xs font-semibold text-primary mb-1">🌍 Here's why this is actually cool:</p>
             <p className="text-base text-foreground leading-relaxed">{content.realWorldWhy}</p>
           </div>
         ) : (
           <Button variant="ghost" size="sm" onClick={() => setShowWhy(true)}>
-            <Eye className="h-3.5 w-3.5 mr-1" /> Why does this matter?
+            <Eye className="h-3.5 w-3.5 mr-1" /> OK but why should I care? 🤔
           </Button>
         )}
       </div>
@@ -69,7 +70,7 @@ const ApplicationBlock = ({ content }: { content: ApplicationContent }) => {
       {content.careers && content.careers.length > 0 && (
         <div className="rounded-xl bg-muted/40 border border-border p-5">
           <p className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
-            💼 Careers Using This
+            🦸 People who use this every day
           </p>
           <div className="flex flex-wrap gap-2">
             {content.careers.map((career, i) => (

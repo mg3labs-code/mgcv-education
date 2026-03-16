@@ -33,7 +33,7 @@ const ImplicationsBlock = ({ content }: { content: ImplicationsContent }) => {
         <div className="flex items-start gap-3">
           <Compass className="h-5 w-5 text-primary mt-0.5 shrink-0" />
           <div>
-            <p className="text-xs font-semibold text-primary mb-1">🔮 The Big Question</p>
+            <p className="text-xs font-semibold text-primary mb-1">🔮 Imagine this...</p>
             <p className="text-base font-semibold font-serif text-foreground">{content.whatIfQuestion}</p>
           </div>
         </div>
@@ -64,7 +64,7 @@ const ImplicationsBlock = ({ content }: { content: ImplicationsContent }) => {
       ) : (
         /* Fallback: flat reflection prompts */
         <div className="rounded-xl border bg-card p-4">
-          <p className="text-xs font-semibold text-muted-foreground mb-3">Think about these:</p>
+          <p className="text-xs font-semibold text-muted-foreground mb-3">🧠 Let these ideas bounce around your brain:</p>
           <div className="space-y-2">
             {content.reflectionPrompts.map((p, i) => (
               <div key={i} className="flex items-start gap-2 text-base text-foreground">
@@ -76,11 +76,11 @@ const ImplicationsBlock = ({ content }: { content: ImplicationsContent }) => {
         </div>
       )}
 
-      {/* Oxford Essay Question */}
+      {/* Essay Question */}
       <div className="space-y-3">
         <div className="rounded-xl bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 px-5 py-3">
           <p className="text-sm font-bold text-red-700 dark:text-red-400 flex items-center gap-2">
-            📝 Oxford Essay Question
+            ✏️ Your Turn to Think Big
           </p>
         </div>
         <p className="text-base font-medium text-foreground">{content.essayPrompt}</p>
@@ -89,7 +89,7 @@ const ImplicationsBlock = ({ content }: { content: ImplicationsContent }) => {
           <>
             <textarea
               className="w-full rounded-xl border bg-background px-4 py-3 text-base resize-none focus:outline-none focus:ring-2 focus:ring-primary/30 min-h-[140px] leading-relaxed"
-              placeholder="Write your reflection here..."
+              placeholder="Share your thoughts — even wild ideas are welcome! 🚀"
               value={essay}
               onChange={(e) => setEssay(e.target.value)}
             />
@@ -102,7 +102,7 @@ const ImplicationsBlock = ({ content }: { content: ImplicationsContent }) => {
                   </span>
                 )}
                 <Button variant="outline" size="sm" onClick={() => setVoiceMode(true)}>
-                  <Mic className="h-3.5 w-3.5 mr-1" /> 🎤 Record Voice Essay Instead
+                  <Mic className="h-3.5 w-3.5 mr-1" /> 🎤 Say it out loud instead
                 </Button>
               </div>
             </div>
@@ -110,7 +110,7 @@ const ImplicationsBlock = ({ content }: { content: ImplicationsContent }) => {
         ) : (
           <div className="rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 p-6 text-center">
             <Mic className="h-8 w-8 text-primary mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground mb-3">Voice essay recording coming soon</p>
+            <p className="text-sm text-muted-foreground mb-3">Voice recording coming soon — for now, type your ideas!</p>
             <Button variant="ghost" size="sm" onClick={() => setVoiceMode(false)}>
               Switch to text
             </Button>
