@@ -7,10 +7,10 @@ const ConnectionsBlock = ({ content }: { content: ConnectionsContent }) => {
       <div className="rounded-xl bg-accent/30 border border-accent p-4">
         <p className="text-sm font-semibold text-foreground flex items-center gap-2">
           <Link className="h-4 w-4 text-primary" />
-          Cross-domain connections for: {content.concept}
+          🌐 Where else does {content.concept} hide?
         </p>
-        <p className="text-xs text-muted-foreground mt-1">
-          Great thinkers see patterns across different fields. Can you?
+        <p className="text-xs text-muted-foreground mt-1 italic">
+          This idea shows up in surprising places. Can you spot it?
         </p>
       </div>
 
@@ -18,7 +18,7 @@ const ConnectionsBlock = ({ content }: { content: ConnectionsContent }) => {
         {content.connections.map((c, i) => (
           <div
             key={i}
-            className="rounded-xl border bg-card p-4 hover:shadow-md transition-shadow"
+            className="rounded-xl border bg-card p-4 hover:shadow-md hover:scale-[1.02] transition-all duration-200"
           >
             <div className="flex items-center gap-2 mb-2">
               <span className="text-lg">{c.icon}</span>
