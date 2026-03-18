@@ -726,6 +726,9 @@ const TextbookEpisode = () => {
           {episode.subtitle && <p className="text-sm text-white/70 mt-1">{episode.subtitle}</p>}
         </div>
 
+        {/* Language Progress Widget — shown only for language subjects */}
+        {isLanguage && langSubject && <LanguageProgressWidget subjectName={langSubject} />}
+
         {/* Stats Bar */}
         <div className="flex items-center justify-between bg-muted/50 rounded-xl p-4 mb-6">
           <div className="flex gap-6">
