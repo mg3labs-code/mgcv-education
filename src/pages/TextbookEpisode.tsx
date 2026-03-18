@@ -517,6 +517,11 @@ const TextbookEpisode = () => {
   
   const isLoading = chapterLoading || blocksLoading;
 
+  // Detect if this is a language subject
+  const langSubject = useMemo(() => getSubjectFromSlug(chapterId), [chapterId]);
+  const isLanguage = !!langSubject;
+  const phases = isLanguage ? langPhases : stemPhases;
+
   // Keep totalBlocksRef in sync
   useEffect(() => { totalBlocksRef.current = blocks.length; }, [blocks.length]);
 
