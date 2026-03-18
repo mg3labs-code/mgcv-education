@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import PageLayout from "@/components/PageLayout";
 import { ContentBlock, ConceptContent, ActivityContent, RecallContent, ExplainContent, AssessmentContent, ExerciseContent, ReasoningContent, AssumptionsContent, ConnectionsContent, ApplicationContent, ImplicationsContent } from "@/data/textbookData";
@@ -16,6 +16,20 @@ import ApplicationBlock from "@/components/textbook/ApplicationBlock";
 import ImplicationsBlock from "@/components/textbook/ImplicationsBlock";
 import TutorialDefenseModal from "@/components/textbook/TutorialDefenseModal";
 import FirstPrinciplesModal from "@/components/textbook/FirstPrinciplesModal";
+import BilingualConceptBlock from "@/components/textbook/BilingualConceptBlock";
+import VocabularyCardBlock from "@/components/textbook/VocabularyCardBlock";
+import GrammarPatternBlock from "@/components/textbook/GrammarPatternBlock";
+import StoryReadingBlock from "@/components/textbook/StoryReadingBlock";
+import LanguageProgressWidget from "@/components/textbook/LanguageProgressWidget";
+
+const LANGUAGE_SUBJECTS = new Set(["Telugu", "Hindi"]);
+
+const getSubjectFromSlug = (slug?: string): string | null => {
+  if (!slug) return null;
+  if (slug.startsWith("tel-")) return "Telugu";
+  if (slug.startsWith("hindi-")) return "Hindi";
+  return null;
+};
 
 // ─── Block Renderers ────────────────────────────────────────
 
