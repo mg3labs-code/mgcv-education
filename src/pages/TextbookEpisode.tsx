@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import PageLayout from "@/components/PageLayout";
 import { ContentBlock, ConceptContent, ActivityContent, RecallContent, ExplainContent, AssessmentContent, ExerciseContent, ReasoningContent, AssumptionsContent, ConnectionsContent, ApplicationContent, ImplicationsContent } from "@/data/textbookData";
@@ -16,6 +16,20 @@ import ApplicationBlock from "@/components/textbook/ApplicationBlock";
 import ImplicationsBlock from "@/components/textbook/ImplicationsBlock";
 import TutorialDefenseModal from "@/components/textbook/TutorialDefenseModal";
 import FirstPrinciplesModal from "@/components/textbook/FirstPrinciplesModal";
+import BilingualConceptBlock from "@/components/textbook/BilingualConceptBlock";
+import VocabularyCardBlock from "@/components/textbook/VocabularyCardBlock";
+import GrammarPatternBlock from "@/components/textbook/GrammarPatternBlock";
+import StoryReadingBlock from "@/components/textbook/StoryReadingBlock";
+import LanguageProgressWidget from "@/components/textbook/LanguageProgressWidget";
+
+const LANGUAGE_SUBJECTS = new Set(["Telugu", "Hindi"]);
+
+const getSubjectFromSlug = (slug?: string): string | null => {
+  if (!slug) return null;
+  if (slug.startsWith("tel-")) return "Telugu";
+  if (slug.startsWith("hindi-")) return "Hindi";
+  return null;
+};
 
 // ─── Block Renderers ────────────────────────────────────────
 
@@ -395,11 +409,22 @@ const layerMeta: Record<string, { border: string; bg: string; badge?: string; ba
   implications:{ border: "border-l-indigo-500",  bg: "",  badge: "🔮 Imagine",      badgeColor: "bg-indigo-500 text-white", dotColor: "bg-indigo-500" },
 };
 
-// Phase config
-const phases = [
+// Phase config — STEM default
+const stemPhases = [
   { id: "discover", label: "🔍 Discover & Explore", subtitle: "Learn the big ideas and try them out", className: "phase-discover", blockSet: DISCOVER_BLOCKS },
   { id: "prove", label: "🧩 Prove You Know It", subtitle: "Test yourself — can you recall, explain & apply?", className: "phase-prove", blockSet: PROVE_BLOCKS },
   { id: "deeper", label: "🚀 Go Deeper — The Fun Part", subtitle: "Ask why, challenge assumptions, see connections", className: "phase-deeper", blockSet: DEEP_BLOCKS },
+];
+
+// Language-specific phases
+const LANG_READ_BLOCKS = new Set(["concept", "activity"]);
+const LANG_PRACTICE_BLOCKS = new Set(["recall", "exercise", "assessment", "explain"]);
+const LANG_EXPRESS_BLOCKS = new Set(["reasoning", "assumptions", "connections", "application", "implications"]);
+
+const langPhases = [
+  { id: "read", label: "📖 Read & Discover", subtitle: "Read side-by-side, learn new words, hear the sounds", className: "phase-discover", blockSet: LANG_READ_BLOCKS },
+  { id: "practice", label: "🧩 Practice & Pattern", subtitle: "Spot grammar patterns, recall what you learned", className: "phase-prove", blockSet: LANG_PRACTICE_BLOCKS },
+  { id: "express", label: "✍️ Express Yourself", subtitle: "Write, think, and connect to culture", className: "phase-deeper", blockSet: LANG_EXPRESS_BLOCKS },
 ];
 
 // ─── Action Bar Buttons ─────────────────────────────────────
@@ -492,6 +517,11 @@ const TextbookEpisode = () => {
   
   const isLoading = chapterLoading || blocksLoading;
 
+  // Detect if this is a language subject
+  const langSubject = useMemo(() => getSubjectFromSlug(chapterId), [chapterId]);
+  const isLanguage = !!langSubject;
+  const phases = isLanguage ? langPhases : stemPhases;
+
   // Keep totalBlocksRef in sync
   useEffect(() => { totalBlocksRef.current = blocks.length; }, [blocks.length]);
 
@@ -579,6 +609,24 @@ const TextbookEpisode = () => {
   }
 
   const renderBlock = (block: ContentBlock) => {
+    // Language-aware rendering: use bilingual/vocab/grammar/story blocks for language subjects
+    if (isLanguage && langSubject) {
+      switch (block.type) {
+        case "concept": return <BilingualConceptBlock content={block.content as any} subjectName={langSubject} />;
+        case "activity": return <VocabularyCardBlock content={block.content as any} subjectName={langSubject} />;
+        case "recall": return <RecallBlock content={block.content as RecallContent} />;
+        case "explain": return <ExplainBlock content={block.content as ExplainContent} />;
+        case "assessment": return <AssessmentBlock content={block.content as AssessmentContent} />;
+        case "exercise": return <GrammarPatternBlock content={block.content as any} />;
+        case "reasoning": return <StoryReadingBlock content={block.content as any} subjectName={langSubject} />;
+        case "assumptions": return <AssumptionsBlock content={block.content as AssumptionsContent} onStartDefense={() => setShowDefense(true)} />;
+        case "connections": return <ConnectionsBlock content={block.content as ConnectionsContent} />;
+        case "application": return <ApplicationBlock content={block.content as ApplicationContent} />;
+        case "implications": return <ImplicationsBlock content={block.content as ImplicationsContent} />;
+        default: return null;
+      }
+    }
+    // STEM rendering
     switch (block.type) {
       case "concept": return <ConceptBlock content={block.content as ConceptContent} />;
       case "activity": return <ActivityBlock content={block.content as ActivityContent} />;
@@ -677,6 +725,9 @@ const TextbookEpisode = () => {
           <h1 className="text-2xl font-light text-white">{episode.title}</h1>
           {episode.subtitle && <p className="text-sm text-white/70 mt-1">{episode.subtitle}</p>}
         </div>
+
+        {/* Language Progress Widget — shown only for language subjects */}
+        {isLanguage && langSubject && <LanguageProgressWidget subjectName={langSubject} />}
 
         {/* Stats Bar */}
         <div className="flex items-center justify-between bg-muted/50 rounded-xl p-4 mb-6">

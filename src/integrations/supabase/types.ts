@@ -329,6 +329,42 @@ export type Database = {
         }
         Relationships: []
       }
+      language_progress: {
+        Row: {
+          created_at: string
+          grammar_patterns_mastered: number
+          id: string
+          passages_read: number
+          progress_date: string
+          sentences_written: number
+          subject_name: string
+          user_id: string
+          words_learned: number
+        }
+        Insert: {
+          created_at?: string
+          grammar_patterns_mastered?: number
+          id?: string
+          passages_read?: number
+          progress_date?: string
+          sentences_written?: number
+          subject_name: string
+          user_id: string
+          words_learned?: number
+        }
+        Update: {
+          created_at?: string
+          grammar_patterns_mastered?: number
+          id?: string
+          passages_read?: number
+          progress_date?: string
+          sentences_written?: number
+          subject_name?: string
+          user_id?: string
+          words_learned?: number
+        }
+        Relationships: []
+      }
       method_sessions: {
         Row: {
           chapter_id: string | null
