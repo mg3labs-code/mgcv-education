@@ -609,6 +609,24 @@ const TextbookEpisode = () => {
   }
 
   const renderBlock = (block: ContentBlock) => {
+    // Language-aware rendering: use bilingual/vocab/grammar/story blocks for language subjects
+    if (isLanguage && langSubject) {
+      switch (block.type) {
+        case "concept": return <BilingualConceptBlock content={block.content as any} subjectName={langSubject} />;
+        case "activity": return <VocabularyCardBlock content={block.content as any} subjectName={langSubject} />;
+        case "recall": return <RecallBlock content={block.content as RecallContent} />;
+        case "explain": return <ExplainBlock content={block.content as ExplainContent} />;
+        case "assessment": return <AssessmentBlock content={block.content as AssessmentContent} />;
+        case "exercise": return <GrammarPatternBlock content={block.content as any} />;
+        case "reasoning": return <StoryReadingBlock content={block.content as any} subjectName={langSubject} />;
+        case "assumptions": return <AssumptionsBlock content={block.content as AssumptionsContent} onStartDefense={() => setShowDefense(true)} />;
+        case "connections": return <ConnectionsBlock content={block.content as ConnectionsContent} />;
+        case "application": return <ApplicationBlock content={block.content as ApplicationContent} />;
+        case "implications": return <ImplicationsBlock content={block.content as ImplicationsContent} />;
+        default: return null;
+      }
+    }
+    // STEM rendering
     switch (block.type) {
       case "concept": return <ConceptBlock content={block.content as ConceptContent} />;
       case "activity": return <ActivityBlock content={block.content as ActivityContent} />;
