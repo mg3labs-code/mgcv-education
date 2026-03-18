@@ -409,11 +409,22 @@ const layerMeta: Record<string, { border: string; bg: string; badge?: string; ba
   implications:{ border: "border-l-indigo-500",  bg: "",  badge: "🔮 Imagine",      badgeColor: "bg-indigo-500 text-white", dotColor: "bg-indigo-500" },
 };
 
-// Phase config
-const phases = [
+// Phase config — STEM default
+const stemPhases = [
   { id: "discover", label: "🔍 Discover & Explore", subtitle: "Learn the big ideas and try them out", className: "phase-discover", blockSet: DISCOVER_BLOCKS },
   { id: "prove", label: "🧩 Prove You Know It", subtitle: "Test yourself — can you recall, explain & apply?", className: "phase-prove", blockSet: PROVE_BLOCKS },
   { id: "deeper", label: "🚀 Go Deeper — The Fun Part", subtitle: "Ask why, challenge assumptions, see connections", className: "phase-deeper", blockSet: DEEP_BLOCKS },
+];
+
+// Language-specific phases
+const LANG_READ_BLOCKS = new Set(["concept", "activity"]);
+const LANG_PRACTICE_BLOCKS = new Set(["recall", "exercise", "assessment", "explain"]);
+const LANG_EXPRESS_BLOCKS = new Set(["reasoning", "assumptions", "connections", "application", "implications"]);
+
+const langPhases = [
+  { id: "read", label: "📖 Read & Discover", subtitle: "Read side-by-side, learn new words, hear the sounds", className: "phase-discover", blockSet: LANG_READ_BLOCKS },
+  { id: "practice", label: "🧩 Practice & Pattern", subtitle: "Spot grammar patterns, recall what you learned", className: "phase-prove", blockSet: LANG_PRACTICE_BLOCKS },
+  { id: "express", label: "✍️ Express Yourself", subtitle: "Write, think, and connect to culture", className: "phase-deeper", blockSet: LANG_EXPRESS_BLOCKS },
 ];
 
 // ─── Action Bar Buttons ─────────────────────────────────────
