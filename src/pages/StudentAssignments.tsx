@@ -181,7 +181,7 @@ const StudentAssignments = () => {
 
   return (
     <DashboardLayout role="student" breadcrumbItems={[{ label: "Dashboard", href: "/student" }, { label: "Assignments" }]}>
-      <main className="p-4 md:p-6 max-w-[1000px] mx-auto">
+      <main className="p-3 sm:p-4 md:p-6 max-w-[1000px] mx-auto">
         <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-1">📝 My Assignments</h1>
         <p className="text-sm text-muted-foreground mb-6">View and submit your assignments</p>
 
