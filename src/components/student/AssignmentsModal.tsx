@@ -110,7 +110,7 @@ const AssignmentsModal = ({ open, onOpenChange }: AssignmentsModalProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[1200px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-[1200px] max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full">
         <DialogHeader className="text-center border-b-[3px] border-primary pb-5">
           <DialogTitle className="text-[28px] text-foreground">📚 MY ASSIGNMENTS</DialogTitle>
           <div className="flex justify-center gap-8 mt-4">
