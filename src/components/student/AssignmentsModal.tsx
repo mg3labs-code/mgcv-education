@@ -113,7 +113,7 @@ const AssignmentsModal = ({ open, onOpenChange }: AssignmentsModalProps) => {
       <DialogContent className="max-w-[1200px] max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full">
         <DialogHeader className="text-center border-b-[3px] border-primary pb-5">
           <DialogTitle className="text-[28px] text-foreground">📚 MY ASSIGNMENTS</DialogTitle>
-          <div className="flex justify-center gap-8 mt-4">
+          <div className="flex justify-center gap-3 sm:gap-8 mt-4 flex-wrap">
             {[
               { n: counts.submitted, label: "SUBMITTED", color: statusColor.submitted },
               { n: counts.in_progress, label: "IN PROGRESS", color: statusColor.in_progress },
