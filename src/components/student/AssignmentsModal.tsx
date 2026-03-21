@@ -137,7 +137,7 @@ const AssignmentsModal = ({ open, onOpenChange }: AssignmentsModalProps) => {
         ) : (
           <>
             <h3 className="text-lg font-semibold text-foreground mt-4 mb-3">📝 Current Assignments</h3>
-            <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(280px,1fr))]">
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-[repeat(auto-fit,minmax(280px,1fr))]">
               {assignments.map((a) => {
                 const color = SUBJECT_COLORS[a.subject] || "#3498db";
                 const icon = SUBJECT_ICONS[a.subject] || "📋";
