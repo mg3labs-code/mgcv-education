@@ -6,18 +6,23 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// Detect if text contains Telugu Unicode characters (0C00-0C7F)
+function containsTelugu(text: string): boolean {
+  return /[\u0C00-\u0C7F]/.test(text);
+}
+
+// Detect if text contains Hindi/Devanagari Unicode characters (0900-097F)
+function containsHindi(text: string): boolean {
+  return /[\u0900-\u097F]/.test(text);
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY");
-    if (!ELEVENLABS_API_KEY) {
-      throw new Error("ELEVENLABS_API_KEY is not configured");
-    }
-
-    const { text, voiceId } = await req.json();
+    const { text, voiceId, language } = await req.json();
 
     // Aggressive sanitization: strip emojis, surrogates, control chars, non-BMP
     const sanitized = (text || "")
@@ -30,7 +35,7 @@ serve(async (req) => {
       .replace(/`(.+?)`/g, "$1")
       .replace(/#{1,6}\s*/g, "")
       .trim()
-      .slice(0, 4500); // ElevenLabs limit is 5000, keep margin
+      .slice(0, 4500);
 
     console.log("TTS sanitized text length:", sanitized.length);
 
@@ -41,8 +46,64 @@ serve(async (req) => {
       );
     }
 
-    // Default to Tripti voice (child-friendly Indian) if available, fallback to Sarah
-    const voice = voiceId || "cgSgspJ2msm6clMCkdW9"; // Jessica - Playful, Bright, Warm
+    // Route Telugu text through Sarvam AI (Kavya voice, Bulbul v3)
+    const isTeluguText = language === "telugu" || containsTelugu(sanitized);
+    const isHindiText = language === "hindi" || containsHindi(sanitized);
+
+    if (isTeluguText || isHindiText) {
+      const SARVAM_API_KEY = Deno.env.get("SARVAM_API_KEY");
+      if (!SARVAM_API_KEY) {
+        console.warn("SARVAM_API_KEY not set, falling back to ElevenLabs");
+      } else {
+        const langCode = isTeluguText ? "te-IN" : "hi-IN";
+        console.log(`Routing TTS through Sarvam AI (${langCode})...`);
+
+        const ttsResp = await fetch("https://api.sarvam.ai/text-to-speech", {
+          method: "POST",
+          headers: {
+            "api-subscription-key": SARVAM_API_KEY,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            text: sanitized.slice(0, 3000),
+            target_language_code: langCode,
+            model: "bulbul:v3",
+            speaker: "kavya",
+            pace: 0.9,
+            temperature: 0.8,
+            enable_preprocessing: true,
+            sample_rate: 24000,
+          }),
+        });
+
+        if (ttsResp.ok) {
+          const ttsData = await ttsResp.json();
+          const audioBase64 = ttsData.audios?.[0];
+          if (audioBase64) {
+            // Convert base64 to binary for streaming response
+            const audioBytes = Uint8Array.from(atob(audioBase64), (c) => c.charCodeAt(0));
+            return new Response(audioBytes, {
+              headers: {
+                ...corsHeaders,
+                "Content-Type": "audio/mpeg",
+              },
+            });
+          }
+        } else {
+          const errText = await ttsResp.text();
+          console.error("Sarvam TTS error:", ttsResp.status, errText);
+          // Fall through to ElevenLabs
+        }
+      }
+    }
+
+    // Default: ElevenLabs TTS (English)
+    const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY");
+    if (!ELEVENLABS_API_KEY) {
+      throw new Error("ELEVENLABS_API_KEY is not configured");
+    }
+
+    const voice = voiceId || "cgSgspJ2msm6clMCkdW9"; // Jessica
 
     const response = await fetch(
       `https://api.elevenlabs.io/v1/text-to-speech/${voice}/stream?output_format=mp3_44100_128`,
