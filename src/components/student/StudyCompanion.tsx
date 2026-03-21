@@ -355,7 +355,16 @@ const StudyCompanion = () => {
     window.speechSynthesis.speak(utterance);
   }, []);
 
+  // Detect if current context is Telugu/Hindi based on URL path
+  const detectLanguageFromPath = useCallback(() => {
+    const path = location.pathname;
+    if (path.includes("tel-") || path.includes("telugu")) return "telugu";
+    if (path.includes("hindi-") || path.includes("hindi")) return "hindi";
+    return null;
+  }, [location.pathname]);
+
   // TTS helper: speak response aloud when input was voice
+  // Auto-routes Telugu/Hindi through Sarvam AI Kavya voice
   const speakResponse = useCallback(async (text: string) => {
     try {
       // Stop any currently playing TTS before starting new one
@@ -371,6 +380,12 @@ const StudyCompanion = () => {
 
       setIsSpeakingTTS(true);
 
+      // Detect language from path or text content
+      const pathLang = detectLanguageFromPath();
+      const hasTeluguChars = /[\u0C00-\u0C7F]/.test(cleaned);
+      const hasHindiChars = /[\u0900-\u097F]/.test(cleaned);
+      const language = pathLang || (hasTeluguChars ? "telugu" : hasHindiChars ? "hindi" : null);
+
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-tts-stream`,
         {
@@ -380,12 +395,12 @@ const StudyCompanion = () => {
             apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
             Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
-          body: JSON.stringify({ text: cleaned }),
+          body: JSON.stringify({ text: cleaned, ...(language ? { language } : {}) }),
         }
       );
 
       if (!response.ok) {
-        console.warn("ElevenLabs TTS failed, falling back to browser speech:", response.status);
+        console.warn("TTS failed, falling back to browser speech:", response.status);
         browserTTSFallback(cleaned);
         return;
       }
@@ -416,7 +431,7 @@ const StudyCompanion = () => {
         setIsSpeakingTTS(false);
       }
     }
-  }, [browserTTSFallback]);
+  }, [browserTTSFallback, detectLanguageFromPath]);
 
   // Start voice conversation
   const startVoiceAgent = useCallback(async () => {
@@ -818,9 +833,9 @@ const StudyCompanion = () => {
         onComplete={handleVoiceQuizComplete}
       />
 
-      {/* Floating Button with nudge */}
+      {/* Floating Button with nudge — always visible, never hidden by scroll */}
       {!isOpen && (
-        <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2">
+        <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-[9999] flex flex-col items-end gap-2" style={{ position: 'fixed' }}>
           {showNudge && (
             <div className="animate-fade-in bg-primary text-primary-foreground text-xs font-medium px-3 py-2 rounded-xl rounded-br-sm shadow-lg max-w-[200px]">
               {getNudgeMessage(location.pathname)}
@@ -852,7 +867,7 @@ const StudyCompanion = () => {
 
       {/* Chat Panel */}
       {isOpen && (
-        <div className="fixed bottom-0 right-0 sm:bottom-4 sm:right-4 z-50 w-full sm:w-[380px] h-[100dvh] sm:h-[560px] bg-background border border-border sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 fade-in duration-300">
+        <div className="fixed bottom-0 right-0 sm:bottom-4 sm:right-4 z-[9999] w-full sm:w-[380px] h-[100dvh] sm:h-[560px] bg-background border border-border sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 fade-in duration-300">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-primary/10 to-primary/5 border-b border-border">
             <div className="flex items-center gap-2">
