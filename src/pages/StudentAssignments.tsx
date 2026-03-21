@@ -181,7 +181,7 @@ const StudentAssignments = () => {
 
   return (
     <DashboardLayout role="student" breadcrumbItems={[{ label: "Dashboard", href: "/student" }, { label: "Assignments" }]}>
-      <main className="p-4 md:p-6 max-w-[1000px] mx-auto">
+      <main className="p-3 sm:p-4 md:p-6 max-w-[1000px] mx-auto">
         <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-1">📝 My Assignments</h1>
         <p className="text-sm text-muted-foreground mb-6">View and submit your assignments</p>
 
@@ -238,15 +238,15 @@ const StudentAssignments = () => {
                 const answer = getAnswerForQuestion(q.id);
                 const selectedFile = answerFiles[q.id];
                 return (
-                  <Card key={q.id} className="p-5">
-                    <div className="flex items-start justify-between mb-3">
-                      <h4 className="font-semibold">Q{q.question_number}. {q.question_text}</h4>
-                      <span className="text-xs text-muted-foreground">{q.max_score} marks</span>
+                  <Card key={q.id} className="p-3 sm:p-5">
+                    <div className="flex items-start justify-between mb-3 gap-2">
+                      <h4 className="font-semibold text-sm sm:text-base">Q{q.question_number}. {q.question_text}</h4>
+                      <span className="text-xs text-muted-foreground whitespace-nowrap">{q.max_score} marks</span>
                     </div>
 
                     {answer ? (
                       <div className="space-y-3">
-                        <div className="flex items-center gap-2 flex-wrap">
+                        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                           {statusIcon[answer.processing_status] || null}
                           <Badge variant="outline">{answer.processing_status}</Badge>
                           {answer.ai_confidence != null && (
@@ -322,7 +322,7 @@ const StudentAssignments = () => {
                       <div className="space-y-3">
                         {/* File Upload Area */}
                         <div
-                          className="border-2 border-dashed border-muted-foreground/30 rounded-xl p-4 text-center cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors"
+                          className="border-2 border-dashed border-muted-foreground/30 rounded-xl p-3 sm:p-4 text-center cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors"
                           onClick={() => fileInputRefs.current[q.id]?.click()}
                           onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
                           onDrop={(e) => {

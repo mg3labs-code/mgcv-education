@@ -118,7 +118,7 @@ const Index = () => {
   if (loading) return <LoadingScreen />;
   if (user && role) return null;
 
-  const inputClass = "w-full py-4 px-5 rounded-xl bg-white/10 text-white text-sm outline-none border border-white/15 transition-all placeholder:text-white/50 focus:bg-white/15 focus:border-primary focus:shadow-[0_0_20px_hsl(162_65%_38%/0.2)]";
+  const inputClass = "w-full py-4 px-5 rounded-xl bg-muted/80 text-foreground text-sm outline-none border border-border transition-all placeholder:text-muted-foreground focus:bg-muted focus:border-primary focus:shadow-[0_0_20px_hsl(var(--primary)/0.2)]";
 
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden">

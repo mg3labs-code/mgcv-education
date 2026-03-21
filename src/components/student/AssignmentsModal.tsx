@@ -110,10 +110,10 @@ const AssignmentsModal = ({ open, onOpenChange }: AssignmentsModalProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[1200px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-[1200px] max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full">
         <DialogHeader className="text-center border-b-[3px] border-primary pb-5">
           <DialogTitle className="text-[28px] text-foreground">📚 MY ASSIGNMENTS</DialogTitle>
-          <div className="flex justify-center gap-8 mt-4">
+          <div className="flex justify-center gap-3 sm:gap-8 mt-4 flex-wrap">
             {[
               { n: counts.submitted, label: "SUBMITTED", color: statusColor.submitted },
               { n: counts.in_progress, label: "IN PROGRESS", color: statusColor.in_progress },
@@ -137,7 +137,7 @@ const AssignmentsModal = ({ open, onOpenChange }: AssignmentsModalProps) => {
         ) : (
           <>
             <h3 className="text-lg font-semibold text-foreground mt-4 mb-3">📝 Current Assignments</h3>
-            <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(280px,1fr))]">
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-[repeat(auto-fit,minmax(280px,1fr))]">
               {assignments.map((a) => {
                 const color = SUBJECT_COLORS[a.subject] || "#3498db";
                 const icon = SUBJECT_ICONS[a.subject] || "📋";
@@ -187,7 +187,7 @@ const AssignmentsModal = ({ open, onOpenChange }: AssignmentsModalProps) => {
             {upcomingTests && upcomingTests.length > 0 && (
               <>
                 <h3 className="text-lg font-semibold text-foreground mt-6 mb-3">📅 Upcoming Due Dates</h3>
-                <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(300px,1fr))]">
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-[repeat(auto-fit,minmax(300px,1fr))]">
                   {upcomingTests.map((t) => (
                     <div key={t.id} className="bg-gradient-to-br from-[#667eea] to-[#764ba2] text-white p-5 rounded-xl shadow-lg hover:-translate-y-1 transition-all">
                       <div className="flex justify-between items-center mb-2">
