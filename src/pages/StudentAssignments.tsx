@@ -238,10 +238,10 @@ const StudentAssignments = () => {
                 const answer = getAnswerForQuestion(q.id);
                 const selectedFile = answerFiles[q.id];
                 return (
-                  <Card key={q.id} className="p-5">
-                    <div className="flex items-start justify-between mb-3">
-                      <h4 className="font-semibold">Q{q.question_number}. {q.question_text}</h4>
-                      <span className="text-xs text-muted-foreground">{q.max_score} marks</span>
+                  <Card key={q.id} className="p-3 sm:p-5">
+                    <div className="flex items-start justify-between mb-3 gap-2">
+                      <h4 className="font-semibold text-sm sm:text-base">Q{q.question_number}. {q.question_text}</h4>
+                      <span className="text-xs text-muted-foreground whitespace-nowrap">{q.max_score} marks</span>
                     </div>
 
                     {answer ? (
