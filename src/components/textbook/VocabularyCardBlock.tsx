@@ -40,8 +40,34 @@ const VocabularyCardBlock = ({ content, subjectName }: { content: VocabularyCont
     });
   };
 
-  const speakWord = (text: string, e: React.MouseEvent) => {
+  const speakWord = async (text: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    if (subjectName === "Telugu") {
+      try {
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-tts-stream`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+              Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            },
+            body: JSON.stringify({ text, language: "telugu" }),
+          }
+        );
+        if (response.ok) {
+          const blob = await response.blob();
+          const url = URL.createObjectURL(blob);
+          const audio = new Audio(url);
+          audio.onended = () => URL.revokeObjectURL(url);
+          await audio.play();
+          return;
+        }
+      } catch (err) {
+        console.warn("Sarvam TTS failed, falling back to browser:", err);
+      }
+    }
     if ("speechSynthesis" in window) {
       window.speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(text);

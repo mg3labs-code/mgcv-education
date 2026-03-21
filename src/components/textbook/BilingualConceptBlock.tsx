@@ -20,16 +20,48 @@ const BilingualConceptBlock = ({ content, subjectName }: { content: BilingualCon
 
   const sections: BilingualSection[] = content.sections || [];
 
-  // Use browser TTS for pronunciation
-  const speakText = (text: string, lang: string, idx: number) => {
+  // Use Sarvam AI via edge function for Telugu, browser TTS for Hindi
+  const speakText = async (text: string, lang: string, idx: number) => {
+    setPlayingIdx(idx);
+    
+    if (lang === "Telugu") {
+      try {
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-tts-stream`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+              Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            },
+            body: JSON.stringify({ text, language: "telugu" }),
+          }
+        );
+        if (response.ok) {
+          const blob = await response.blob();
+          const url = URL.createObjectURL(blob);
+          const audio = new Audio(url);
+          audio.onended = () => { setPlayingIdx(null); URL.revokeObjectURL(url); };
+          audio.onerror = () => { setPlayingIdx(null); URL.revokeObjectURL(url); };
+          await audio.play();
+          return;
+        }
+      } catch (e) {
+        console.warn("Sarvam TTS failed, falling back to browser:", e);
+      }
+    }
+
+    // Fallback: browser TTS for Hindi and others
     if ("speechSynthesis" in window) {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = lang === "Telugu" ? "te-IN" : lang === "Hindi" ? "hi-IN" : "en-IN";
       utterance.rate = 0.85;
-      setPlayingIdx(idx);
       utterance.onend = () => setPlayingIdx(null);
       window.speechSynthesis.speak(utterance);
+    } else {
+      setPlayingIdx(null);
     }
   };
 
