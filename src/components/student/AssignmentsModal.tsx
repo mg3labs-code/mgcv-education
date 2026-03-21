@@ -187,7 +187,7 @@ const AssignmentsModal = ({ open, onOpenChange }: AssignmentsModalProps) => {
             {upcomingTests && upcomingTests.length > 0 && (
               <>
                 <h3 className="text-lg font-semibold text-foreground mt-6 mb-3">📅 Upcoming Due Dates</h3>
-                <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(300px,1fr))]">
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-[repeat(auto-fit,minmax(300px,1fr))]">
                   {upcomingTests.map((t) => (
                     <div key={t.id} className="bg-gradient-to-br from-[#667eea] to-[#764ba2] text-white p-5 rounded-xl shadow-lg hover:-translate-y-1 transition-all">
                       <div className="flex justify-between items-center mb-2">

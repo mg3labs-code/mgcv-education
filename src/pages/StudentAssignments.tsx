@@ -322,7 +322,7 @@ const StudentAssignments = () => {
                       <div className="space-y-3">
                         {/* File Upload Area */}
                         <div
-                          className="border-2 border-dashed border-muted-foreground/30 rounded-xl p-4 text-center cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors"
+                          className="border-2 border-dashed border-muted-foreground/30 rounded-xl p-3 sm:p-4 text-center cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors"
                           onClick={() => fileInputRefs.current[q.id]?.click()}
                           onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
                           onDrop={(e) => {
