@@ -246,7 +246,7 @@ const StudentAssignments = () => {
 
                     {answer ? (
                       <div className="space-y-3">
-                        <div className="flex items-center gap-2 flex-wrap">
+                        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                           {statusIcon[answer.processing_status] || null}
                           <Badge variant="outline">{answer.processing_status}</Badge>
                           {answer.ai_confidence != null && (
