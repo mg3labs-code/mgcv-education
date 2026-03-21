@@ -833,9 +833,9 @@ const StudyCompanion = () => {
         onComplete={handleVoiceQuizComplete}
       />
 
-      {/* Floating Button with nudge */}
+      {/* Floating Button with nudge — always visible, never hidden by scroll */}
       {!isOpen && (
-        <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2">
+        <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-[9999] flex flex-col items-end gap-2" style={{ position: 'fixed' }}>
           {showNudge && (
             <div className="animate-fade-in bg-primary text-primary-foreground text-xs font-medium px-3 py-2 rounded-xl rounded-br-sm shadow-lg max-w-[200px]">
               {getNudgeMessage(location.pathname)}
