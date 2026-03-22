@@ -46,18 +46,17 @@ serve(async (req) => {
       );
     }
 
-    // Route Telugu text through Sarvam AI (Kavya voice, Bulbul v3)
+    // Detect language
     const isTeluguText = language === "telugu" || containsTelugu(sanitized);
     const isHindiText = language === "hindi" || containsHindi(sanitized);
 
-    if (isTeluguText || isHindiText) {
+    // Route Hindi through Sarvam AI (Kavya voice, Bulbul v3)
+    if (isHindiText && !isTeluguText) {
       const SARVAM_API_KEY = Deno.env.get("SARVAM_API_KEY");
       if (!SARVAM_API_KEY) {
         console.warn("SARVAM_API_KEY not set, falling back to ElevenLabs");
       } else {
-        const langCode = isTeluguText ? "te-IN" : "hi-IN";
-        console.log(`Routing TTS through Sarvam AI (${langCode})...`);
-
+        console.log("Routing Hindi TTS through Sarvam AI (hi-IN)...");
         const ttsResp = await fetch("https://api.sarvam.ai/text-to-speech", {
           method: "POST",
           headers: {
@@ -66,7 +65,7 @@ serve(async (req) => {
           },
           body: JSON.stringify({
             text: sanitized.slice(0, 3000),
-            target_language_code: langCode,
+            target_language_code: "hi-IN",
             model: "bulbul:v3",
             speaker: "kavya",
             pace: 0.9,
@@ -80,21 +79,66 @@ serve(async (req) => {
           const ttsData = await ttsResp.json();
           const audioBase64 = ttsData.audios?.[0];
           if (audioBase64) {
-            // Convert base64 to binary for streaming response
             const audioBytes = Uint8Array.from(atob(audioBase64), (c) => c.charCodeAt(0));
             return new Response(audioBytes, {
-              headers: {
-                ...corsHeaders,
-                "Content-Type": "audio/mpeg",
-              },
+              headers: { ...corsHeaders, "Content-Type": "audio/mpeg" },
             });
           }
         } else {
           const errText = await ttsResp.text();
           console.error("Sarvam TTS error:", ttsResp.status, errText);
-          // Fall through to ElevenLabs
         }
       }
+    }
+
+    // Route Telugu through ElevenLabs Jessica with expressive settings
+    if (isTeluguText) {
+      const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY");
+      if (!ELEVENLABS_API_KEY) {
+        throw new Error("ELEVENLABS_API_KEY is not configured");
+      }
+
+      const teluguVoice = voiceId || "cgSgspJ2msm6clMCkdW9"; // Jessica
+      console.log("Routing Telugu TTS through ElevenLabs Jessica (expressive)...");
+
+      const response = await fetch(
+        `https://api.elevenlabs.io/v1/text-to-speech/${teluguVoice}/stream?output_format=mp3_44100_128`,
+        {
+          method: "POST",
+          headers: {
+            "xi-api-key": ELEVENLABS_API_KEY,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            text: sanitized,
+            model_id: "eleven_multilingual_v2",
+            voice_settings: {
+              stability: 0.3,
+              similarity_boost: 0.8,
+              style: 0.5,
+              use_speaker_boost: true,
+              speed: 0.9,
+            },
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("ElevenLabs Telugu API error:", response.status, errorText);
+        return new Response(
+          JSON.stringify({ error: `ElevenLabs API error: ${response.status}` }),
+          { status: response.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      return new Response(response.body, {
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "audio/mpeg",
+          "Transfer-Encoding": "chunked",
+        },
+      });
     }
 
     // Default: ElevenLabs TTS (English)
