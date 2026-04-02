@@ -49,7 +49,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <CommandPalette />
-          <StudentCompanionWrapper />
+          <CompanionWrapper />
           <Routes>
             <Route path="/" element={<Index />} />
             
