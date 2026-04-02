@@ -389,6 +389,10 @@ const blockSubtitles: Record<string, string> = {
   connections: "Surprising links you didn't expect",
   application: "How the real world uses this",
   implications: "How this idea shapes tomorrow",
+  bilingual_concept: "Read in both languages side-by-side",
+  story_reading: "A story to read and understand",
+  vocabulary: "New words to master today",
+  grammar_pattern: "Spot the pattern in the language",
 };
 
 const DEEP_BLOCKS = new Set(["reasoning", "assumptions", "connections", "application", "implications"]);
@@ -407,6 +411,11 @@ const layerMeta: Record<string, { border: string; bg: string; badge?: string; ba
   connections: { border: "border-l-emerald-600", bg: "",  badge: "🌐 Connect",      badgeColor: "bg-emerald-600 text-white", dotColor: "bg-emerald-600" },
   application: { border: "border-l-orange-500",  bg: "",  badge: "🚀 Apply",        badgeColor: "bg-orange-500 text-white", dotColor: "bg-orange-500" },
   implications:{ border: "border-l-indigo-500",  bg: "",  badge: "🔮 Imagine",      badgeColor: "bg-indigo-500 text-white", dotColor: "bg-indigo-500" },
+  // Language-native block types
+  bilingual_concept: { border: "border-l-blue-600",    bg: "",  badge: "📖 Read",       badgeColor: "bg-blue-500 text-white", dotColor: "bg-blue-600" },
+  story_reading:     { border: "border-l-rose-500",    bg: "",  badge: "📚 Story",      badgeColor: "bg-rose-500 text-white", dotColor: "bg-rose-500" },
+  vocabulary:        { border: "border-l-amber-500",   bg: "",  badge: "🔤 Words",      badgeColor: "bg-amber-500 text-white", dotColor: "bg-amber-500" },
+  grammar_pattern:   { border: "border-l-emerald-500", bg: "",  badge: "🧩 Grammar",    badgeColor: "bg-emerald-500 text-white", dotColor: "bg-emerald-500" },
 };
 
 // Phase config — STEM default
@@ -416,9 +425,9 @@ const stemPhases = [
   { id: "deeper", label: "🚀 Go Deeper — The Fun Part", subtitle: "Ask why, challenge assumptions, see connections", className: "phase-deeper", blockSet: DEEP_BLOCKS },
 ];
 
-// Language-specific phases
-const LANG_READ_BLOCKS = new Set(["concept", "activity"]);
-const LANG_PRACTICE_BLOCKS = new Set(["recall", "exercise", "assessment", "explain"]);
+// Language-specific phases (supports both native bilingual types and legacy STEM-mapped types)
+const LANG_READ_BLOCKS = new Set(["concept", "activity", "bilingual_concept", "story_reading"]);
+const LANG_PRACTICE_BLOCKS = new Set(["recall", "exercise", "assessment", "explain", "vocabulary", "grammar_pattern"]);
 const LANG_EXPRESS_BLOCKS = new Set(["reasoning", "assumptions", "connections", "application", "implications"]);
 
 const langPhases = [
@@ -609,7 +618,15 @@ const TextbookEpisode = () => {
   }
 
   const renderBlock = (block: ContentBlock) => {
-    // Language-aware rendering: use bilingual/vocab/grammar/story blocks for language subjects
+    // Native bilingual block types (from generate-language-content)
+    switch (block.type) {
+      case "bilingual_concept": return <BilingualConceptBlock content={block.content as any} subjectName={langSubject || "Telugu"} />;
+      case "vocabulary": return <VocabularyCardBlock content={block.content as any} subjectName={langSubject || "Telugu"} />;
+      case "grammar_pattern": return <GrammarPatternBlock content={block.content as any} />;
+      case "story_reading": return <StoryReadingBlock content={block.content as any} subjectName={langSubject || "Telugu"} />;
+    }
+
+    // Language-aware rendering for legacy STEM-typed blocks
     if (isLanguage && langSubject) {
       switch (block.type) {
         case "concept": return <BilingualConceptBlock content={block.content as any} subjectName={langSubject} />;

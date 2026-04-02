@@ -32,3 +32,6 @@ verify_jwt = false
 
 [functions.generate-chapter-content]
 verify_jwt = false
+
+[functions.generate-language-content]
+verify_jwt = false
