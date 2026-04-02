@@ -35,10 +35,10 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const StudentCompanionWrapper = () => {
+const CompanionWrapper = () => {
   const { role } = useAuth();
-  if (role !== "student") return null;
-  return <StudyCompanion />;
+  if (role !== "student" && role !== "teacher") return null;
+  return <StudyCompanion role={role} />;
 };
 
 const App = () => (
@@ -49,7 +49,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <CommandPalette />
-          <StudentCompanionWrapper />
+          <CompanionWrapper />
           <Routes>
             <Route path="/" element={<Index />} />
             
