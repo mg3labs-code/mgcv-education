@@ -727,6 +727,7 @@ const StudyCompanion = ({ role = "student" }: StudyCompanionProps) => {
         body: JSON.stringify({
           messages: history,
           context: getPageContext(location.pathname),
+          role,
         }),
       });
 
