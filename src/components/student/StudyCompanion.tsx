@@ -69,10 +69,31 @@ function getPageContext(pathname: string) {
   if (pathname === "/student/calendar") return { page: "calendar" };
   if (pathname === "/student/exam-room") return { page: "exam-room" };
   if (pathname.startsWith("/student/deep-dive")) return { page: "deep-dive" };
+  // Teacher pages
+  if (pathname === "/teacher") return { page: "teacher-dashboard" };
+  if (pathname === "/teacher/assignments") return { page: "teacher-assignments" };
+  if (pathname === "/teacher/analytics") return { page: "teacher-analytics" };
+  if (pathname === "/teacher/attendance") return { page: "teacher-attendance" };
+  if (pathname === "/teacher/schedule") return { page: "teacher-schedule" };
+  if (pathname === "/teacher/insights") return { page: "teacher-insights" };
+  if (pathname === "/teacher/daily-todo") return { page: "teacher-daily-plan" };
+  if (pathname === "/teacher/performance") return { page: "teacher-performance" };
+  if (pathname === "/teacher/exam-room") return { page: "teacher-exam-room" };
   return { page: pathname };
 }
 
-function getReadablePageContext(pathname: string): string {
+function getReadablePageContext(pathname: string, role?: string): string {
+  // Teacher pages
+  if (pathname === "/teacher") return "Teacher Dashboard - class overview and quick actions";
+  if (pathname === "/teacher/assignments") return "Assignments page - managing and grading student assignments";
+  if (pathname === "/teacher/analytics") return "Analytics page - viewing student performance data";
+  if (pathname === "/teacher/attendance") return "Attendance page - taking and reviewing attendance";
+  if (pathname === "/teacher/schedule") return "Schedule page - managing teaching calendar";
+  if (pathname === "/teacher/insights") return "Insights page - AI-generated class insights and patterns";
+  if (pathname === "/teacher/daily-todo") return "Daily Plan page - managing today's teaching tasks";
+  if (pathname === "/teacher/performance") return "Performance Report - class-wide score analysis";
+  if (pathname === "/teacher/exam-room") return "Exam Room - managing student exams";
+  // Student pages
   if (pathname === "/student") return "Student Dashboard - home page with subjects and quick actions";
   if (pathname === "/student/assignments") return "Assignments page - viewing homework and tasks";
   if (pathname === "/student/calendar") return "Calendar page - viewing study schedule";
@@ -97,26 +118,45 @@ function getReadablePageContext(pathname: string): string {
   return `Page: ${pathname}`;
 }
 
-function getGreeting(pathname: string, name: string) {
+function getGreeting(pathname: string, name: string, role?: string) {
   const first = name.split(" ")[0] || "there";
+  if (role === "teacher") {
+    if (pathname === "/teacher/assignments") return `Hi ${first}! 📝 Need help with grading or creating assignments?`;
+    if (pathname === "/teacher/attendance") return `Hey ${first}! 📋 Taking attendance today? I can help with that.`;
+    if (pathname === "/teacher/analytics") return `Hi ${first}! 📊 Looking at analytics? I can help you interpret the data.`;
+    if (pathname === "/teacher") return `Hey ${first}! 👋 I'm Buddy, your teaching assistant. How can I help today?`;
+    return `Hi ${first}! 😊 I'm Buddy, your teaching assistant. What do you need help with?`;
+  }
   if (pathname.startsWith("/student/textbook/")) return `Hey ${first}! 📚 I see you're reading the textbook. Need help understanding something?`;
   if (pathname === "/student/assignments") return `Hi ${first}! 📝 Working on assignments? I can help you break down the problems.`;
   if (pathname === "/student") return `Hey ${first}! 👋 How's your study day going? What can I help with?`;
   return `Hi ${first}! 😊 I'm Buddy, your study companion. Ask me anything!`;
 }
 
-function getNudgeMessage(pathname: string) {
+function getNudgeMessage(pathname: string, role?: string) {
+  if (role === "teacher") {
+    if (pathname === "/teacher/assignments") return "Need help with assignments? 📝";
+    if (pathname === "/teacher") return "Hey! Need any help? 👋";
+    return "I'm here to help! 💡";
+  }
   if (pathname.startsWith("/student/textbook/")) return "Need help with this chapter? 📖";
   if (pathname === "/student/assignments") return "Stuck on an assignment? 📝";
   if (pathname === "/student") return "Hey! Need help? 👋";
   return "I'm here if you need help! 💡";
 }
 
-const QUICK_ACTIONS = [
+const STUDENT_QUICK_ACTIONS = [
   { label: "Explain this topic", icon: Lightbulb, prompt: "Can you explain what I'm currently studying in simple terms?" },
   { label: "Quiz me", icon: Sparkles, prompt: "Give me a quick quiz on what I'm studying right now." },
   { label: "Go to Textbook", icon: BookOpen, prompt: "Take me to my textbook." },
   { label: "My Assignments", icon: ClipboardList, prompt: "Take me to my assignments." },
+];
+
+const TEACHER_QUICK_ACTIONS = [
+  { label: "Go to Assignments", icon: ClipboardList, prompt: "Take me to assignments." },
+  { label: "Take Attendance", icon: BookOpen, prompt: "Take me to attendance." },
+  { label: "View Analytics", icon: Sparkles, prompt: "Take me to analytics." },
+  { label: "Daily Plan", icon: Lightbulb, prompt: "Take me to my daily plan." },
 ];
 
 // ─── Navigation routes for client tools ───
@@ -130,6 +170,23 @@ const NAV_ROUTES: Record<string, string> = {
   "deep dive": "/student/deep-dive",
   "deep-dive": "/student/deep-dive",
   onboarding: "/student/onboarding",
+};
+
+const TEACHER_NAV_ROUTES: Record<string, string> = {
+  dashboard: "/teacher",
+  assignments: "/teacher/assignments",
+  analytics: "/teacher/analytics",
+  attendance: "/teacher/attendance",
+  schedule: "/teacher/schedule",
+  insights: "/teacher/insights",
+  "daily plan": "/teacher/daily-todo",
+  "daily-plan": "/teacher/daily-todo",
+  "daily todo": "/teacher/daily-todo",
+  performance: "/teacher/performance",
+  "performance report": "/teacher/performance",
+  "exam room": "/teacher/exam-room",
+  "exam-room": "/teacher/exam-room",
+  "parent connect": "/teacher/parent-connect",
 };
 
 const StudyCompanion = () => {
