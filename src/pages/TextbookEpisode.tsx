@@ -389,6 +389,10 @@ const blockSubtitles: Record<string, string> = {
   connections: "Surprising links you didn't expect",
   application: "How the real world uses this",
   implications: "How this idea shapes tomorrow",
+  bilingual_concept: "Read in both languages side-by-side",
+  story_reading: "A story to read and understand",
+  vocabulary: "New words to master today",
+  grammar_pattern: "Spot the pattern in the language",
 };
 
 const DEEP_BLOCKS = new Set(["reasoning", "assumptions", "connections", "application", "implications"]);
