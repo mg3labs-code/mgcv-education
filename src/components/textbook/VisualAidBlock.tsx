@@ -87,8 +87,17 @@ const VisualAidBlock = ({ content }: VisualAidBlockProps) => {
           </div>
         </div>
         {content.caption && (
-          <p className="text-sm text-muted-foreground text-center italic">
+          <p className="text-sm text-muted-foreground text-center italic flex items-center justify-center gap-1.5 flex-wrap">
             📷 {content.caption}
+            {content.source && (
+              <span className={`inline-flex items-center text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
+                content.source === "web" 
+                  ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300" 
+                  : "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300"
+              }`}>
+                {content.source === "web" ? "🌐 Web" : "🎨 AI"}
+              </span>
+            )}
           </p>
         )}
         {content.explanation && (
