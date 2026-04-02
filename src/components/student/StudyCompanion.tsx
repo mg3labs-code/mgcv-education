@@ -381,9 +381,10 @@ const StudyCompanion = ({ role = "student" }: StudyCompanionProps) => {
   // ─── Send contextual update when page changes ───
   useEffect(() => {
     if (conversation.status === "connected") {
-      const context = getReadablePageContext(location.pathname);
+      const context = getReadablePageContext(location.pathname, role);
       try {
-        conversation.sendContextualUpdate(`The student just navigated to: ${context}`);
+        const userLabel = role === "teacher" ? "teacher" : "student";
+        conversation.sendContextualUpdate(`The ${userLabel} just navigated to: ${context}`);
       } catch (e) {
         console.log("Could not send contextual update:", e);
       }
