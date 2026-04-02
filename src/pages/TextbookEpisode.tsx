@@ -399,7 +399,7 @@ const blockSubtitles: Record<string, string> = {
 };
 
 const DEEP_BLOCKS = new Set(["reasoning", "assumptions", "connections", "application", "implications"]);
-const DISCOVER_BLOCKS = new Set(["concept", "activity", "exercise"]);
+const DISCOVER_BLOCKS = new Set(["concept", "activity", "exercise", "visual_aid"]);
 const PROVE_BLOCKS = new Set(["recall", "assessment", "explain"]);
 
 const layerMeta: Record<string, { border: string; bg: string; badge?: string; badgeColor?: string; dotColor: string }> = {
