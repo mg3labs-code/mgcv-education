@@ -5,7 +5,7 @@ import { ContentBlock, ConceptContent, ActivityContent, RecallContent, ExplainCo
 import { useChapterEpisodes, useEpisodeBlocks } from "@/hooks/useTextbookData";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { ArrowLeft, BookOpen, Brain, Briefcase, Check, CheckCircle2, ChevronDown, Cloud, Compass, Eye, Layers, Lightbulb, Link, Map, MessageSquare, Mic, PenLine, Search, Shield, Sparkles, Zap, RotateCcw, GripHorizontal } from "lucide-react";
+import { ArrowLeft, BookOpen, Brain, Briefcase, Check, CheckCircle2, ChevronDown, Cloud, Compass, Eye, Image, Layers, Lightbulb, Link, Map, MessageSquare, Mic, PenLine, Search, Shield, Sparkles, Zap, RotateCcw, GripHorizontal } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import VoiceExplainWidget from "@/components/textbook/VoiceExplainWidget";
