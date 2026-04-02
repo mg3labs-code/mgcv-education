@@ -99,7 +99,7 @@ The 11 blocks IN ORDER:
      ]
    }
 
-4. block_type: "grammar_pattern"
+5. block_type: "grammar_pattern"
    title: "Grammar Pattern"
    icon: "🧩"
    content: {
@@ -123,7 +123,7 @@ The 11 blocks IN ORDER:
      }
    }
 
-5. block_type: "recall"
+6. block_type: "recall"
    title: "Quick Recall"
    icon: "🧠"
    content: {
@@ -133,7 +133,7 @@ The 11 blocks IN ORDER:
      ]
    }
 
-6. block_type: "assessment"
+7. block_type: "assessment"
    title: "Check Your Understanding"
    icon: "✅"
    content: {
@@ -148,7 +148,19 @@ The 11 blocks IN ORDER:
      ]
    }
 
-7. block_type: "explain"
+8. block_type: "visual_aid"
+   title: "Cultural Visual"
+   icon: "🖼️"
+   content: {
+     "type": "image",
+     "url": "",
+     "caption": "<what this cultural/educational image shows>",
+     "explanation": "<how this visual connects to the language lesson>",
+     "alt": "<accessibility description>",
+     "searchTerms": "<2-4 keywords for a relevant cultural image>"
+   }
+
+9. block_type: "explain"
    title: "Express in ${subject}"
    icon: "✍️"
    content: {
@@ -157,28 +169,28 @@ The 11 blocks IN ORDER:
      "wordLimit": 100
    }
 
-8. block_type: "application"
-   title: "Real-World ${subject}"
-   icon: "🌍"
-   content: {
-     "scenario": "<real-world scenario where ${subject} is used>",
-     "context": "<cultural context>",
-     "questions": [{"question": "<question>", "hint": "<hint>"}],
-     "realWorldWhy": "<why this matters>",
-     "careers": ["<career 1>", "<career 2>"]
-   }
+10. block_type: "application"
+    title: "Real-World ${subject}"
+    icon: "🌍"
+    content: {
+      "scenario": "<real-world scenario where ${subject} is used>",
+      "context": "<cultural context>",
+      "questions": [{"question": "<question>", "hint": "<hint>"}],
+      "realWorldWhy": "<why this matters>",
+      "careers": ["<career 1>", "<career 2>"]
+    }
 
-9. block_type: "connections"
-   title: "Cultural Connections"
-   icon: "🌐"
-   content: {
-     "concept": "<the language concept>",
-     "connections": [
-       {"domain": "Literature", "icon": "📚", "link": "<connection to ${subject} literature>", "explanation": "<explain>"},
-       {"domain": "Film", "icon": "🎬", "link": "<connection to ${subject} cinema>", "explanation": "<explain>"},
-       {"domain": "History", "icon": "🏛️", "link": "<connection to cultural history>", "explanation": "<explain>"}
-     ]
-   }
+11. block_type: "connections"
+    title: "Cultural Connections"
+    icon: "🌐"
+    content: {
+      "concept": "<the language concept>",
+      "connections": [
+        {"domain": "Literature", "icon": "📚", "link": "<connection to ${subject} literature>", "explanation": "<explain>"},
+        {"domain": "Film", "icon": "🎬", "link": "<connection to ${subject} cinema>", "explanation": "<explain>"},
+        {"domain": "History", "icon": "🏛️", "link": "<connection to cultural history>", "explanation": "<explain>"}
+      ]
+    }
 
 IMPORTANT:
 - ALL native text must be in actual ${scriptName}, NOT romanized
