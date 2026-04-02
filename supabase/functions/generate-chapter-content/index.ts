@@ -45,23 +45,32 @@ Chapter: ${chapterTitle}
 Episode ${ep.number}: "${ep.title}" - ${ep.subtitle}
 Type: ${ep.type}
 
-Return a JSON array of 11 content blocks in this exact order:
+Return a JSON array of content blocks in this exact order:
 1. concept (type: "concept")
-2. activity (type: "activity") 
-3. recall (type: "recall")
-4. explain (type: "explain")
-5. assessment (type: "assessment")
-6. exercise (type: "exercise")
-7. reasoning (type: "reasoning")
-8. assumptions (type: "assumptions")
-9. connections (type: "connections")
-10. application (type: "application")
-11. implications (type: "implications")
+2. visual_aid (type: "visual_aid") — an image/diagram illustrating the core concept
+3. activity (type: "activity") 
+4. recall (type: "recall")
+5. explain (type: "explain")
+6. assessment (type: "assessment")
+7. exercise (type: "exercise")
+8. reasoning (type: "reasoning")
+9. visual_aid (type: "visual_aid") — a diagram showing why/how the concept works
+10. assumptions (type: "assumptions")
+11. connections (type: "connections")
+12. application (type: "application")
+13. visual_aid (type: "visual_aid") — a real-world image showing the concept in action
+14. implications (type: "implications")
 
 Each block must have: { "block_type": string, "title": string, "icon": string, "content": object }
 
 The content object structure for each type:
 - concept: { sections: [{heading, body, highlight?}], keyFormulas?: string[], example?: [{question, solution}] }
+- visual_aid: { type: "image", url: "", caption: string, explanation: string, alt: string, searchTerms: string }
+  For visual_aid blocks: leave "url" as empty string (it will be resolved later). 
+  Set "searchTerms" to 2-4 keywords describing what image to find (e.g. "real number line classification diagram").
+  Set "caption" to a short description of what the image shows.
+  Set "explanation" to 1-2 sentences explaining how the visual connects to the lesson.
+  Set "alt" to accessibility text describing the image.
 - activity: { instruction: string, type: "classify"|"match"|"order"|"explore", items?: [{value, categories?}], categories?: [{id, label, description}] }
 - recall: { questions: [{question, answer, hint?}] }
 - explain: { prompt: string, guidePoints?: string[], wordLimit?: number }

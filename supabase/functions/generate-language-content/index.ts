@@ -39,9 +39,9 @@ Content should be age-appropriate, culturally relevant, and pedagogically sound 
 
     const userPrompt = `Generate exactly 9 content blocks for the episode titled "{EPISODE_TITLE}" from Chapter "{CHAPTER_TITLE}" in ${subject}.
 
-Return a JSON array of 9 objects. Each object must have: block_type, title, icon, content.
+Return a JSON array of 11 objects. Each object must have: block_type, title, icon, content.
 
-The 9 blocks IN ORDER:
+The 11 blocks IN ORDER:
 
 1. block_type: "bilingual_concept"
    title: A heading for this concept section
