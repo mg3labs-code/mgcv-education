@@ -504,12 +504,14 @@ const StudyCompanion = ({ role = "student" }: StudyCompanionProps) => {
     try {
       await navigator.mediaDevices.getUserMedia({ audio: true });
 
+      const langHint = detectLanguageFromPath();
       const response = await fetch(BUDDY_SESSION_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
+        body: JSON.stringify({ ...(langHint ? { language: langHint } : {}) }),
       });
 
       if (!response.ok) {
