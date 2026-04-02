@@ -609,7 +609,15 @@ const TextbookEpisode = () => {
   }
 
   const renderBlock = (block: ContentBlock) => {
-    // Language-aware rendering: use bilingual/vocab/grammar/story blocks for language subjects
+    // Native bilingual block types (from generate-language-content)
+    switch (block.type) {
+      case "bilingual_concept": return <BilingualConceptBlock content={block.content as any} subjectName={langSubject || "Telugu"} />;
+      case "vocabulary": return <VocabularyCardBlock content={block.content as any} subjectName={langSubject || "Telugu"} />;
+      case "grammar_pattern": return <GrammarPatternBlock content={block.content as any} />;
+      case "story_reading": return <StoryReadingBlock content={block.content as any} subjectName={langSubject || "Telugu"} />;
+    }
+
+    // Language-aware rendering for legacy STEM-typed blocks
     if (isLanguage && langSubject) {
       switch (block.type) {
         case "concept": return <BilingualConceptBlock content={block.content as any} subjectName={langSubject} />;
