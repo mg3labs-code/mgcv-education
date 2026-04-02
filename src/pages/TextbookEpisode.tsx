@@ -628,6 +628,7 @@ const TextbookEpisode = () => {
       case "vocabulary": return <VocabularyCardBlock content={block.content as any} subjectName={langSubject || "Telugu"} />;
       case "grammar_pattern": return <GrammarPatternBlock content={block.content as any} />;
       case "story_reading": return <StoryReadingBlock content={block.content as any} subjectName={langSubject || "Telugu"} />;
+      case "visual_aid": return <VisualAidBlock content={block.content as VisualAidContent} />;
     }
 
     // Language-aware rendering for legacy STEM-typed blocks
