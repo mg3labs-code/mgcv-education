@@ -1,11 +1,20 @@
 // 10th Class Mathematics - Telangana State Board
 // Chapter & Episode structure with interactive content blocks
 
+export interface VisualAidContent {
+  type: "image" | "video";
+  url: string;
+  caption: string;
+  explanation?: string;
+  alt?: string;
+  searchTerms?: string;
+}
+
 export interface ContentBlock {
-  type: "concept" | "activity" | "recall" | "explain" | "assessment" | "exercise" | "reasoning" | "assumptions" | "connections" | "application" | "implications" | "bilingual_concept" | "vocabulary" | "grammar_pattern" | "story_reading";
+  type: "concept" | "activity" | "recall" | "explain" | "assessment" | "exercise" | "reasoning" | "assumptions" | "connections" | "application" | "implications" | "bilingual_concept" | "vocabulary" | "grammar_pattern" | "story_reading" | "visual_aid";
   title: string;
   icon: string;
-  content: ConceptContent | ActivityContent | RecallContent | ExplainContent | AssessmentContent | ExerciseContent | ReasoningContent | AssumptionsContent | ConnectionsContent | ApplicationContent | ImplicationsContent | Record<string, any>;
+  content: ConceptContent | ActivityContent | RecallContent | ExplainContent | AssessmentContent | ExerciseContent | ReasoningContent | AssumptionsContent | ConnectionsContent | ApplicationContent | ImplicationsContent | VisualAidContent | Record<string, any>;
 }
 
 export interface ConceptContent {

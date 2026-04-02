@@ -414,6 +414,7 @@ const layerMeta: Record<string, { border: string; bg: string; badge?: string; ba
   connections: { border: "border-l-emerald-600", bg: "",  badge: "🌐 Connect",      badgeColor: "bg-emerald-600 text-white", dotColor: "bg-emerald-600" },
   application: { border: "border-l-orange-500",  bg: "",  badge: "🚀 Apply",        badgeColor: "bg-orange-500 text-white", dotColor: "bg-orange-500" },
   implications:{ border: "border-l-indigo-500",  bg: "",  badge: "🔮 Imagine",      badgeColor: "bg-indigo-500 text-white", dotColor: "bg-indigo-500" },
+  visual_aid:  { border: "border-l-pink-500",    bg: "",  badge: "🖼️ Visual",     badgeColor: "bg-pink-500 text-white", dotColor: "bg-pink-500" },
   // Language-native block types
   bilingual_concept: { border: "border-l-blue-600",    bg: "",  badge: "📖 Read",       badgeColor: "bg-blue-500 text-white", dotColor: "bg-blue-600" },
   story_reading:     { border: "border-l-rose-500",    bg: "",  badge: "📚 Story",      badgeColor: "bg-rose-500 text-white", dotColor: "bg-rose-500" },
