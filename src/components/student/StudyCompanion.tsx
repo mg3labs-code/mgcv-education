@@ -615,7 +615,7 @@ const StudyCompanion = ({ role = "student" }: StudyCompanionProps) => {
   // Greeting
   useEffect(() => {
     if (isOpen && !hasGreeted && messages.length === 0 && sessionId && !voiceMode) {
-      const greeting = getGreeting(location.pathname, fullName);
+      const greeting = getGreeting(location.pathname, fullName, role);
       const greetMsg: ChatMessage = { role: "assistant", content: greeting };
       setMessages([greetMsg]);
       setHasGreeted(true);
