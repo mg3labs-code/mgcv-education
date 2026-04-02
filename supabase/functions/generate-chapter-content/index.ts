@@ -35,6 +35,8 @@ You follow the 7-Layer Elite Learning Framework:
 
 Also include: recall (4 Q&A pairs), explain (prompt + guide points), assessment (3-4 MCQs), exercise (textbook problems).
 
+Additionally, include 2-3 visual_aid blocks placed after concept, reasoning, and application blocks. Each visual_aid block helps students visualize the topic with images or short videos.
+
 Content must be culturally relevant to Indian students. Use Indian examples, ₹ currency, cricket/Bollywood references where appropriate.`;
 
       const userPrompt = `Generate complete 7-layer content blocks for:
