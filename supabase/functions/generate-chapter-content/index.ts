@@ -67,7 +67,9 @@ The content object structure for each type:
 - concept: { sections: [{heading, body, highlight?}], keyFormulas?: string[], example?: [{question, solution}] }
 - visual_aid: { type: "image", url: "", caption: string, explanation: string, alt: string, searchTerms: string }
   For visual_aid blocks: leave "url" as empty string (it will be resolved later). 
-  Set "searchTerms" to 2-4 keywords describing what image to find (e.g. "real number line classification diagram").
+  Set "searchTerms" to SPECIFIC descriptive keywords that would find an existing educational diagram online.
+  Examples: "Wikimedia Commons Venn diagram rational irrational numbers", "NCERT labeled diagram human digestive system", "Khan Academy photosynthesis process diagram labeled".
+  Use 4-8 words, include the source site name if possible, and always include "labeled diagram" or "educational illustration".
   Set "caption" to a short description of what the image shows.
   Set "explanation" to 1-2 sentences explaining how the visual connects to the lesson.
   Set "alt" to accessibility text describing the image.

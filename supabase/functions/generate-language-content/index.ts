@@ -63,7 +63,7 @@ The 11 blocks IN ORDER:
      "caption": "<what the image shows related to the story/concept>",
      "explanation": "<how this visual helps understand the ${subject} content>",
      "alt": "<accessibility description>",
-     "searchTerms": "<2-4 keywords for finding a relevant cultural/educational image>"
+      "searchTerms": "<4-8 specific keywords for finding an existing educational/cultural image, e.g. 'Wikimedia Commons Telugu script ancient inscription' or 'NCERT Hindi grammar sandhi examples labeled'>"
    }
 
 3. block_type: "story_reading"
