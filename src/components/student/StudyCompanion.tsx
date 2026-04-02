@@ -683,7 +683,8 @@ const StudyCompanion = ({ role = "student" }: StudyCompanionProps) => {
       const path = navMatch[1];
       setTimeout(() => navigate(path), 500);
     }
-    for (const [key, route] of Object.entries(NAV_ROUTES)) {
+    const routes = role === "teacher" ? { ...TEACHER_NAV_ROUTES, ...NAV_ROUTES } : NAV_ROUTES;
+    for (const [key, route] of Object.entries(routes)) {
       if (text.toLowerCase().includes(`navigate to ${key}`) || text.toLowerCase().includes(`go to ${key}`)) {
         setTimeout(() => navigate(route), 500);
         break;
