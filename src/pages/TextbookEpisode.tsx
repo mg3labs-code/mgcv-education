@@ -395,6 +395,7 @@ const blockSubtitles: Record<string, string> = {
   story_reading: "A story to read and understand",
   vocabulary: "New words to master today",
   grammar_pattern: "Spot the pattern in the language",
+  visual_aid: "A picture is worth a thousand words",
 };
 
 const DEEP_BLOCKS = new Set(["reasoning", "assumptions", "connections", "application", "implications"]);
