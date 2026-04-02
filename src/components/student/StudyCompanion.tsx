@@ -905,7 +905,7 @@ const StudyCompanion = ({ role = "student" }: StudyCompanionProps) => {
         <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-[9999] flex flex-col items-end gap-2" style={{ position: 'fixed' }}>
           {showNudge && (
             <div className="animate-fade-in bg-primary text-primary-foreground text-xs font-medium px-3 py-2 rounded-xl rounded-br-sm shadow-lg max-w-[200px]">
-              {getNudgeMessage(location.pathname)}
+              {getNudgeMessage(location.pathname, role)}
             </div>
           )}
           <button
