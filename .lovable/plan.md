@@ -1,78 +1,81 @@
 
 
-# Generate Bilingual 3-Phase Content for Telugu & Hindi
+# Add Visual Media (Images & Videos) to Textbook Content Blocks
 
-## Problem
-Telugu and Hindi Chapter 1 episodes currently have 22 content blocks each, but they were generated using the STEM 7-layer prompt. The content structure (e.g., `concept` blocks with `sections: [{heading, body}]`) doesn't match what the language-specific components expect (e.g., `BilingualConceptBlock` expects `sections: [{native, english, transliteration}]`). This causes empty/broken rendering.
+## What We're Building
 
-## Solution
+Enrich textbook episodes with contextual images and short educational videos that appear inline within content blocks. This applies to all subjects — STEM blocks get diagrams/illustrations, language blocks get cultural images and pronunciation videos.
 
-### Step 1: Create a language-specific content generation edge function
+## Approach
 
-New edge function `generate-language-content/index.ts` that produces blocks matching the bilingual 3-phase framework:
+### 1. Add a new `visual_aid` block type + inline media support
 
-**Phase 1 — "Read & Discover":**
-- `bilingual_concept` → `{sections: [{native, english, transliteration}], heading}` — split-screen native/English text
-- `story_reading` → `{title, sentences: [{native, english}], questions: [{question, answer}]}` — tap-to-reveal passage
+Rather than modifying every existing block type, we take a two-pronged approach:
 
-**Phase 2 — "Practice & Pattern":**
-- `vocabulary` → `{words: [{word, transliteration, meaning, example, exampleTranslation, memoryTrick}], heading}` — flashcards
-- `grammar_pattern` → `{patternName, rule, examples: [{sentence, translation, highlights: [{text, role}]}], challenge: {question, answer}}` — color-coded syntax
-- `recall` → standard recall format (Q&A pairs in target language)
-- `assessment` → standard MCQ format (language-focused questions)
+**A. New `visual_aid` content block type** — a standalone media block that can be inserted between existing blocks. Contains an image or embedded video with a caption and optional explanation. The AI content generator will produce these alongside regular blocks.
 
-**Phase 3 — "Express Yourself":**
-- `explain` → writing prompt in target language
-- `application` → cultural/real-world language usage scenario
-- `connections` → cross-domain connections (literature, film, history)
+**B. Add `media` field to existing block content** — each block's JSON `content` can optionally include a `media` array with image URLs and captions that render inline within the block.
 
-The AI prompt will instruct Gemini to generate content in the actual target language (Telugu script / Hindi Devanagari) with English translations, transliterations, and culturally relevant examples.
+### 2. Create a `VisualAidBlock` component
 
-### Step 2: Delete existing STEM blocks for Telugu & Hindi episodes
+New component `src/components/textbook/VisualAidBlock.tsx`:
+- Renders an image (from Unsplash, Wikimedia, or AI-generated) or an embedded YouTube video (≤2 min clips)
+- Image: responsive with rounded corners, lazy loading, alt text, and a caption overlay
+- Video: embedded YouTube iframe with `max-width: 100%`, 16:9 aspect ratio
+- Caption + brief explanation text below
+- Optional "zoom" on tap for images (mobile-friendly)
 
-Use a script to:
-1. Query `tb_episodes` joined with `tb_chapters` and `subjects` where subject name is "Telugu" or "Hindi"
-2. Delete all `content_blocks` for those episode IDs
-3. This clears the way for fresh language-appropriate content
+### 3. Create an `InlineMedia` component
 
-### Step 3: Generate new content via the edge function
+New component `src/components/textbook/InlineMedia.tsx`:
+- Small reusable component that renders within existing blocks (ConceptBlock, ReasoningBlock, etc.)
+- Shows a relevant image/diagram alongside text content
+- Floats right on desktop, full-width on mobile
 
-Call the new function for each Telugu and Hindi Chapter 1 episode, generating 9 blocks per episode (instead of 11 STEM blocks):
-1. `bilingual_concept`
-2. `story_reading`
-3. `vocabulary`
-4. `grammar_pattern`
-5. `recall`
-6. `assessment`
-7. `explain`
-8. `application`
-9. `connections`
+### 4. Update content generation edge functions
 
-### Step 4: Update TextbookEpisode.tsx rendering
+**`generate-chapter-content/index.ts`** — Update the AI prompt to:
+- Include 2-3 `visual_aid` blocks per episode (placed after concept, reasoning, and application blocks)
+- Each visual_aid block has: `{ type: "image"|"video", url: string, caption: string, explanation: string, alt: string }`
+- For images: prompt instructs AI to suggest Unsplash search terms or Wikimedia Commons URLs for real diagrams
+- For videos: prompt instructs AI to suggest YouTube video IDs of short (≤2 min) educational clips
+- Add `media` field to concept/reasoning/application block content with relevant image suggestions
 
-Update `renderBlock` to handle the new block types natively instead of awkwardly mapping STEM types to language components:
+**`generate-language-content/index.ts`** — Same treatment for language blocks:
+- Cultural images for story_reading blocks
+- Script/calligraphy images for bilingual_concept blocks
 
-```text
-block.type === "bilingual_concept" → <BilingualConceptBlock />
-block.type === "vocabulary"        → <VocabularyCardBlock />
-block.type === "grammar_pattern"   → <GrammarPatternBlock />
-block.type === "story_reading"     → <StoryReadingBlock />
-```
+### 5. Create an image resolution edge function
 
-Update `langPhases` to reference the new block type names. Keep the existing STEM block type rendering for non-language subjects untouched.
+New edge function `resolve-visual-aid/index.ts`:
+- Accepts a search query/topic
+- Uses Unsplash API (free tier, 50 req/hr) to find high-quality images
+- Alternatively uses AI image generation (Gemini flash-image) for diagrams that don't exist as photos
+- Returns the resolved image URL
+- Called during content generation, NOT at render time (URLs stored in DB)
 
-### Step 5: Update ContentBlock type definition
+### 6. Update TextbookEpisode.tsx rendering
 
-Add the new language block types to `textbookData.ts`:
-- Add `"bilingual_concept" | "vocabulary" | "grammar_pattern" | "story_reading"` to the `ContentBlock.type` union
-- Add corresponding content interfaces (already exist in the component files)
+- Add `visual_aid` to `renderBlock` switch
+- Add inline media rendering within ConceptBlock, ReasoningBlock, ApplicationBlock when `content.media` exists
+- Add to `blockIcons`, `blockLabels`, `blockSubtitles`, `layerMeta`
 
-## Files Modified
-1. `supabase/functions/generate-language-content/index.ts` — **new** edge function with bilingual prompt
-2. `src/pages/TextbookEpisode.tsx` — updated `renderBlock` and `langPhases` for new block types
-3. `src/data/textbookData.ts` — extended `ContentBlock.type` union with language types
-4. Script execution to delete old blocks and generate new ones via the edge function
+### 7. Update data types
 
-## Content Generation Approach
-The edge function will be called via script (`code--exec`) to generate content for all Telugu and Hindi Ch1 episodes in sequence, with rate-limit handling between calls.
+- Add `"visual_aid"` to ContentBlock type union in `textbookData.ts`
+- Define `VisualAidContent` interface
+
+## Files to Create
+1. `src/components/textbook/VisualAidBlock.tsx` — standalone visual block
+2. `src/components/textbook/InlineMedia.tsx` — inline media within blocks
+3. `supabase/functions/resolve-visual-aid/index.ts` — image search/generation
+
+## Files to Modify
+1. `src/pages/TextbookEpisode.tsx` — render visual_aid blocks + inline media
+2. `src/data/textbookData.ts` — add visual_aid type
+3. `supabase/functions/generate-chapter-content/index.ts` — add visual_aid blocks to STEM prompt
+4. `supabase/functions/generate-language-content/index.ts` — add visual_aid blocks to language prompt
+
+## Content Generation Strategy
+After deploying the updated edge functions, re-generate content for existing episodes to include visual aids. The AI will suggest appropriate Unsplash URLs based on topic keywords, which get resolved and stored in the DB content JSON.
 
