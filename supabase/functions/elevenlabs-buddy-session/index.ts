@@ -47,6 +47,14 @@ IMPORTANT RULES:
 - Be the kind of friend every student wishes they had.
 - When you get context about what page the student is on, mention it naturally. Like "Oh I see you are looking at Real Numbers! Want me to explain something?"`;
 
+const TELUGU_ADDENDUM = `
+
+TELUGU MODE:
+- You are now on a Telugu subject page. Speak in Telugu naturally, mixing English when needed just like how Telugu students talk.
+- Be expressive and animated in your Telugu speech. Use warm, affectionate Telugu phrases.
+- When explaining concepts, use Telugu first, then clarify key terms in English if needed.
+- Use Telugu expressions of encouragement like "బాగుంది!", "చాలా బాగా చేశావ్!", "అద్భుతం!"`;
+
 const BUDDY_FIRST_MESSAGE = "Hey there! I am Buddy, your study buddy. I can help you with any subject, open your textbook, or quiz you. What would you like to do?";
 
 const CLIENT_TOOLS = [
@@ -213,25 +221,72 @@ serve(async (req) => {
       throw new Error("Supabase config missing");
     }
 
+    // Parse optional language hint from request body
+    let language = "english";
+    try {
+      const body = await req.json();
+      if (body?.language) {
+        language = body.language.toLowerCase();
+      }
+    } catch {
+      // No body or invalid JSON — default to english
+    }
+
     const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     // Get or create the agent
     const agentId = await getOrCreateAgent(supabaseAdmin, ELEVENLABS_API_KEY);
 
-    // Generate a conversation token
-    const tokenResponse = await fetch(
-      `https://api.elevenlabs.io/v1/convai/conversation/token?agent_id=${agentId}`,
-      {
-        headers: {
-          "xi-api-key": ELEVENLABS_API_KEY,
-        },
-      }
-    );
+    // Build conversation config overrides for Telugu
+    const isTeluguSession = language === "telugu";
+    const tokenUrl = `https://api.elevenlabs.io/v1/convai/conversation/token?agent_id=${agentId}`;
 
-    if (!tokenResponse.ok) {
+    let tokenRequestBody: any = undefined;
+    if (isTeluguSession) {
+      console.log("🇮🇳 Telugu session detected — applying expressive voice overrides");
+      tokenRequestBody = {
+        conversation_config_override: {
+          agent: {
+            prompt: {
+              prompt: BUDDY_SYSTEM_PROMPT + TELUGU_ADDENDUM,
+            },
+            language: "hi", // ElevenLabs doesn't support "te", use "hi" as closest
+          },
+          tts: {
+            voice_id: "cgSgspJ2msm6clMCkdW9", // Jessica
+            model_id: "eleven_multilingual_v2",
+            stability: 0.3,
+            similarity_boost: 0.8,
+            style: 0.5,
+          },
+        },
+      };
+    }
+
+    // Generate a conversation token (with optional overrides)
+    const fetchOptions: any = {
+      method: isTeluguSession ? "POST" : "GET",
+      headers: {
+        "xi-api-key": ELEVENLABS_API_KEY,
+        ...(isTeluguSession ? { "Content-Type": "application/json" } : {}),
+      },
+    };
+    if (isTeluguSession && tokenRequestBody) {
+      fetchOptions.body = JSON.stringify(tokenRequestBody);
+    }
+
+    // Retry logic for token fetch
+    let tokenResponse: Response | null = null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      tokenResponse = await fetch(tokenUrl, fetchOptions);
+      if (tokenResponse.ok) break;
       const errText = await tokenResponse.text();
-      console.error("Failed to get conversation token:", tokenResponse.status, errText);
-      throw new Error(`Failed to get token: ${tokenResponse.status}`);
+      console.error(`Token attempt ${attempt + 1} failed:`, tokenResponse.status, errText);
+      if (attempt < 2) await new Promise(r => setTimeout(r, 1500));
+    }
+
+    if (!tokenResponse || !tokenResponse.ok) {
+      throw new Error(`Failed to get token after 3 attempts`);
     }
 
     const { token } = await tokenResponse.json();
