@@ -376,7 +376,7 @@ const blockLabels: Record<string, string> = {
   explain: "Teach your friend", assessment: "Prove it!", exercise: "Level up",
   reasoning: "But WHY though?", assumptions: "What if we're wrong?",
   connections: "Where else does this hide?", application: "Use it in real life",
-  implications: "What does this change?",
+  implications: "What does this change?", visual_aid: "See it in action",
 };
 
 const blockSubtitles: Record<string, string> = {
