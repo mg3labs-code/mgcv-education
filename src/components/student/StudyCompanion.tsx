@@ -1104,7 +1104,7 @@ const StudyCompanion = ({ role = "student" }: StudyCompanionProps) => {
               {/* Quick Actions */}
               {messages.length <= 1 && (
                 <div className="px-3 pb-2 flex flex-wrap gap-1.5">
-                  {QUICK_ACTIONS.map((action) => (
+                  {(role === "teacher" ? TEACHER_QUICK_ACTIONS : STUDENT_QUICK_ACTIONS).map((action) => (
                     <button
                       key={action.label}
                       onClick={() => sendMessage(action.prompt)}
