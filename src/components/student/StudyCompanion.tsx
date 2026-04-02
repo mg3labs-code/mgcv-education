@@ -189,7 +189,11 @@ const TEACHER_NAV_ROUTES: Record<string, string> = {
   "parent connect": "/teacher/parent-connect",
 };
 
-const StudyCompanion = () => {
+interface StudyCompanionProps {
+  role?: "student" | "teacher";
+}
+
+const StudyCompanion = ({ role = "student" }: StudyCompanionProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
