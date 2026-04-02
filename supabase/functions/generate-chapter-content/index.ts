@@ -97,7 +97,7 @@ Return ONLY the JSON array, no markdown wrapping.`;
             { role: "user", content: userPrompt },
           ],
           temperature: 0.7,
-          max_tokens: 16000,
+          max_tokens: 20000,
         }),
       });
 
