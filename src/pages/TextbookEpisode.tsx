@@ -21,6 +21,8 @@ import VocabularyCardBlock from "@/components/textbook/VocabularyCardBlock";
 import GrammarPatternBlock from "@/components/textbook/GrammarPatternBlock";
 import StoryReadingBlock from "@/components/textbook/StoryReadingBlock";
 import LanguageProgressWidget from "@/components/textbook/LanguageProgressWidget";
+import VisualAidBlock from "@/components/textbook/VisualAidBlock";
+import InlineMedia from "@/components/textbook/InlineMedia";
 
 const LANGUAGE_SUBJECTS = new Set(["Telugu", "Hindi"]);
 
