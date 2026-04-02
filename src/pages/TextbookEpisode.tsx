@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import PageLayout from "@/components/PageLayout";
-import { ContentBlock, ConceptContent, ActivityContent, RecallContent, ExplainContent, AssessmentContent, ExerciseContent, ReasoningContent, AssumptionsContent, ConnectionsContent, ApplicationContent, ImplicationsContent } from "@/data/textbookData";
+import { ContentBlock, ConceptContent, ActivityContent, RecallContent, ExplainContent, AssessmentContent, ExerciseContent, ReasoningContent, AssumptionsContent, ConnectionsContent, ApplicationContent, ImplicationsContent, VisualAidContent } from "@/data/textbookData";
 import { useChapterEpisodes, useEpisodeBlocks } from "@/hooks/useTextbookData";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { ArrowLeft, BookOpen, Brain, Briefcase, Check, CheckCircle2, ChevronDown, Cloud, Compass, Eye, Layers, Lightbulb, Link, Map, MessageSquare, Mic, PenLine, Search, Shield, Sparkles, Zap, RotateCcw, GripHorizontal } from "lucide-react";
+import { ArrowLeft, BookOpen, Brain, Briefcase, Check, CheckCircle2, ChevronDown, Cloud, Compass, Eye, Image, Layers, Lightbulb, Link, Map, MessageSquare, Mic, PenLine, Search, Shield, Sparkles, Zap, RotateCcw, GripHorizontal } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import VoiceExplainWidget from "@/components/textbook/VoiceExplainWidget";
@@ -21,6 +21,8 @@ import VocabularyCardBlock from "@/components/textbook/VocabularyCardBlock";
 import GrammarPatternBlock from "@/components/textbook/GrammarPatternBlock";
 import StoryReadingBlock from "@/components/textbook/StoryReadingBlock";
 import LanguageProgressWidget from "@/components/textbook/LanguageProgressWidget";
+import VisualAidBlock from "@/components/textbook/VisualAidBlock";
+import InlineMedia from "@/components/textbook/InlineMedia";
 
 const LANGUAGE_SUBJECTS = new Set(["Telugu", "Hindi"]);
 
@@ -366,7 +368,7 @@ const ExerciseBlock = ({ content }: { content: ExerciseContent }) => {
 const blockIcons: Record<string, React.ElementType> = {
   concept: BookOpen, activity: PenLine, recall: Brain, explain: MessageSquare,
   assessment: CheckCircle2, exercise: Lightbulb, reasoning: Zap, assumptions: Shield,
-  connections: Link, application: Briefcase, implications: Compass,
+  connections: Link, application: Briefcase, implications: Compass, visual_aid: Image,
 };
 
 const blockLabels: Record<string, string> = {
@@ -374,7 +376,7 @@ const blockLabels: Record<string, string> = {
   explain: "Teach your friend", assessment: "Prove it!", exercise: "Level up",
   reasoning: "But WHY though?", assumptions: "What if we're wrong?",
   connections: "Where else does this hide?", application: "Use it in real life",
-  implications: "What does this change?",
+  implications: "What does this change?", visual_aid: "See it in action",
 };
 
 const blockSubtitles: Record<string, string> = {
@@ -393,10 +395,11 @@ const blockSubtitles: Record<string, string> = {
   story_reading: "A story to read and understand",
   vocabulary: "New words to master today",
   grammar_pattern: "Spot the pattern in the language",
+  visual_aid: "A picture is worth a thousand words",
 };
 
 const DEEP_BLOCKS = new Set(["reasoning", "assumptions", "connections", "application", "implications"]);
-const DISCOVER_BLOCKS = new Set(["concept", "activity", "exercise"]);
+const DISCOVER_BLOCKS = new Set(["concept", "activity", "exercise", "visual_aid"]);
 const PROVE_BLOCKS = new Set(["recall", "assessment", "explain"]);
 
 const layerMeta: Record<string, { border: string; bg: string; badge?: string; badgeColor?: string; dotColor: string }> = {
@@ -411,6 +414,7 @@ const layerMeta: Record<string, { border: string; bg: string; badge?: string; ba
   connections: { border: "border-l-emerald-600", bg: "",  badge: "🌐 Connect",      badgeColor: "bg-emerald-600 text-white", dotColor: "bg-emerald-600" },
   application: { border: "border-l-orange-500",  bg: "",  badge: "🚀 Apply",        badgeColor: "bg-orange-500 text-white", dotColor: "bg-orange-500" },
   implications:{ border: "border-l-indigo-500",  bg: "",  badge: "🔮 Imagine",      badgeColor: "bg-indigo-500 text-white", dotColor: "bg-indigo-500" },
+  visual_aid:  { border: "border-l-pink-500",    bg: "",  badge: "🖼️ Visual",     badgeColor: "bg-pink-500 text-white", dotColor: "bg-pink-500" },
   // Language-native block types
   bilingual_concept: { border: "border-l-blue-600",    bg: "",  badge: "📖 Read",       badgeColor: "bg-blue-500 text-white", dotColor: "bg-blue-600" },
   story_reading:     { border: "border-l-rose-500",    bg: "",  badge: "📚 Story",      badgeColor: "bg-rose-500 text-white", dotColor: "bg-rose-500" },
@@ -426,7 +430,7 @@ const stemPhases = [
 ];
 
 // Language-specific phases (supports both native bilingual types and legacy STEM-mapped types)
-const LANG_READ_BLOCKS = new Set(["concept", "activity", "bilingual_concept", "story_reading"]);
+const LANG_READ_BLOCKS = new Set(["concept", "activity", "bilingual_concept", "story_reading", "visual_aid"]);
 const LANG_PRACTICE_BLOCKS = new Set(["recall", "exercise", "assessment", "explain", "vocabulary", "grammar_pattern"]);
 const LANG_EXPRESS_BLOCKS = new Set(["reasoning", "assumptions", "connections", "application", "implications"]);
 
@@ -624,6 +628,7 @@ const TextbookEpisode = () => {
       case "vocabulary": return <VocabularyCardBlock content={block.content as any} subjectName={langSubject || "Telugu"} />;
       case "grammar_pattern": return <GrammarPatternBlock content={block.content as any} />;
       case "story_reading": return <StoryReadingBlock content={block.content as any} subjectName={langSubject || "Telugu"} />;
+      case "visual_aid": return <VisualAidBlock content={block.content as VisualAidContent} />;
     }
 
     // Language-aware rendering for legacy STEM-typed blocks

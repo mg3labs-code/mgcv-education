@@ -35,3 +35,6 @@ verify_jwt = false
 
 [functions.generate-language-content]
 verify_jwt = false
+
+[functions.resolve-visual-aid]
+verify_jwt = false
