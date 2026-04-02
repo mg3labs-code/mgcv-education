@@ -1,81 +1,76 @@
 
 
-# Add Visual Media (Images & Videos) to Textbook Content Blocks
+# Web-First Image Resolution with AI Fallback + Verification
 
-## What We're Building
+## Problem
+The current `resolve-visual-aid` function only generates AI images, which can be low-quality, noisy, or unsuitable. Many educational topics have excellent, professionally-made diagrams already available on the web (Wikimedia Commons, NCERT textbooks, Khan Academy).
 
-Enrich textbook episodes with contextual images and short educational videos that appear inline within content blocks. This applies to all subjects — STEM blocks get diagrams/illustrations, language blocks get cultural images and pronunciation videos.
+## Solution
 
-## Approach
+### Two-tier image resolution in `resolve-visual-aid/index.ts`
 
-### 1. Add a new `visual_aid` block type + inline media support
+**Tier 1 — Web image lookup (new)**
+- Ask Gemini text model to find the **best publicly accessible direct image URL** from trusted educational sources (Wikimedia Commons, NCERT, Khan Academy, OpenStax) for the given topic
+- The AI returns a JSON with `{ url, source, description }`
+- **Verify the URL** with a `HEAD` request: check HTTP status 200 AND `content-type` starts with `image/`
+- If verification passes → return this URL with `source: "web"`
+- If verification fails → proceed to Tier 2
 
-Rather than modifying every existing block type, we take a two-pronged approach:
+**Tier 2 — AI generation fallback (existing)**
+- Use current Gemini flash-image generation logic
+- Return with `source: "generated"`
 
-**A. New `visual_aid` content block type** — a standalone media block that can be inserted between existing blocks. Contains an image or embedded video with a caption and optional explanation. The AI content generator will produce these alongside regular blocks.
+### Updated flow
 
-**B. Add `media` field to existing block content** — each block's JSON `content` can optionally include a `media` array with image URLs and captions that render inline within the block.
+```text
+Request: { query, topic, type, subject }
+         │
+         ▼
+  ┌──────────────────────────┐
+  │ Tier 1: Ask AI to find   │
+  │ direct image URL from    │
+  │ Wikimedia/NCERT/Khan     │
+  │ Academy/OpenStax         │
+  └──────────┬───────────────┘
+             │
+             ▼
+  ┌──────────────────────────┐
+  │ HEAD-check the URL       │
+  │ - Status 200?            │
+  │ - Content-type: image/*? │
+  └──────────┬───────────────┘
+        ┌────┴────┐
+       Yes       No
+        │         │
+        ▼         ▼
+   Return URL   ┌──────────────────┐
+   source:web   │ Tier 2: AI       │
+                │ generate image   │
+                │ (existing logic) │
+                └────────┬─────────┘
+                         │
+                         ▼
+                    Return base64
+                    source:generated
+```
 
-### 2. Create a `VisualAidBlock` component
+### VisualAidBlock.tsx — Source badge
 
-New component `src/components/textbook/VisualAidBlock.tsx`:
-- Renders an image (from Unsplash, Wikimedia, or AI-generated) or an embedded YouTube video (≤2 min clips)
-- Image: responsive with rounded corners, lazy loading, alt text, and a caption overlay
-- Video: embedded YouTube iframe with `max-width: 100%`, 16:9 aspect ratio
-- Caption + brief explanation text below
-- Optional "zoom" on tap for images (mobile-friendly)
+Add a small label showing "🌐 From web" vs "🎨 AI generated" based on the optional `source` field in the content JSON. Purely cosmetic, no functional change.
 
-### 3. Create an `InlineMedia` component
+### Content generation prompt tweaks
 
-New component `src/components/textbook/InlineMedia.tsx`:
-- Small reusable component that renders within existing blocks (ConceptBlock, ReasoningBlock, etc.)
-- Shows a relevant image/diagram alongside text content
-- Floats right on desktop, full-width on mobile
+Update `generate-chapter-content` and `generate-language-content` prompts to include better `searchTerms` in visual_aid blocks — e.g., "Wikimedia Commons labeled diagram of human digestive system" instead of generic "digestive system".
 
-### 4. Update content generation edge functions
+## Files Modified
+1. `supabase/functions/resolve-visual-aid/index.ts` — Add web-first lookup with HEAD validation before AI fallback
+2. `src/components/textbook/VisualAidBlock.tsx` — Add optional source badge
+3. `supabase/functions/generate-chapter-content/index.ts` — Better searchTerms in prompt
+4. `supabase/functions/generate-language-content/index.ts` — Better searchTerms for language visuals
 
-**`generate-chapter-content/index.ts`** — Update the AI prompt to:
-- Include 2-3 `visual_aid` blocks per episode (placed after concept, reasoning, and application blocks)
-- Each visual_aid block has: `{ type: "image"|"video", url: string, caption: string, explanation: string, alt: string }`
-- For images: prompt instructs AI to suggest Unsplash search terms or Wikimedia Commons URLs for real diagrams
-- For videos: prompt instructs AI to suggest YouTube video IDs of short (≤2 min) educational clips
-- Add `media` field to concept/reasoning/application block content with relevant image suggestions
-
-**`generate-language-content/index.ts`** — Same treatment for language blocks:
-- Cultural images for story_reading blocks
-- Script/calligraphy images for bilingual_concept blocks
-
-### 5. Create an image resolution edge function
-
-New edge function `resolve-visual-aid/index.ts`:
-- Accepts a search query/topic
-- Uses Unsplash API (free tier, 50 req/hr) to find high-quality images
-- Alternatively uses AI image generation (Gemini flash-image) for diagrams that don't exist as photos
-- Returns the resolved image URL
-- Called during content generation, NOT at render time (URLs stored in DB)
-
-### 6. Update TextbookEpisode.tsx rendering
-
-- Add `visual_aid` to `renderBlock` switch
-- Add inline media rendering within ConceptBlock, ReasoningBlock, ApplicationBlock when `content.media` exists
-- Add to `blockIcons`, `blockLabels`, `blockSubtitles`, `layerMeta`
-
-### 7. Update data types
-
-- Add `"visual_aid"` to ContentBlock type union in `textbookData.ts`
-- Define `VisualAidContent` interface
-
-## Files to Create
-1. `src/components/textbook/VisualAidBlock.tsx` — standalone visual block
-2. `src/components/textbook/InlineMedia.tsx` — inline media within blocks
-3. `supabase/functions/resolve-visual-aid/index.ts` — image search/generation
-
-## Files to Modify
-1. `src/pages/TextbookEpisode.tsx` — render visual_aid blocks + inline media
-2. `src/data/textbookData.ts` — add visual_aid type
-3. `supabase/functions/generate-chapter-content/index.ts` — add visual_aid blocks to STEM prompt
-4. `supabase/functions/generate-language-content/index.ts` — add visual_aid blocks to language prompt
-
-## Content Generation Strategy
-After deploying the updated edge functions, re-generate content for existing episodes to include visual aids. The AI will suggest appropriate Unsplash URLs based on topic keywords, which get resolved and stored in the DB content JSON.
+## Key Safeguards
+- HEAD request has a 5-second timeout to avoid hanging on dead URLs
+- Only accept URLs ending in common image extensions (.jpg, .png, .svg, .webp) OR with `content-type: image/*`
+- AI prompt specifically asks for **direct image file URLs** (not HTML pages)
+- Double verification: AI suggests URL → code validates it actually serves an image
 
