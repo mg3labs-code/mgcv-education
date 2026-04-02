@@ -299,7 +299,8 @@ const StudyCompanion = ({ role = "student" }: StudyCompanionProps) => {
     },
     clientTools: {
       navigateTo: (params: { page: string }) => {
-        const route = NAV_ROUTES[params.page.toLowerCase()];
+        const routes = role === "teacher" ? { ...TEACHER_NAV_ROUTES } : NAV_ROUTES;
+        const route = routes[params.page.toLowerCase()];
         if (route) {
           navigate(route);
           return `Navigated to ${params.page}`;
