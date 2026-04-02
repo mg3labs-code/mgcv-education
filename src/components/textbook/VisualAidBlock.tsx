@@ -9,6 +9,7 @@ export interface VisualAidContent {
   explanation?: string;
   alt?: string;
   searchTerms?: string;
+  source?: "web" | "generated";
 }
 
 interface VisualAidBlockProps {
