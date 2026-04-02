@@ -81,7 +81,7 @@ The 11 blocks IN ORDER:
      ]
    }
 
-3. block_type: "vocabulary"
+4. block_type: "vocabulary"
    title: "New Words"
    icon: "🔤"
    content: {
