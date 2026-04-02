@@ -54,7 +54,19 @@ The 11 blocks IN ORDER:
      ]
    }
 
-2. block_type: "story_reading"
+2. block_type: "visual_aid"
+   title: "Visualize the Concept"
+   icon: "🖼️"
+   content: {
+     "type": "image",
+     "url": "",
+     "caption": "<what the image shows related to the story/concept>",
+     "explanation": "<how this visual helps understand the ${subject} content>",
+     "alt": "<accessibility description>",
+     "searchTerms": "<2-4 keywords for finding a relevant cultural/educational image>"
+   }
+
+3. block_type: "story_reading"
    title: A story title
    icon: "📚"
    content: {
