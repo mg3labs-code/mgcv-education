@@ -416,9 +416,9 @@ const stemPhases = [
   { id: "deeper", label: "🚀 Go Deeper — The Fun Part", subtitle: "Ask why, challenge assumptions, see connections", className: "phase-deeper", blockSet: DEEP_BLOCKS },
 ];
 
-// Language-specific phases
-const LANG_READ_BLOCKS = new Set(["concept", "activity"]);
-const LANG_PRACTICE_BLOCKS = new Set(["recall", "exercise", "assessment", "explain"]);
+// Language-specific phases (supports both native bilingual types and legacy STEM-mapped types)
+const LANG_READ_BLOCKS = new Set(["concept", "activity", "bilingual_concept", "story_reading"]);
+const LANG_PRACTICE_BLOCKS = new Set(["recall", "exercise", "assessment", "explain", "vocabulary", "grammar_pattern"]);
 const LANG_EXPRESS_BLOCKS = new Set(["reasoning", "assumptions", "connections", "application", "implications"]);
 
 const langPhases = [
