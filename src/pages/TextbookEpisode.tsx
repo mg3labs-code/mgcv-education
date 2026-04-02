@@ -368,7 +368,7 @@ const ExerciseBlock = ({ content }: { content: ExerciseContent }) => {
 const blockIcons: Record<string, React.ElementType> = {
   concept: BookOpen, activity: PenLine, recall: Brain, explain: MessageSquare,
   assessment: CheckCircle2, exercise: Lightbulb, reasoning: Zap, assumptions: Shield,
-  connections: Link, application: Briefcase, implications: Compass,
+  connections: Link, application: Briefcase, implications: Compass, visual_aid: Image,
 };
 
 const blockLabels: Record<string, string> = {
