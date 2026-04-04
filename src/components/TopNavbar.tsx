@@ -10,9 +10,10 @@ import PersonalisationModal from "./student/PersonalisationModal";
 
 interface TopNavbarProps {
   role: "student" | "teacher" | "admin";
+  phase?: number;
 }
 
-const TopNavbar = ({ role }: TopNavbarProps) => {
+const TopNavbar = ({ role, phase = 4 }: TopNavbarProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { signOut, fullName } = useAuth();
