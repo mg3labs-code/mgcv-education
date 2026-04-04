@@ -130,8 +130,12 @@ export function useChapters(subjectSlug?: string) {
       });
 
       // Append any hardcoded chapters not already matched by DB rows
+      // Only append hardcoded (Math) chapters when viewing Mathematics
+      const isMathSubject = !subjectSlug || subjectSlug.toLowerCase() === "mathematics";
       const dbSlugs = new Set(mergedChapters.map((c) => c.id));
-      const unmatchedHardcoded = hardcodedChapters.filter((h) => !dbSlugs.has(h.id));
+      const unmatchedHardcoded = isMathSubject
+        ? hardcodedChapters.filter((h) => !dbSlugs.has(h.id))
+        : [];
 
       return [...mergedChapters, ...unmatchedHardcoded];
     },
