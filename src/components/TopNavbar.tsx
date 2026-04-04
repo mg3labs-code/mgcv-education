@@ -175,23 +175,35 @@ const TopNavbar = ({ role, phase = 4, activeTab, onTabChange }: TopNavbarProps) 
       {/* Mobile/tablet dropdown */}
       {menuOpen && (
         <div className="lg:hidden bg-[#0f1419]/98 border-b-2 border-blue-500/30 px-4 py-3 flex flex-col gap-2 sticky top-[73px] z-[999] animate-slide-down">
-          {items.map((item) =>
-            item.type === "nav" ? (
+          {role === "student" && onTabChange ? (
+            studentTabs.map((t) => (
               <button
-                key={item.label}
-                onClick={() => navAction(item.path!)}
-                className={`text-left text-white py-3 px-4 rounded-lg transition-all bg-transparent border-none text-base ${isActive(item.path) ? "bg-blue-500/20 font-semibold" : "hover:bg-white/10"}`}
+                key={t.id}
+                onClick={() => { onTabChange(t.id); setMenuOpen(false); }}
+                className={`text-left text-white py-3 px-4 rounded-lg transition-all bg-transparent border-none text-base ${activeTab === t.id ? "bg-blue-500/20 font-semibold" : "hover:bg-white/10"}`}
               >
-                {item.label}
+                {t.icon} {t.label}
               </button>
-            ) : (
-              <button
-                key={item.label}
-                onClick={() => openModal(item.modal!)}
-                className="text-left text-white py-3 px-4 rounded-lg transition-all bg-transparent border-none text-base hover:bg-white/10"
-              >
-                {item.label}
-              </button>
+            ))
+          ) : (
+            items.map((item) =>
+              item.type === "nav" ? (
+                <button
+                  key={item.label}
+                  onClick={() => navAction(item.path!)}
+                  className={`text-left text-white py-3 px-4 rounded-lg transition-all bg-transparent border-none text-base ${isActive(item.path) ? "bg-blue-500/20 font-semibold" : "hover:bg-white/10"}`}
+                >
+                  {item.label}
+                </button>
+              ) : (
+                <button
+                  key={item.label}
+                  onClick={() => openModal(item.modal!)}
+                  className="text-left text-white py-3 px-4 rounded-lg transition-all bg-transparent border-none text-base hover:bg-white/10"
+                >
+                  {item.label}
+                </button>
+              )
             )
           )}
         </div>
