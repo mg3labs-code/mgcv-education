@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import PageLayout from "@/components/PageLayout";
 import { ContentBlock, ConceptContent, ActivityContent, RecallContent, ExplainContent, AssessmentContent, ExerciseContent, ReasoningContent, AssumptionsContent, ConnectionsContent, ApplicationContent, ImplicationsContent, VisualAidContent } from "@/data/textbookData";
 import { useChapterEpisodes, useEpisodeBlocks } from "@/hooks/useTextbookData";
@@ -453,6 +453,8 @@ const actionBarButtons = [
 
 const TextbookEpisode = () => {
   const { chapterId, episodeId } = useParams();
+  const [searchParams] = useSearchParams();
+  const layerParam = searchParams.get("layer"); // "deep" or "quiz"
   const navigate = useNavigate();
   const { user } = useAuth();
   const [showDefense, setShowDefense] = useState(false);
@@ -595,6 +597,18 @@ const TextbookEpisode = () => {
     const actIdx = blocks.findIndex(b => b.type === "activity");
     if (actIdx >= 0) scrollToBlock(actIdx);
   }, [blocks, scrollToBlock]);
+
+  // Auto-scroll to layer based on ?layer=deep or ?layer=quiz query param
+  useEffect(() => {
+    if (!layerParam || !blocks || blocks.length === 0) return;
+    const timer = setTimeout(() => {
+      const targetSet = layerParam === "deep" ? DEEP_BLOCKS : layerParam === "quiz" ? PROVE_BLOCKS : null;
+      if (!targetSet) return;
+      const idx = blocks.findIndex(b => targetSet.has(b.type));
+      if (idx >= 0) scrollToBlock(idx);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [layerParam, blocks, scrollToBlock]);
 
   if (isLoading) {
     return (

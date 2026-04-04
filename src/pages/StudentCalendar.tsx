@@ -1,8 +1,12 @@
 import { useState, useEffect, useMemo } from "react";
-import { ChevronLeft, ChevronRight, ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { ChevronLeft, ChevronRight, ArrowLeft, BookOpen, Search as SearchIcon, Zap, Clock } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { findTextbookMatch } from "@/data/topicTextbookMap";
+import PopQuizModal from "@/components/student/PopQuizModal";
+import ScheduleCalendar from "@/components/student/ScheduleCalendar";
 
 interface ScheduleItem {
   type: string;
@@ -11,346 +15,305 @@ interface ScheduleItem {
   cssClass?: string;
   chapterId?: string;
   isNational?: boolean;
-  key?: string;
 }
 
-interface SubjectConfig {
-  name: string;
-  icon: string;
-  color: string;
-  gradient: string;
+interface SubjectSchedule {
+  subject: string;
+  schedule: Record<string, ScheduleItem>;
+  chapters: { id: string; name: string; colorHex: string }[];
 }
 
-const SUBJECTS: SubjectConfig[] = [
-  { name: "Mathematics", icon: "🔢", color: "#667eea", gradient: "from-indigo-500 to-purple-600" },
-  { name: "Science", icon: "🔬", color: "#48bb78", gradient: "from-green-500 to-teal-600" },
-  { name: "Social Science", icon: "🌍", color: "#ed8936", gradient: "from-orange-500 to-amber-600" },
-  { name: "English", icon: "📖", color: "#9f7aea", gradient: "from-purple-500 to-pink-600" },
-  { name: "Hindi", icon: "🇮🇳", color: "#f56565", gradient: "from-red-500 to-rose-600" },
-  { name: "Sanskrit", icon: "🕉️", color: "#38b2ac", gradient: "from-teal-500 to-cyan-600" },
+const SUBJECT_META: Record<string, { icon: string; time: string; color: string; gradient: string }> = {
+  "Mathematics": { icon: "🔢", time: "09:00 – 10:00", color: "#7C3AED", gradient: "from-violet-500 to-purple-600" },
+  "Science":     { icon: "🔬", time: "10:00 – 11:00", color: "#059669", gradient: "from-emerald-500 to-teal-600" },
+  "English":     { icon: "📖", time: "11:15 – 12:15", color: "#2563EB", gradient: "from-blue-500 to-indigo-600" },
+  "Social Science": { icon: "🌍", time: "01:00 – 02:00", color: "#F59E0B", gradient: "from-amber-500 to-orange-600" },
+  "Hindi":       { icon: "🇮🇳", time: "02:00 – 03:00", color: "#EF4444", gradient: "from-red-500 to-rose-600" },
+  "Sanskrit":    { icon: "🕉️", time: "03:00 – 04:00", color: "#06B6D4", gradient: "from-cyan-500 to-teal-600" },
+};
+
+const BREAKS = [
+  { time: "11:00 – 11:15", subject: "Short Break", icon: "☕", topic: "Refresh & Energize", type: "break" as const },
+  { time: "12:15 – 01:00", subject: "Lunch Break", icon: "🍱", topic: "Nutrition & Rest", type: "break" as const },
+];
+
+const SUBJECTS_LIST = [
+  { id: "Mathematics", label: "Mathematics", icon: "🔢", color: "#7C3AED" },
+  { id: "Science", label: "Science", icon: "🔬", color: "#059669" },
+  { id: "English", label: "English", icon: "📖", color: "#2563EB" },
+  { id: "Social Science", label: "Social Science", icon: "🌍", color: "#F59E0B" },
+  { id: "Hindi", label: "Hindi", icon: "🇮🇳", color: "#EF4444" },
+  { id: "Sanskrit", label: "Sanskrit", icon: "🕉️", color: "#06B6D4" },
 ];
 
 const DAY_HEADERS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-
 const toKey = (date: Date) => date.toISOString().split("T")[0];
-
-interface TopicModalData {
-  title: string;
-  subject: string;
-  type: string;
-  chapterName?: string;
-}
 
 const StudentCalendar = () => {
   const { user } = useAuth();
-  const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
-  const [schedulesBySubject, setSchedulesBySubject] = useState<Record<string, { schedule: Record<string, ScheduleItem>; chapters: { id: string; name: string; colorHex: string }[] }>>({});
-  const [monthIndex, setMonthIndex] = useState(new Date().getMonth());
-  const [year, setYear] = useState(new Date().getFullYear());
-  const [modalTopic, setModalTopic] = useState<TopicModalData | null>(null);
+  const navigate = useNavigate();
+  const [view, setView] = useState<"today" | "monthly">("today");
+  const [subjectSchedules, setSubjectSchedules] = useState<SubjectSchedule[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [expandedAction, setExpandedAction] = useState<string | null>(null);
+  const [quizSubject, setQuizSubject] = useState<string | null>(null);
 
-  // Fetch all schedules for the student's class
+  // Monthly view state
+  const [selectedSubject, setSelectedSubject] = useState("Mathematics");
+  const now = new Date();
+  const [monthIndex, setMonthIndex] = useState(now.getMonth());
+  const [year, setYear] = useState(now.getFullYear());
+
   useEffect(() => {
     const fetchSchedules = async () => {
       if (!user) return;
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("class_name")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (!profile?.class_name) return;
-
-      const { data: schedules } = await supabase
-        .from("teaching_schedules")
-        .select("subject, schedule_data, chapters_data")
-        .eq("class_name", profile.class_name);
-
+      const { data: profile } = await supabase.from("profiles").select("class_name").eq("user_id", user.id).maybeSingle();
+      if (!profile?.class_name) { setLoading(false); return; }
+      const { data: schedules } = await supabase.from("teaching_schedules").select("subject, schedule_data, chapters_data").eq("class_name", profile.class_name);
       if (schedules) {
-        const map: typeof schedulesBySubject = {};
-        schedules.forEach((s) => {
-          map[s.subject] = {
-            schedule: s.schedule_data as unknown as Record<string, ScheduleItem>,
-            chapters: (s.chapters_data as unknown as { id: string; name: string; colorHex: string }[]) || [],
-          };
-        });
-        setSchedulesBySubject(map);
+        setSubjectSchedules(schedules.map((s) => ({
+          subject: s.subject,
+          schedule: s.schedule_data as unknown as Record<string, ScheduleItem>,
+          chapters: (s.chapters_data as unknown as { id: string; name: string; colorHex: string }[]) || [],
+        })));
       }
+      setLoading(false);
     };
     fetchSchedules();
   }, [user]);
 
-  const now = new Date();
+  const todayKey = now.toISOString().split("T")[0];
+
+  // Build today's full timeline
+  const todayTimeline = useMemo(() => {
+    const items: { time: string; subject: string; icon: string; topic: string; type: string; color: string; isBreak: boolean }[] = [];
+    const orderedSubjects = Object.keys(SUBJECT_META);
+
+    orderedSubjects.forEach((subjectName) => {
+      const subSchedule = subjectSchedules.find((s) => s.subject === subjectName);
+      const meta = SUBJECT_META[subjectName];
+      const todayItem = subSchedule?.schedule[todayKey];
+
+      let topic = "Regular Class";
+      if (todayItem) {
+        const chapterName = todayItem.chapterId ? subSchedule?.chapters.find((c) => c.id === todayItem.chapterId)?.name : undefined;
+        topic = todayItem.title || todayItem.label || "Scheduled";
+        if (chapterName) topic = `${chapterName}: ${topic}`;
+      }
+
+      items.push({ time: meta.time, subject: subjectName, icon: meta.icon, topic, type: todayItem?.type || "class", color: meta.color, isBreak: false });
+
+      if (subjectName === "Science") items.push({ time: BREAKS[0].time, subject: BREAKS[0].subject, icon: BREAKS[0].icon, topic: BREAKS[0].topic, type: "break", color: "#9CA3AF", isBreak: true });
+      if (subjectName === "English") items.push({ time: BREAKS[1].time, subject: BREAKS[1].subject, icon: BREAKS[1].icon, topic: BREAKS[1].topic, type: "break", color: "#9CA3AF", isBreak: true });
+    });
+    return items;
+  }, [subjectSchedules, todayKey]);
+
+  // Determine "now" class (simplified: based on hour)
+  const currentHour = now.getHours();
+  const nowIndex = currentHour < 10 ? 0 : currentHour < 11 ? 1 : currentHour < 12 ? 3 : currentHour < 13 ? -1 : currentHour < 14 ? 5 : currentHour < 15 ? 6 : currentHour < 16 ? 7 : -1;
+
+  const handleClassOpen = (subject: string, topic: string) => {
+    const match = findTextbookMatch(topic);
+    if (match && match.episodeId) {
+      navigate(`/student/textbook/${match.chapterId}/${match.episodeId}`);
+    } else {
+      navigate(`/student/textbook`);
+    }
+  };
+
+  const handleDeepDive = (subject: string, topic: string) => {
+    const match = findTextbookMatch(topic);
+    if (match && match.episodeId) {
+      navigate(`/student/textbook/${match.chapterId}/${match.episodeId}?layer=deep`);
+    } else {
+      navigate(`/student/textbook`);
+    }
+  };
+
+  const handlePopQuiz = (subject: string) => {
+    setQuizSubject(subject);
+  };
+
+  // Monthly view helpers
   const monthDate = new Date(Date.UTC(year, monthIndex, 1));
   const monthName = monthDate.toLocaleString("default", { month: "long", timeZone: "UTC" });
-  const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
-  let firstDay = new Date(Date.UTC(year, monthIndex, 1)).getUTCDay();
-  firstDay = firstDay === 0 ? 6 : firstDay - 1;
-
-  const prevMonth = () => {
-    if (monthIndex === 0) { setMonthIndex(11); setYear((y) => y - 1); }
-    else setMonthIndex((m) => m - 1);
-  };
-  const nextMonth = () => {
-    if (monthIndex === 11) { setMonthIndex(0); setYear((y) => y + 1); }
-    else setMonthIndex((m) => m + 1);
-  };
-
-  const currentSchedule = selectedSubject ? schedulesBySubject[selectedSubject] : null;
-
-  const chapterColorMap = useMemo(() => {
-    if (!currentSchedule?.chapters) return {};
-    const m: Record<string, { name: string; hex: string }> = {};
-    currentSchedule.chapters.forEach((c) => { m[c.id] = { name: c.name, hex: c.colorHex }; });
-    return m;
-  }, [currentSchedule]);
-
-  const chaptersInMonth = useMemo(() => {
-    if (!currentSchedule) return [];
-    const ids = new Set<string>();
-    for (let d = 1; d <= daysInMonth; d++) {
-      const key = toKey(new Date(Date.UTC(year, monthIndex, d)));
-      const item = currentSchedule.schedule[key];
-      if (item?.chapterId) ids.add(item.chapterId);
-    }
-    return Array.from(ids).map((id) => chapterColorMap[id]).filter(Boolean);
-  }, [currentSchedule, monthIndex, year, daysInMonth, chapterColorMap]);
-
-  const hasSchedule = (subjectName: string) => !!schedulesBySubject[subjectName];
-
-  // Subject selection view
-  if (!selectedSubject) {
-    return (
-      <DashboardLayout role="student" breadcrumbItems={[{ label: "Dashboard", href: "/student" }, { label: "Calendar" }]}>
-        <div className="p-8 max-w-[1400px] mx-auto">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-[#1e3c72] to-[#2a5298] text-white text-center py-10 px-8 rounded-2xl mb-8 relative overflow-hidden">
-            <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 25% 25%, white 1px, transparent 1px), radial-gradient(circle at 75% 75%, white 1px, transparent 1px)", backgroundSize: "50px 50px" }} />
-            <h1 className="text-3xl font-bold mb-2 relative z-10">🎓 CBSE Class 10 Learning Calendar</h1>
-            <p className="text-lg opacity-90 relative z-10">Interactive Subject-wise Study Planner • Academic Year 2025–26</p>
-          </div>
-
-          {/* Subject cards */}
-          <h2 className="text-2xl font-semibold text-card-foreground mb-6 text-center">Choose Your Subject to Begin</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-[900px] mx-auto">
-            {SUBJECTS.map((sub) => {
-              const available = hasSchedule(sub.name);
-              return (
-                <button
-                  key={sub.name}
-                  onClick={() => setSelectedSubject(sub.name)}
-                  className={`bg-gradient-to-br ${sub.gradient} rounded-2xl p-8 text-white text-left cursor-pointer transition-all border-none relative overflow-hidden group hover:-translate-y-2 hover:shadow-xl`}
-                >
-                  <span className="text-4xl block mb-3">{sub.icon}</span>
-                  <span className="text-lg font-semibold block">{sub.name}</span>
-                  {available && (
-                    <span className="text-xs mt-2 block opacity-80 bg-white/20 rounded-full px-3 py-1 w-fit">📅 Schedule Available</span>
-                  )}
-                  {!available && (
-                    <span className="text-xs mt-2 block opacity-60">Coming soon</span>
-                  )}
-                  <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-white/0 to-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </DashboardLayout>
-    );
-  }
-
-  // Calendar view for selected subject
-  const subjectConfig = SUBJECTS.find((s) => s.name === selectedSubject)!;
-
-  const days: JSX.Element[] = [];
-  for (let i = 0; i < firstDay; i++) {
-    days.push(<div key={`empty-${i}`} className="min-h-[120px] bg-muted/30 rounded-lg" />);
-  }
-
-  for (let d = 1; d <= daysInMonth; d++) {
-    const key = toKey(new Date(Date.UTC(year, monthIndex, d)));
-    const item = currentSchedule?.schedule[key];
-    const isToday = d === now.getDate() && monthIndex === now.getMonth() && year === now.getFullYear();
-    const dayOfWeek = new Date(Date.UTC(year, monthIndex, d)).getUTCDay();
-    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-
-    let cellClasses = "bg-card";
-    if (isToday) cellClasses = "ring-2 ring-primary shadow-lg";
-    if (isWeekend && !item) cellClasses = "bg-muted/50 opacity-70";
-    if (item?.isNational) cellClasses = "bg-orange-50 border-2 border-orange-400";
-    else if (item?.type === "holiday") cellClasses = "bg-red-50 border-red-200";
-
-    days.push(
-      <div
-        key={d}
-        className={`min-h-[120px] p-3 rounded-lg border border-border/30 relative transition-all hover:-translate-y-0.5 hover:shadow-md hover:border-primary/40 cursor-pointer ${cellClasses}`}
-        onClick={() => {
-          if (item) {
-            setModalTopic({
-              title: item.title || item.label || "No topic",
-              subject: selectedSubject,
-              type: item.type,
-              chapterName: item.chapterId ? chapterColorMap[item.chapterId]?.name : undefined,
-            });
-          }
-        }}
-      >
-        <div className={`text-sm font-semibold mb-2 ${isToday ? "text-primary" : "text-card-foreground"}`}>
-          {d}
-        </div>
-        {item && (
-          <>
-            {item.isNational && (
-              <div className="bg-orange-500 text-white text-[11px] px-2 py-1.5 rounded-md text-center font-medium animate-fade-in">
-                {item.label}
-              </div>
-            )}
-            {!item.isNational && item.type === "holiday" && (
-              <div className="bg-red-500 text-white text-[11px] px-2 py-1.5 rounded-md text-center font-medium">
-                {item.label}
-              </div>
-            )}
-            {item.type === "topic" && (
-              <div
-                className="text-white text-[11px] px-2 py-1.5 rounded-md text-center font-medium leading-tight transition-all hover:scale-105"
-                style={{ backgroundColor: (item.chapterId && chapterColorMap[item.chapterId]?.hex) || subjectConfig.color }}
-              >
-                {item.title}
-              </div>
-            )}
-            {item.type === "practice" && (
-              <div className="bg-cyan-500 text-white text-[11px] px-2 py-1.5 rounded-md text-center font-medium">
-                Practice Day
-              </div>
-            )}
-            {item.type === "test" && (
-              <div className="bg-red-500 text-white text-[11px] px-2 py-1.5 rounded-md text-center font-medium">
-                {item.title}
-              </div>
-            )}
-            {item.type === "assignment" && (
-              <div className="bg-amber-500 text-gray-900 text-[11px] px-2 py-1.5 rounded-md text-center font-medium">
-                {item.title}
-              </div>
-            )}
-          </>
-        )}
-      </div>
-    );
-  }
+  const currentSubjectSchedule = subjectSchedules.find(s => s.subject === selectedSubject);
 
   return (
     <DashboardLayout role="student" breadcrumbItems={[{ label: "Dashboard", href: "/student" }, { label: "Calendar" }]}>
-      <div className="p-8 max-w-[1400px] mx-auto">
-        <div className="bg-card/95 backdrop-blur rounded-2xl overflow-hidden shadow-lg border border-border/20">
-          {/* Header */}
-          <div className={`bg-gradient-to-r ${subjectConfig.gradient} text-white py-8 px-8 text-center relative`}>
-            <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "30px 30px" }} />
-            <h1 className="text-2xl font-bold mb-1 relative z-10">{subjectConfig.icon} {selectedSubject} Calendar</h1>
-            <p className="opacity-90 relative z-10">CBSE Class 10 • Academic Year 2025–26</p>
+      <div className="p-4 md:p-8 max-w-[1200px] mx-auto space-y-6">
+
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground">📅 Calendar</h1>
+            <p className="text-sm text-muted-foreground mt-1">Your daily plan with quick actions to learn, dive deep, or quiz yourself.</p>
           </div>
-
-          {/* Controls */}
-          <div className="flex justify-between items-center px-6 py-4 bg-secondary/50 border-b border-border/30">
-            <button
-              onClick={() => setSelectedSubject(null)}
-              className="flex items-center gap-2 bg-muted hover:bg-muted/80 text-card-foreground border-none px-4 py-2 rounded-full cursor-pointer font-medium transition-all"
-            >
-              <ArrowLeft className="h-4 w-4" /> Back to Subjects
-            </button>
-            <div className="flex items-center gap-4">
-              <button onClick={prevMonth} className="w-10 h-10 rounded-full text-white flex items-center justify-center transition-all border-none cursor-pointer hover:scale-110" style={{ background: subjectConfig.color }}>
-                <ChevronLeft className="h-4 w-4" />
+          {/* View Toggle */}
+          <div className="flex gap-1 bg-muted/50 rounded-xl p-1">
+            {[
+              { id: "today" as const, label: "Today's Plan" },
+              { id: "monthly" as const, label: "Monthly" },
+            ].map(v => (
+              <button key={v.id} onClick={() => setView(v.id)}
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all border-none cursor-pointer ${
+                  view === v.id ? "bg-card text-foreground shadow-sm" : "bg-transparent text-muted-foreground hover:text-foreground"
+                }`}>
+                {v.label}
               </button>
-              <h3 className="text-lg font-semibold text-card-foreground min-w-[160px] text-center">
-                {monthName} {year}
-              </h3>
-              <button onClick={nextMonth} className="w-10 h-10 rounded-full text-white flex items-center justify-center transition-all border-none cursor-pointer hover:scale-110" style={{ background: subjectConfig.color }}>
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
-            <div />
+            ))}
           </div>
-
-          {/* Calendar Grid */}
-          {currentSchedule ? (
-            <>
-              <div className="grid grid-cols-7 gap-px p-5">
-                {DAY_HEADERS.map((h) => (
-                  <div key={h} className="bg-gray-700 text-white py-3 text-center text-xs font-semibold rounded-md">
-                    {h}
-                  </div>
-                ))}
-                {days}
-              </div>
-
-              {/* Legend */}
-              <div className="px-6 py-4 bg-secondary/50 border-t border-border/30 flex flex-wrap gap-4 justify-center">
-                {chaptersInMonth.map((ch) => (
-                  <div key={ch.name} className="flex items-center gap-1.5 text-xs font-medium text-card-foreground">
-                    <div className="w-4 h-4 rounded" style={{ backgroundColor: ch.hex }} />
-                    <span>{ch.name}</span>
-                  </div>
-                ))}
-                <div className="flex items-center gap-1.5 text-xs font-medium text-card-foreground">
-                  <div className="w-4 h-4 rounded bg-cyan-500" />
-                  <span>Practice</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-xs font-medium text-card-foreground">
-                  <div className="w-4 h-4 rounded bg-red-500" />
-                  <span>Test</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-xs font-medium text-card-foreground">
-                  <div className="w-4 h-4 rounded bg-amber-500" />
-                  <span>Assignment</span>
-                </div>
-              </div>
-            </>
-          ) : (
-            <div className="p-16 text-center">
-              <div className="text-5xl mb-4">{subjectConfig.icon}</div>
-              <h3 className="text-xl font-semibold text-card-foreground mb-2">No Schedule Published Yet</h3>
-              <p className="text-muted-foreground">Your teacher hasn't published the {selectedSubject} schedule yet. Check back later!</p>
-            </div>
-          )}
         </div>
+
+        {/* ═══ TODAY'S PLAN ═══ */}
+        {view === "today" && (
+          <div className="space-y-1">
+            <p className="text-sm text-muted-foreground mb-4">
+              {now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })} • Full day plan with quick actions
+            </p>
+
+            {loading ? (
+              <div className="text-center py-16 text-muted-foreground">Loading schedule...</div>
+            ) : (
+              <div className="relative">
+                {todayTimeline.map((cls, i) => {
+                  const isNow = i === nowIndex;
+                  const actionKey = `action-${i}`;
+
+                  return (
+                    <div key={i} className="flex gap-4 mb-1">
+                      {/* Time column */}
+                      <div className="w-[70px] shrink-0 text-right pt-5">
+                        <span className="text-xs font-semibold text-muted-foreground">{cls.time.split("–")[0].trim()}</span>
+                      </div>
+
+                      {/* Timeline dot + line */}
+                      <div className="flex flex-col items-center shrink-0">
+                        <div className={`w-3 h-3 rounded-full mt-5 shrink-0 ${isNow ? "ring-4 ring-primary/30" : ""}`}
+                          style={{ backgroundColor: cls.isBreak ? "#D1D5DB" : cls.color }} />
+                        {i < todayTimeline.length - 1 && (
+                          <div className="w-0.5 flex-1 min-h-[20px] bg-border/50" />
+                        )}
+                      </div>
+
+                      {/* Content card */}
+                      <div className={`flex-1 mb-3 rounded-xl border p-4 transition-all ${
+                        cls.isBreak
+                          ? "bg-muted/30 border-border/30"
+                          : isNow
+                          ? "bg-card border-primary shadow-md ring-1 ring-primary/20"
+                          : "bg-card border-border hover:border-primary/30 hover:shadow-sm"
+                      }`}>
+                        {cls.isBreak ? (
+                          <p className="text-sm text-muted-foreground">{cls.icon} {cls.topic}</p>
+                        ) : (
+                          <>
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="text-lg">{cls.icon}</span>
+                                  <span className="font-semibold text-foreground">{cls.subject}</span>
+                                  {isNow && (
+                                    <span className="flex items-center gap-1 text-[11px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                                      <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" /> LIVE
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-sm text-muted-foreground mt-1">{cls.topic}</p>
+                              </div>
+                            </div>
+
+                            {/* Action buttons */}
+                            <div className="flex flex-wrap gap-2 mt-3">
+                              <button onClick={() => {
+                                if (expandedAction === `${i}-class`) { handleClassOpen(cls.subject, cls.topic); }
+                                else setExpandedAction(`${i}-class`);
+                              }}
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-semibold border-2 border-primary/30 text-primary bg-primary/5 hover:bg-primary/10 transition-all cursor-pointer">
+                                <BookOpen className="h-3.5 w-3.5" /> Class
+                              </button>
+                              <button onClick={() => {
+                                if (expandedAction === `${i}-deep`) { handleDeepDive(cls.subject, cls.topic); }
+                                else setExpandedAction(`${i}-deep`);
+                              }}
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-semibold border-2 border-purple-300 text-purple-700 bg-purple-50 hover:bg-purple-100 transition-all cursor-pointer">
+                                <SearchIcon className="h-3.5 w-3.5" /> Deep Dive
+                              </button>
+                              <button onClick={() => handlePopQuiz(cls.subject)}
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-semibold border-2 border-amber-300 text-amber-700 bg-amber-50 hover:bg-amber-100 transition-all cursor-pointer">
+                                <Zap className="h-3.5 w-3.5" /> Pop Quiz
+                              </button>
+                            </div>
+
+                            {/* Expanded action description */}
+                            {expandedAction === `${i}-class` && (
+                              <div className="mt-3 p-3 rounded-lg bg-primary/5 border border-primary/20 text-sm text-muted-foreground animate-fade-in">
+                                📖 <strong>Class</strong> → Opens the lesson for "{cls.topic}" in the textbook. Click again to go!
+                                <button onClick={() => handleClassOpen(cls.subject, cls.topic)}
+                                  className="block mt-2 text-primary font-semibold text-xs cursor-pointer bg-transparent border-none hover:underline">
+                                  Open Lesson →
+                                </button>
+                              </div>
+                            )}
+                            {expandedAction === `${i}-deep` && (
+                              <div className="mt-3 p-3 rounded-lg bg-purple-50 border border-purple-200 text-sm text-muted-foreground animate-fade-in">
+                                🔍 <strong>Deep Dive</strong> → Opens the "Go Deeper" layer for "{cls.topic}". Ask WHY, bust myths, explore connections.
+                                <button onClick={() => handleDeepDive(cls.subject, cls.topic)}
+                                  className="block mt-2 text-purple-700 font-semibold text-xs cursor-pointer bg-transparent border-none hover:underline">
+                                  Start Deep Dive →
+                                </button>
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ═══ MONTHLY VIEW ═══ */}
+        {view === "monthly" && (
+          <div className="space-y-4">
+            {/* Subject filter tabs */}
+            <div className="flex gap-2 overflow-x-auto pb-2">
+              {SUBJECTS_LIST.map(s => (
+                <button key={s.id} onClick={() => setSelectedSubject(s.id)}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold border-none cursor-pointer whitespace-nowrap transition-all"
+                  style={{
+                    background: selectedSubject === s.id ? s.color : undefined,
+                    color: selectedSubject === s.id ? "white" : undefined,
+                  }}
+                >
+                  {s.icon} {s.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Use existing ScheduleCalendar component */}
+            {currentSubjectSchedule ? (
+              <ScheduleCalendar
+                scheduleData={currentSubjectSchedule.schedule}
+                className="Class 10"
+                subject={selectedSubject}
+                chaptersData={currentSubjectSchedule.chapters}
+              />
+            ) : (
+              <div className="text-center py-16 bg-card rounded-2xl border">
+                <span className="text-4xl block mb-3">{SUBJECTS_LIST.find(s => s.id === selectedSubject)?.icon}</span>
+                <h3 className="text-lg font-semibold text-foreground mb-2">No Schedule Published Yet</h3>
+                <p className="text-sm text-muted-foreground">Your teacher hasn't published the {selectedSubject} schedule yet.</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* Topic Modal */}
-      {modalTopic && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[1001]" onClick={() => setModalTopic(null)}>
-          <div className="bg-card rounded-2xl max-w-[600px] w-[90%] max-h-[80vh] overflow-y-auto shadow-2xl animate-scale-in" onClick={(e) => e.stopPropagation()}>
-            <div className={`bg-gradient-to-r ${subjectConfig.gradient} text-white p-8 rounded-t-2xl text-center relative`}>
-              <button onClick={() => setModalTopic(null)} className="absolute top-4 right-4 bg-white/20 hover:bg-white/30 border-none rounded-full w-9 h-9 text-white text-lg cursor-pointer transition-all">
-                ×
-              </button>
-              <h2 className="text-xl font-bold mb-1">{modalTopic.title}</h2>
-              <p className="opacity-90 text-sm">{modalTopic.subject}{modalTopic.chapterName ? ` • ${modalTopic.chapterName}` : ""}</p>
-            </div>
-            <div className="p-8">
-              <div className="mb-6">
-                <div className="flex items-center gap-2 font-semibold text-card-foreground mb-3">
-                  <span className="w-7 h-7 rounded-full flex items-center justify-center text-white text-sm" style={{ background: subjectConfig.color }}>📚</span>
-                  Overview
-                </div>
-                <p className="text-muted-foreground leading-relaxed">
-                  This is an important topic in {modalTopic.subject}. Focus on understanding the core concepts and practice regularly.
-                </p>
-              </div>
-
-              <div className="p-5 rounded-xl text-white text-center" style={{ background: `linear-gradient(135deg, ${subjectConfig.color}, ${subjectConfig.color}dd)` }}>
-                <h3 className="font-semibold mb-2">📖 Study Tips</h3>
-                <ul className="text-left text-sm space-y-2 mx-auto max-w-xs">
-                  <li>✦ Read the chapter thoroughly</li>
-                  <li>✦ Make important notes</li>
-                  <li>✦ Practice questions daily</li>
-                  <li>✦ Discuss with classmates</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {quizSubject && <PopQuizModal open={!!quizSubject} onClose={() => setQuizSubject(null)} subject={quizSubject} />}
     </DashboardLayout>
   );
 };

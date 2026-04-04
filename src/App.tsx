@@ -28,7 +28,7 @@ import StudentTextbook from "./pages/StudentTextbook";
 import TextbookChapter from "./pages/TextbookChapter";
 import TextbookEpisode from "./pages/TextbookEpisode";
 import TextbookLab from "./pages/TextbookLab";
-import StudentDeepDive from "./pages/StudentDeepDive";
+import StudentCalendarRedirect from "./pages/StudentCalendar";
 import ResetPassword from "./pages/ResetPassword";
 import AttractionDemo from "./pages/AttractionDemo";
 import NotFound from "./pages/NotFound";
@@ -66,7 +66,7 @@ const App = () => (
             <Route path="/student/textbook/:chapterId" element={<ProtectedRoute><TextbookChapter /></ProtectedRoute>} />
             <Route path="/student/textbook/:chapterId/:episodeId" element={<ProtectedRoute><TextbookEpisode /></ProtectedRoute>} />
             <Route path="/student/textbook-lab" element={<ProtectedRoute><TextbookLab /></ProtectedRoute>} />
-            <Route path="/student/deep-dive" element={<ProtectedRoute><StudentDeepDive /></ProtectedRoute>} />
+            <Route path="/student/deep-dive" element={<ProtectedRoute><StudentCalendarRedirect /></ProtectedRoute>} />
             <Route path="/teacher" element={<ProtectedRoute><TeacherDashboard /></ProtectedRoute>} />
             <Route path="/teacher/students" element={<ProtectedRoute><TeacherDashboard /></ProtectedRoute>} />
             <Route path="/teacher/daily-todo" element={<ProtectedRoute><TeacherDailyTodo /></ProtectedRoute>} />
