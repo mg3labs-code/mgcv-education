@@ -6,6 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { findTextbookMatch } from "@/data/topicTextbookMap";
 import PopQuizModal from "@/components/student/PopQuizModal";
+import LearnTab from "@/components/student/LearnTab";
+import TasksTab from "@/components/student/TasksTab";
 
 interface ScheduleItem {
   type: string;
