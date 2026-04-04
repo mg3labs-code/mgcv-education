@@ -181,9 +181,12 @@ export function useChapterEpisodes(chapterSlug: string | undefined) {
           subtitle: ep.subtitle || "",
           duration: ep.duration || "8 min",
           type: ep.type as Episode["type"],
-          blocks: hcEp?.blocks || [], // Will be replaced by DB blocks when available
+          blocks: hcEp?.blocks || [],
         };
       });
+
+      // If DB has no episodes but hardcoded does, use hardcoded episodes
+      const finalEpisodes = mappedEpisodes.length > 0 ? mappedEpisodes : (hardcoded?.episodes || []);
 
       return {
         id: chapter.slug,
@@ -193,7 +196,7 @@ export function useChapterEpisodes(chapterSlug: string | undefined) {
         color: chapter.color || "#6366f1",
         periods: chapter.periods || 0,
         pageRange: chapter.page_range || "",
-        episodes: mappedEpisodes,
+        episodes: finalEpisodes,
       } as Chapter;
     },
   });
