@@ -453,6 +453,8 @@ const actionBarButtons = [
 
 const TextbookEpisode = () => {
   const { chapterId, episodeId } = useParams();
+  const [searchParams] = useSearchParams();
+  const layerParam = searchParams.get("layer"); // "deep" or "quiz"
   const navigate = useNavigate();
   const { user } = useAuth();
   const [showDefense, setShowDefense] = useState(false);
