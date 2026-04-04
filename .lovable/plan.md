@@ -1,36 +1,67 @@
 
 
-# Redesign "Today's Classes" Widget to Match Screenshot
+# Fix LearnTab Content + Make TextbookEpisode Show One Section Per Page
 
-## What changes
+## Problem
+1. **LearnTab**: Recently visited cards display raw episode IDs instead of proper titles. Episode list has unnecessary "Episode N:" prefix.
+2. **TextbookEpisode**: All blocks render on one long scrollable page. The user's JSX and screenshots clearly show ONE section at a time with Previous/Continue buttons to navigate between them — like a paginated reading experience.
 
-The current `ScheduleWidget` shows all classes in a vertical stack with left-colored borders. The screenshot shows a different layout:
+## Plan
 
-1. **Current/NOW class** — prominent card with purple icon badge, "NOW" label, time, subject name, topic subtitle, and a green "Open →" button
-2. **Remaining classes** — compact horizontal row of small cards showing just time + subject name (color-coded text), no topic
-3. **"View Full Schedule →"** link in the header pointing to `/student/calendar`
-4. **All 6 subjects shown** (not just 3-5 based on phase)
+### 1. Fix LearnTab content display (`src/components/student/LearnTab.tsx`)
 
-## File modified
+**Recently Visited cards (lines 140-180):**
+- Fetch episode details (title, duration) by joining `episode_progress` with `tb_episodes` table, or do a secondary lookup
+- Show actual episode title instead of `Ep: ch1-ep1`
+- Show the correct subject name per episode (currently shows the active tab subject for all)
 
-### `src/pages/StudentDashboard.tsx` — Rewrite `ScheduleWidget`
+**Episode list (lines 278-332):**
+- Remove "Episode N:" prefix — just show the episode title directly (matching JSX: "Number Types & Classification" not "Episode 1: Number Types & Classification")
+- Add block count display: `• {ep.blocks?.length} blocks` next to duration
 
-**NOW card (first non-break class):**
-- Left: purple rounded-square icon badge (subject icon)
-- Center: "● NOW {time}" in red/green, bold subject name, topic as subtitle in muted text
-- Right: green "Open →" button (teal `#0D9488` or purple `#7C3AED`)
-- Background: `#F5F3FF` light purple tint, rounded 14, subtle border
+### 2. Paginate TextbookEpisode — one block per page (`src/pages/TextbookEpisode.tsx`)
 
-**Remaining classes row:**
-- Horizontal flex row with small cards (border `#E7E5E4`, rounded 10, padding 10-14)
-- Each card: time in small muted text on top, subject name in subject color below
-- No topic text, no icon — just time + colored subject name
-- Overflow scroll on mobile
+This is the big change. Currently all blocks render in a scrollable list. Change to show only ONE block at a time.
 
-**Header:**
-- "📅 Today's Classes" left, "View Full Schedule →" link right (teal colored, navigates to `/student/calendar`)
+**New state:**
+- `activeBlockIndex` (already exists as `activeBlock`) — controls which single block is rendered
+- Remove scroll-based IntersectionObserver for active block detection (no longer needed since we show one at a time)
 
-**Data:** Remove `compact` prop gating — always show all subjects from `todayScheduleItems`
+**Layout change (lines 832-963):**
+- Instead of mapping ALL phase blocks and rendering them all, render ONLY `blocks[activeBlockIndex]`
+- Show the block's phase header above it
+- Show the block content using existing `renderBlock()`
+- Show "Got it! ✓" / "Nailed it!" button below the block
 
-**No backend changes** — same `todayScheduleItems` data, just visual restructure.
+**Bottom navigation bar:**
+- `← Previous` button (disabled on first block)
+- Center: "✓ Section complete" label if current block is understood
+- `Continue →` button (teal `#0D9488` background) — marks current as understood + advances to next block
+- On last block: show completion card instead of Continue
+
+**Top bar update:**
+- Section counter shows `{activeBlockIndex + 1}/{blocks.length}` (already works)
+- Progress bar reflects understood/total (already works)
+- Phase breadcrumb shows current block's phase (already works)
+
+**Sidebar update:**
+- Clicking a section in sidebar sets `activeBlockIndex` to that block's index (already does `scrollToBlock` — change to `setActiveBlock`)
+
+**What stays the same:**
+- All block renderers (ConceptBlock, ActivityBlock, etc.)
+- All Supabase data fetching and progress persistence
+- Phase grouping logic (used for sidebar and breadcrumb)
+- Tools toolbar
+- Episode header and stats bar
+- Completion card at the end
+- Voice/AI integrations
+- "Got it!" understood tracking
+
+### Files Modified
+1. `src/components/student/LearnTab.tsx` — Fix episode titles and block counts
+2. `src/pages/TextbookEpisode.tsx` — Switch from scroll-all to one-block-per-page navigation
+
+### No changes to
+- Database, edge functions, block renderer components
+- Content data structures
 
