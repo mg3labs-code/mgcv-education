@@ -1,58 +1,72 @@
 
 
-# Replace Dashboards with User-Provided Phased Design
+# Add Learn Tab + Tasks Tab to Student Dashboard
 
 ## Summary
-Replace the current StudentDashboard and TeacherDashboard with the exact JSX design provided by the user — warm cream/stone palette, inline styles, Source Serif 4 + DM Sans fonts, phased progressive unlock (1-4), and the teacher layout from the mockups. No existing Tailwind theme tokens — use the exact inline styles from the provided code.
+Add two new tab views (Learn and Tasks) to the student dashboard, using the exact JSX/inline styles from the provided code. The Home tab keeps the current phased dashboard. Tab switching happens within `StudentDashboard` via state — no new routes.
 
-## What Changes
+## Data Mapping (old feature → new section)
 
-### 1. `src/pages/StudentDashboard.tsx` — Full rewrite
-Port the user's provided JSX directly into the existing component structure:
-- Keep existing Supabase queries (innerOS, breakthroughs, methodCounts, schedules) but map their data into the new widget components
-- **Phase computation**: Use `episode_progress` count + `student_inner_os.created_at` age to determine phase 1-4
-- **Phase 1**: Greeting + `ScheduleWidget` (horizontal timeline with colored left borders, "HAPPENING NOW" badge) + `ContinueLearning` card (chapter progress bar) + locked placeholders for Inner OS and Scholar Methods
-- **Phase 2**: Same + `InnerOS` normal card (5 dimension circles with mini progress bars)
-- **Phase 3**: Same + `ScholarMethods` grid (Debate Challenge, Break It Down, Case Study, Teach It)
-- **Phase 4**: `InnerOS` hero mode (teal gradient `#0D9488` to `#134E4A`, circular SVG score ring, "+5% this week" badge) + `StatsRow` (Episodes, Study Time, Streak, Gems as horizontal cards)
-- **`FadeSlide` wrapper** for progressive reveal animations
-- All styling uses inline styles from the provided code: `background: "#FFFBF5"`, `color: "#1C1917"`, `borderRadius: 16`, `border: "1px solid #E7E5E4"`, `fontFamily: "'DM Sans', sans-serif"`
-- Wrap in `DashboardLayout` and keep navigation/auth integration
+### Learn Tab
+| New Section | Data Source | Existing Code |
+|---|---|---|
+| **Continue Learning** card | `episode_progress` table (latest incomplete episode by `user_id`, ordered by `started_at desc`) | Already in StudentDashboard as `ContinueLearning` component |
+| **Recently Visited** | `episode_progress` ordered by `started_at desc limit 3`, joined with `tb_chapters`/`tb_episodes` for titles | New query — maps episode_id/chapter_id to chapter title via `tb_chapters.slug` + `tb_episodes.slug` |
+| **Subject → Chapter Browser** | `subjects` table + `tb_chapters` + `tb_episodes` (counts) | Reuses `useSubjects()` and `useChapters()` from `src/hooks/useTextbookData.ts` |
+| **Chapter progress** (X/Y episodes done) | `episode_progress` grouped by `chapter_id` for current user | New aggregation query |
+| **Scholar Methods** | `method_sessions` table grouped by `method_type` | Already fetched in StudentDashboard as `methodCounts` query |
 
-### 2. `src/pages/TeacherDashboard.tsx` — Full rewrite
-Port the user's `TeacherDashboard` JSX:
-- Class-wide Inner OS as 4 horizontal stat cards (emoji icon, percentage, label, student count) with colored left borders
-- Today's Classes as vertical cards with time, subject, class section, "● LIVE" indicator on current class
-- "Needs Your Attention" section with action items (Grade Now, View buttons) — pull from existing `teacher_alerts` query
-- Quick action cards at bottom (Create Assignment, Class Analytics, Edit Schedule) in pastel backgrounds
-- Same warm cream/stone inline style system
-- Keep existing Supabase queries (classAvg, alerts)
+### Tasks Tab
+| New Section | Data Source | Existing Code |
+|---|---|---|
+| **Summary strip** (To Do / Urgent / Submitted) | Computed from `assignments` + `student_submissions` | `StudentAssignments.tsx` lines 39-51 (assignments query), lines 54-100 (submissions query) |
+| **Teacher Assignments** list | `assignments` + `assignment_questions` + `student_submissions` + `student_answers` | Same queries from `StudentAssignments.tsx` |
+| **Incomplete Sections** | `episode_progress` where `completion_pct < 100` | New query filtering incomplete episodes |
+| **Daily Challenges** | Static for now (Pop Quiz links to existing `PopQuizModal`) | Already has `PopQuizModal` in StudentDashboard |
 
-### 3. `src/components/TopNavbar.tsx` — Accept phase prop
-- Add optional `phase` prop
-- Student nav tabs: Home, Learn, Tasks, Calendar always visible; "My Growth" tab appears only at phase >= 2
-- Show streak badge (🔥 + day count) at phase >= 3
-- Use existing nav styling (no changes to colors)
+## Files to Create/Modify
 
-### 4. `src/components/DashboardLayout.tsx` — Forward phase prop
-- Accept optional `phase` prop, pass to `TopNavbar`
+### 1. `src/components/student/LearnTab.tsx` — NEW
+- Port user's `LearnTab` JSX with inline styles exactly as provided
+- Wire **Continue Learning**: query `episode_progress` for latest incomplete, resolve chapter/episode names from `tb_chapters`/`tb_episodes`
+- Wire **Recently Visited**: query `episode_progress` ordered by `started_at desc limit 3`
+- Wire **Subject tabs**: use `useSubjects()` hook, display subject icon/label/color from DB
+- Wire **Chapter list**: use `useChapters(selectedSubject)`, show progress from `episode_progress` count per chapter
+- Wire **Scholar Methods**: accept `methodCounts` as prop (already fetched in parent)
+- Chapter/episode clicks → `navigate("/student/textbook/{chapterId}/{episodeId}")`
 
-### 5. `index.html` — Add Google Fonts
-- Add Source Serif 4 + DM Sans font imports (from the user's provided `<style>` block)
+### 2. `src/components/student/TasksTab.tsx` — NEW
+- Port user's `TasksTab` JSX with inline styles exactly as provided
+- Wire **Assignments**: query `assignments` + `assignment_questions` + `student_submissions` + `student_answers` (same pattern as `StudentAssignments.tsx`)
+- Wire **Summary counts**: computed from assignments data (pending/urgent/submitted)
+- Wire **Incomplete Sections**: query `episode_progress` where `completion_pct < 100`, resolve episode names
+- Wire **Daily Challenges**: static data, Start button opens `PopQuizModal`
+- Assignment click → `navigate("/student/assignments")` or open inline
 
-## Design System (from user's code — used exactly)
-- Background: `#FFFBF5` (warm cream)
-- Card: `background: "white"`, `border: "1px solid #E7E5E4"`, `borderRadius: 16`, `boxShadow: "0 1px 3px rgba(0,0,0,0.04)"`
-- Text primary: `#1C1917` (stone-900), secondary: `#78716C` (stone-500)
-- Teal accent: `#0D9488` for active states, buttons, hero gradient
-- Subject colors: Math `#7C3AED`, Science `#059669`, English `#2563EB`, Social `#F59E0B`
-- Locked sections: centered emoji + `#78716C` text + 🔒 unlock condition
-- Fonts: `'Source Serif 4'` for headings, `'DM Sans'` for body
+### 3. `src/pages/StudentDashboard.tsx` — Modify
+- Add `activeTab` state (synced from TopNavbar)
+- Home tab renders current phased content (unchanged)
+- Learn tab renders `<LearnTab />`
+- Tasks tab renders `<TasksTab />`
+- Calendar tab → `navigate("/student/calendar")`
+- Growth tab → open ProgressModal
+- Pass `activeTab`/`setActiveTab` to DashboardLayout → TopNavbar
 
-## Files Modified
-1. `src/pages/StudentDashboard.tsx` — Full rewrite with phased inline-styled widgets
-2. `src/pages/TeacherDashboard.tsx` — Full rewrite with inline-styled teacher layout
-3. `src/components/TopNavbar.tsx` — Phase-aware tabs + streak badge
-4. `src/components/DashboardLayout.tsx` — Forward phase prop
-5. `index.html` — Google Fonts link for Source Serif 4 + DM Sans
+### 4. `src/components/TopNavbar.tsx` — Modify
+- Student nav: replace current items with 5 pill-style tabs: Home, Learn, Tasks, Calendar, My Growth
+- Accept `activeTab`/`onTabChange` props for student role
+- Tasks tab shows pending count badge (red dot with number)
+- Streak badge (🔥 N Days) next to avatar at phase >= 3
+- Tab click for Home/Learn/Tasks → call `onTabChange`
+- Tab click for Calendar → navigate to `/student/calendar`
+- Tab click for My Growth → open progress modal
+
+### 5. `src/components/DashboardLayout.tsx` — Modify
+- Forward `activeTab`/`onTabChange` props to TopNavbar
+
+## Key Decisions
+- Tab state lives in `StudentDashboard`, not URL — keeps single `/student` route
+- All DB queries use existing hooks/patterns with `maybeSingle()` for safety
+- No new DB tables needed — all data comes from existing `episode_progress`, `assignments`, `student_submissions`, `method_sessions`, `subjects`, `tb_chapters`, `tb_episodes`
+- Inline styles match user's provided JSX exactly (cream bg, stone borders, Source Serif 4 headings, DM Sans body)
 
