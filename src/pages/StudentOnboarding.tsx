@@ -47,30 +47,69 @@ const StudentOnboarding = () => {
     setSaving(true);
 
     try {
-      // Update profile
-      const { error: profileError } = await supabase
+      const profilePayload = {
+        user_id: user.id,
+        full_name: name.trim(),
+        class_name: selectedClass,
+        school_name: selectedBoard,
+      };
+
+      const { data: existingProfiles, error: profileLookupError } = await supabase
         .from('profiles')
-        .update({
-          full_name: name.trim(),
-          class_name: selectedClass,
-          school_name: selectedBoard,
-        })
-        .eq('user_id', user.id);
+        .select('id')
+        .eq('user_id', user.id)
+        .limit(1);
+
+      if (profileLookupError) throw profileLookupError;
+
+      const { error: profileError } = (existingProfiles?.length ?? 0) > 0
+        ? await supabase
+            .from('profiles')
+            .update({
+              full_name: profilePayload.full_name,
+              class_name: profilePayload.class_name,
+              school_name: profilePayload.school_name,
+            })
+            .eq('user_id', user.id)
+        : await supabase
+            .from('profiles')
+            .insert(profilePayload);
 
       if (profileError) throw profileError;
 
-      // Update preferences
       const gradeNum = parseInt(selectedClass.replace('Class ', ''));
-      const { error: prefError } = await supabase
+
+      const preferencesPayload = {
+        user_id: user.id,
+        grade: gradeNum,
+        interests: selectedSubjects,
+        onboarding_completed: true,
+        difficulty_level: 'medium',
+        preferred_language: 'en',
+      };
+
+      const { data: existingPreferences, error: preferenceLookupError } = await supabase
         .from('student_preferences')
-        .upsert({
-          user_id: user.id,
-          grade: gradeNum,
-          interests: selectedSubjects,
-          onboarding_completed: true,
-          difficulty_level: 'medium',
-          preferred_language: 'en',
-        }, { onConflict: 'user_id' });
+        .select('id')
+        .eq('user_id', user.id)
+        .limit(1);
+
+      if (preferenceLookupError) throw preferenceLookupError;
+
+      const { error: prefError } = (existingPreferences?.length ?? 0) > 0
+        ? await supabase
+            .from('student_preferences')
+            .update({
+              grade: preferencesPayload.grade,
+              interests: preferencesPayload.interests,
+              onboarding_completed: preferencesPayload.onboarding_completed,
+              difficulty_level: preferencesPayload.difficulty_level,
+              preferred_language: preferencesPayload.preferred_language,
+            })
+            .eq('user_id', user.id)
+        : await supabase
+            .from('student_preferences')
+            .insert(preferencesPayload);
 
       if (prefError) throw prefError;
 
