@@ -8,6 +8,7 @@ import { findTextbookMatch } from "@/data/topicTextbookMap";
 import PopQuizModal from "@/components/student/PopQuizModal";
 import LearnTab from "@/components/student/LearnTab";
 import TasksTab from "@/components/student/TasksTab";
+import GrowthTab from "@/components/student/GrowthTab";
 
 interface ScheduleItem {
   type: string;
