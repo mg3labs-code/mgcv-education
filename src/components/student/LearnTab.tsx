@@ -319,10 +319,11 @@ const LearnTab = ({ methodCounts }: LearnTabProps) => {
                           </div>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <span style={{ fontSize: 13, color: isCurrent ? "#0D9488" : done ? "#1C1917" : "#78716C", fontWeight: isCurrent ? 600 : 400 }}>
-                              Episode {ei + 1}: {ep.title}
+                              {ep.title}
                             </span>
                             <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 2 }}>
                               {ep.duration && <span style={{ fontSize: 11, color: "#A8A29E" }}>⏱ {ep.duration}</span>}
+                              {ep.blocks && ep.blocks.length > 0 && <span style={{ fontSize: 11, color: "#A8A29E" }}>• {ep.blocks.length} blocks</span>}
                               {ep.type && (
                                 <span style={{ fontSize: 10, fontWeight: 600, color: ch.color || "#7C3AED", background: (ch.color || "#7C3AED") + "12", padding: "1px 6px", borderRadius: 6 }}>{ep.type}</span>
                               )}
