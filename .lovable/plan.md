@@ -1,76 +1,42 @@
 
 
-# Web-First Image Resolution with AI Fallback + Verification
+# Unified Schedule-Calendar-Textbook Flow
 
 ## Problem
-The current `resolve-visual-aid` function only generates AI images, which can be low-quality, noisy, or unsuitable. Many educational topics have excellent, professionally-made diagrams already available on the web (Wikimedia Commons, NCERT textbooks, Khan Academy).
+Three disconnected systems: Dashboard has a full schedule tab with Class/DeepDive/PopQuiz buttons, Calendar page is a standalone monthly-only subject picker, and Deep Dive is a separate page that often breaks. No cohesive daily planner.
 
-## Solution
+## What Changes
 
-### Two-tier image resolution in `resolve-visual-aid/index.ts`
+### 1. Dashboard — Compact Schedule Only
+- Remove the "Overview / Schedule" tab toggle
+- Keep Inner OS hero + dimensions as the main view
+- Replace the schedule tab with a **compact "Today's Classes"** card showing: current class (highlighted with "NOW" + "Open" button that deep-links to the episode) + next 3-4 classes as small pills (time + subject name only, no action buttons)
+- Add "View Full Schedule →" link that navigates to `/student/calendar`
+- Keep Continue Learning and Elite Methods sections
 
-**Tier 1 — Web image lookup (new)**
-- Ask Gemini text model to find the **best publicly accessible direct image URL** from trusted educational sources (Wikimedia Commons, NCERT, Khan Academy, OpenStax) for the given topic
-- The AI returns a JSON with `{ url, source, description }`
-- **Verify the URL** with a `HEAD` request: check HTTP status 200 AND `content-type` starts with `image/`
-- If verification passes → return this URL with `source: "web"`
-- If verification fails → proceed to Tier 2
+### 2. Calendar Page — Daily Plan + Monthly View
+- Replace the current subject-picker-first monthly calendar with a **two-view** page: "Today's Plan" (default) and "Monthly"
+- **Today's Plan**: Full daily timeline with all classes + breaks, each class card has 3 action buttons:
+  - **Class** → navigates to `/student/textbook/{chapterId}/{episodeId}` (Layer 1-2)
+  - **Deep Dive** → navigates to `/student/textbook/{chapterId}/{episodeId}?layer=deep` (Layer 3)
+  - **Pop Quiz** → opens PopQuiz modal for that subject
+- Each button uses `topicTextbookMap` to resolve the correct episode; if no match, show "Coming Soon"
+- **Monthly**: Subject filter tabs + monthly grid calendar (existing logic, moved here as second tab)
+- Tapping a date in Monthly opens the matching episode
 
-**Tier 2 — AI generation fallback (existing)**
-- Use current Gemini flash-image generation logic
-- Return with `source: "generated"`
+### 3. Deep-Link Support in TextbookEpisode
+- Accept `?layer=deep` or `?layer=quiz` query params to auto-scroll/focus on the appropriate layer when opened from Calendar
 
-### Updated flow
-
-```text
-Request: { query, topic, type, subject }
-         │
-         ▼
-  ┌──────────────────────────┐
-  │ Tier 1: Ask AI to find   │
-  │ direct image URL from    │
-  │ Wikimedia/NCERT/Khan     │
-  │ Academy/OpenStax         │
-  └──────────┬───────────────┘
-             │
-             ▼
-  ┌──────────────────────────┐
-  │ HEAD-check the URL       │
-  │ - Status 200?            │
-  │ - Content-type: image/*? │
-  └──────────┬───────────────┘
-        ┌────┴────┐
-       Yes       No
-        │         │
-        ▼         ▼
-   Return URL   ┌──────────────────┐
-   source:web   │ Tier 2: AI       │
-                │ generate image   │
-                │ (existing logic) │
-                └────────┬─────────┘
-                         │
-                         ▼
-                    Return base64
-                    source:generated
-```
-
-### VisualAidBlock.tsx — Source badge
-
-Add a small label showing "🌐 From web" vs "🎨 AI generated" based on the optional `source` field in the content JSON. Purely cosmetic, no functional change.
-
-### Content generation prompt tweaks
-
-Update `generate-chapter-content` and `generate-language-content` prompts to include better `searchTerms` in visual_aid blocks — e.g., "Wikimedia Commons labeled diagram of human digestive system" instead of generic "digestive system".
+### 4. Remove StudentDeepDive Page
+- The standalone `/student/deep-dive` page becomes unnecessary — all deep-dive actions now link directly to the textbook episode with a layer param
 
 ## Files Modified
-1. `supabase/functions/resolve-visual-aid/index.ts` — Add web-first lookup with HEAD validation before AI fallback
-2. `src/components/textbook/VisualAidBlock.tsx` — Add optional source badge
-3. `supabase/functions/generate-chapter-content/index.ts` — Better searchTerms in prompt
-4. `supabase/functions/generate-language-content/index.ts` — Better searchTerms for language visuals
+1. `src/pages/StudentDashboard.tsx` — Remove schedule tab, add compact Today's Classes card with NOW highlight + "View Full Schedule" link
+2. `src/pages/StudentCalendar.tsx` — Full rewrite: Today's Plan (daily timeline with action buttons) + Monthly view (subject tabs + grid)
+3. `src/pages/TextbookEpisode.tsx` — Accept `?layer=deep|quiz` query param for auto-scrolling
+4. `src/data/topicTextbookMap.ts` — Add mappings for Science, English, Social Science, Hindi, Sanskrit subjects
+5. `src/App.tsx` — Remove `/student/deep-dive` route (optional, can keep as redirect)
 
-## Key Safeguards
-- HEAD request has a 5-second timeout to avoid hanging on dead URLs
-- Only accept URLs ending in common image extensions (.jpg, .png, .svg, .webp) OR with `content-type: image/*`
-- AI prompt specifically asks for **direct image file URLs** (not HTML pages)
-- Double verification: AI suggests URL → code validates it actually serves an image
+## Design Reference
+Follows the uploaded mockups: cream/white cards, teal accents, timeline with colored dots, action buttons as outlined pills (Class in teal, Deep Dive in purple, Pop Quiz in amber).
 
