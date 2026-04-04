@@ -15,7 +15,7 @@ interface TopNavbarProps {
   onTabChange?: (tab: string) => void;
 }
 
-const TopNavbar = ({ role, phase = 4 }: TopNavbarProps) => {
+const TopNavbar = ({ role, phase = 4, activeTab, onTabChange }: TopNavbarProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { signOut, fullName } = useAuth();
