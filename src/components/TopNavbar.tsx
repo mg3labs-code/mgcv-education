@@ -34,7 +34,7 @@ const TopNavbar = ({ role, phase = 4, activeTab, onTabChange }: TopNavbarProps) 
     { id: "learn", icon: "📖", label: "Learn" },
     { id: "tasks", icon: "📝", label: "Tasks" },
     { id: "calendar", icon: "📅", label: "Calendar" },
-    ...(phase >= 2 ? [{ id: "growth", icon: "📊", label: "My Growth" }] : []),
+    { id: "growth", icon: "📊", label: "My Growth" },
     { id: "messages", icon: "💬", label: "Messages" },
     { id: "notifications", icon: "🔔", label: "Notifications" },
     { id: "personalisation", icon: "⚙️", label: "Settings" },
