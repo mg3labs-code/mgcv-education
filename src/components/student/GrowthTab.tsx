@@ -576,9 +576,11 @@ export default function GrowthTab({ dimensionScores, streakDays, episodeCount, m
       </div>
 
       <ActivityHeatmap userId={user.id} streakDays={streakDays} />
+      <DailyQuizProgress userId={user.id} />
       <InnerOSTrends dimensionScores={dimensionScores} />
       <BreakthroughsSection breakthroughs={breakthroughs} />
       <LearningStats episodeCount={episodeCount} methodCounts={methodCounts} streakDays={streakDays} />
+      <WeeklyAssignmentsProgress userId={user.id} />
       <ChapterProgressSection userId={user.id} />
       <ScholarMethodsStats methodCounts={methodCounts} userId={user.id} />
     </div>
