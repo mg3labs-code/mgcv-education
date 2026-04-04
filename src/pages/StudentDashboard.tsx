@@ -437,11 +437,8 @@ const StudentDashboard = () => {
               </div>
             </div>
           </>
-        )}
-                    <div className="text-xs text-gray-500">{today.toLocaleDateString("en-US", { weekday: "long" })}</div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <button className="text-gray-500 hover:text-white transition-colors text-lg bg-transparent border-none cursor-pointer">‹</button>
+
+      </div>
                     <div className="bg-gradient-to-br from-gray-500 to-gray-600 border-2 border-yellow-400 rounded-xl py-2 px-3 flex items-center gap-2">
                       <span className="text-base text-yellow-400 font-bold">{today.getDate()}</span>
                       <span className="text-[10px] text-gray-300">{today.toLocaleDateString("en-US", { month: "short" }).toUpperCase()}</span>
