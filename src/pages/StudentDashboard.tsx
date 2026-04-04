@@ -576,7 +576,7 @@ const StudentDashboard = () => {
           )}
 
           {/* ===== GROWTH TAB ===== */}
-          {activeTab === "growth" && phase >= 2 && (
+          {activeTab === "growth" && (
             <GrowthTab
               dimensionScores={dimensionScores}
               streakDays={streakDays}
