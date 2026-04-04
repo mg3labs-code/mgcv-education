@@ -641,7 +641,7 @@ const TextbookEpisode = () => {
                     return (
                       <button
                         key={i}
-                        onClick={() => { scrollToBlock(i); setSidebarOpen(false); }}
+                        onClick={() => { goToBlock(i); setSidebarOpen(false); }}
                         style={{
                           width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "9px 10px",
                           borderRadius: 8, border: "none", textAlign: "left", marginBottom: 2,
