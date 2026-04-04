@@ -10,9 +10,10 @@ import PersonalisationModal from "./student/PersonalisationModal";
 
 interface TopNavbarProps {
   role: "student" | "teacher" | "admin";
+  phase?: number;
 }
 
-const TopNavbar = ({ role }: TopNavbarProps) => {
+const TopNavbar = ({ role, phase = 4 }: TopNavbarProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { signOut, fullName } = useAuth();
@@ -62,7 +63,7 @@ const TopNavbar = ({ role }: TopNavbarProps) => {
     { label: "Dashboard", path: "/student", type: "nav" as const },
     { label: "Assignments", modal: "assignments", type: "modal" as const },
     { label: "Calendar", path: "/student/calendar", type: "nav" as const },
-    { label: "Progress", modal: "progress", type: "modal" as const },
+    ...(phase >= 2 ? [{ label: "My Growth", modal: "progress", type: "modal" as const }] : []),
     { label: "Message Bar", modal: "message", type: "modal" as const },
     { label: "Notifications", modal: "notifications", type: "modal" as const },
     { label: "Personalisation", modal: "personalisation", type: "modal" as const },
