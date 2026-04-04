@@ -577,20 +577,14 @@ const StudentDashboard = () => {
 
           {/* ===== GROWTH TAB ===== */}
           {activeTab === "growth" && phase >= 2 && (
-            <>
-              <FadeSlide>
-                <div style={{ marginBottom: 24 }}>
-                  <div style={{ fontFamily: "'Source Serif 4', serif", fontSize: 26, fontWeight: 700, color: "#1C1917" }}>
-                    📊 My Growth
-                  </div>
-                  <p style={{ fontSize: 14, color: "#78716C", margin: "4px 0 0" }}>Track your learning journey</p>
-                </div>
-              </FadeSlide>
-              <InnerOS position="hero" scores={dimensionScores} />
-              <div style={{ marginTop: 16 }}>
-                <StatsRow streakDays={streakDays} episodesCompleted={episodeCount ?? 0} />
-              </div>
-            </>
+            <GrowthTab
+              dimensionScores={dimensionScores}
+              streakDays={streakDays}
+              episodeCount={episodeCount ?? 0}
+              methodCounts={methodCounts ?? {}}
+              breakthroughs={breakthroughs ?? []}
+              weeklyGrowth={Number(innerOS?.weekly_growth ?? 0)}
+            />
           )}
         </div>
 
