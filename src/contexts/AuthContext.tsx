@@ -4,6 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 
 type AppRole = "student" | "teacher" | "admin";
 
+const isAppRole = (value: unknown): value is AppRole =>
+  value === "student" || value === "teacher" || value === "admin";
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -30,23 +33,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(true);
 
-  const fetchUserData = async (userId: string) => {
-    try {
-      const { data: roleData } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userId)
-        .single();
-      if (roleData) setRole(roleData.role as AppRole);
+  const fetchUserData = async (userId: string, fallback?: { role?: unknown; fullName?: unknown }) => {
+    const fallbackRole = isAppRole(fallback?.role) ? fallback.role : null;
+    const fallbackName = typeof fallback?.fullName === "string" ? fallback.fullName : "";
 
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("full_name")
-        .eq("user_id", userId)
-        .single();
-      if (profileData) setFullName(profileData.full_name);
+    try {
+      const [{ data: roleData, error: roleError }, { data: profileData, error: profileError }] = await Promise.all([
+        supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", userId)
+          .maybeSingle(),
+        supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("user_id", userId)
+          .maybeSingle(),
+      ]);
+
+      if (roleError) throw roleError;
+      if (profileError) throw profileError;
+
+      setRole((roleData?.role as AppRole | null) ?? fallbackRole);
+      setFullName(profileData?.full_name ?? fallbackName);
     } catch (e) {
       console.error("Error fetching user data:", e);
+      setRole(fallbackRole);
+      setFullName(fallbackName);
     }
   };
 
@@ -56,7 +69,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
-          setTimeout(() => fetchUserData(session.user.id), 0);
+          const metadata = session.user.user_metadata ?? {};
+          setRole(isAppRole(metadata.role) ? metadata.role : null);
+          setFullName(typeof metadata.full_name === "string" ? metadata.full_name : "");
+          setTimeout(() => fetchUserData(session.user.id, metadata), 0);
         } else {
           setRole(null);
           setFullName("");
@@ -69,7 +85,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchUserData(session.user.id);
+        const metadata = session.user.user_metadata ?? {};
+        setRole(isAppRole(metadata.role) ? metadata.role : null);
+        setFullName(typeof metadata.full_name === "string" ? metadata.full_name : "");
+        fetchUserData(session.user.id, metadata);
+      } else {
+        setRole(null);
+        setFullName("");
       }
       setLoading(false);
     });
