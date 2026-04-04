@@ -1,27 +1,45 @@
 
 
-# Fix: Make My Growth Tab Always Visible + Verify It Renders
+# Add Daily Quiz + Weekly Assignments Sections to GrowthTab
 
-## Problem
-The Growth tab is hidden behind a `phase >= 2` gate in both the navbar (TopNavbar line 37) and the render block (StudentDashboard line 579). If the student hasn't completed 3+ episodes, the tab never appears.
+## What's happening
+The old ProgressModal had 5 analytics categories. The new GrowthTab covers 3 of them well (Overall, Chapter-wise, Semester) but is missing **Daily Quiz Progress** and **Weekly Assignments Progress**.
 
-The current GrowthTab.tsx already matches the user's provided JSX design exactly — all 6 sections with identical styling — but wired to real Supabase data instead of static mock data. **No redesign needed.**
+## Comparison
 
-## Fix (2 small changes)
+| Old ProgressModal | New GrowthTab | Status |
+|---|---|---|
+| Daily Quiz Progress | — | **Missing** |
+| Weekly Assignments Progress | — | **Missing** |
+| Chapter-wise Progress | Chapter Progress section | ✅ Covered (better) |
+| Semester Progress | Inner OS Trends (weekly chart) | ✅ Covered (better) |
+| Overall Progress | Inner OS Score banner + Learning Stats | ✅ Covered (better) |
 
-### 1. `src/components/TopNavbar.tsx` — Always show Growth tab
-Line 37: Remove the `phase >= 2` condition from the Growth tab entry so it's always visible in the nav.
+## Plan: Add 2 new sections to GrowthTab
 
-### 2. `src/pages/StudentDashboard.tsx` — Always render Growth content  
-Line 579: Remove `phase >= 2` condition from the Growth tab render block. When there's no data yet, the GrowthTab already handles empty states gracefully (shows "No chapters started yet", empty heatmap, placeholder breakthrough).
+### 1. Daily Quiz Progress section
+- Show quiz streak (days in a row with quiz completed)
+- Recent quiz scores (last 7 days) as small bar chart or score dots
+- Data source: `daily_activity` table (`episodes_completed`, `methods_used` as proxy) — or if Pop Quiz results aren't persisted yet, show a "Start today's quiz" CTA linking to PopQuizModal
+- Stats: Today's status (✅ Done / ⏳ Pending), Best score, Average score
 
-## No other changes needed
-The GrowthTab.tsx component is already the correct implementation of the user's JSX with all 6 sections:
-1. Overall Inner OS Score banner (teal gradient)
-2. Activity & Streaks + GitHub-style Heatmap (real `daily_activity` data)
-3. Inner OS Trend Lines (SVG chart with dimension filters)
-4. Breakthroughs timeline (real `student_breakthroughs` data)
-5. Learning Stats (computed from real episode/method counts)
-6. Chapter Progress (real `episode_progress` grouped by chapter)
-7. Scholar Methods Performance (real `method_sessions` data)
+### 2. Weekly Assignments Progress section  
+- Summary: Total assigned / Submitted / Graded
+- Per-assignment cards: title, subject, score (if graded), status badge
+- Data source: `assignments` + `student_submissions` + `student_answers` (same queries already used in TasksTab)
+- Visual: progress ring or bar showing submitted/total ratio
+
+### Files modified
+
+**`src/components/student/GrowthTab.tsx`**
+- Add `DailyQuizProgress` sub-component after the Heatmap section
+- Add `WeeklyAssignmentsProgress` sub-component after Learning Stats
+- Both use the same Card + SectionTitle pattern and cream/stone inline styles
+- Wire to existing Supabase tables via useQuery
+
+### Props additions
+- Pass `userId` (already available) — both new sections query their own data internally like the heatmap does
+
+### Styling
+Same as existing sections — white Card, stone border, Source Serif 4 headings, DM Sans body, teal/purple accent colors.
 
