@@ -1,67 +1,47 @@
 
 
-# Fix LearnTab Content + Make TextbookEpisode Show One Section Per Page
+# Fix: Empty Textbook Pages — Populate DB + Fix Fallback Logic
 
-## Problem
-1. **LearnTab**: Recently visited cards display raw episode IDs instead of proper titles. Episode list has unnecessary "Episode N:" prefix.
-2. **TextbookEpisode**: All blocks render on one long scrollable page. The user's JSX and screenshots clearly show ONE section at a time with Previous/Continue buttons to navigate between them — like a paginated reading experience.
+## Root Cause
 
-## Plan
+The `subjects` and `tb_chapters` tables in the database are **completely empty** (0 rows each). Both `StudentTextbook` and `LearnTab` query these tables via `useSubjects()` and `useChapters()`. When the DB returns nothing:
 
-### 1. Fix LearnTab content display (`src/components/student/LearnTab.tsx`)
+- **StudentTextbook page** (`/student/textbook`): Shows the header but zero chapters — exactly what your screenshot shows
+- **LearnTab** (in dashboard): Also gets empty chapters, but has hardcoded fallbacks for "continue learning" (`ch1`) that partially work — explaining why you see Math Ch1 content there
+- **Other subjects** (Science, English, etc.): Never appear because there are no subject rows in DB at all
 
-**Recently Visited cards (lines 140-180):**
-- Fetch episode details (title, duration) by joining `episode_progress` with `tb_episodes` table, or do a secondary lookup
-- Show actual episode title instead of `Ep: ch1-ep1`
-- Show the correct subject name per episode (currently shows the active tab subject for all)
+The merge logic in `useChapters()` iterates over DB chapters and tries to match hardcoded data — but if DB returns zero rows, the loop produces nothing.
 
-**Episode list (lines 278-332):**
-- Remove "Episode N:" prefix — just show the episode title directly (matching JSX: "Number Types & Classification" not "Episode 1: Number Types & Classification")
-- Add block count display: `• {ep.blocks?.length} blocks` next to duration
+## Fix Plan (2 parts)
 
-### 2. Paginate TextbookEpisode — one block per page (`src/pages/TextbookEpisode.tsx`)
+### 1. Database Migration — Seed all subjects and chapters
 
-This is the big change. Currently all blocks render in a scrollable list. Change to show only ONE block at a time.
+Insert all 8 subjects and their 71 chapters into `subjects` and `tb_chapters` tables so the entire curriculum is browsable.
 
-**New state:**
-- `activeBlockIndex` (already exists as `activeBlock`) — controls which single block is rendered
-- Remove scroll-based IntersectionObserver for active block detection (no longer needed since we show one at a time)
+**Subjects** (8 rows): Mathematics, Science, English, Social Science, Telugu, Hindi, Physics, Chemistry — with icons, colors, board = "Telangana State Board", grade = 10.
 
-**Layout change (lines 832-963):**
-- Instead of mapping ALL phase blocks and rendering them all, render ONLY `blocks[activeBlockIndex]`
-- Show the block's phase header above it
-- Show the block content using existing `renderBlock()`
-- Show "Got it! ✓" / "Nailed it!" button below the block
+**Chapters** (~71 rows): All chapters for each subject with title, subtitle/description, periods, page ranges, color codes, sort order. Only Math Ch1 will have episodes (already hardcoded); the rest show as "Coming Soon" with a lock icon.
 
-**Bottom navigation bar:**
-- `← Previous` button (disabled on first block)
-- Center: "✓ Section complete" label if current block is understood
-- `Continue →` button (teal `#0D9488` background) — marks current as understood + advances to next block
-- On last block: show completion card instead of Continue
+### 2. Fix `useChapters()` fallback logic
 
-**Top bar update:**
-- Section counter shows `{activeBlockIndex + 1}/{blocks.length}` (already works)
-- Progress bar reflects understood/total (already works)
-- Phase breadcrumb shows current block's phase (already works)
+Currently: merges only DB results. If DB returns 0 rows for a subject, returns empty array even though hardcoded data exists.
 
-**Sidebar update:**
-- Clicking a section in sidebar sets `activeBlockIndex` to that block's index (already does `scrollToBlock` — change to `setActiveBlock`)
+**Fix**: After the merge loop, append any hardcoded chapters that weren't matched by a DB chapter (so `ch1` always appears for Mathematics even if `tb_chapters` is empty). This makes the system resilient — DB data takes priority when present, hardcoded fills gaps.
 
-**What stays the same:**
-- All block renderers (ConceptBlock, ActivityBlock, etc.)
-- All Supabase data fetching and progress persistence
-- Phase grouping logic (used for sidebar and breadcrumb)
-- Tools toolbar
-- Episode header and stats bar
-- Completion card at the end
-- Voice/AI integrations
-- "Got it!" understood tracking
+```
+// Pseudo-logic change:
+const dbSlugs = new Set(dbChapters.map(c => c.id));
+const unmatchedHardcoded = hardcodedChapters.filter(h => !dbSlugs.has(h.id));
+return [...mergedChapters, ...unmatchedHardcoded];
+```
 
 ### Files Modified
-1. `src/components/student/LearnTab.tsx` — Fix episode titles and block counts
-2. `src/pages/TextbookEpisode.tsx` — Switch from scroll-all to one-block-per-page navigation
+1. **Database migration** — INSERT into `subjects` (8 rows) and `tb_chapters` (~71 rows) with all curriculum metadata
+2. **`src/hooks/useTextbookData.ts`** — Add hardcoded fallback append after merge loop
 
-### No changes to
-- Database, edge functions, block renderer components
-- Content data structures
+### What This Fixes
+- `/student/textbook` page shows all subjects (tabs) and all chapters per subject
+- LearnTab browse mode shows full chapter list with proper metadata
+- Chapters without episodes display "Coming Soon" with 🔒 icon (existing UI logic handles this)
+- Math Ch1 episodes work via hardcoded data; future chapters get content via AI generation pipeline
 
