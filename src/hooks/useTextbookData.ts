@@ -129,7 +129,11 @@ export function useChapters(subjectSlug?: string) {
         return dbCh;
       });
 
-      return mergedChapters;
+      // Append any hardcoded chapters not already matched by DB rows
+      const dbSlugs = new Set(mergedChapters.map((c) => c.id));
+      const unmatchedHardcoded = hardcodedChapters.filter((h) => !dbSlugs.has(h.id));
+
+      return [...mergedChapters, ...unmatchedHardcoded];
     },
   });
 }
