@@ -890,32 +890,49 @@ const TextbookEpisode = () => {
                 </div>
 
                 {!isLastBlock ? (
-                  <button
-                    onClick={() => {
-                      if (!isUnderstood) toggleUnderstood(activeBlock);
-                      goToBlock(activeBlock + 1);
-                    }}
-                    style={{
-                      padding: "12px 24px", borderRadius: 12, border: "none",
-                      background: "#0D9488", fontSize: 14, fontWeight: 600, color: "white",
-                      cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
-                    }}
-                  >
-                    Continue →
-                  </button>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
+                    <button
+                      disabled={!isUnderstood}
+                      onClick={() => goToBlock(activeBlock + 1)}
+                      style={{
+                        padding: "12px 24px", borderRadius: 12, border: "none",
+                        background: isUnderstood ? "#0D9488" : "#D6D3D1",
+                        fontSize: 14, fontWeight: 600, color: isUnderstood ? "white" : "#A8A29E",
+                        cursor: isUnderstood ? "pointer" : "not-allowed",
+                        fontFamily: "'DM Sans', sans-serif",
+                        transition: "all 0.2s ease",
+                      }}
+                    >
+                      Continue →
+                    </button>
+                    {!isUnderstood && (
+                      <span style={{ fontSize: 11, color: "#A8A29E", fontFamily: "'DM Sans', sans-serif" }}>
+                        Mark "Got it!" first
+                      </span>
+                    )}
+                  </div>
                 ) : (
-                  <button
-                    onClick={() => {
-                      if (!isUnderstood) toggleUnderstood(activeBlock);
-                    }}
-                    style={{
-                      padding: "12px 24px", borderRadius: 12, border: "none",
-                      background: "#059669", fontSize: 14, fontWeight: 600, color: "white",
-                      cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
-                    }}
-                  >
-                    Finish ✓
-                  </button>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
+                    <button
+                      disabled={!isUnderstood}
+                      onClick={() => {/* already marked */}}
+                      style={{
+                        padding: "12px 24px", borderRadius: 12, border: "none",
+                        background: isUnderstood ? "#059669" : "#D6D3D1",
+                        fontSize: 14, fontWeight: 600, color: isUnderstood ? "white" : "#A8A29E",
+                        cursor: isUnderstood ? "pointer" : "not-allowed",
+                        fontFamily: "'DM Sans', sans-serif",
+                        transition: "all 0.2s ease",
+                      }}
+                    >
+                      Finish ✓
+                    </button>
+                    {!isUnderstood && (
+                      <span style={{ fontSize: 11, color: "#A8A29E", fontFamily: "'DM Sans', sans-serif" }}>
+                        Mark "Got it!" first
+                      </span>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
