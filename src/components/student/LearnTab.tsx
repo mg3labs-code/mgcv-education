@@ -53,7 +53,19 @@ const LearnTab = ({ methodCounts }: LearnTabProps) => {
         .order("started_at", { ascending: false })
         .limit(3);
       if (error) throw error;
-      return data ?? [];
+      const episodes = data ?? [];
+      // Fetch episode titles from tb_episodes
+      if (episodes.length > 0) {
+        const slugs = episodes.map(e => e.episode_id);
+        const { data: epDetails } = await supabase
+          .from("tb_episodes")
+          .select("slug, title, duration, chapter_id, tb_chapters!inner(slug, title, subject_id, subjects!inner(name, icon))")
+          .in("slug", slugs);
+        const detailMap: Record<string, any> = {};
+        (epDetails ?? []).forEach((d: any) => { detailMap[d.slug] = d; });
+        return episodes.map(ep => ({ ...ep, _detail: detailMap[ep.episode_id] || null }));
+      }
+      return episodes.map(ep => ({ ...ep, _detail: null }));
     },
     enabled: !!user,
   });
