@@ -1,65 +1,36 @@
 
 
-# Visual Polish: LearnTab Browse Mode + TextbookEpisode Lesson Mode
+# Redesign "Today's Classes" Widget to Match Screenshot
 
-## What Changes (UI only — no backend/DB changes)
+## What changes
 
-### 1. `src/components/student/LearnTab.tsx` — Match provided JSX visual design
+The current `ScheduleWidget` shows all classes in a vertical stack with left-colored borders. The screenshot shows a different layout:
 
-**Continue Where You Left Off card:**
-- Add a `▶️` emoji prefix in the section title
-- Add a numbered circle badge (episode number) on the left side of the card
-- Change gradient from blue/purple to match provided JSX (`#F0FDFA` lighter feel)
-- Add "Continue →" as a proper styled button (teal `#0D9488` background, white text, rounded 10)
+1. **Current/NOW class** — prominent card with purple icon badge, "NOW" label, time, subject name, topic subtitle, and a green "Open →" button
+2. **Remaining classes** — compact horizontal row of small cards showing just time + subject name (color-coded text), no topic
+3. **"View Full Schedule →"** link in the header pointing to `/student/calendar`
+4. **All 6 subjects shown** (not just 3-5 based on phase)
 
-**Recently Visited cards:**
-- Add subject icon + subject name + time label in the top row of each card
-- Add a mini progress bar with percentage below the chapter title
-- Match the `minWidth: 210`, rounded 10, horizontal scroll layout from JSX
+## File modified
 
-**My Textbook header:**
-- Add `📚 My Textbook` header with "Class X • Telangana State Board" subtitle above subject tabs
-- Add "Every chapter transformed into bite-sized lessons" tagline
+### `src/pages/StudentDashboard.tsx` — Rewrite `ScheduleWidget`
 
-**Chapter list styling:**
-- Add chapter description text (`ch.subtitle`) below chapter title
-- Add `⏱ {periods} periods` and `📄 Pages {pageRange}` info badges
-- Show `🔒` icon + "Coming Soon" badge for chapters with 0 progress and no episodes
-- Expanded lesson list: add `⏱ {duration}` + `• {blocks} blocks` + type tag badges per lesson
-- Add explicit "Continue →" button on current lesson, "✓ Done" label on completed lessons
+**NOW card (first non-break class):**
+- Left: purple rounded-square icon badge (subject icon)
+- Center: "● NOW {time}" in red/green, bold subject name, topic as subtitle in muted text
+- Right: green "Open →" button (teal `#0D9488` or purple `#7C3AED`)
+- Background: `#F5F3FF` light purple tint, rounded 14, subtle border
 
-**Scholar Methods cards:**
-- Add session count display (`{n} done`) using real `methodCounts` data (already wired)
-- Match vertical card layout from provided JSX with icon left, text right
+**Remaining classes row:**
+- Horizontal flex row with small cards (border `#E7E5E4`, rounded 10, padding 10-14)
+- Each card: time in small muted text on top, subject name in subject color below
+- No topic text, no icon — just time + colored subject name
+- Overflow scroll on mobile
 
-### 2. `src/pages/TextbookEpisode.tsx` — Adopt lesson navigation shell
+**Header:**
+- "📅 Today's Classes" left, "View Full Schedule →" link right (teal colored, navigates to `/student/calendar`)
 
-**Phase-based sidebar (replace current sidebar):**
-- Redesign the left sidebar to show 3 phases with headers: icon + label + completion fraction (e.g., "2/3")
-- Each section shows: completion circle (✓ if done, 🔒 if locked, emoji if available) + title + type label
-- Active section gets phase-color background tint
-- Match provided JSX styling: cream/white bg, stone borders, `#F5F5F4` hover
+**Data:** Remove `compact` prop gating — always show all subjects from `todayScheduleItems`
 
-**Lesson top bar (new, above content):**
-- Add a bar with: `☰ Sections` toggle button + phase breadcrumb trail ("🔍 Discover & Explore › What's the big idea?")
-- Right side: section counter `{n}/11` + mini progress bar + `⋯ Tools` toggle
-
-**Collapsible Tools toolbar:**
-- Replace current gradient pill action bar with a collapsible toolbar triggered by "⋯ Tools"
-- 4 buttons: 🗺️ MINDMAP, ✏️ PRACTICE, 📚 Q BANK, 🔍 SEARCH — same functionality, new layout
-- Match provided JSX inline styles (teal/purple/blue/amber borders, white bg, rounded 8)
-
-**Section navigation (bottom of each section):**
-- Add Previous/Next buttons at bottom matching provided design (stone border, rounded 12)
-- Show "✓ Section complete" label between buttons when section is marked understood
-
-**What stays unchanged:**
-- All block renderers (ConceptBlock, ActivityBlock, RecallBlock, etc.)
-- All Supabase data fetching and progress persistence
-- Voice/AI integrations, drag-and-drop, language-aware rendering
-- IntersectionObserver, scroll progress, understood blocks tracking
-
-### Files Modified
-1. `src/components/student/LearnTab.tsx` — Visual restyling of all 4 sections
-2. `src/pages/TextbookEpisode.tsx` — Navigation shell upgrade (sidebar + top bar + tools toolbar + section nav)
+**No backend changes** — same `todayScheduleItems` data, just visual restructure.
 
