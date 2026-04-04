@@ -598,6 +598,18 @@ const TextbookEpisode = () => {
     if (actIdx >= 0) scrollToBlock(actIdx);
   }, [blocks, scrollToBlock]);
 
+  // Auto-scroll to layer based on ?layer=deep or ?layer=quiz query param
+  useEffect(() => {
+    if (!layerParam || !blocks || blocks.length === 0) return;
+    const timer = setTimeout(() => {
+      const targetSet = layerParam === "deep" ? DEEP_BLOCKS : layerParam === "quiz" ? PROVE_BLOCKS : null;
+      if (!targetSet) return;
+      const idx = blocks.findIndex(b => targetSet.has(b.type));
+      if (idx >= 0) scrollToBlock(idx);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [layerParam, blocks, scrollToBlock]);
+
   if (isLoading) {
     return (
       <PageLayout role="student">
