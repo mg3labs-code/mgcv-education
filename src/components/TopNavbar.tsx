@@ -79,7 +79,7 @@ const TopNavbar = ({ role, phase = 4, activeTab, onTabChange }: TopNavbarProps) 
     { label: "Personalisation", modal: "personalisation", type: "modal" as const },
   ];
 
-  const items = role === "teacher" ? teacherItems : role === "student" && !onTabChange ? studentItems : role === "teacher" ? teacherItems : [];
+  const items = role === "teacher" ? teacherItems : role === "student" && !onTabChange ? studentItems : [];
 
   const isActive = (path?: string) => path && location.pathname === path;
 
