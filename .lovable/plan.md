@@ -1,47 +1,56 @@
 
 
-# Fix: Empty Textbook Pages — Populate DB + Fix Fallback Logic
+# Fix Episode Page: Better Colors + Reading Checkpoint Before Completion
 
-## Root Cause
+## Problems
+1. **Dark header text invisible** — The gradient header (`#1E3A5F → #1E293B`) makes the episode title hard to read (font-weight 300 is too thin for white-on-dark).
+2. **Auto-completion on Continue** — Clicking "Continue →" auto-marks the current block as understood (`if (!isUnderstood) toggleUnderstood(activeBlock)`). Students can skip through without reading anything.
 
-The `subjects` and `tb_chapters` tables in the database are **completely empty** (0 rows each). Both `StudentTextbook` and `LearnTab` query these tables via `useSubjects()` and `useChapters()`. When the DB returns nothing:
+## Plan
 
-- **StudentTextbook page** (`/student/textbook`): Shows the header but zero chapters — exactly what your screenshot shows
-- **LearnTab** (in dashboard): Also gets empty chapters, but has hardcoded fallbacks for "continue learning" (`ch1`) that partially work — explaining why you see Math Ch1 content there
-- **Other subjects** (Science, English, etc.): Never appear because there are no subject rows in DB at all
+### 1. Fix header readability and colors
 
-The merge logic in `useChapters()` iterates over DB chapters and tries to match hardcoded data — but if DB returns zero rows, the loop produces nothing.
+**Episode header** (lines 751-768):
+- Change gradient to a lighter, more readable combo: `linear-gradient(135deg, #0F766E, #115E59)` (teal family, matches brand)
+- Increase title font-weight from 300 → 600
+- Make subtitle color brighter: `rgba(255,255,255,0.85)` instead of `0.7`
 
-## Fix Plan (2 parts)
+**Phase header block** (lines 817-835):
+- Increase background opacity from `08` → `15` for better visibility
+- Ensure text color stays dark and readable
 
-### 1. Database Migration — Seed all subjects and chapters
+### 2. Add reading checkpoint — require "Got it!" before Continue
 
-Insert all 8 subjects and their 71 chapters into `subjects` and `tb_chapters` tables so the entire curriculum is browsable.
+**Current behavior**: "Continue →" auto-marks as understood and moves forward. No engagement needed.
 
-**Subjects** (8 rows): Mathematics, Science, English, Social Science, Telugu, Hindi, Physics, Chemistry — with icons, colors, board = "Telangana State Board", grade = 10.
+**New behavior**:
+- "Continue →" button stays **disabled** (grayed out) until the student explicitly clicks "Got it! ✓"
+- Once "Got it!" is clicked, block is marked understood and "Continue →" becomes active (teal)
+- Remove the auto-mark logic from Continue's onClick — it only navigates now
+- Visual: disabled Continue shows gray background + "Read & mark complete first" tooltip-style hint text
 
-**Chapters** (~71 rows): All chapters for each subject with title, subtitle/description, periods, page ranges, color codes, sort order. Only Math Ch1 will have episodes (already hardcoded); the rest show as "Coming Soon" with a lock icon.
-
-### 2. Fix `useChapters()` fallback logic
-
-Currently: merges only DB results. If DB returns 0 rows for a subject, returns empty array even though hardcoded data exists.
-
-**Fix**: After the merge loop, append any hardcoded chapters that weren't matched by a DB chapter (so `ch1` always appears for Mathematics even if `tb_chapters` is empty). This makes the system resilient — DB data takes priority when present, hardcoded fills gaps.
-
+**Code change** (lines 892-905):
 ```
-// Pseudo-logic change:
-const dbSlugs = new Set(dbChapters.map(c => c.id));
-const unmatchedHardcoded = hardcodedChapters.filter(h => !dbSlugs.has(h.id));
-return [...mergedChapters, ...unmatchedHardcoded];
+// Before: auto-marks + navigates
+onClick={() => {
+  if (!isUnderstood) toggleUnderstood(activeBlock);
+  goToBlock(activeBlock + 1);
+}}
+
+// After: only navigates, disabled until understood
+disabled={!isUnderstood}
+onClick={() => goToBlock(activeBlock + 1)}
+style={{ 
+  ...existing styles,
+  background: isUnderstood ? "#0D9488" : "#D6D3D1",
+  cursor: isUnderstood ? "pointer" : "not-allowed",
+}}
 ```
+
+Same for "Finish ✓" button on last block — disabled until "Got it!" is clicked.
 
 ### Files Modified
-1. **Database migration** — INSERT into `subjects` (8 rows) and `tb_chapters` (~71 rows) with all curriculum metadata
-2. **`src/hooks/useTextbookData.ts`** — Add hardcoded fallback append after merge loop
+1. `src/pages/TextbookEpisode.tsx` — Header color fix + checkpoint gate on Continue/Finish buttons
 
-### What This Fixes
-- `/student/textbook` page shows all subjects (tabs) and all chapters per subject
-- LearnTab browse mode shows full chapter list with proper metadata
-- Chapters without episodes display "Coming Soon" with 🔒 icon (existing UI logic handles this)
-- Math Ch1 episodes work via hardcoded data; future chapters get content via AI generation pipeline
+### No backend/DB changes
 
