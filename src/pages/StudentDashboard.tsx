@@ -6,6 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { findTextbookMatch } from "@/data/topicTextbookMap";
 import PopQuizModal from "@/components/student/PopQuizModal";
+import LearnTab from "@/components/student/LearnTab";
+import TasksTab from "@/components/student/TasksTab";
 
 interface ScheduleItem {
   type: string;
@@ -350,6 +352,7 @@ const StudentDashboard = () => {
   const [subjectSchedules, setSubjectSchedules] = useState<SubjectSchedule[]>([]);
   const [loading, setLoading] = useState(true);
   const [quizSubject, setQuizSubject] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("home");
 
   const { data: innerOS } = useQuery({
     queryKey: ["student-inner-os", user?.id],
@@ -451,7 +454,10 @@ const StudentDashboard = () => {
     : "You're on fire this week!";
 
   return (
-    <DashboardLayout role="student" phase={phase}>
+    <DashboardLayout role="student" phase={phase} activeTab={activeTab} onTabChange={(tab) => {
+      if (tab === "calendar") { navigate("/student/calendar"); return; }
+      setActiveTab(tab);
+    }}>
       <div style={{
         background: "#FFFBF5", minHeight: "100vh",
         fontFamily: "'DM Sans', sans-serif", color: "#1C1917",
@@ -459,88 +465,121 @@ const StudentDashboard = () => {
         <div style={{ maxWidth: 900, margin: "0 auto", padding: "24px 16px" }}>
           <style>{`@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }`}</style>
 
-          {/* Greeting */}
-          <FadeSlide>
-            <div style={{ marginBottom: 24 }}>
-              <div style={{ fontFamily: "'Source Serif 4', serif", fontSize: 26, fontWeight: 700, color: "#1C1917" }}>
-                Hi, {firstName}! 👋
+          {/* ===== HOME TAB ===== */}
+          {activeTab === "home" && (
+            <>
+              {/* Greeting */}
+              <FadeSlide>
+                <div style={{ marginBottom: 24 }}>
+                  <div style={{ fontFamily: "'Source Serif 4', serif", fontSize: 26, fontWeight: 700, color: "#1C1917" }}>
+                    Hi, {firstName}! 👋
+                  </div>
+                  <p style={{ fontSize: 14, color: "#78716C", margin: "4px 0 0" }}>{greeting}</p>
+                </div>
+              </FadeSlide>
+
+              {/* PHASE 4: Inner OS as hero */}
+              <FadeSlide show={phase >= 4} delay={0}>
+                {phase >= 4 && <InnerOS position="hero" scores={dimensionScores} />}
+              </FadeSlide>
+
+              {/* PHASE 4: Stats row */}
+              <FadeSlide show={phase >= 4} delay={100}>
+                {phase >= 4 && (
+                  <div style={{ marginTop: 16 }}>
+                    <StatsRow streakDays={streakDays} episodesCompleted={episodeCount ?? 0} />
+                  </div>
+                )}
+              </FadeSlide>
+
+              {/* ALWAYS: Today's Schedule */}
+              <div style={{ marginTop: 20 }}>
+                <FadeSlide delay={50}>
+                  {loading ? (
+                    <Card><p style={{ textAlign: "center", color: "#78716C", padding: 24 }}>Loading schedule...</p></Card>
+                  ) : (
+                    <ScheduleWidget
+                      items={todayScheduleItems}
+                      compact={phase <= 2}
+                      onOpenTopic={(topic) => {
+                        const match = findTextbookMatch(topic);
+                        if (match?.episodeId) navigate(`/student/textbook/${match.chapterId}/${match.episodeId}`);
+                        else navigate("/student/textbook");
+                      }}
+                    />
+                  )}
+                </FadeSlide>
               </div>
-              <p style={{ fontSize: 14, color: "#78716C", margin: "4px 0 0" }}>{greeting}</p>
-            </div>
-          </FadeSlide>
 
-          {/* PHASE 4: Inner OS as hero */}
-          <FadeSlide show={phase >= 4} delay={0}>
-            {phase >= 4 && <InnerOS position="hero" scores={dimensionScores} />}
-          </FadeSlide>
+              {/* ALWAYS: Continue Learning */}
+              <div style={{ marginTop: 16 }}>
+                <FadeSlide delay={100}>
+                  <ContinueLearning onContinue={() => navigate("/student/textbook/ch1")} />
+                </FadeSlide>
+              </div>
 
-          {/* PHASE 4: Stats row */}
-          <FadeSlide show={phase >= 4} delay={100}>
-            {phase >= 4 && (
+              {/* PHASE 2: Inner OS as normal card */}
+              {phase === 2 || phase === 3 ? (
+                <div style={{ marginTop: 16 }}>
+                  <FadeSlide show={phase >= 2} delay={150}>
+                    <InnerOS position="normal" scores={dimensionScores} />
+                  </FadeSlide>
+                </div>
+              ) : null}
+
+              {/* PHASE 3+: Scholar Methods */}
+              {phase >= 3 && (
+                <div style={{ marginTop: 16 }}>
+                  <FadeSlide show={phase >= 3} delay={200}>
+                    <ScholarMethods methodCounts={methodCounts ?? {}} />
+                  </FadeSlide>
+                </div>
+              )}
+
+              {/* PHASE 1-2: Locked placeholders */}
+              {phase < 2 && (
+                <div style={{ marginTop: 16 }}>
+                  <FadeSlide delay={200}>
+                    <LockedPlaceholder icon="📊" title="Your Learning Strengths" unlockText="Complete 3 episodes to unlock" />
+                  </FadeSlide>
+                </div>
+              )}
+              {phase < 3 && (
+                <div style={{ marginTop: 16 }}>
+                  <FadeSlide delay={250}>
+                    <LockedPlaceholder icon="🎓" title="Think Like a Scholar" unlockText="Unlocks after 1 week of learning" />
+                  </FadeSlide>
+                </div>
+              )}
+            </>
+          )}
+
+          {/* ===== LEARN TAB ===== */}
+          {activeTab === "learn" && (
+            <LearnTab methodCounts={methodCounts ?? {}} />
+          )}
+
+          {/* ===== TASKS TAB ===== */}
+          {activeTab === "tasks" && (
+            <TasksTab onOpenQuiz={(subject) => setQuizSubject(subject)} />
+          )}
+
+          {/* ===== GROWTH TAB ===== */}
+          {activeTab === "growth" && phase >= 2 && (
+            <>
+              <FadeSlide>
+                <div style={{ marginBottom: 24 }}>
+                  <div style={{ fontFamily: "'Source Serif 4', serif", fontSize: 26, fontWeight: 700, color: "#1C1917" }}>
+                    📊 My Growth
+                  </div>
+                  <p style={{ fontSize: 14, color: "#78716C", margin: "4px 0 0" }}>Track your learning journey</p>
+                </div>
+              </FadeSlide>
+              <InnerOS position="hero" scores={dimensionScores} />
               <div style={{ marginTop: 16 }}>
                 <StatsRow streakDays={streakDays} episodesCompleted={episodeCount ?? 0} />
               </div>
-            )}
-          </FadeSlide>
-
-          {/* ALWAYS: Today's Schedule */}
-          <div style={{ marginTop: 20 }}>
-            <FadeSlide delay={50}>
-              {loading ? (
-                <Card><p style={{ textAlign: "center", color: "#78716C", padding: 24 }}>Loading schedule...</p></Card>
-              ) : (
-                <ScheduleWidget
-                  items={todayScheduleItems}
-                  compact={phase <= 2}
-                  onOpenTopic={(topic) => {
-                    const match = findTextbookMatch(topic);
-                    if (match?.episodeId) navigate(`/student/textbook/${match.chapterId}/${match.episodeId}`);
-                    else navigate("/student/textbook");
-                  }}
-                />
-              )}
-            </FadeSlide>
-          </div>
-
-          {/* ALWAYS: Continue Learning */}
-          <div style={{ marginTop: 16 }}>
-            <FadeSlide delay={100}>
-              <ContinueLearning onContinue={() => navigate("/student/textbook/ch1")} />
-            </FadeSlide>
-          </div>
-
-          {/* PHASE 2: Inner OS as normal card */}
-          {phase === 2 || phase === 3 ? (
-            <div style={{ marginTop: 16 }}>
-              <FadeSlide show={phase >= 2} delay={150}>
-                <InnerOS position="normal" scores={dimensionScores} />
-              </FadeSlide>
-            </div>
-          ) : null}
-
-          {/* PHASE 3+: Scholar Methods */}
-          {phase >= 3 && (
-            <div style={{ marginTop: 16 }}>
-              <FadeSlide show={phase >= 3} delay={200}>
-                <ScholarMethods methodCounts={methodCounts ?? {}} />
-              </FadeSlide>
-            </div>
-          )}
-
-          {/* PHASE 1-2: Locked placeholders */}
-          {phase < 2 && (
-            <div style={{ marginTop: 16 }}>
-              <FadeSlide delay={200}>
-                <LockedPlaceholder icon="📊" title="Your Learning Strengths" unlockText="Complete 3 episodes to unlock" />
-              </FadeSlide>
-            </div>
-          )}
-          {phase < 3 && (
-            <div style={{ marginTop: 16 }}>
-              <FadeSlide delay={250}>
-                <LockedPlaceholder icon="🎓" title="Think Like a Scholar" unlockText="Unlocks after 1 week of learning" />
-              </FadeSlide>
-            </div>
+            </>
           )}
         </div>
 

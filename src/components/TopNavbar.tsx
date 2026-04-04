@@ -11,9 +11,11 @@ import PersonalisationModal from "./student/PersonalisationModal";
 interface TopNavbarProps {
   role: "student" | "teacher" | "admin";
   phase?: number;
+  activeTab?: string;
+  onTabChange?: (tab: string) => void;
 }
 
-const TopNavbar = ({ role, phase = 4 }: TopNavbarProps) => {
+const TopNavbar = ({ role, phase = 4, activeTab, onTabChange }: TopNavbarProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { signOut, fullName } = useAuth();
@@ -59,6 +61,14 @@ const TopNavbar = ({ role, phase = 4 }: TopNavbarProps) => {
     { label: "Message Bar", modal: "message", type: "modal" as const },
   ];
 
+  const studentTabs = [
+    { id: "home", icon: "🏠", label: "Home" },
+    { id: "learn", icon: "📖", label: "Learn" },
+    { id: "tasks", icon: "📝", label: "Tasks" },
+    { id: "calendar", icon: "📅", label: "Calendar" },
+    ...(phase >= 2 ? [{ id: "growth", icon: "📊", label: "My Growth" }] : []),
+  ];
+
   const studentItems = [
     { label: "Dashboard", path: "/student", type: "nav" as const },
     { label: "Assignments", modal: "assignments", type: "modal" as const },
@@ -69,7 +79,7 @@ const TopNavbar = ({ role, phase = 4 }: TopNavbarProps) => {
     { label: "Personalisation", modal: "personalisation", type: "modal" as const },
   ];
 
-  const items = role === "teacher" ? teacherItems : role === "student" ? studentItems : [];
+  const items = role === "teacher" ? teacherItems : role === "student" && !onTabChange ? studentItems : [];
 
   const isActive = (path?: string) => path && location.pathname === path;
 
@@ -86,20 +96,39 @@ const TopNavbar = ({ role, phase = 4 }: TopNavbarProps) => {
           </div>
         </a>
 
-        {/* Desktop nav */}
-        <div className="hidden lg:flex gap-5 items-center">
-          {items.map((item) =>
-            item.type === "nav" ? (
-              <button key={item.label} onClick={() => navigate(item.path!)} aria-current={isActive(item.path) ? "page" : undefined} className={`${btnBase} ${isActive(item.path) ? "ring-2 ring-white/60" : ""}`}>
-                {item.label}
+        {/* Desktop nav — Student tab pills */}
+        {role === "student" && onTabChange ? (
+          <div className="hidden lg:flex items-center" style={{
+            background: "#F5F5F4", borderRadius: 12, padding: 4, gap: 2,
+          }}>
+            {studentTabs.map((t) => (
+              <button key={t.id} onClick={() => onTabChange(t.id)} style={{
+                display: "flex", alignItems: "center", gap: 5, padding: "7px 12px", borderRadius: 8, border: "none",
+                background: activeTab === t.id ? "white" : "transparent",
+                boxShadow: activeTab === t.id ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
+                fontSize: 13, fontWeight: activeTab === t.id ? 600 : 400,
+                color: activeTab === t.id ? "#0D9488" : "#78716C", cursor: "pointer",
+                fontFamily: "'DM Sans', sans-serif", transition: "all 0.15s",
+              }}>
+                {t.icon} {t.label}
               </button>
-            ) : (
-              <button key={item.label} onClick={() => openModal(item.modal!)} className={btnBase}>
-                {item.label}
-              </button>
-            )
-          )}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="hidden lg:flex gap-5 items-center">
+            {items.map((item) =>
+              item.type === "nav" ? (
+                <button key={item.label} onClick={() => navigate(item.path!)} aria-current={isActive(item.path) ? "page" : undefined} className={`${btnBase} ${isActive(item.path) ? "ring-2 ring-white/60" : ""}`}>
+                  {item.label}
+                </button>
+              ) : (
+                <button key={item.label} onClick={() => openModal(item.modal!)} className={btnBase}>
+                  {item.label}
+                </button>
+              )
+            )}
+          </div>
+        )}
 
         <div className="flex items-center gap-3 lg:gap-4">
           {/* Hamburger for mobile/tablet */}
@@ -121,6 +150,16 @@ const TopNavbar = ({ role, phase = 4 }: TopNavbarProps) => {
           <kbd className="hidden md:inline-flex items-center gap-0.5 rounded-md border border-white/20 bg-white/10 px-2 py-1 text-[11px] font-mono text-white/60">
             ⌘K
           </kbd>
+          {role === "student" && phase && phase >= 3 && (
+            <div style={{
+              display: "flex", alignItems: "center", gap: 4, padding: "4px 10px",
+              background: "rgba(255,255,255,0.1)", borderRadius: 20,
+              fontSize: 13, fontWeight: 600, color: "#F59E0B",
+              fontFamily: "'DM Sans', sans-serif",
+            }}>
+              🔥 {/* streak placeholder */}
+            </div>
+          )}
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-400 to-pink-600 flex items-center justify-center text-white font-bold text-base">
             {initials}
           </div>
@@ -136,23 +175,35 @@ const TopNavbar = ({ role, phase = 4 }: TopNavbarProps) => {
       {/* Mobile/tablet dropdown */}
       {menuOpen && (
         <div className="lg:hidden bg-[#0f1419]/98 border-b-2 border-blue-500/30 px-4 py-3 flex flex-col gap-2 sticky top-[73px] z-[999] animate-slide-down">
-          {items.map((item) =>
-            item.type === "nav" ? (
+          {role === "student" && onTabChange ? (
+            studentTabs.map((t) => (
               <button
-                key={item.label}
-                onClick={() => navAction(item.path!)}
-                className={`text-left text-white py-3 px-4 rounded-lg transition-all bg-transparent border-none text-base ${isActive(item.path) ? "bg-blue-500/20 font-semibold" : "hover:bg-white/10"}`}
+                key={t.id}
+                onClick={() => { onTabChange(t.id); setMenuOpen(false); }}
+                className={`text-left text-white py-3 px-4 rounded-lg transition-all bg-transparent border-none text-base ${activeTab === t.id ? "bg-blue-500/20 font-semibold" : "hover:bg-white/10"}`}
               >
-                {item.label}
+                {t.icon} {t.label}
               </button>
-            ) : (
-              <button
-                key={item.label}
-                onClick={() => openModal(item.modal!)}
-                className="text-left text-white py-3 px-4 rounded-lg transition-all bg-transparent border-none text-base hover:bg-white/10"
-              >
-                {item.label}
-              </button>
+            ))
+          ) : (
+            items.map((item) =>
+              item.type === "nav" ? (
+                <button
+                  key={item.label}
+                  onClick={() => navAction(item.path!)}
+                  className={`text-left text-white py-3 px-4 rounded-lg transition-all bg-transparent border-none text-base ${isActive(item.path) ? "bg-blue-500/20 font-semibold" : "hover:bg-white/10"}`}
+                >
+                  {item.label}
+                </button>
+              ) : (
+                <button
+                  key={item.label}
+                  onClick={() => openModal(item.modal!)}
+                  className="text-left text-white py-3 px-4 rounded-lg transition-all bg-transparent border-none text-base hover:bg-white/10"
+                >
+                  {item.label}
+                </button>
+              )
             )
           )}
         </div>
