@@ -817,7 +817,7 @@ const TextbookEpisode = () => {
               <div style={{
                 display: "flex", alignItems: "center", justifyContent: "space-between",
                 padding: "12px 16px", borderRadius: 12,
-                background: `${currentPhase.color}08`, border: `1px solid ${currentPhase.color}20`,
+                background: `${currentPhase.color}15`, border: `1px solid ${currentPhase.color}30`,
               }}>
                 <div>
                   <h3 style={{ fontSize: 16, fontWeight: 700, color: "#1C1917", margin: 0, display: "flex", alignItems: "center", gap: 8, fontFamily: "'Source Serif 4', serif" }}>
