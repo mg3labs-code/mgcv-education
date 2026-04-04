@@ -150,6 +150,16 @@ const TopNavbar = ({ role, phase = 4, activeTab, onTabChange }: TopNavbarProps) 
           <kbd className="hidden md:inline-flex items-center gap-0.5 rounded-md border border-white/20 bg-white/10 px-2 py-1 text-[11px] font-mono text-white/60">
             ⌘K
           </kbd>
+          {role === "student" && phase && phase >= 3 && (
+            <div style={{
+              display: "flex", alignItems: "center", gap: 4, padding: "4px 10px",
+              background: "rgba(255,255,255,0.1)", borderRadius: 20,
+              fontSize: 13, fontWeight: 600, color: "#F59E0B",
+              fontFamily: "'DM Sans', sans-serif",
+            }}>
+              🔥 {/* streak placeholder */}
+            </div>
+          )}
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-400 to-pink-600 flex items-center justify-center text-white font-bold text-base">
             {initials}
           </div>

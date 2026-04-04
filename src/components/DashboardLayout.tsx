@@ -7,12 +7,14 @@ interface DashboardLayoutProps {
   children: React.ReactNode;
   breadcrumbItems?: BreadcrumbEntry[];
   phase?: number;
+  activeTab?: string;
+  onTabChange?: (tab: string) => void;
 }
 
-const DashboardLayout = ({ role, children, breadcrumbItems, phase }: DashboardLayoutProps) => (
+const DashboardLayout = ({ role, children, breadcrumbItems, phase, activeTab, onTabChange }: DashboardLayoutProps) => (
   <div className="gradient-bg min-h-screen" style={{ animation: "gradientShift 10s ease infinite" }}>
     <a href="#main-content" className="skip-to-content">Skip to content</a>
-    <TopNavbar role={role} phase={phase} />
+    <TopNavbar role={role} phase={phase} activeTab={activeTab} onTabChange={onTabChange} />
     {breadcrumbItems && breadcrumbItems.length > 0 && (
       <div className="px-4 md:px-8 pt-3 md:pt-4 max-w-[1400px] mx-auto">
         <Breadcrumbs items={breadcrumbItems} />
