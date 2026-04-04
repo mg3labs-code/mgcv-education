@@ -55,9 +55,9 @@ const ConceptBlock = ({ content }: { content: ConceptContent }) => (
         </div>
       </div>
     )}
-    {content.solvedExamples && content.solvedExamples.length > 0 && (
+    {(content as any).solvedExamples && (content as any).solvedExamples.length > 0 && (
       <div className="space-y-3">
-        {content.solvedExamples.map((ex, i) => (
+        {(content as any).solvedExamples.map((ex: any, i: number) => (
           <div key={i} className="rounded-xl bg-muted/30 border border-border p-5">
             <p className="text-sm font-semibold text-foreground mb-1">🎯 {ex.question}</p>
             <p className="text-base text-muted-foreground leading-relaxed whitespace-pre-line">{ex.solution}</p>
@@ -65,7 +65,7 @@ const ConceptBlock = ({ content }: { content: ConceptContent }) => (
         ))}
       </div>
     )}
-    {content.media && <InlineMedia media={content.media} />}
+    {(content as any).media && <InlineMedia media={(content as any).media} />}
   </div>
 );
 
