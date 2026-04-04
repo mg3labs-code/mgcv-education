@@ -238,7 +238,7 @@ const StudentDashboard = () => {
 
         {/* No tab switcher — single unified view */}
 
-        {true ? (
+        {(
           <>
             {/* ── Inner OS Score Card ── */}
             <div className="bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-700 rounded-2xl p-6 md:p-8 text-white relative overflow-hidden">
