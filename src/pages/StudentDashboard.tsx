@@ -236,29 +236,7 @@ const StudentDashboard = () => {
           </div>
         </div>
 
-        {/* ── Tab Switcher ── */}
-        <div className="flex gap-2 bg-muted/50 rounded-xl p-1 w-fit">
-          <button
-            onClick={() => setActiveTab("overview")}
-            className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition-all border-none cursor-pointer ${
-              activeTab === "overview"
-                ? "bg-card text-foreground shadow-sm"
-                : "bg-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            🧠 Inner OS Overview
-          </button>
-          <button
-            onClick={() => setActiveTab("schedule")}
-            className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition-all border-none cursor-pointer ${
-              activeTab === "schedule"
-                ? "bg-card text-foreground shadow-sm"
-                : "bg-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            📅 Today's Schedule
-          </button>
-        </div>
+        {/* No tab switcher — single unified view */}
 
         {activeTab === "overview" ? (
           <>
