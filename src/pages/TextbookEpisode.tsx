@@ -471,21 +471,10 @@ const TextbookEpisode = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // IntersectionObserver for active block
-  useEffect(() => {
-    if (!blocks || blocks.length === 0) return;
-    const observers: IntersectionObserver[] = [];
-    blockRefs.current.forEach((ref, index) => {
-      if (!ref) return;
-      const observer = new IntersectionObserver(([entry]) => { if (entry.isIntersecting) setActiveBlock(index); }, { rootMargin: "-20% 0px -60% 0px", threshold: 0 });
-      observer.observe(ref);
-      observers.push(observer);
-    });
-    return () => observers.forEach((o) => o.disconnect());
-  }, [blocks]);
-
-  const scrollToBlock = useCallback((index: number) => {
-    blockRefs.current[index]?.scrollIntoView({ behavior: "smooth", block: "start" });
+  // Navigate to block by index (paginated — no scroll needed)
+  const goToBlock = useCallback((index: number) => {
+    setActiveBlock(index);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
   const scrollToActivity = useCallback(() => {
