@@ -801,20 +801,6 @@ const TextbookEpisode = () => {
                 <Check className="h-3 w-3" /> Saved
               </span>
             )}
-            <button
-              onClick={() => toggleAllCollapsed(blocks)}
-              style={{
-                display: "flex", alignItems: "center", gap: 6, padding: "6px 12px",
-                borderRadius: 8, border: "1px solid #E7E5E4", background: "white",
-                fontSize: 12, fontWeight: 500, color: "#57534E", cursor: "pointer",
-              }}
-            >
-              {collapsedBlocks.size === blocks.length ? (
-                <><Eye className="h-3.5 w-3.5" /> Expand All</>
-              ) : (
-                <><ChevronDown className="h-3.5 w-3.5 -rotate-90" /> Collapse All</>
-              )}
-            </button>
           </div>
         </div>
 
