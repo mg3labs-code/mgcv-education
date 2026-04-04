@@ -153,12 +153,12 @@ const LearnTab = ({ methodCounts }: LearnTabProps) => {
         <div style={{ background: "white", borderRadius: 16, border: "1px solid #E7E5E4", boxShadow: "0 1px 3px rgba(0,0,0,0.04)", padding: 24 }}>
           <h4 style={{ fontFamily: "'Source Serif 4', serif", fontSize: 16, fontWeight: 600, color: "#1C1917", margin: "0 0 12px" }}>Recently Visited</h4>
           <div style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 4 }}>
-            {recentEpisodes.map((ep, i) => {
-              const ch = chapters?.find((c) => c.id === ep.chapter_id);
-              const subjectForEp = subjects?.find(s => {
-                // Match subject by checking if this chapter belongs to it
-                return ch ? true : false;
-              });
+            {recentEpisodes.map((ep: any, i: number) => {
+              const detail = ep._detail;
+              const subjectName = detail?.tb_chapters?.subjects?.name || activeSubjectName || "Math";
+              const subjectIcon = detail?.tb_chapters?.subjects?.icon || SUBJECT_ICONS[subjectName] || "📖";
+              const epTitle = detail?.title || ep.episode_id;
+              const chTitle = detail?.tb_chapters?.title || chapters?.find((c) => c.id === ep.chapter_id)?.title || ep.chapter_id;
               const timeDiff = Date.now() - new Date(ep.started_at).getTime();
               const hours = Math.floor(timeDiff / 3600000);
               const timeLabel = hours < 1 ? "Just now" : hours < 24 ? `${hours}h ago` : `${Math.floor(hours / 24)}d ago`;
@@ -168,15 +168,15 @@ const LearnTab = ({ methodCounts }: LearnTabProps) => {
                   cursor: "pointer", background: "white", flexShrink: 0, transition: "all 0.15s",
                 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
-                    <span style={{ fontSize: 14 }}>{SUBJECT_ICONS[activeSubjectName || ""] || "📖"}</span>
-                    <span style={{ fontSize: 11, fontWeight: 600, color: "#57534E", fontFamily: "'DM Sans', sans-serif" }}>{activeSubjectName || "Math"}</span>
+                    <span style={{ fontSize: 14 }}>{subjectIcon}</span>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: "#57534E", fontFamily: "'DM Sans', sans-serif" }}>{subjectName}</span>
                     <span style={{ fontSize: 11, color: "#A8A29E", fontFamily: "'DM Sans', sans-serif", marginLeft: "auto" }}>{timeLabel}</span>
                   </div>
                   <div style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 600, fontSize: 13, color: "#1C1917" }}>
-                    {ch?.title ?? ep.chapter_id}
+                    {epTitle}
                   </div>
                   <div style={{ fontSize: 12, color: "#78716C", fontFamily: "'DM Sans', sans-serif", marginTop: 2 }}>
-                    Ep: {ep.episode_id.split("-").pop()}
+                    {chTitle}
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8 }}>
                     <div style={{ flex: 1, height: 4, background: "#E7E5E4", borderRadius: 2, overflow: "hidden" }}>
