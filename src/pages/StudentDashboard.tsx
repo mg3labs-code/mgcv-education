@@ -586,6 +586,126 @@ const StudentDashboard = () => {
               weeklyGrowth={Number(innerOS?.weekly_growth ?? 0)}
             />
           )}
+
+          {/* ===== MESSAGES TAB ===== */}
+          {activeTab === "messages" && (
+            <div>
+              <div style={{ marginBottom: 24 }}>
+                <h2 style={{ fontFamily: "'Source Serif 4', serif", fontSize: 26, fontWeight: 700, color: "#1C1917" }}>
+                  💬 Message Center
+                </h2>
+                <p style={{ fontSize: 14, color: "#78716C", margin: "4px 0 0" }}>Send messages to teachers, classmates, or parents</p>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16 }}>
+                {[
+                  { label: "📨 Message to Everyone", color: "#0D9488" },
+                  { label: "💚 Message to Students", color: "#059669" },
+                  { label: "👨‍👩‍👧 Message to Parents", color: "#7C3AED" },
+                  { label: "📩 Message to Individual", color: "#3B82F6" },
+                ].map((o, i) => (
+                  <button key={i} style={{
+                    background: o.color, color: "white", border: "none",
+                    padding: 20, borderRadius: 16, cursor: "pointer",
+                    fontWeight: 600, fontSize: 15, fontFamily: "'DM Sans', sans-serif",
+                    textAlign: "center", transition: "all 0.15s",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                  }}>
+                    {o.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ===== NOTIFICATIONS TAB ===== */}
+          {activeTab === "notifications" && (
+            <div>
+              <div style={{ marginBottom: 24 }}>
+                <h2 style={{ fontFamily: "'Source Serif 4', serif", fontSize: 26, fontWeight: 700, color: "#1C1917" }}>
+                  🔔 Notifications
+                </h2>
+                <p style={{ fontSize: 14, color: "#78716C", margin: "4px 0 0" }}>Stay updated with your learning activity</p>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {[
+                  { icon: "🔔", text: "AI Quiz available on June 10", time: "2 hours ago", color: "#EF4444", bg: "#FEF2F2" },
+                  { icon: "📚", text: "New assignment added: Mathematics Chapter 2", time: "5 hours ago", color: "#3B82F6", bg: "#EFF6FF" },
+                  { icon: "🎯", text: "You're on a 7-day streak! Keep it up!", time: "Today", color: "#059669", bg: "#ECFDF5" },
+                  { icon: "📝", text: "Draft reminder: Complete your learning notes", time: "Yesterday", color: "#F59E0B", bg: "#FFFBEB" },
+                  { icon: "🏆", text: "Achievement unlocked: Quiz Master!", time: "2 days ago", color: "#059669", bg: "#ECFDF5" },
+                  { icon: "📊", text: "Weekly progress report is ready", time: "3 days ago", color: "#3B82F6", bg: "#EFF6FF" },
+                ].map((n, i) => (
+                  <div key={i} style={{
+                    padding: 16, borderRadius: 14, background: n.bg,
+                    borderLeft: `4px solid ${n.color}`, cursor: "pointer",
+                    transition: "all 0.15s",
+                  }}>
+                    <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                      <span style={{ fontSize: 20 }}>{n.icon}</span>
+                      <div style={{ flex: 1 }}>
+                        <p style={{ fontSize: 14, fontWeight: 500, color: "#1C1917", margin: 0 }}>{n.text}</p>
+                        <span style={{ fontSize: 12, color: "#A8A29E", marginTop: 4, display: "block" }}>{n.time}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ===== PERSONALISATION TAB ===== */}
+          {activeTab === "personalisation" && (
+            <div>
+              <div style={{ marginBottom: 24 }}>
+                <h2 style={{ fontFamily: "'Source Serif 4', serif", fontSize: 26, fontWeight: 700, color: "#1C1917" }}>
+                  ⚙️ Personalize Your Experience
+                </h2>
+                <p style={{ fontSize: 14, color: "#78716C", margin: "4px 0 0" }}>Make this dashboard truly yours!</p>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16 }}>
+                {[
+                  { icon: "🎨", name: "Appearance & Themes", desc: "Customize colors, themes, and visual style" },
+                  { icon: "📚", name: "Study Preferences", desc: "Set your learning goals and preferences" },
+                  { icon: "🔔", name: "Smart Notifications", desc: "Manage alerts, reminders, and motivation" },
+                  { icon: "🎮", name: "Gamification & Rewards", desc: "Achievements, streaks, and fun challenges" },
+                  { icon: "♿", name: "Accessibility", desc: "Make learning comfortable for everyone" },
+                  { icon: "🔒", name: "Data & Privacy", desc: "Control your data and privacy settings" },
+                ].map((c, i) => (
+                  <button key={i} style={{
+                    display: "flex", alignItems: "center", gap: 16,
+                    padding: 20, borderRadius: 16,
+                    border: "1.5px solid #E7E5E4", background: "white",
+                    cursor: "pointer", textAlign: "left",
+                    transition: "all 0.15s", fontFamily: "'DM Sans', sans-serif",
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+                  }}>
+                    <span style={{ fontSize: 24 }}>{c.icon}</span>
+                    <div style={{ flex: 1 }}>
+                      <span style={{ fontWeight: 600, color: "#1C1917", display: "block" }}>{c.name}</span>
+                      <span style={{ fontSize: 12, color: "#78716C" }}>{c.desc}</span>
+                    </div>
+                    <span style={{ color: "#0D9488", fontSize: 16 }}>→</span>
+                  </button>
+                ))}
+              </div>
+              <div style={{ display: "flex", gap: 12, justifyContent: "center", marginTop: 24 }}>
+                <button style={{
+                  background: "#0D9488", color: "white", border: "none",
+                  padding: "10px 24px", borderRadius: 20, fontWeight: 600,
+                  fontSize: 14, cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+                }}>
+                  💾 Save All Changes
+                </button>
+                <button style={{
+                  background: "#F59E0B", color: "white", border: "none",
+                  padding: "10px 24px", borderRadius: 20, fontWeight: 600,
+                  fontSize: 14, cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+                }}>
+                  🔄 Reset to Defaults
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         <BuddyFAB />
