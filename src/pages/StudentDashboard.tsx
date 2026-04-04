@@ -352,6 +352,7 @@ const StudentDashboard = () => {
   const [subjectSchedules, setSubjectSchedules] = useState<SubjectSchedule[]>([]);
   const [loading, setLoading] = useState(true);
   const [quizSubject, setQuizSubject] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("home");
 
   const { data: innerOS } = useQuery({
     queryKey: ["student-inner-os", user?.id],
