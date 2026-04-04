@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import PageLayout from "@/components/PageLayout";
-import { ContentBlock, ConceptContent, ActivityContent, RecallContent, ExplainContent, AssessmentContent, ExerciseContent, ReasoningContent, AssumptionsContent, ConnectionsContent, ApplicationContent, ImplicationsContent, VisualAidContent } from "@/data/textbookData";
+import { ContentBlock, ConceptContent, ActivityContent as ActivityContentType, RecallContent, ExplainContent, AssessmentContent, ExerciseContent, ReasoningContent, AssumptionsContent, ConnectionsContent, ApplicationContent, ImplicationsContent, VisualAidContent } from "@/data/textbookData";
 import { useChapterEpisodes, useEpisodeBlocks } from "@/hooks/useTextbookData";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -48,143 +48,83 @@ const ConceptBlock = ({ content }: { content: ConceptContent }) => (
         <h4 className="text-sm font-semibold text-primary mb-3 flex items-center justify-center gap-2">
           🎯 Key Formulas
         </h4>
-        {content.keyFormulas.map((f, i) => (
-          <div key={i} className="font-mono text-lg font-semibold text-foreground mt-2">{f}</div>
+        <div className="space-y-1">
+          {content.keyFormulas.map((f, i) => (
+            <p key={i} className="text-lg font-mono text-foreground">{f}</p>
+          ))}
+        </div>
+      </div>
+    )}
+    {(content as any).solvedExamples && (content as any).solvedExamples.length > 0 && (
+      <div className="space-y-3">
+        {(content as any).solvedExamples.map((ex: any, i: number) => (
+          <div key={i} className="rounded-xl bg-muted/30 border border-border p-5">
+            <p className="text-sm font-semibold text-foreground mb-1">🎯 {ex.question}</p>
+            <p className="text-base text-muted-foreground leading-relaxed whitespace-pre-line">{ex.solution}</p>
+          </div>
         ))}
       </div>
     )}
-    {content.example && content.example.map((ex, i) => (
-      <div key={i} className="rounded-lg border-l-4 border-green-500 bg-green-50 dark:bg-green-950/20 p-5">
-        <h4 className="text-green-700 dark:text-green-400 font-semibold mb-2 flex items-center gap-2">🎯 {ex.question}</h4>
-        <p className="text-[0.95rem] text-muted-foreground leading-[1.8] whitespace-pre-line">{ex.solution}</p>
-      </div>
-    ))}
+    {(content as any).media && <InlineMedia media={(content as any).media} />}
   </div>
 );
 
-// ─── Drag & Drop Activity Block ─────────────────────────────
+// DragDrop Activity Block
+interface DragDropItem { value: string; categories?: string[] }
+interface ActivityCategory { id: string; description: string }
+interface ActivityContent { instruction: string; type?: string; items?: DragDropItem[]; categories?: ActivityCategory[] }
 
 const DragDropActivityBlock = ({ content }: { content: ActivityContent }) => {
-  const [placements, setPlacements] = useState<Record<string, string[]>>({});
   const [dragItem, setDragItem] = useState<string | null>(null);
+  const [placements, setPlacements] = useState<Record<string, string[]>>({});
   const [feedback, setFeedback] = useState<Record<string, Record<string, "correct" | "wrong">>>({});
-
-  const categories = content.categories || [];
   const items = content.items || [];
-
-  // Items not yet placed anywhere
-  const availableItems = items.filter(item =>
-    !Object.values(placements).flat().includes(item.value) || 
-    // Allow items in multiple zones
-    true
-  );
-
-  const handleDragStart = (e: React.DragEvent, value: string) => {
-    setDragItem(value);
-    e.dataTransfer.effectAllowed = "copy";
-    e.dataTransfer.setData("text/plain", value);
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "copy";
-  };
-
+  const categories = content.categories || [];
+  const handleDragStart = (e: React.DragEvent, value: string) => { e.dataTransfer.setData("text/plain", value); setDragItem(value); };
+  const handleDragOver = (e: React.DragEvent) => e.preventDefault();
   const handleDrop = (e: React.DragEvent, categoryId: string) => {
     e.preventDefault();
     const value = e.dataTransfer.getData("text/plain");
-    if (!value) return;
-
-    const item = items.find(i => i.value === value);
+    const item = items.find(it => it.value === value);
     if (!item) return;
-
-    // Check if already in this category
     if (placements[categoryId]?.includes(value)) return;
-
     const isCorrect = item.categories?.includes(categoryId);
-
-    setPlacements(prev => ({
-      ...prev,
-      [categoryId]: [...(prev[categoryId] || []), value],
-    }));
-
-    setFeedback(prev => ({
-      ...prev,
-      [categoryId]: {
-        ...(prev[categoryId] || {}),
-        [value]: isCorrect ? "correct" : "wrong",
-      },
-    }));
-
+    setPlacements(prev => ({ ...prev, [categoryId]: [...(prev[categoryId] || []), value] }));
+    setFeedback(prev => ({ ...prev, [categoryId]: { ...(prev[categoryId] || {}), [value]: isCorrect ? "correct" : "wrong" } }));
     setDragItem(null);
   };
-
-  const handleReset = () => {
-    setPlacements({});
-    setFeedback({});
-  };
-
+  const handleReset = () => { setPlacements({}); setFeedback({}); };
   const totalPlaced = Object.values(placements).flat().length;
   const totalCorrect = Object.values(feedback).flatMap(f => Object.values(f)).filter(v => v === "correct").length;
-
   return (
     <div className="space-y-5">
       <div className="rounded-xl bg-primary/5 border border-primary/20 p-4">
         <p className="text-base font-medium text-foreground leading-relaxed">{content.instruction}</p>
       </div>
-
-      {/* Draggable chips */}
       <div className="space-y-2">
         <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Drag these numbers</p>
         <div className="flex flex-wrap gap-3">
           {items.map((item) => (
-            <div
-              key={item.value}
-              draggable
-              onDragStart={(e) => handleDragStart(e, item.value)}
-              className="px-5 py-2.5 rounded-full bg-card border-2 border-border text-foreground font-semibold text-base cursor-grab active:cursor-grabbing hover:border-primary hover:shadow-md transition-all select-none flex items-center gap-2"
-            >
-              <GripHorizontal className="h-3.5 w-3.5 text-muted-foreground" />
-              {item.value}
+            <div key={item.value} draggable onDragStart={(e) => handleDragStart(e, item.value)} className="px-5 py-2.5 rounded-full bg-card border-2 border-border text-foreground font-semibold text-base cursor-grab active:cursor-grabbing hover:border-primary hover:shadow-md transition-all select-none flex items-center gap-2">
+              <GripHorizontal className="h-3.5 w-3.5 text-muted-foreground" />{item.value}
             </div>
           ))}
         </div>
       </div>
-
-      {/* Drop zones */}
       <div className="grid grid-cols-2 gap-4">
         {categories.map((cat) => {
           const catPlacements = placements[cat.id] || [];
           const catFeedback = feedback[cat.id] || {};
-
           return (
-            <div
-              key={cat.id}
-              onDragOver={handleDragOver}
-              onDrop={(e) => handleDrop(e, cat.id)}
-              className={`rounded-xl border-2 border-dashed p-4 min-h-[120px] transition-all ${
-                dragItem ? "border-primary/60 bg-primary/5" : "border-border bg-muted/20"
-              }`}
-            >
+            <div key={cat.id} onDragOver={handleDragOver} onDrop={(e) => handleDrop(e, cat.id)} className={`rounded-xl border-2 border-dashed p-4 min-h-[120px] transition-all ${dragItem ? "border-primary/60 bg-primary/5" : "border-border bg-muted/20"}`}>
               <div className="mb-3">
                 <span className="inline-block px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-bold">{cat.id}</span>
                 <p className="text-xs text-muted-foreground mt-1">{cat.description}</p>
               </div>
               <div className="flex flex-wrap gap-2 min-h-[40px]">
-                {catPlacements.length === 0 && (
-                  <p className="text-xs text-muted-foreground/50 italic">Drop numbers here…</p>
-                )}
+                {catPlacements.length === 0 && <p className="text-xs text-muted-foreground/50 italic">Drop numbers here…</p>}
                 {catPlacements.map((val) => (
-                  <span
-                    key={val}
-                    className={`px-3 py-1.5 rounded-full text-sm font-semibold border-2 transition-all ${
-                      catFeedback[val] === "correct"
-                        ? "bg-green-50 border-green-400 text-green-800"
-                        : catFeedback[val] === "wrong"
-                        ? "bg-red-50 border-red-400 text-red-800 line-through"
-                        : "bg-card border-border text-foreground"
-                    }`}
-                  >
+                  <span key={val} className={`px-3 py-1.5 rounded-full text-sm font-semibold border-2 transition-all ${catFeedback[val] === "correct" ? "bg-green-50 border-green-400 text-green-800" : catFeedback[val] === "wrong" ? "bg-red-50 border-red-400 text-red-800 line-through" : "bg-card border-border text-foreground"}`}>
                     {val} {catFeedback[val] === "correct" ? "✓" : catFeedback[val] === "wrong" ? "✗" : ""}
                   </span>
                 ))}
@@ -193,23 +133,16 @@ const DragDropActivityBlock = ({ content }: { content: ActivityContent }) => {
           );
         })}
       </div>
-
-      {/* Stats & Reset */}
       {totalPlaced > 0 && (
         <div className="flex items-center justify-between rounded-xl bg-muted/40 px-4 py-3">
-          <span className="text-sm text-muted-foreground">
-            {totalCorrect} correct of {totalPlaced} placed
-          </span>
-          <Button variant="ghost" size="sm" onClick={handleReset}>
-            <RotateCcw className="h-3.5 w-3.5 mr-1" /> Reset
-          </Button>
+          <span className="text-sm text-muted-foreground">{totalCorrect} correct of {totalPlaced} placed</span>
+          <Button variant="ghost" size="sm" onClick={handleReset}><RotateCcw className="h-3.5 w-3.5 mr-1" /> Reset</Button>
         </div>
       )}
     </div>
   );
 };
 
-// Fallback for non-classify activity types
 const FallbackActivityBlock = ({ content }: { content: ActivityContent }) => {
   const [answers, setAnswers] = useState<Record<number, string>>({});
   return (
@@ -228,9 +161,7 @@ const FallbackActivityBlock = ({ content }: { content: ActivityContent }) => {
 };
 
 const ActivityBlock = ({ content }: { content: ActivityContent }) => {
-  if (content.type === "classify" && content.categories && content.items) {
-    return <DragDropActivityBlock content={content} />;
-  }
+  if (content.type === "classify" && content.categories && content.items) return <DragDropActivityBlock content={content} />;
   return <FallbackActivityBlock content={content} />;
 };
 
@@ -244,11 +175,7 @@ const RecallBlock = ({ content }: { content: RecallContent }) => {
           <div key={i} className="bg-white dark:bg-card rounded-lg p-4 cursor-pointer hover:bg-amber-50/60 dark:hover:bg-amber-950/20 transition-colors" onClick={() => !revealed[i] && setRevealed({ ...revealed, [i]: true })}>
             <p className="text-[0.95rem] font-medium text-foreground"><strong>Q{i + 1}:</strong> {q.question}</p>
             {q.hint && !revealed[i] && <p className="text-sm text-muted-foreground italic mt-1">💡 Hint: {q.hint}</p>}
-            {revealed[i] && (
-              <div className="mt-2 p-3 bg-green-100 dark:bg-green-950/30 rounded-md text-green-800 dark:text-green-300 text-[0.95rem]">
-                ✓ {q.answer}
-              </div>
-            )}
+            {revealed[i] && <div className="mt-2 p-3 bg-green-100 dark:bg-green-950/30 rounded-md text-green-800 dark:text-green-300 text-[0.95rem]">✓ {q.answer}</div>}
             {!revealed[i] && <p className="text-xs text-muted-foreground mt-2">Click to reveal answer</p>}
           </div>
         ))}
@@ -415,38 +342,27 @@ const layerMeta: Record<string, { border: string; bg: string; badge?: string; ba
   application: { border: "border-l-orange-500",  bg: "",  badge: "🚀 Apply",        badgeColor: "bg-orange-500 text-white", dotColor: "bg-orange-500" },
   implications:{ border: "border-l-indigo-500",  bg: "",  badge: "🔮 Imagine",      badgeColor: "bg-indigo-500 text-white", dotColor: "bg-indigo-500" },
   visual_aid:  { border: "border-l-pink-500",    bg: "",  badge: "🖼️ Visual",     badgeColor: "bg-pink-500 text-white", dotColor: "bg-pink-500" },
-  // Language-native block types
   bilingual_concept: { border: "border-l-blue-600",    bg: "",  badge: "📖 Read",       badgeColor: "bg-blue-500 text-white", dotColor: "bg-blue-600" },
   story_reading:     { border: "border-l-rose-500",    bg: "",  badge: "📚 Story",      badgeColor: "bg-rose-500 text-white", dotColor: "bg-rose-500" },
   vocabulary:        { border: "border-l-amber-500",   bg: "",  badge: "🔤 Words",      badgeColor: "bg-amber-500 text-white", dotColor: "bg-amber-500" },
   grammar_pattern:   { border: "border-l-emerald-500", bg: "",  badge: "🧩 Grammar",    badgeColor: "bg-emerald-500 text-white", dotColor: "bg-emerald-500" },
 };
 
-// Phase config — STEM default
+// Phase config
 const stemPhases = [
-  { id: "discover", label: "🔍 Discover & Explore", subtitle: "Learn the big ideas and try them out", className: "phase-discover", blockSet: DISCOVER_BLOCKS },
-  { id: "prove", label: "🧩 Prove You Know It", subtitle: "Test yourself — can you recall, explain & apply?", className: "phase-prove", blockSet: PROVE_BLOCKS },
-  { id: "deeper", label: "🚀 Go Deeper — The Fun Part", subtitle: "Ask why, challenge assumptions, see connections", className: "phase-deeper", blockSet: DEEP_BLOCKS },
+  { id: "discover", label: "Discover & Explore", icon: "🔍", color: "#0D9488", subtitle: "Learn the big ideas and try them out", className: "phase-discover", blockSet: DISCOVER_BLOCKS },
+  { id: "prove", label: "Test Yourself", icon: "🎯", color: "#3B82F6", subtitle: "Can you recall, explain & apply?", className: "phase-prove", blockSet: PROVE_BLOCKS },
+  { id: "deeper", label: "Challenge Yourself", icon: "🚀", color: "#8B5CF6", subtitle: "Ask why, challenge assumptions, see connections", className: "phase-deeper", blockSet: DEEP_BLOCKS },
 ];
 
-// Language-specific phases (supports both native bilingual types and legacy STEM-mapped types)
 const LANG_READ_BLOCKS = new Set(["concept", "activity", "bilingual_concept", "story_reading", "visual_aid"]);
 const LANG_PRACTICE_BLOCKS = new Set(["recall", "exercise", "assessment", "explain", "vocabulary", "grammar_pattern"]);
 const LANG_EXPRESS_BLOCKS = new Set(["reasoning", "assumptions", "connections", "application", "implications"]);
 
 const langPhases = [
-  { id: "read", label: "📖 Read & Discover", subtitle: "Read side-by-side, learn new words, hear the sounds", className: "phase-discover", blockSet: LANG_READ_BLOCKS },
-  { id: "practice", label: "🧩 Practice & Pattern", subtitle: "Spot grammar patterns, recall what you learned", className: "phase-prove", blockSet: LANG_PRACTICE_BLOCKS },
-  { id: "express", label: "✍️ Express Yourself", subtitle: "Write, think, and connect to culture", className: "phase-deeper", blockSet: LANG_EXPRESS_BLOCKS },
-];
-
-// ─── Action Bar Buttons ─────────────────────────────────────
-
-const actionBarButtons = [
-  { label: "MINDMAP", icon: Map, gradient: "from-blue-500 to-violet-500" },
-  { label: "PRACTICE", icon: PenLine, gradient: "from-rose-500 to-pink-500" },
-  { label: "Q BANK", icon: Lightbulb, gradient: "from-emerald-500 to-teal-500" },
-  { label: "SEARCH", icon: Search, gradient: "from-gray-400 to-gray-500" },
+  { id: "read", label: "Read & Discover", icon: "📖", color: "#0D9488", subtitle: "Read side-by-side, learn new words, hear the sounds", className: "phase-discover", blockSet: LANG_READ_BLOCKS },
+  { id: "practice", label: "Practice & Pattern", icon: "🧩", color: "#3B82F6", subtitle: "Spot grammar patterns, recall what you learned", className: "phase-prove", blockSet: LANG_PRACTICE_BLOCKS },
+  { id: "express", label: "Express Yourself", icon: "✍️", color: "#8B5CF6", subtitle: "Write, think, and connect to culture", className: "phase-deeper", blockSet: LANG_EXPRESS_BLOCKS },
 ];
 
 // ─── Main Component ─────────────────────────────────────────
@@ -454,14 +370,15 @@ const actionBarButtons = [
 const TextbookEpisode = () => {
   const { chapterId, episodeId } = useParams();
   const [searchParams] = useSearchParams();
-  const layerParam = searchParams.get("layer"); // "deep" or "quiz"
+  const layerParam = searchParams.get("layer");
   const navigate = useNavigate();
   const { user } = useAuth();
   const [showDefense, setShowDefense] = useState(false);
   const [showFirstPrinciples, setShowFirstPrinciples] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [activeBlock, setActiveBlock] = useState(0);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showToolbar, setShowToolbar] = useState(false);
   const [collapsedBlocks, setCollapsedBlocks] = useState<Set<number>>(new Set());
   const [understoodBlocks, setUnderstoodBlocks] = useState<Set<number>>(new Set());
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
@@ -472,13 +389,11 @@ const TextbookEpisode = () => {
   const toggleBlock = useCallback((index: number) => {
     setCollapsedBlocks(prev => {
       const next = new Set(prev);
-      if (next.has(index)) next.delete(index);
-      else next.add(index);
+      if (next.has(index)) next.delete(index); else next.add(index);
       return next;
     });
   }, []);
 
-  // Persist understood blocks to DB (debounced)
   const persistUnderstood = useCallback((understood: Set<number>) => {
     if (!user || !chapterId || !episodeId) return;
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
@@ -489,11 +404,8 @@ const TextbookEpisode = () => {
       const { error } = await supabase
         .from("episode_progress")
         .upsert({
-          user_id: user.id,
-          chapter_id: chapterId,
-          episode_id: episodeId,
-          layer_scores: { understood: arr },
-          completion_pct: pct,
+          user_id: user.id, chapter_id: chapterId, episode_id: episodeId,
+          layer_scores: { understood: arr }, completion_pct: pct,
           completed_at: pct === 100 ? new Date().toISOString() : null,
         }, { onConflict: "user_id,chapter_id,episode_id" });
       setSaveStatus(error ? "idle" : "saved");
@@ -504,8 +416,7 @@ const TextbookEpisode = () => {
   const toggleUnderstood = useCallback((index: number) => {
     setUnderstoodBlocks(prev => {
       const next = new Set(prev);
-      if (next.has(index)) next.delete(index);
-      else next.add(index);
+      if (next.has(index)) next.delete(index); else next.add(index);
       persistUnderstood(next);
       return next;
     });
@@ -517,45 +428,34 @@ const TextbookEpisode = () => {
       return new Set(blocks.map((_, i) => i));
     });
   }, []);
+
   const contentRef = useRef<HTMLDivElement>(null);
   const activityRef = useRef<HTMLDivElement>(null);
 
-  // DB-backed data with fallback
   const { data: chapter, isLoading: chapterLoading } = useChapterEpisodes(chapterId);
   const { data: dbBlocks, isLoading: blocksLoading } = useEpisodeBlocks(chapterId, episodeId);
 
   const episode = chapter?.episodes.find((e) => e.id === episodeId);
   const blocks = dbBlocks && dbBlocks.length > 0 ? dbBlocks : (episode?.blocks || []);
-
   const currentEpisodeIndex = chapter?.episodes.findIndex((e) => e.id === episodeId) ?? -1;
   const nextEpisode = chapter?.episodes[currentEpisodeIndex + 1];
-  
   const isLoading = chapterLoading || blocksLoading;
 
-  // Detect if this is a language subject
   const langSubject = useMemo(() => getSubjectFromSlug(chapterId), [chapterId]);
   const isLanguage = !!langSubject;
   const phases = isLanguage ? langPhases : stemPhases;
 
-  // Keep totalBlocksRef in sync
   useEffect(() => { totalBlocksRef.current = blocks.length; }, [blocks.length]);
 
-  // Load understood blocks from DB on mount
+  // Load understood blocks from DB
   useEffect(() => {
     if (!user || !chapterId || !episodeId) return;
-    supabase
-      .from("episode_progress")
-      .select("layer_scores")
-      .eq("user_id", user.id)
-      .eq("chapter_id", chapterId)
-      .eq("episode_id", episodeId)
-      .maybeSingle()
-      .then(({ data }) => {
+    supabase.from("episode_progress").select("layer_scores")
+      .eq("user_id", user.id).eq("chapter_id", chapterId).eq("episode_id", episodeId)
+      .maybeSingle().then(({ data }) => {
         if (data?.layer_scores && typeof data.layer_scores === "object" && !Array.isArray(data.layer_scores)) {
           const scores = data.layer_scores as Record<string, unknown>;
-          if (Array.isArray(scores.understood)) {
-            setUnderstoodBlocks(new Set(scores.understood as number[]));
-          }
+          if (Array.isArray(scores.understood)) setUnderstoodBlocks(new Set(scores.understood as number[]));
         }
       });
   }, [user, chapterId, episodeId]);
@@ -571,18 +471,13 @@ const TextbookEpisode = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // IntersectionObserver for active block tracking
+  // IntersectionObserver for active block
   useEffect(() => {
     if (!blocks || blocks.length === 0) return;
     const observers: IntersectionObserver[] = [];
     blockRefs.current.forEach((ref, index) => {
       if (!ref) return;
-      const observer = new IntersectionObserver(
-        ([entry]) => {
-          if (entry.isIntersecting) setActiveBlock(index);
-        },
-        { rootMargin: "-20% 0px -60% 0px", threshold: 0 }
-      );
+      const observer = new IntersectionObserver(([entry]) => { if (entry.isIntersecting) setActiveBlock(index); }, { rootMargin: "-20% 0px -60% 0px", threshold: 0 });
       observer.observe(ref);
       observers.push(observer);
     });
@@ -598,7 +493,7 @@ const TextbookEpisode = () => {
     if (actIdx >= 0) scrollToBlock(actIdx);
   }, [blocks, scrollToBlock]);
 
-  // Auto-scroll to layer based on ?layer=deep or ?layer=quiz query param
+  // Auto-scroll to layer based on query param
   useEffect(() => {
     if (!layerParam || !blocks || blocks.length === 0) return;
     const timer = setTimeout(() => {
@@ -614,11 +509,8 @@ const TextbookEpisode = () => {
     return (
       <PageLayout role="student">
         <div className="max-w-3xl mx-auto space-y-4 pt-8">
-          <Skeleton className="h-8 w-48" />
-          <Skeleton className="h-6 w-64" />
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-48 w-full rounded-2xl" />
-          ))}
+          <Skeleton className="h-8 w-48" /><Skeleton className="h-6 w-64" />
+          {[1, 2, 3].map((i) => <Skeleton key={i} className="h-48 w-full rounded-2xl" />)}
         </div>
       </PageLayout>
     );
@@ -636,7 +528,6 @@ const TextbookEpisode = () => {
   }
 
   const renderBlock = (block: ContentBlock) => {
-    // Native bilingual block types (from generate-language-content)
     switch (block.type) {
       case "bilingual_concept": return <BilingualConceptBlock content={block.content as any} subjectName={langSubject || "Telugu"} />;
       case "vocabulary": return <VocabularyCardBlock content={block.content as any} subjectName={langSubject || "Telugu"} />;
@@ -644,8 +535,6 @@ const TextbookEpisode = () => {
       case "story_reading": return <StoryReadingBlock content={block.content as any} subjectName={langSubject || "Telugu"} />;
       case "visual_aid": return <VisualAidBlock content={block.content as VisualAidContent} />;
     }
-
-    // Language-aware rendering for legacy STEM-typed blocks
     if (isLanguage && langSubject) {
       switch (block.type) {
         case "concept": return <BilingualConceptBlock content={block.content as any} subjectName={langSubject} />;
@@ -662,7 +551,6 @@ const TextbookEpisode = () => {
         default: return null;
       }
     }
-    // STEM rendering
     switch (block.type) {
       case "concept": return <ConceptBlock content={block.content as ConceptContent} />;
       case "activity": return <ActivityBlock content={block.content as ActivityContent} />;
@@ -681,6 +569,11 @@ const TextbookEpisode = () => {
 
   const defaultMeta = { border: "border-l-primary", bg: "", dotColor: "bg-primary", badge: undefined, badgeColor: undefined } as const;
 
+  // Find current phase & section for breadcrumb
+  const allPhaseBlocks = phases.flatMap(p => blocks.map((b, i) => ({ block: b, index: i, phase: p })).filter(({ block }) => p.blockSet.has(block.type)));
+  const currentPhaseBlock = allPhaseBlocks.find(pb => pb.index === activeBlock);
+  const currentPhase = currentPhaseBlock?.phase || phases[0];
+
   const breadcrumbs = [
     { label: "Dashboard", href: "/student" },
     { label: "Textbook", href: "/student/textbook" },
@@ -695,106 +588,237 @@ const TextbookEpisode = () => {
         <div className="h-full bg-primary transition-all duration-150" style={{ width: `${scrollProgress}%` }} />
       </div>
 
-      {/* Floating Layer Sidebar — Desktop only */}
-      <div className={`fixed top-1/2 -translate-y-1/2 z-40 transition-all duration-300 hidden lg:block ${sidebarOpen ? "left-4" : "-left-1"}`}>
-        <button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="absolute -right-8 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-card border border-border shadow-sm flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
-          title={sidebarOpen ? "Hide navigation" : "Show navigation"}
-        >
-          {sidebarOpen ? <ArrowLeft className="h-3.5 w-3.5" /> : <Layers className="h-3.5 w-3.5" />}
-        </button>
+      {/* ═══ Phase Sidebar — Slide-in panel ═══ */}
+      {sidebarOpen && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 45,
+          background: "rgba(0,0,0,0.3)", backdropFilter: "blur(2px)",
+        }} onClick={() => setSidebarOpen(false)}>
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              position: "fixed", top: 0, left: 0, bottom: 0, width: 300, maxWidth: "85vw",
+              background: "white", borderRight: "1px solid #E7E5E4", overflowY: "auto",
+              padding: 20, zIndex: 46,
+            }}
+          >
+            {/* Sidebar header */}
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 20 }}>
+              <div>
+                <div style={{ fontFamily: "'Source Serif 4', serif", fontWeight: 700, fontSize: 16, color: "#1C1917" }}>
+                  {episode.title}
+                </div>
+                <div style={{ fontSize: 12, color: "#78716C", fontFamily: "'DM Sans', sans-serif", marginTop: 4 }}>
+                  {chapter.title} • Lesson {episode.number}
+                </div>
+              </div>
+              <button onClick={() => setSidebarOpen(false)} style={{
+                background: "#F5F5F4", border: "none", width: 28, height: 28, borderRadius: "50%",
+                cursor: "pointer", fontSize: 14, color: "#78716C",
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>✕</button>
+            </div>
 
-        {sidebarOpen && (
-          <div className="bg-card/95 backdrop-blur-sm border border-border rounded-xl shadow-lg p-3 w-48">
+            {/* Progress bar */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: "#78716C", fontFamily: "'DM Sans', sans-serif" }}>Progress</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "#0D9488", fontFamily: "'DM Sans', sans-serif" }}>{understoodBlocks.size}/{blocks.length}</span>
+            </div>
+            <div style={{ height: 6, background: "#E7E5E4", borderRadius: 3, overflow: "hidden", marginBottom: 20 }}>
+              <div style={{ width: `${blocks.length > 0 ? Math.round((understoodBlocks.size / blocks.length) * 100) : 0}%`, height: "100%", background: "linear-gradient(90deg, #0D9488, #14B8A6)", borderRadius: 3, transition: "width 0.3s" }} />
+            </div>
+
+            {/* Phases and sections */}
             {phases.map((phase) => {
               const phaseBlocks = blocks.map((b, i) => ({ block: b, index: i })).filter(({ block }) => phase.blockSet.has(block.type));
               if (phaseBlocks.length === 0) return null;
               const phaseUnderstood = phaseBlocks.filter(({ index }) => understoodBlocks.has(index)).length;
-              const phaseComplete = phaseUnderstood === phaseBlocks.length && phaseBlocks.length > 0;
+
               return (
-                <div key={phase.id} className="mb-2">
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1 px-1 flex items-center gap-1">
-                    {phase.label.split(" ")[0]} {phase.label.split(" ").slice(1).join(" ")}
-                    {phaseComplete && <Check className="h-3 w-3 text-primary" />}
-                  </p>
-                  <div className="space-y-0.5">
-                    {phaseBlocks.map(({ block, index: i }) => {
-                      const meta = layerMeta[block.type] || defaultMeta;
-                      const BlockIcon = blockIcons[block.type] || BookOpen;
-                      const isActive = i === activeBlock;
-                      const isPast = i < activeBlock;
-                      return (
-                        <button
-                          key={i}
-                          onClick={() => scrollToBlock(i)}
-                          className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left transition-all text-xs ${
-                            isActive ? "bg-primary/10 text-foreground font-medium"
-                              : isPast ? "text-muted-foreground/70"
-                              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                          }`}
-                        >
-                          <span className={`h-2 w-2 rounded-full shrink-0 transition-all ${isActive ? meta.dotColor + " scale-125" : isPast ? "bg-primary/30" : "bg-border"}`} />
-                          <BlockIcon className="h-3 w-3 shrink-0" />
-                          <span className="truncate">{blockLabels[block.type] || block.type}</span>
-                          {understoodBlocks.has(i) && <Check className="h-3 w-3 ml-auto text-primary shrink-0" />}
-                        </button>
-                      );
-                    })}
+                <div key={phase.id} style={{ marginBottom: 16 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ fontSize: 14 }}>{phase.icon}</span>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: phase.color, fontFamily: "'DM Sans', sans-serif" }}>{phase.label}</span>
+                    </div>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: "#A8A29E", fontFamily: "'DM Sans', sans-serif" }}>
+                      {phaseUnderstood}/{phaseBlocks.length}
+                    </span>
                   </div>
+
+                  {phaseBlocks.map(({ block, index: i }) => {
+                    const isActive = i === activeBlock;
+                    const isDone = understoodBlocks.has(i);
+                    return (
+                      <button
+                        key={i}
+                        onClick={() => { scrollToBlock(i); setSidebarOpen(false); }}
+                        style={{
+                          width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "9px 10px",
+                          borderRadius: 8, border: "none", textAlign: "left", marginBottom: 2,
+                          background: isActive ? `${phase.color}10` : "transparent",
+                          cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+                        }}
+                      >
+                        <div style={{
+                          width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
+                          background: isDone ? phase.color : isActive ? "white" : "#E7E5E4",
+                          border: isActive && !isDone ? `2px solid ${phase.color}` : "none",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          color: isDone ? "white" : "#78716C", fontSize: 10, fontWeight: 700,
+                        }}>
+                          {isDone ? "✓" : block.icon || (blockIcons[block.type] ? "•" : "•")}
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 13, fontWeight: isActive ? 600 : 400, color: isActive ? phase.color : "#1C1917" }}>
+                            {blockLabels[block.type] || block.title || block.type}
+                          </div>
+                          <div style={{ fontSize: 11, color: "#A8A29E" }}>
+                            {layerMeta[block.type]?.badge?.split(" ").slice(1).join(" ") || block.type}
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               );
             })}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       <div className="max-w-3xl mx-auto" ref={contentRef}>
-        {/* Header */}
-        <div className="bg-gradient-to-r from-blue-800 to-indigo-800 rounded-2xl text-white p-6 mb-6">
-          <div className="flex items-center justify-between mb-3">
-            <button onClick={() => navigate(`/student/textbook/${chapterId}`)} className="flex items-center gap-2 text-sm text-white/70 hover:text-white transition-colors">
-              <ArrowLeft className="h-4 w-4" /> {chapter.title}
+        {/* ═══ Lesson Top Bar ═══ */}
+        <div style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "10px 0", marginBottom: 8, flexWrap: "wrap", gap: 8,
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              style={{
+                padding: "5px 10px", borderRadius: 6, border: "1px solid #E7E5E4",
+                background: sidebarOpen ? "#F0FDFA" : "white", fontSize: 12, cursor: "pointer",
+                color: "#57534E", fontWeight: 500, fontFamily: "'DM Sans', sans-serif",
+              }}
+            >
+              ☰ Sections
             </button>
-            <span className="text-xs text-white/60 bg-white/10 px-3 py-1 rounded-full">⏱️ {episode.duration}</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "#78716C", fontFamily: "'DM Sans', sans-serif" }}>
+              <span>{currentPhase?.icon}</span>
+              <span style={{ fontWeight: 600, color: currentPhase?.color }}>{currentPhase?.label}</span>
+              <span>›</span>
+              <span>{blockLabels[blocks[activeBlock]?.type] || "Section"}</span>
+            </div>
           </div>
-          <h1 className="text-2xl font-light text-white">{episode.title}</h1>
-          {episode.subtitle && <p className="text-sm text-white/70 mt-1">{episode.subtitle}</p>}
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontSize: 11, fontWeight: 600, color: "#78716C", fontFamily: "'DM Sans', sans-serif" }}>
+              {understoodBlocks.size}/{blocks.length}
+            </span>
+            <div style={{ width: 60, height: 4, background: "#E7E5E4", borderRadius: 2, overflow: "hidden" }}>
+              <div style={{ width: `${blocks.length > 0 ? Math.round((understoodBlocks.size / blocks.length) * 100) : 0}%`, height: "100%", background: "#0D9488", borderRadius: 2 }} />
+            </div>
+            <button
+              onClick={() => setShowToolbar(!showToolbar)}
+              style={{
+                padding: "4px 10px", borderRadius: 6, border: "1px solid #E7E5E4",
+                background: showToolbar ? "#F0FDFA" : "white", fontSize: 11, cursor: "pointer",
+                color: "#57534E", fontFamily: "'DM Sans', sans-serif",
+              }}
+            >
+              ⋯ Tools
+            </button>
+          </div>
         </div>
 
-        {/* Language Progress Widget — shown only for language subjects */}
+        {/* ═══ Collapsible Tools Toolbar ═══ */}
+        {showToolbar && (
+          <div style={{
+            display: "flex", gap: 8, padding: "10px 0", marginBottom: 8, flexWrap: "wrap",
+          }}>
+            {[
+              { icon: "🗺️", label: "MINDMAP", color: "#0D9488", onClick: undefined },
+              { icon: "✏️", label: "PRACTICE", color: "#7C3AED", onClick: scrollToActivity },
+              { icon: "📚", label: "Q BANK", color: "#3B82F6", onClick: undefined },
+              { icon: "🔍", label: "SEARCH", color: "#F59E0B", onClick: undefined },
+            ].map(t => (
+              <button
+                key={t.label}
+                onClick={t.onClick}
+                style={{
+                  display: "flex", alignItems: "center", gap: 6, padding: "8px 14px",
+                  borderRadius: 8, border: `1.5px solid ${t.color}20`, background: "white",
+                  fontSize: 12, fontWeight: 700, color: t.color, cursor: "pointer",
+                  fontFamily: "'DM Sans', sans-serif",
+                }}
+              >
+                {t.icon} {t.label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Header */}
+        <div style={{
+          background: "linear-gradient(135deg, #1E3A5F, #1E293B)", borderRadius: 16,
+          color: "white", padding: 24, marginBottom: 16,
+        }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+            <button onClick={() => navigate(`/student/textbook/${chapterId}`)} style={{
+              display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "rgba(255,255,255,0.7)",
+              background: "none", border: "none", cursor: "pointer",
+            }}>
+              ← {chapter.title}
+            </button>
+            <span style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", background: "rgba(255,255,255,0.1)", padding: "4px 12px", borderRadius: 20 }}>
+              ⏱️ {episode.duration}
+            </span>
+          </div>
+          <h1 style={{ fontSize: 22, fontWeight: 300, fontFamily: "'Source Serif 4', serif", margin: 0 }}>{episode.title}</h1>
+          {episode.subtitle && <p style={{ fontSize: 14, color: "rgba(255,255,255,0.7)", marginTop: 4 }}>{episode.subtitle}</p>}
+        </div>
+
+        {/* Language Progress Widget */}
         {isLanguage && langSubject && <LanguageProgressWidget subjectName={langSubject} />}
 
         {/* Stats Bar */}
-        <div className="flex items-center justify-between bg-muted/50 rounded-xl p-4 mb-6">
-          <div className="flex gap-6">
-            <div className="text-center">
-              <div className="text-xl font-bold text-primary">{blocks.length}</div>
-              <div className="text-xs text-muted-foreground mt-0.5">Total Sections</div>
+        <div style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          background: "#FAFAF9", borderRadius: 12, padding: 16, marginBottom: 16,
+          border: "1px solid #E7E5E4",
+        }}>
+          <div style={{ display: "flex", gap: 24 }}>
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 20, fontWeight: 700, color: "#0D9488" }}>{blocks.length}</div>
+              <div style={{ fontSize: 11, color: "#78716C", marginTop: 2 }}>Total Sections</div>
             </div>
-            <div className="text-center">
-              <div className="text-xl font-bold text-primary">{understoodBlocks.size}</div>
-              <div className="text-xs text-muted-foreground mt-0.5">Completed</div>
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 20, fontWeight: 700, color: "#0D9488" }}>{understoodBlocks.size}</div>
+              <div style={{ fontSize: 11, color: "#78716C", marginTop: 2 }}>Completed</div>
             </div>
-            <div className="text-center">
-              <div className="text-xl font-bold text-primary">{episode.duration}</div>
-              <div className="text-xs text-muted-foreground mt-0.5">Estimated Time</div>
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 20, fontWeight: 700, color: "#0D9488" }}>{episode.duration}</div>
+              <div style={{ fontSize: 11, color: "#78716C", marginTop: 2 }}>Est. Time</div>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             {saveStatus === "saving" && (
-              <span className="text-xs text-muted-foreground flex items-center gap-1 animate-pulse">
+              <span style={{ fontSize: 11, color: "#A8A29E", display: "flex", alignItems: "center", gap: 4 }}>
                 <Cloud className="h-3 w-3" /> Saving…
               </span>
             )}
             {saveStatus === "saved" && (
-              <span className="text-xs text-primary flex items-center gap-1">
+              <span style={{ fontSize: 11, color: "#0D9488", display: "flex", alignItems: "center", gap: 4 }}>
                 <Check className="h-3 w-3" /> Saved
               </span>
             )}
             <button
               onClick={() => toggleAllCollapsed(blocks)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              style={{
+                display: "flex", alignItems: "center", gap: 6, padding: "6px 12px",
+                borderRadius: 8, border: "1px solid #E7E5E4", background: "white",
+                fontSize: 12, fontWeight: 500, color: "#57534E", cursor: "pointer",
+              }}
             >
               {collapsedBlocks.size === blocks.length ? (
                 <><Eye className="h-3.5 w-3.5" /> Expand All</>
@@ -805,43 +829,34 @@ const TextbookEpisode = () => {
           </div>
         </div>
 
-        {/* Action Bar */}
-        <div className="flex items-center gap-2 mb-6 flex-wrap">
-          {actionBarButtons.map((btn) => (
-            <button
-              key={btn.label}
-              onClick={btn.label === "PRACTICE" ? scrollToActivity : undefined}
-              className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold text-white bg-gradient-to-r ${btn.gradient} shadow-sm hover:shadow-md hover:scale-105 transition-all`}
-            >
-              <btn.icon className="h-3.5 w-3.5" />
-              {btn.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Blocks grouped by Phase */}
+        {/* ═══ Blocks grouped by Phase ═══ */}
         <div className="space-y-8">
           {phases.map((phase) => {
-            const phaseBlocks = blocks
-              .map((b, i) => ({ block: b, index: i }))
-              .filter(({ block }) => phase.blockSet.has(block.type));
+            const phaseBlocks = blocks.map((b, i) => ({ block: b, index: i })).filter(({ block }) => phase.blockSet.has(block.type));
             if (phaseBlocks.length === 0) return null;
-
             const phaseUnderstood = phaseBlocks.filter(({ index }) => understoodBlocks.has(index)).length;
             const phaseComplete = phaseUnderstood === phaseBlocks.length;
 
             return (
               <div key={phase.id} className={phase.className}>
                 {/* Phase Header */}
-                <div className="flex items-center justify-between mb-4">
+                <div style={{
+                  display: "flex", alignItems: "center", justifyContent: "space-between",
+                  marginBottom: 16, padding: "12px 16px", borderRadius: 12,
+                  background: `${phase.color}08`, border: `1px solid ${phase.color}20`,
+                }}>
                   <div>
-                    <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
-                      {phase.label}
-                      {phaseComplete && <span className="text-primary text-sm">✓ Complete</span>}
+                    <h3 style={{ fontSize: 16, fontWeight: 700, color: "#1C1917", margin: 0, display: "flex", alignItems: "center", gap: 8, fontFamily: "'Source Serif 4', serif" }}>
+                      {phase.icon} {phase.label}
+                      {phaseComplete && <span style={{ fontSize: 13, color: "#0D9488" }}>✓ Complete</span>}
                     </h3>
-                    <p className="text-sm text-muted-foreground mt-0.5">{phase.subtitle}</p>
+                    <p style={{ fontSize: 12, color: "#78716C", margin: "4px 0 0", fontFamily: "'DM Sans', sans-serif" }}>{phase.subtitle}</p>
                   </div>
-                  <span className="text-xs font-semibold text-muted-foreground bg-background/60 px-3 py-1 rounded-full">
+                  <span style={{
+                    fontSize: 12, fontWeight: 600, color: phase.color,
+                    background: `${phase.color}12`, padding: "4px 10px", borderRadius: 20,
+                    fontFamily: "'DM Sans', sans-serif",
+                  }}>
                     {phaseUnderstood}/{phaseBlocks.length}
                   </span>
                 </div>
@@ -857,15 +872,9 @@ const TextbookEpisode = () => {
                       <div
                         key={i}
                         ref={(el) => { blockRefs.current[i] = el; }}
-                        className={`bg-card rounded-xl scroll-mt-24 shadow-sm hover:shadow-md transition-all border-l-4 ${(meta as any).border || "border-l-primary"} hover:-translate-y-0.5 ${
-                          !isCollapsed ? "animate-block-unlock" : ""
-                        }`}
+                        className={`bg-card rounded-xl scroll-mt-24 shadow-sm hover:shadow-md transition-all border-l-4 ${(meta as any).border || "border-l-primary"} hover:-translate-y-0.5 ${!isCollapsed ? "animate-block-unlock" : ""}`}
                       >
-                        {/* Section Header */}
-                        <button
-                          onClick={() => toggleBlock(i)}
-                          className="w-full flex items-center justify-between p-5 pb-3 cursor-pointer select-none group"
-                        >
+                        <button onClick={() => toggleBlock(i)} className="w-full flex items-center justify-between p-5 pb-3 cursor-pointer select-none group">
                           <div className="flex items-center gap-3 min-w-0">
                             <span className="text-xl shrink-0">{block.icon}</span>
                             <div className="text-left min-w-0">
@@ -884,26 +893,12 @@ const TextbookEpisode = () => {
                           </div>
                         </button>
 
-                        {/* Block Content — collapsible */}
-                        <div
-                          className="overflow-hidden transition-all duration-300 ease-in-out"
-                          style={{
-                            maxHeight: isCollapsed ? "0px" : "5000px",
-                            opacity: isCollapsed ? 0 : 1,
-                            padding: isCollapsed ? "0 1.25rem" : "1.25rem",
-                          }}
-                        >
+                        <div className="overflow-hidden transition-all duration-300 ease-in-out" style={{ maxHeight: isCollapsed ? "0px" : "5000px", opacity: isCollapsed ? 0 : 1, padding: isCollapsed ? "0 1.25rem" : "1.25rem" }}>
                           {renderBlock(block)}
-
-                          {/* Got it! button */}
                           <div className="mt-4 pt-3 border-t border-border flex justify-end">
                             <button
                               onClick={(e) => { e.stopPropagation(); toggleUnderstood(i); }}
-                              className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                                understoodBlocks.has(i)
-                                  ? "bg-primary/10 text-primary border border-primary/30 animate-got-it"
-                                  : "bg-muted text-muted-foreground hover:bg-muted/80 border border-border"
-                              }`}
+                              className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${understoodBlocks.has(i) ? "bg-primary/10 text-primary border border-primary/30 animate-got-it" : "bg-muted text-muted-foreground hover:bg-muted/80 border border-border"}`}
                             >
                               <CheckCircle2 className={`h-4 w-4 ${understoodBlocks.has(i) ? "fill-primary" : ""}`} />
                               {understoodBlocks.has(i) ? "Nailed it! 🎯" : "Got it! ✓"}
@@ -914,44 +909,120 @@ const TextbookEpisode = () => {
                     );
                   })}
                 </div>
+
+                {/* ═══ Section Navigation (Previous/Next) ═══ */}
+                {phaseBlocks.length > 0 && (
+                  <div style={{
+                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                    marginTop: 12, padding: "8px 0",
+                  }}>
+                    {/* Previous phase button */}
+                    {phases.indexOf(phase) > 0 ? (
+                      <button
+                        onClick={() => {
+                          const prevPhase = phases[phases.indexOf(phase) - 1];
+                          const prevBlocks = blocks.map((b, i) => ({ block: b, index: i })).filter(({ block }) => prevPhase.blockSet.has(block.type));
+                          if (prevBlocks.length > 0) scrollToBlock(prevBlocks[0].index);
+                        }}
+                        style={{
+                          padding: "10px 20px", borderRadius: 12, border: "1px solid #E7E5E4",
+                          background: "white", fontSize: 13, fontWeight: 600, color: "#57534E",
+                          cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+                        }}
+                      >
+                        ← Previous
+                      </button>
+                    ) : <div />}
+
+                    {phaseComplete && (
+                      <span style={{ fontSize: 12, fontWeight: 600, color: "#0D9488", fontFamily: "'DM Sans', sans-serif" }}>
+                        ✓ Phase complete
+                      </span>
+                    )}
+
+                    {phases.indexOf(phase) < phases.length - 1 ? (
+                      <button
+                        onClick={() => {
+                          const nextPhase = phases[phases.indexOf(phase) + 1];
+                          const nextBlocks = blocks.map((b, i) => ({ block: b, index: i })).filter(({ block }) => nextPhase.blockSet.has(block.type));
+                          if (nextBlocks.length > 0) scrollToBlock(nextBlocks[0].index);
+                        }}
+                        style={{
+                          padding: "10px 20px", borderRadius: 12, border: "none",
+                          background: "#0D9488", fontSize: 13, fontWeight: 600, color: "white",
+                          cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+                        }}
+                      >
+                        Next Phase →
+                      </button>
+                    ) : <div />}
+                  </div>
+                )}
               </div>
             );
           })}
         </div>
 
         {/* Completion Actions */}
-        <div className="mt-10 mb-8 rounded-2xl bg-muted/50 border border-border p-8 text-center">
-          <h2 className="text-2xl font-bold font-serif text-foreground mb-2">You crushed it! 🎉</h2>
-          <p className="text-base text-muted-foreground mb-8">What do you want to try next?</p>
+        <div style={{
+          marginTop: 40, marginBottom: 32, borderRadius: 16,
+          background: "#FAFAF9", border: "1px solid #E7E5E4", padding: 32, textAlign: "center",
+        }}>
+          <h2 style={{ fontSize: 24, fontWeight: 700, fontFamily: "'Source Serif 4', serif", color: "#1C1917", marginBottom: 8 }}>You crushed it! 🎉</h2>
+          <p style={{ fontSize: 15, color: "#78716C", marginBottom: 32, fontFamily: "'DM Sans', sans-serif" }}>What do you want to try next?</p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-            <button onClick={() => setShowDefense(true)} className="bg-card border-2 border-border hover:border-primary rounded-xl p-6 text-center transition-all hover:-translate-y-1">
-              <div className="text-4xl mb-3">🎓</div>
-              <h3 className="font-bold font-serif text-foreground mb-1">Can you defend it?</h3>
-              <p className="text-xs text-muted-foreground">Friendly debate, not a test · 5 min</p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 16, marginBottom: 32 }}>
+            <button onClick={() => setShowDefense(true)} style={{
+              background: "white", border: "2px solid #E7E5E4", borderRadius: 14,
+              padding: 24, textAlign: "center", cursor: "pointer", transition: "all 0.15s",
+            }}>
+              <div style={{ fontSize: 32, marginBottom: 12 }}>🎓</div>
+              <h3 style={{ fontFamily: "'Source Serif 4', serif", fontWeight: 700, fontSize: 14, color: "#1C1917", marginBottom: 4 }}>Can you defend it?</h3>
+              <p style={{ fontSize: 12, color: "#78716C", fontFamily: "'DM Sans', sans-serif" }}>Friendly debate · 5 min</p>
             </button>
 
-            <button onClick={() => setShowFirstPrinciples(true)} className="bg-card border-2 border-border hover:border-primary rounded-xl p-6 text-center transition-all hover:-translate-y-1">
-              <div className="text-4xl mb-3">💡</div>
-              <h3 className="font-bold font-serif text-foreground mb-1">Break it to basics</h3>
-              <p className="text-xs text-muted-foreground">Strip it down, rebuild smarter · 10 min</p>
+            <button onClick={() => setShowFirstPrinciples(true)} style={{
+              background: "white", border: "2px solid #E7E5E4", borderRadius: 14,
+              padding: 24, textAlign: "center", cursor: "pointer", transition: "all 0.15s",
+            }}>
+              <div style={{ fontSize: 32, marginBottom: 12 }}>💡</div>
+              <h3 style={{ fontFamily: "'Source Serif 4', serif", fontWeight: 700, fontSize: 14, color: "#1C1917", marginBottom: 4 }}>Break it to basics</h3>
+              <p style={{ fontSize: 12, color: "#78716C", fontFamily: "'DM Sans', sans-serif" }}>Strip down, rebuild · 10 min</p>
             </button>
 
-            <button onClick={() => navigate("/student/dashboard")} className="bg-card border-2 border-border hover:border-primary rounded-xl p-6 text-center transition-all hover:-translate-y-1">
-              <div className="text-4xl mb-3">📊</div>
-              <h3 className="font-bold font-serif text-foreground mb-1">See how far you've come</h3>
-              <p className="text-xs text-muted-foreground">Track your growth</p>
+            <button onClick={() => navigate("/student")} style={{
+              background: "white", border: "2px solid #E7E5E4", borderRadius: 14,
+              padding: 24, textAlign: "center", cursor: "pointer", transition: "all 0.15s",
+            }}>
+              <div style={{ fontSize: 32, marginBottom: 12 }}>📊</div>
+              <h3 style={{ fontFamily: "'Source Serif 4', serif", fontWeight: 700, fontSize: 14, color: "#1C1917", marginBottom: 4 }}>See how far you've come</h3>
+              <p style={{ fontSize: 12, color: "#78716C", fontFamily: "'DM Sans', sans-serif" }}>Track your growth</p>
             </button>
           </div>
 
           {nextEpisode ? (
-            <Button size="lg" onClick={() => { navigate(`/student/textbook/${chapterId}/${nextEpisode.id}`); window.scrollTo(0, 0); }} className="text-base px-8">
+            <button
+              onClick={() => { navigate(`/student/textbook/${chapterId}/${nextEpisode.id}`); window.scrollTo(0, 0); }}
+              style={{
+                padding: "14px 32px", borderRadius: 12, border: "none",
+                background: "#0D9488", color: "white", fontSize: 15, fontWeight: 700,
+                cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+              }}
+            >
               Continue to Episode {nextEpisode.number}: {nextEpisode.title} →
-            </Button>
+            </button>
           ) : (
-            <Button size="lg" onClick={() => navigate(`/student/textbook/${chapterId}`)} className="bg-green-600 hover:bg-green-700 text-white text-base px-8">
-              <CheckCircle2 className="h-5 w-5 mr-2" /> Complete Chapter
-            </Button>
+            <button
+              onClick={() => navigate(`/student/textbook/${chapterId}`)}
+              style={{
+                padding: "14px 32px", borderRadius: 12, border: "none",
+                background: "#059669", color: "white", fontSize: 15, fontWeight: 700,
+                cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+                display: "inline-flex", alignItems: "center", gap: 8,
+              }}
+            >
+              <CheckCircle2 className="h-5 w-5" /> Complete Chapter
+            </button>
           )}
         </div>
       </div>
