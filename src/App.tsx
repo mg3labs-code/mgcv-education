@@ -28,7 +28,7 @@ import StudentTextbook from "./pages/StudentTextbook";
 import TextbookChapter from "./pages/TextbookChapter";
 import TextbookEpisode from "./pages/TextbookEpisode";
 import TextbookLab from "./pages/TextbookLab";
-import StudentDeepDive from "./pages/StudentDeepDive";
+import StudentCalendarRedirect from "./pages/StudentCalendar";
 import ResetPassword from "./pages/ResetPassword";
 import AttractionDemo from "./pages/AttractionDemo";
 import NotFound from "./pages/NotFound";
