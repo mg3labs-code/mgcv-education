@@ -4,82 +4,8 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Eye, Brain, Target, Heart, TrendingUp, TrendingDown, AlertTriangle, CheckCircle, Info, ChevronRight, GraduationCap, Users, BookOpen, ClipboardList, BarChart3, Bell, MessageSquare, Lightbulb, Zap, Shield } from "lucide-react";
-import HelpTooltip from "@/components/HelpTooltip";
-import EmptyState from "@/components/EmptyState";
-import WelcomeBanner from "@/components/WelcomeBanner";
 
 const CLASS_OPTIONS = ["Class 10", "Class 9", "Class 8"];
-
-const STAT_CONFIG = [
-  { key: "avg_clarity", label: "Avg Clarity", icon: Eye, borderColor: "border-l-sky-500", bg: "bg-sky-50", iconBg: "bg-sky-100", iconColor: "text-sky-600" },
-  { key: "avg_thinking", label: "Avg Reasoning", icon: Brain, borderColor: "border-l-purple-500", bg: "bg-purple-50", iconBg: "bg-purple-100", iconColor: "text-purple-600" },
-  { key: "avg_attention", label: "Avg Attention", icon: Target, borderColor: "border-l-amber-500", bg: "bg-amber-50", iconBg: "bg-amber-100", iconColor: "text-amber-600" },
-  { key: "avg_character", label: "Avg Character", icon: Heart, borderColor: "border-l-rose-500", bg: "bg-rose-50", iconBg: "bg-rose-100", iconColor: "text-rose-600" },
-];
-
-const CURRICULUM_INSIGHTS = [
-  {
-    title: "Why This Curriculum Develops Thinking",
-    icon: "🧠",
-    bg: "bg-blue-50", border: "border-blue-200",
-    points: [
-      "7-layer framework forces students to move beyond memorization",
-      "Layer 3 (Reasoning) activates logical thinking — 82% of students show improved deduction",
-      "Layer 4 (Assumptions) trains critical questioning — students challenge ideas, not just accept them",
-    ],
-  },
-  {
-    title: "How It Builds Character",
-    icon: "💎",
-    bg: "bg-emerald-50", border: "border-emerald-200",
-    points: [
-      "Tutorial Defense builds confidence through defended reasoning",
-      "First Principles teaches intellectual honesty — accepting what you don't know",
-      "Reflection prompts develop self-awareness and emotional regulation",
-    ],
-  },
-  {
-    title: "What's Working Best",
-    icon: "⭐",
-    bg: "bg-amber-50", border: "border-amber-200",
-    points: [
-      "Students who complete Layer 5+ show 3× better retention in assessments",
-      "Voice essays improve articulation scores by 40%",
-      "Tutorial Defense sessions correlate with 25% higher exam scores",
-    ],
-  },
-];
-
-const METHODS_PERFORMANCE = [
-  { name: "Tutorial Defense", usage: "78%", sessions: 156, icon: "🎓" },
-  { name: "First Principles", usage: "65%", sessions: 98, icon: "🔬" },
-  { name: "Case Study", usage: "52%", sessions: 73, icon: "📋" },
-  { name: "Peer Teaching", usage: "34%", sessions: 42, icon: "👥" },
-];
-
-const alertStyles = {
-  critical: { bg: "bg-red-50", border: "border-red-200", badge: "bg-red-100 text-red-700", dot: "bg-red-500" },
-  warning: { bg: "bg-amber-50", border: "border-amber-200", badge: "bg-amber-100 text-amber-700", dot: "bg-amber-500" },
-  success: { bg: "bg-emerald-50", border: "border-emerald-200", badge: "bg-emerald-100 text-emerald-700", dot: "bg-emerald-500" },
-};
-
-const alertIconMap: Record<string, typeof AlertTriangle> = {
-  critical: AlertTriangle,
-  warning: Info,
-  success: CheckCircle,
-};
-
-const QUICK_ACTIONS = [
-  { label: "Grade Assignments", icon: ClipboardList, path: "/teacher/assignments", color: "from-blue-500 to-blue-600" },
-  { label: "Take Attendance", icon: Users, path: "/teacher/attendance", color: "from-emerald-500 to-emerald-600" },
-  { label: "Performance Report", icon: BarChart3, path: "/teacher/performance", color: "from-purple-500 to-purple-600" },
-  { label: "Announcements", icon: Bell, path: "/teacher/parent-connect", color: "from-amber-500 to-orange-500" },
-  { label: "View Schedule", icon: BookOpen, path: "/teacher/schedule", color: "from-teal-500 to-cyan-600" },
-  { label: "Analytics", icon: Lightbulb, path: "/teacher/analytics", color: "from-rose-500 to-pink-500" },
-];
-
 
 const TeacherDashboard = () => {
   const { fullName, user } = useAuth();
@@ -87,8 +13,7 @@ const TeacherDashboard = () => {
   const firstName = fullName?.split(" ")[0] || "Teacher";
   const [selectedClass, setSelectedClass] = useState(CLASS_OPTIONS[0]);
 
-  // Fetch class averages from DB
-  const { data: classAvg, isLoading: avgLoading } = useQuery({
+  const { data: classAvg } = useQuery({
     queryKey: ["class-averages", selectedClass],
     queryFn: async () => {
       const { data, error } = await supabase.rpc("get_class_averages", { _class_name: selectedClass });
@@ -97,7 +22,6 @@ const TeacherDashboard = () => {
     },
   });
 
-  // Fetch teacher alerts from DB
   const { data: alerts } = useQuery({
     queryKey: ["teacher-alerts", user?.id],
     queryFn: async () => {
@@ -114,219 +38,172 @@ const TeacherDashboard = () => {
     enabled: !!user,
   });
 
+  const studentCount = classAvg?.student_count ?? 0;
+  const today = new Date();
+  const dateStr = today.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+
+  const classMetrics = [
+    { label: "Avg Clarity", score: Math.round(Number(classAvg?.avg_clarity) || 0), color: "#0D9488", icon: "👁️", students: studentCount },
+    { label: "Avg Thinking", score: Math.round(Number(classAvg?.avg_thinking) || 0), color: "#7C3AED", icon: "🧠", students: studentCount },
+    { label: "Avg Focus", score: Math.round(Number(classAvg?.avg_attention) || 0), color: "#F59E0B", icon: "🎯", students: studentCount },
+    { label: "Avg Character", score: Math.round(Number(classAvg?.avg_character) || 0), color: "#EC4899", icon: "❤️", students: studentCount },
+  ];
+
+  const todayClasses = [
+    { time: "9:00", cls: "10-A", subject: "Real Numbers", status: "now", color: "#0D9488" },
+    { time: "10:00", cls: "10-B", subject: "Polynomials", status: "next", color: "#7C3AED" },
+    { time: "11:30", cls: "9-A", subject: "Number Systems", status: "later", color: "#3B82F6" },
+  ];
+
+  const attentionItems = alerts && alerts.length > 0
+    ? alerts.map(a => ({
+        icon: a.alert_type === "critical" ? "⚠️" : "📝",
+        text: a.message,
+        action: a.suggested_action || "View",
+        urgent: a.alert_type === "critical",
+      }))
+    : [
+        { icon: "📝", text: "5 ungraded submissions — Real Numbers Weekly Assignment", action: "Grade Now", urgent: true },
+        { icon: "⚠️", text: "Vivaan Jain scored below average in 3 consecutive assessments", action: "View", urgent: true },
+        { icon: "📊", text: "New class insights available — AI found a common mistake pattern", action: "View", urgent: false },
+      ];
+
+  const quickActions = [
+    { icon: "📝", label: "Create Assignment", bg: "#F0FDFA", color: "#0D9488", path: "/teacher/assignments" },
+    { icon: "📊", label: "Class Analytics", bg: "#F5F3FF", color: "#7C3AED", path: "/teacher/analytics" },
+    { icon: "📅", label: "Edit Schedule", bg: "#FEF3C7", color: "#92400E", path: "/teacher/schedule" },
+  ];
+
   return (
     <DashboardLayout role="teacher">
-      <div className="p-4 md:p-8 max-w-[1400px] mx-auto space-y-6">
+      <div style={{
+        background: "#FFFBF5", minHeight: "100vh",
+        fontFamily: "'DM Sans', sans-serif", color: "#1C1917",
+      }}>
+        <div style={{ maxWidth: 900, margin: "0 auto", padding: "24px 16px" }}>
 
-        <WelcomeBanner role="teacher" name={firstName} studentCount={classAvg?.student_count} />
-
-        {/* ── Header ── */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-foreground">Good Morning, {firstName}! 👋</h1>
-            <p className="text-sm text-muted-foreground mt-1">Your students' Inner OS is evolving — here's what needs your attention.</p>
+          {/* Header */}
+          <div style={{ marginBottom: 24 }}>
+            <div style={{ fontFamily: "'Source Serif 4', serif", fontSize: 26, fontWeight: 700, color: "#1C1917" }}>
+              Good morning, {firstName}! ☀️
+            </div>
+            <p style={{ fontSize: 14, color: "#78716C", margin: "4px 0 0" }}>
+              {dateStr} • {selectedClass}
+            </p>
           </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            {CLASS_OPTIONS.map((cls) => (
-              <button key={cls} onClick={() => setSelectedClass(cls)}
-                className={`px-4 py-2 rounded-full text-sm font-medium border-none cursor-pointer transition-all ${
-                  selectedClass === cls
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "bg-muted text-muted-foreground hover:bg-accent"
-                }`}>
+
+          {/* Class Selector */}
+          <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+            {CLASS_OPTIONS.map(cls => (
+              <button key={cls} onClick={() => setSelectedClass(cls)} style={{
+                padding: "6px 16px", borderRadius: 8, border: "none",
+                background: selectedClass === cls ? "#0D9488" : "#F5F5F4",
+                color: selectedClass === cls ? "white" : "#78716C",
+                fontSize: 13, fontWeight: 600, cursor: "pointer",
+                fontFamily: "'DM Sans', sans-serif",
+              }}>
                 {cls}
               </button>
             ))}
           </div>
-        </div>
 
-        {/* Pedagogy Badge */}
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="bg-gradient-to-r from-purple-100 to-blue-100 border border-purple-200 rounded-full px-3 md:px-4 py-1.5 md:py-2 flex items-center gap-2">
-            <GraduationCap className="h-4 w-4 text-purple-600 shrink-0" />
-            <span className="text-xs md:text-sm font-semibold text-purple-700">Oxford & Harvard Pedagogy</span>
-          </div>
-          <div className="bg-gradient-to-r from-emerald-100 to-teal-100 border border-emerald-200 rounded-full px-3 md:px-4 py-1.5 md:py-2 flex items-center gap-2">
-            <Shield className="h-4 w-4 text-emerald-600 shrink-0" />
-            <span className="text-xs md:text-sm font-semibold text-emerald-700">7-Layer Framework</span>
-          </div>
-        </div>
-
-        {/* ── 4 Stat Cards ── */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {avgLoading ? (
-            Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-28 rounded-xl" />)
-          ) : (
-            STAT_CONFIG.map((stat, idx) => {
-              const value = classAvg ? Math.round(Number(classAvg[stat.key]) || 0) : 0;
-              return (
-                <div key={stat.label} className={`${stat.bg} border-l-4 ${stat.borderColor} rounded-xl p-5 card-hover-lift animate-stagger-in`}
-                  style={{ "--stagger-delay": `${idx * 0.08}s` } as React.CSSProperties}>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-muted-foreground flex items-center gap-1">
-                      {stat.label}
-                      <HelpTooltip content={
-                        stat.label === "Avg Clarity" ? "Average concept understanding across your class — based on recall and explanation scores." :
-                        stat.label === "Avg Reasoning" ? "Average analytical thinking score — how well students reason through problems." :
-                        stat.label === "Avg Attention" ? "Average focus and engagement — consistency in completing learning layers." :
-                        "Average intellectual character — persistence, honesty, and growth mindset."
-                      } />
-                    </span>
-                    <div className={`w-8 h-8 rounded-lg ${stat.iconBg} flex items-center justify-center`}>
-                      <stat.icon className={`h-4 w-4 ${stat.iconColor}`} />
-                    </div>
-                  </div>
-                  <div className="text-3xl font-bold text-foreground">{value}%</div>
-                  <div className="text-xs text-muted-foreground mt-1">
-                    {classAvg?.student_count ?? 0} students
-                  </div>
-                </div>
-              );
-            })
-          )}
-        </div>
-
-        {/* ── Main Grid: Intelligence + Alerts ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left: Curriculum Intelligence */}
-          <div className="lg:col-span-2 space-y-5">
-            <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-              <Lightbulb className="h-5 w-5 text-amber-500" /> Curriculum Intelligence
-            </h2>
-
-            {CURRICULUM_INSIGHTS.map((insight, i) => (
-              <div key={i} className={`${insight.bg} ${insight.border} border rounded-xl p-5`}>
-                <h3 className="font-bold text-foreground text-base flex items-center gap-2 mb-3">
-                  <span>{insight.icon}</span> {insight.title}
-                </h3>
-                <ul className="space-y-2">
-                  {insight.points.map((point, j) => (
-                    <li key={j} className="text-sm text-foreground/80 flex items-start gap-2">
-                      <span className="text-primary mt-0.5">•</span> {point}
-                    </li>
-                  ))}
-                </ul>
+          {/* Class-wide Inner OS */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 20 }}>
+            {classMetrics.map(d => (
+              <div key={d.label} style={{
+                background: "white", borderRadius: 14, border: "1px solid #E7E5E4",
+                padding: "16px 14px", textAlign: "center",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+                borderLeft: `4px solid ${d.color}`,
+              }}>
+                <div style={{ fontSize: 24 }}>{d.icon}</div>
+                <div style={{ fontSize: 22, fontWeight: 700, color: "#1C1917", fontFamily: "'Source Serif 4', serif", marginTop: 4 }}>{d.score}%</div>
+                <div style={{ fontSize: 12, color: "#78716C", fontFamily: "'DM Sans', sans-serif" }}>{d.label}</div>
+                <div style={{ fontSize: 10, color: "#A8A29E", fontFamily: "'DM Sans', sans-serif", marginTop: 2 }}>{d.students} students</div>
               </div>
             ))}
+          </div>
 
-            {/* Elite Methods Performance */}
-            <div className="bg-card border border-border rounded-xl p-5">
-              <h3 className="font-bold text-foreground text-base mb-4 flex items-center gap-2">
-                <GraduationCap className="h-4 w-4 text-primary" /> Elite Methods Performance
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {METHODS_PERFORMANCE.map((method) => (
-                  <div key={method.name} className="border border-border rounded-lg p-4 hover:shadow-sm transition-all">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-xl">{method.icon}</span>
-                      <span className="text-sm font-semibold text-foreground">{method.name}</span>
-                    </div>
-                    <div className="text-2xl font-bold text-primary">{method.usage}</div>
-                    <div className="w-full h-2 bg-secondary rounded-full overflow-hidden mt-2">
-                      <div className="h-full bg-primary rounded-full" style={{ width: method.usage }} />
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">{method.sessions} sessions total</p>
+          {/* Today's Classes */}
+          <div style={{
+            background: "white", borderRadius: 16, border: "1px solid #E7E5E4",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.04)", padding: 24, marginBottom: 20,
+          }}>
+            <h3 style={{ fontFamily: "'Source Serif 4', serif", fontSize: 20, fontWeight: 700, color: "#1C1917", margin: "0 0 16px" }}>
+              📅 Today's Classes
+            </h3>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {todayClasses.map(c => (
+                <div key={c.time} style={{
+                  display: "flex", alignItems: "center", gap: 14, padding: "14px 16px",
+                  borderRadius: 12, background: c.status === "now" ? "#F0FDFA" : "#FAFAF9",
+                  borderLeft: `4px solid ${c.color}`,
+                }}>
+                  <div>
+                    <span style={{ fontSize: 13, color: "#78716C", fontWeight: 500, fontFamily: "'DM Sans', sans-serif" }}>{c.time} AM</span>
+                    {c.status === "now" && (
+                      <span style={{
+                        marginLeft: 8, fontSize: 10, fontWeight: 700, color: "#059669",
+                        fontFamily: "'DM Sans', sans-serif",
+                      }}>● LIVE</span>
+                    )}
                   </div>
-                ))}
-              </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 15, fontWeight: 600, color: "#1C1917" }}>{c.subject}</div>
+                    <div style={{ fontSize: 12, color: "#78716C", fontFamily: "'DM Sans', sans-serif" }}>Class {c.cls}</div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* Right: Alerts */}
-          <div className="space-y-5">
-            <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-              <Bell className="h-5 w-5 text-red-500" /> Needs Attention
-            </h2>
-
-            {(alerts ?? []).length === 0 ? (
-              <EmptyState
-                icon={Shield}
-                title="All Clear!"
-                description="No alerts right now — all students are on track. Great job! 🎉"
-              />
-            ) : (
-              (alerts ?? []).map((alert) => {
-                const style = alertStyles[alert.alert_type as keyof typeof alertStyles] ?? alertStyles.warning;
-                return (
-                  <div key={alert.id} className={`${style.bg} ${style.border} border rounded-xl p-4`}>
-                    <div className="flex items-start gap-3">
-                      <div className={`w-2 h-2 rounded-full ${style.dot} mt-2 shrink-0`} />
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-semibold text-foreground text-sm">{alert.title}</span>
-                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${style.badge}`}>
-                            {alert.alert_type}
-                          </span>
-                        </div>
-                        <p className="text-xs text-foreground/70 mb-3">{alert.message}</p>
-                        {alert.suggested_action && (
-                          <button className="text-xs font-semibold text-primary hover:underline bg-transparent border-none cursor-pointer p-0 flex items-center gap-1">
-                            {alert.suggested_action} <ChevronRight className="h-3 w-3" />
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-
-            {/* AI Behavioral Insights - placeholder until AI generates them */}
-            <div className="bg-gradient-to-br from-purple-600 to-indigo-700 rounded-xl p-5 text-white">
-              <h3 className="font-bold text-base mb-4 flex items-center gap-2">
-                <Zap className="h-4 w-4" /> AI Behavioral Insights
-              </h3>
-              <div className="space-y-3">
-                <div className="bg-white/10 rounded-lg p-3">
-                  <p className="text-xs text-white/70 font-medium">Status</p>
-                  <p className="text-sm text-white font-medium mt-0.5">
-                    {classAvg?.student_count ? `Tracking ${classAvg.student_count} students in ${selectedClass}` : "No student data yet"}
-                  </p>
-                </div>
+          {/* Needs Attention */}
+          <div style={{
+            background: "white", borderRadius: 16, border: "1px solid #E7E5E4",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.04)", padding: 24, marginBottom: 20,
+          }}>
+            <h3 style={{ fontFamily: "'Source Serif 4', serif", fontSize: 20, fontWeight: 700, color: "#1C1917", margin: "0 0 16px" }}>
+              ⚠️ Needs Your Attention
+            </h3>
+            {attentionItems.map((item, i) => (
+              <div key={i} style={{
+                display: "flex", alignItems: "center", gap: 12, padding: "12px 0",
+                borderBottom: i < attentionItems.length - 1 ? "1px solid #F5F5F4" : "none",
+              }}>
+                <span style={{ fontSize: 20 }}>{item.icon}</span>
+                <span style={{ flex: 1, fontSize: 13, color: "#1C1917", fontFamily: "'DM Sans', sans-serif" }}>{item.text}</span>
+                <button onClick={() => {
+                  if (item.action === "Grade Now") navigate("/teacher/assignments");
+                  else navigate("/teacher/analytics");
+                }} style={{
+                  background: item.urgent ? "#0D9488" : "transparent",
+                  color: item.urgent ? "white" : "#0D9488",
+                  border: item.urgent ? "none" : "1px solid #0D9488",
+                  padding: "6px 14px", borderRadius: 8, fontSize: 12,
+                  fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+                  flexShrink: 0,
+                }}>
+                  {item.action}
+                </button>
               </div>
-            </div>
+            ))}
           </div>
-        </div>
 
-        {/* ── Quick Actions ── */}
-        <div>
-          <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
-            <Zap className="h-5 w-5 text-primary" /> Quick Actions
-          </h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-            {QUICK_ACTIONS.map((action, i) => (
-              <button key={action.label} onClick={() => navigate(action.path)}
-                className="flex flex-col items-center gap-3 p-5 rounded-xl bg-card border border-border card-hover-lift card-interactive text-center group animate-stagger-in"
-                style={{ "--stagger-delay": `${i * 0.06}s` } as React.CSSProperties}>
-                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${action.color} flex items-center justify-center`}>
-                  <action.icon className="h-5 w-5 text-white" />
-                </div>
-                <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">{action.label}</span>
+          {/* Quick Actions */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+            {quickActions.map(a => (
+              <button key={a.label} onClick={() => navigate(a.path)} style={{
+                background: a.bg, border: "none", borderRadius: 14,
+                padding: "20px 16px", cursor: "pointer",
+                display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
+                transition: "transform 0.15s",
+              }}>
+                <span style={{ fontSize: 28 }}>{a.icon}</span>
+                <span style={{ fontSize: 13, fontWeight: 600, color: a.color, fontFamily: "'DM Sans', sans-serif" }}>{a.label}</span>
               </button>
             ))}
           </div>
         </div>
-
-        {/* ── Footer ── */}
-        <footer className="bg-[#0f1419]/95 text-white py-6 rounded-2xl mt-4">
-          <div className="max-w-[1400px] mx-auto px-4 md:px-6 grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
-            <div>
-              <h4 className="mb-2 text-blue-400 text-sm">EduTech</h4>
-              <p className="text-gray-400 text-xs leading-relaxed">Empowering education through innovative technology.</p>
-            </div>
-            <div>
-              <h4 className="mb-2 text-blue-400 text-sm">Quick Links</h4>
-              <p className="text-gray-400 text-xs">Dashboard • Schedule • Metrics • Settings</p>
-            </div>
-            <div>
-              <h4 className="mb-2 text-blue-400 text-sm">Support</h4>
-              <p className="text-gray-400 text-xs">mg3labs@gmail.com</p>
-            </div>
-          </div>
-          <div className="border-t border-gray-700 mt-4 pt-3 text-center text-gray-500 text-xs">
-            © 2025 EduTech. All rights reserved.
-          </div>
-        </footer>
       </div>
     </DashboardLayout>
   );
