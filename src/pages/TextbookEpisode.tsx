@@ -479,8 +479,8 @@ const TextbookEpisode = () => {
 
   const scrollToActivity = useCallback(() => {
     const actIdx = blocks.findIndex(b => b.type === "activity");
-    if (actIdx >= 0) scrollToBlock(actIdx);
-  }, [blocks, scrollToBlock]);
+    if (actIdx >= 0) goToBlock(actIdx);
+  }, [blocks, goToBlock]);
 
   // Auto-scroll to layer based on query param
   useEffect(() => {
