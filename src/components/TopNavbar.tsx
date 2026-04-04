@@ -11,6 +11,8 @@ import PersonalisationModal from "./student/PersonalisationModal";
 interface TopNavbarProps {
   role: "student" | "teacher" | "admin";
   phase?: number;
+  activeTab?: string;
+  onTabChange?: (tab: string) => void;
 }
 
 const TopNavbar = ({ role, phase = 4 }: TopNavbarProps) => {
