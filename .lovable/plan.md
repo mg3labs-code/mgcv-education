@@ -1,42 +1,58 @@
 
 
-# Unified Schedule-Calendar-Textbook Flow
+# Replace Dashboards with User-Provided Phased Design
 
-## Problem
-Three disconnected systems: Dashboard has a full schedule tab with Class/DeepDive/PopQuiz buttons, Calendar page is a standalone monthly-only subject picker, and Deep Dive is a separate page that often breaks. No cohesive daily planner.
+## Summary
+Replace the current StudentDashboard and TeacherDashboard with the exact JSX design provided by the user — warm cream/stone palette, inline styles, Source Serif 4 + DM Sans fonts, phased progressive unlock (1-4), and the teacher layout from the mockups. No existing Tailwind theme tokens — use the exact inline styles from the provided code.
 
 ## What Changes
 
-### 1. Dashboard — Compact Schedule Only
-- Remove the "Overview / Schedule" tab toggle
-- Keep Inner OS hero + dimensions as the main view
-- Replace the schedule tab with a **compact "Today's Classes"** card showing: current class (highlighted with "NOW" + "Open" button that deep-links to the episode) + next 3-4 classes as small pills (time + subject name only, no action buttons)
-- Add "View Full Schedule →" link that navigates to `/student/calendar`
-- Keep Continue Learning and Elite Methods sections
+### 1. `src/pages/StudentDashboard.tsx` — Full rewrite
+Port the user's provided JSX directly into the existing component structure:
+- Keep existing Supabase queries (innerOS, breakthroughs, methodCounts, schedules) but map their data into the new widget components
+- **Phase computation**: Use `episode_progress` count + `student_inner_os.created_at` age to determine phase 1-4
+- **Phase 1**: Greeting + `ScheduleWidget` (horizontal timeline with colored left borders, "HAPPENING NOW" badge) + `ContinueLearning` card (chapter progress bar) + locked placeholders for Inner OS and Scholar Methods
+- **Phase 2**: Same + `InnerOS` normal card (5 dimension circles with mini progress bars)
+- **Phase 3**: Same + `ScholarMethods` grid (Debate Challenge, Break It Down, Case Study, Teach It)
+- **Phase 4**: `InnerOS` hero mode (teal gradient `#0D9488` to `#134E4A`, circular SVG score ring, "+5% this week" badge) + `StatsRow` (Episodes, Study Time, Streak, Gems as horizontal cards)
+- **`FadeSlide` wrapper** for progressive reveal animations
+- All styling uses inline styles from the provided code: `background: "#FFFBF5"`, `color: "#1C1917"`, `borderRadius: 16`, `border: "1px solid #E7E5E4"`, `fontFamily: "'DM Sans', sans-serif"`
+- Wrap in `DashboardLayout` and keep navigation/auth integration
 
-### 2. Calendar Page — Daily Plan + Monthly View
-- Replace the current subject-picker-first monthly calendar with a **two-view** page: "Today's Plan" (default) and "Monthly"
-- **Today's Plan**: Full daily timeline with all classes + breaks, each class card has 3 action buttons:
-  - **Class** → navigates to `/student/textbook/{chapterId}/{episodeId}` (Layer 1-2)
-  - **Deep Dive** → navigates to `/student/textbook/{chapterId}/{episodeId}?layer=deep` (Layer 3)
-  - **Pop Quiz** → opens PopQuiz modal for that subject
-- Each button uses `topicTextbookMap` to resolve the correct episode; if no match, show "Coming Soon"
-- **Monthly**: Subject filter tabs + monthly grid calendar (existing logic, moved here as second tab)
-- Tapping a date in Monthly opens the matching episode
+### 2. `src/pages/TeacherDashboard.tsx` — Full rewrite
+Port the user's `TeacherDashboard` JSX:
+- Class-wide Inner OS as 4 horizontal stat cards (emoji icon, percentage, label, student count) with colored left borders
+- Today's Classes as vertical cards with time, subject, class section, "● LIVE" indicator on current class
+- "Needs Your Attention" section with action items (Grade Now, View buttons) — pull from existing `teacher_alerts` query
+- Quick action cards at bottom (Create Assignment, Class Analytics, Edit Schedule) in pastel backgrounds
+- Same warm cream/stone inline style system
+- Keep existing Supabase queries (classAvg, alerts)
 
-### 3. Deep-Link Support in TextbookEpisode
-- Accept `?layer=deep` or `?layer=quiz` query params to auto-scroll/focus on the appropriate layer when opened from Calendar
+### 3. `src/components/TopNavbar.tsx` — Accept phase prop
+- Add optional `phase` prop
+- Student nav tabs: Home, Learn, Tasks, Calendar always visible; "My Growth" tab appears only at phase >= 2
+- Show streak badge (🔥 + day count) at phase >= 3
+- Use existing nav styling (no changes to colors)
 
-### 4. Remove StudentDeepDive Page
-- The standalone `/student/deep-dive` page becomes unnecessary — all deep-dive actions now link directly to the textbook episode with a layer param
+### 4. `src/components/DashboardLayout.tsx` — Forward phase prop
+- Accept optional `phase` prop, pass to `TopNavbar`
+
+### 5. `index.html` — Add Google Fonts
+- Add Source Serif 4 + DM Sans font imports (from the user's provided `<style>` block)
+
+## Design System (from user's code — used exactly)
+- Background: `#FFFBF5` (warm cream)
+- Card: `background: "white"`, `border: "1px solid #E7E5E4"`, `borderRadius: 16`, `boxShadow: "0 1px 3px rgba(0,0,0,0.04)"`
+- Text primary: `#1C1917` (stone-900), secondary: `#78716C` (stone-500)
+- Teal accent: `#0D9488` for active states, buttons, hero gradient
+- Subject colors: Math `#7C3AED`, Science `#059669`, English `#2563EB`, Social `#F59E0B`
+- Locked sections: centered emoji + `#78716C` text + 🔒 unlock condition
+- Fonts: `'Source Serif 4'` for headings, `'DM Sans'` for body
 
 ## Files Modified
-1. `src/pages/StudentDashboard.tsx` — Remove schedule tab, add compact Today's Classes card with NOW highlight + "View Full Schedule" link
-2. `src/pages/StudentCalendar.tsx` — Full rewrite: Today's Plan (daily timeline with action buttons) + Monthly view (subject tabs + grid)
-3. `src/pages/TextbookEpisode.tsx` — Accept `?layer=deep|quiz` query param for auto-scrolling
-4. `src/data/topicTextbookMap.ts` — Add mappings for Science, English, Social Science, Hindi, Sanskrit subjects
-5. `src/App.tsx` — Remove `/student/deep-dive` route (optional, can keep as redirect)
-
-## Design Reference
-Follows the uploaded mockups: cream/white cards, teal accents, timeline with colored dots, action buttons as outlined pills (Class in teal, Deep Dive in purple, Pop Quiz in amber).
+1. `src/pages/StudentDashboard.tsx` — Full rewrite with phased inline-styled widgets
+2. `src/pages/TeacherDashboard.tsx` — Full rewrite with inline-styled teacher layout
+3. `src/components/TopNavbar.tsx` — Phase-aware tabs + streak badge
+4. `src/components/DashboardLayout.tsx` — Forward phase prop
+5. `index.html` — Google Fonts link for Source Serif 4 + DM Sans
 
