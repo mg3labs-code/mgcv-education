@@ -8,6 +8,7 @@ import { findTextbookMatch } from "@/data/topicTextbookMap";
 import PopQuizModal from "@/components/student/PopQuizModal";
 import LearnTab from "@/components/student/LearnTab";
 import TasksTab from "@/components/student/TasksTab";
+import GrowthTab from "@/components/student/GrowthTab";
 
 interface ScheduleItem {
   type: string;
@@ -386,6 +387,16 @@ const StudentDashboard = () => {
     enabled: !!user,
   });
 
+  const { data: breakthroughs } = useQuery({
+    queryKey: ["student-breakthroughs", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("student_breakthroughs").select("*").eq("user_id", user!.id).order("created_at", { ascending: false }).limit(10);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!user,
+  });
+
   const streakDays = innerOS?.streak_days ?? 0;
   const accountCreated = innerOS?.created_at ? new Date(innerOS.created_at) : null;
   const accountAgeDays = accountCreated ? Math.floor((Date.now() - accountCreated.getTime()) / (1000 * 60 * 60 * 24)) : 0;
@@ -566,20 +577,14 @@ const StudentDashboard = () => {
 
           {/* ===== GROWTH TAB ===== */}
           {activeTab === "growth" && phase >= 2 && (
-            <>
-              <FadeSlide>
-                <div style={{ marginBottom: 24 }}>
-                  <div style={{ fontFamily: "'Source Serif 4', serif", fontSize: 26, fontWeight: 700, color: "#1C1917" }}>
-                    📊 My Growth
-                  </div>
-                  <p style={{ fontSize: 14, color: "#78716C", margin: "4px 0 0" }}>Track your learning journey</p>
-                </div>
-              </FadeSlide>
-              <InnerOS position="hero" scores={dimensionScores} />
-              <div style={{ marginTop: 16 }}>
-                <StatsRow streakDays={streakDays} episodesCompleted={episodeCount ?? 0} />
-              </div>
-            </>
+            <GrowthTab
+              dimensionScores={dimensionScores}
+              streakDays={streakDays}
+              episodeCount={episodeCount ?? 0}
+              methodCounts={methodCounts ?? {}}
+              breakthroughs={breakthroughs ?? []}
+              weeklyGrowth={Number(innerOS?.weekly_growth ?? 0)}
+            />
           )}
         </div>
 
