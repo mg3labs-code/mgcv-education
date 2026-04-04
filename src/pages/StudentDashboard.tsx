@@ -387,6 +387,16 @@ const StudentDashboard = () => {
     enabled: !!user,
   });
 
+  const { data: breakthroughs } = useQuery({
+    queryKey: ["student-breakthroughs", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("student_breakthroughs").select("*").eq("user_id", user!.id).order("created_at", { ascending: false }).limit(10);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!user,
+  });
+
   const streakDays = innerOS?.streak_days ?? 0;
   const accountCreated = innerOS?.created_at ? new Date(innerOS.created_at) : null;
   const accountAgeDays = accountCreated ? Math.floor((Date.now() - accountCreated.getTime()) / (1000 * 60 * 60 * 24)) : 0;
