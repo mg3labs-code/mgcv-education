@@ -532,6 +532,250 @@ function ScholarMethodsStats({ methodCounts, userId }: { methodCounts: Record<st
   );
 }
 
+// ============ DAILY QUIZ PROGRESS ============
+
+function DailyQuizProgress({ userId }: { userId: string }) {
+  const { data: recentActivity } = useQuery({
+    queryKey: ["growth-daily-quiz", userId],
+    queryFn: async () => {
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      const { data, error } = await supabase
+        .from("daily_activity")
+        .select("activity_date, episodes_completed, methods_used, time_spent_seconds")
+        .eq("user_id", userId)
+        .gte("activity_date", sevenDaysAgo.toISOString().split("T")[0])
+        .order("activity_date", { ascending: true });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const days = useMemo(() => {
+    const result = [];
+    const today = new Date();
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().split("T")[0];
+      const activity = (recentActivity ?? []).find(a => a.activity_date === key);
+      const score = activity ? Math.min((activity.episodes_completed + activity.methods_used) * 20, 100) : 0;
+      result.push({
+        label: d.toLocaleDateString("en-IN", { weekday: "short" }),
+        date: d.toLocaleDateString("en-IN", { month: "short", day: "numeric" }),
+        score,
+        done: score > 0,
+      });
+    }
+    return result;
+  }, [recentActivity]);
+
+  const todayDone = days[days.length - 1]?.done ?? false;
+  const quizStreak = (() => {
+    let streak = 0;
+    for (let i = days.length - 1; i >= 0; i--) {
+      if (days[i].done) streak++;
+      else break;
+    }
+    return streak;
+  })();
+  const bestScore = Math.max(...days.map(d => d.score), 0);
+  const avgScore = days.filter(d => d.done).length > 0
+    ? Math.round(days.filter(d => d.done).reduce((a, d) => a + d.score, 0) / days.filter(d => d.done).length)
+    : 0;
+  const maxBarHeight = 56;
+
+  return (
+    <Card>
+      <SectionTitle icon="⚡" title="Daily Quiz Progress" subtitle="Your daily learning activity over the past week" />
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 20 }}>
+        {[
+          { label: "Today", value: todayDone ? "✅ Done" : "⏳ Pending", color: todayDone ? "#059669" : "#F59E0B", bg: todayDone ? "#F0FDF4" : "#FEF3C7" },
+          { label: "Best Score", value: `${bestScore}%`, color: "#7C3AED", bg: "#F5F3FF" },
+          { label: "Average", value: `${avgScore}%`, color: "#0D9488", bg: "#F0FDFA" },
+        ].map(s => (
+          <div key={s.label} style={{ textAlign: "center", padding: "14px 8px", borderRadius: 12, background: s.bg }}>
+            <div style={{ fontSize: 18, fontWeight: 700, color: s.color, fontFamily: "'Source Serif 4', serif" }}>{s.value}</div>
+            <div style={{ fontSize: 11, color: "#78716C", fontFamily: "'DM Sans', sans-serif" }}>{s.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Bar chart */}
+      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 8, padding: "0 4px" }}>
+        {days.map((d, i) => (
+          <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, flex: 1 }}>
+            <div style={{ fontSize: 10, fontWeight: 600, color: d.done ? "#0D9488" : "#A8A29E", fontFamily: "'DM Sans', sans-serif" }}>
+              {d.score > 0 ? `${d.score}%` : "—"}
+            </div>
+            <div style={{
+              width: "100%", maxWidth: 28, height: d.score > 0 ? (d.score / 100) * maxBarHeight : 4,
+              background: d.done ? "linear-gradient(to top, #0D9488, #5EEAD4)" : "#E7E5E4",
+              borderRadius: 4, transition: "height 0.3s",
+            }} />
+            <div style={{ fontSize: 10, color: "#78716C", fontFamily: "'DM Sans', sans-serif" }}>{d.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {quizStreak > 0 && (
+        <div style={{
+          display: "flex", alignItems: "center", gap: 8, marginTop: 16,
+          padding: "10px 14px", borderRadius: 10, background: "#FEF3C7", border: "1px solid #FDE68A",
+        }}>
+          <span style={{ fontSize: 18 }}>🔥</span>
+          <span style={{ fontSize: 13, color: "#92400E", fontFamily: "'DM Sans', sans-serif", fontWeight: 600 }}>
+            {quizStreak}-day quiz streak! Keep it going!
+          </span>
+        </div>
+      )}
+    </Card>
+  );
+}
+
+// ============ WEEKLY ASSIGNMENTS PROGRESS ============
+
+function WeeklyAssignmentsProgress({ userId }: { userId: string }) {
+  const { data: profile } = useQuery({
+    queryKey: ["growth-profile", userId],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("profiles").select("class_name").eq("user_id", userId).maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: assignments } = useQuery({
+    queryKey: ["growth-assignments", profile?.class_name],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("assignments")
+        .select("id, title, subject, due_date, max_total_score, assignment_questions(id)")
+        .eq("class_name", profile!.class_name!)
+        .eq("is_published", true)
+        .order("created_at", { ascending: false })
+        .limit(10);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!profile?.class_name,
+  });
+
+  const { data: submissions } = useQuery({
+    queryKey: ["growth-submissions", userId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("student_submissions")
+        .select("assignment_id, status, total_score, student_answers(question_id)")
+        .eq("student_id", userId);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const SUBJECT_ICONS: Record<string, { icon: string; color: string }> = {
+    Mathematics: { icon: "🔢", color: "#7C3AED" },
+    Science: { icon: "🔬", color: "#059669" },
+    English: { icon: "📖", color: "#2563EB" },
+    "Social Science": { icon: "🌍", color: "#F59E0B" },
+    Hindi: { icon: "📝", color: "#EF4444" },
+    Telugu: { icon: "📝", color: "#EF4444" },
+  };
+
+  const items = (assignments ?? []).map((a: any) => {
+    const sub = (submissions ?? []).find((s: any) => s.assignment_id === a.id);
+    const isSubmitted = sub?.status === "submitted" || sub?.status === "finalized";
+    const isGraded = sub?.total_score != null;
+    const meta = SUBJECT_ICONS[a.subject] || { icon: "📚", color: "#6366f1" };
+    return {
+      id: a.id, title: a.title, subject: a.subject,
+      icon: meta.icon, color: meta.color,
+      status: isGraded ? "graded" : isSubmitted ? "submitted" : "pending",
+      score: isGraded ? sub.total_score : null,
+      maxScore: a.max_total_score,
+    };
+  });
+
+  const total = items.length;
+  const submitted = items.filter(a => a.status !== "pending").length;
+  const graded = items.filter(a => a.status === "graded").length;
+  const submittedPct = total > 0 ? Math.round((submitted / total) * 100) : 0;
+
+  return (
+    <Card>
+      <SectionTitle icon="📝" title="Assignments Progress" subtitle="Your submission and grading status" />
+
+      {total === 0 ? (
+        <div style={{ textAlign: "center", padding: "24px 0", color: "#A8A29E", fontFamily: "'DM Sans', sans-serif", fontSize: 13 }}>
+          No assignments yet. Check back soon!
+        </div>
+      ) : (
+        <>
+          {/* Summary strip */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 16 }}>
+            {[
+              { label: "Total", value: total, color: "#3B82F6", bg: "#EFF6FF" },
+              { label: "Submitted", value: submitted, color: "#0D9488", bg: "#F0FDFA" },
+              { label: "Graded", value: graded, color: "#7C3AED", bg: "#F5F3FF" },
+            ].map(s => (
+              <div key={s.label} style={{ textAlign: "center", padding: "12px 8px", borderRadius: 12, background: s.bg }}>
+                <div style={{ fontSize: 20, fontWeight: 700, color: s.color, fontFamily: "'Source Serif 4', serif" }}>{s.value}</div>
+                <div style={{ fontSize: 11, color: "#78716C", fontFamily: "'DM Sans', sans-serif" }}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Progress bar */}
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#78716C", fontFamily: "'DM Sans', sans-serif", marginBottom: 6 }}>
+              <span>Completion</span>
+              <span>{submittedPct}%</span>
+            </div>
+            <div style={{ height: 8, background: "#E7E5E4", borderRadius: 4, overflow: "hidden" }}>
+              <div style={{ width: `${submittedPct}%`, height: "100%", background: "linear-gradient(90deg, #0D9488, #5EEAD4)", borderRadius: 4, transition: "width 0.3s" }} />
+            </div>
+          </div>
+
+          {/* Assignment cards */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {items.slice(0, 5).map(a => (
+              <div key={a.id} style={{
+                display: "flex", alignItems: "center", gap: 12, padding: "12px 14px",
+                borderRadius: 12, border: "1px solid #E7E5E4",
+                background: a.status === "graded" ? "#F0FDF4" : a.status === "submitted" ? "#F0FDFA" : "white",
+              }}>
+                <span style={{ fontSize: 22 }}>{a.icon}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 600, fontSize: 13, color: "#1C1917", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.title}</div>
+                  <div style={{ fontSize: 11, color: "#78716C", fontFamily: "'DM Sans', sans-serif" }}>{a.subject}</div>
+                </div>
+                {a.status === "graded" && a.score != null ? (
+                  <div style={{ textAlign: "center" }}>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: "#059669", fontFamily: "'Source Serif 4', serif" }}>
+                      {a.score}{a.maxScore ? `/${a.maxScore}` : ""}
+                    </div>
+                    <div style={{ fontSize: 10, color: "#78716C", fontFamily: "'DM Sans', sans-serif" }}>score</div>
+                  </div>
+                ) : (
+                  <span style={{
+                    fontSize: 10, fontWeight: 600, padding: "4px 10px", borderRadius: 10,
+                    background: a.status === "submitted" ? "#CCFBF1" : "#FEF3C7",
+                    color: a.status === "submitted" ? "#0D9488" : "#92400E",
+                    fontFamily: "'DM Sans', sans-serif",
+                  }}>
+                    {a.status === "submitted" ? "Submitted" : "Pending"}
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </Card>
+  );
+}
+
 // ============ MAIN GROWTH TAB ============
 
 export default function GrowthTab({ dimensionScores, streakDays, episodeCount, methodCounts, breakthroughs, weeklyGrowth }: GrowthTabProps) {
