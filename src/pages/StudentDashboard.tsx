@@ -579,7 +579,6 @@ const StudentDashboard = () => {
                   ) : (
                     <ScheduleWidget
                       items={todayScheduleItems}
-                      compact={phase <= 2}
                       onOpenTopic={(topic) => {
                         const match = findTextbookMatch(topic);
                         if (match?.episodeId) navigate(`/student/textbook/${match.chapterId}/${match.episodeId}`);
