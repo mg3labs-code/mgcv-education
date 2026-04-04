@@ -84,36 +84,104 @@ function SectionTitle({ icon, title, badge = null }: { icon: string; title: stri
   );
 }
 
-function ScheduleWidget({ items, compact = false, onOpenTopic }: {
+function ScheduleWidget({ items, onOpenTopic }: {
   items: { time: string; subject: string; icon: string; topic: string; type: string; color: string }[];
   compact?: boolean;
   onOpenTopic?: (topic: string) => void;
 }) {
+  const navigate = useNavigate();
   const classes = items.filter(i => i.type !== "break");
-  const display = compact ? classes.slice(0, 3) : classes.slice(0, 5);
+  const nowClass = classes[0];
+  const upcomingClasses = classes.slice(1);
 
   return (
     <Card>
-      <SectionTitle icon="📅" title="Today's Classes" />
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        {display.map((c, i) => (
-          <div key={i} style={{
-            display: "flex", alignItems: "center", gap: 14, padding: "14px 16px",
-            borderRadius: 12, background: i === 0 ? "#F0FDFA" : "#FAFAF9",
-            borderLeft: `4px solid ${c.color}`, cursor: i === 0 ? "pointer" : "default",
-          }} onClick={() => i === 0 && onOpenTopic?.(c.topic)}>
-            <span style={{ fontSize: 12, color: "#78716C", minWidth: 60, fontWeight: 500, fontFamily: "'DM Sans', sans-serif" }}>{c.time}</span>
-            <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 15, fontWeight: 600, color: "#1C1917" }}>{c.subject}</span>
-            {c.type !== "break" && <span style={{ fontSize: 13, color: "#78716C", fontFamily: "'DM Sans', sans-serif" }}>{c.topic}</span>}
-            {i === 0 && (
-              <div style={{ display: "flex", alignItems: "center", gap: 6, marginLeft: "auto" }}>
-                <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#059669", animation: "pulse 2s infinite" }} />
-                <span style={{ fontSize: 10, fontWeight: 700, color: "#059669", textTransform: "uppercase", letterSpacing: 0.5, fontFamily: "'DM Sans', sans-serif" }}>HAPPENING NOW</span>
-              </div>
-            )}
-          </div>
-        ))}
+      {/* Header with View Full Schedule link */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+        <h3 style={{ fontFamily: "'Source Serif 4', serif", fontSize: 20, fontWeight: 700, color: "#1C1917", margin: 0 }}>
+          📅 Today's Classes
+        </h3>
+        <button
+          onClick={() => navigate("/student/calendar")}
+          style={{
+            background: "none", border: "none", color: "#0D9488", fontSize: 13,
+            fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+            padding: 0,
+          }}
+        >
+          View Full Schedule →
+        </button>
       </div>
+
+      {/* NOW Card — prominent current class */}
+      {nowClass && (
+        <div
+          onClick={() => onOpenTopic?.(nowClass.topic)}
+          style={{
+            display: "flex", alignItems: "center", gap: 16, padding: "16px 18px",
+            borderRadius: 14, background: "#F5F3FF", border: "1px solid #E9E5F5",
+            cursor: "pointer", marginBottom: 14,
+          }}
+        >
+          {/* Icon badge */}
+          <div style={{
+            width: 48, height: 48, borderRadius: 12,
+            background: "linear-gradient(135deg, #7C3AED, #9333EA)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 22, flexShrink: 0,
+          }}>
+            {nowClass.icon}
+          </div>
+
+          {/* Center info */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#059669", animation: "pulse 2s infinite" }} />
+              <span style={{ fontSize: 11, fontWeight: 700, color: "#059669", textTransform: "uppercase", letterSpacing: 0.5, fontFamily: "'DM Sans', sans-serif" }}>
+                NOW • {nowClass.time}
+              </span>
+            </div>
+            <div style={{ fontFamily: "'Source Serif 4', serif", fontWeight: 700, fontSize: 16, color: "#1C1917" }}>
+              {nowClass.subject}
+            </div>
+            <div style={{ fontSize: 13, color: "#78716C", fontFamily: "'DM Sans', sans-serif", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {nowClass.topic}
+            </div>
+          </div>
+
+          {/* Open button */}
+          <button
+            onClick={(e) => { e.stopPropagation(); onOpenTopic?.(nowClass.topic); }}
+            style={{
+              background: "#0D9488", color: "white", border: "none", padding: "10px 18px",
+              borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: "pointer",
+              fontFamily: "'DM Sans', sans-serif", flexShrink: 0, whiteSpace: "nowrap",
+            }}
+          >
+            Open →
+          </button>
+        </div>
+      )}
+
+      {/* Upcoming classes — horizontal row */}
+      {upcomingClasses.length > 0 && (
+        <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4 }}>
+          {upcomingClasses.map((c, i) => (
+            <div key={i} style={{
+              minWidth: 110, padding: "10px 14px", borderRadius: 10,
+              border: "1px solid #E7E5E4", background: "#FAFAF9",
+              flexShrink: 0, textAlign: "center",
+            }}>
+              <div style={{ fontSize: 11, color: "#A8A29E", fontWeight: 500, fontFamily: "'DM Sans', sans-serif", marginBottom: 4 }}>
+                {c.time}
+              </div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: c.color, fontFamily: "'DM Sans', sans-serif" }}>
+                {c.subject}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </Card>
   );
 }
