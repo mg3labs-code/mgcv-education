@@ -96,20 +96,39 @@ const TopNavbar = ({ role, phase = 4, activeTab, onTabChange }: TopNavbarProps) 
           </div>
         </a>
 
-        {/* Desktop nav */}
-        <div className="hidden lg:flex gap-5 items-center">
-          {items.map((item) =>
-            item.type === "nav" ? (
-              <button key={item.label} onClick={() => navigate(item.path!)} aria-current={isActive(item.path) ? "page" : undefined} className={`${btnBase} ${isActive(item.path) ? "ring-2 ring-white/60" : ""}`}>
-                {item.label}
+        {/* Desktop nav — Student tab pills */}
+        {role === "student" && onTabChange ? (
+          <div className="hidden lg:flex items-center" style={{
+            background: "#F5F5F4", borderRadius: 12, padding: 4, gap: 2,
+          }}>
+            {studentTabs.map((t) => (
+              <button key={t.id} onClick={() => onTabChange(t.id)} style={{
+                display: "flex", alignItems: "center", gap: 5, padding: "7px 12px", borderRadius: 8, border: "none",
+                background: activeTab === t.id ? "white" : "transparent",
+                boxShadow: activeTab === t.id ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
+                fontSize: 13, fontWeight: activeTab === t.id ? 600 : 400,
+                color: activeTab === t.id ? "#0D9488" : "#78716C", cursor: "pointer",
+                fontFamily: "'DM Sans', sans-serif", transition: "all 0.15s",
+              }}>
+                {t.icon} {t.label}
               </button>
-            ) : (
-              <button key={item.label} onClick={() => openModal(item.modal!)} className={btnBase}>
-                {item.label}
-              </button>
-            )
-          )}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="hidden lg:flex gap-5 items-center">
+            {items.map((item) =>
+              item.type === "nav" ? (
+                <button key={item.label} onClick={() => navigate(item.path!)} aria-current={isActive(item.path) ? "page" : undefined} className={`${btnBase} ${isActive(item.path) ? "ring-2 ring-white/60" : ""}`}>
+                  {item.label}
+                </button>
+              ) : (
+                <button key={item.label} onClick={() => openModal(item.modal!)} className={btnBase}>
+                  {item.label}
+                </button>
+              )
+            )}
+          </div>
+        )}
 
         <div className="flex items-center gap-3 lg:gap-4">
           {/* Hamburger for mobile/tablet */}
