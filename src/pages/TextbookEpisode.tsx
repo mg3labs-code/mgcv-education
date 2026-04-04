@@ -489,10 +489,10 @@ const TextbookEpisode = () => {
       const targetSet = layerParam === "deep" ? DEEP_BLOCKS : layerParam === "quiz" ? PROVE_BLOCKS : null;
       if (!targetSet) return;
       const idx = blocks.findIndex(b => targetSet.has(b.type));
-      if (idx >= 0) scrollToBlock(idx);
+      if (idx >= 0) goToBlock(idx);
     }, 500);
     return () => clearTimeout(timer);
-  }, [layerParam, blocks, scrollToBlock]);
+  }, [layerParam, blocks, goToBlock]);
 
   if (isLoading) {
     return (
