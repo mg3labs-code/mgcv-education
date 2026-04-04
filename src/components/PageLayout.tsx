@@ -13,7 +13,7 @@ const PageLayout = ({ role, children, breadcrumbItems }: PageLayoutProps) => {
   // Student pages use top navbar (no sidebar), matching the dashboard layout
   if (role === "student") {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen" style={{ background: "#F9FAFB" }}>
         <a href="#main-content" className="skip-to-content">Skip to content</a>
         <TopNavbar role={role} />
         {breadcrumbItems && breadcrumbItems.length > 0 && (
