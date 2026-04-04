@@ -23,6 +23,7 @@ const Index = () => {
   const { user, role, loading, signIn, signUp } = useAuth();
   const { toast } = useToast();
   const inIframe = isInIframe();
+  const standalonePreviewUrl = typeof window !== "undefined" ? window.location.href : "/";
   const [modalType, setModalType] = useState<ModalType>("");
   const [loginType, setLoginType] = useState<LoginType>("");
   const [authMode, setAuthMode] = useState<AuthMode>("login");
@@ -41,9 +42,17 @@ const Index = () => {
     }
   }, [loading, user, role, navigate]);
 
+  const openStandalonePreview = useCallback(() => {
+    window.open(standalonePreviewUrl, "_blank", "noopener,noreferrer");
+  }, [standalonePreviewUrl]);
+
   const openModal = (type: "student" | "teacher" | "about" | "contact") => {
     setMobileMenuOpen(false);
     if (type === "student" || type === "teacher") {
+      if (inIframe) {
+        openStandalonePreview();
+        return;
+      }
       setLoginType(type);
       setModalType("login");
     } else {
@@ -128,9 +137,9 @@ const Index = () => {
           <div className="max-w-xl mx-auto">
             <p className="font-bold text-base mb-1">⚠️ Preview Mode — Login may not work here</p>
             <p className="text-sm text-white/90 mb-2">Browser security blocks authentication inside iframes.</p>
-            <a href="https://mind-map-academy.lovable.app" target="_blank" rel="noopener noreferrer"
+              <a href={standalonePreviewUrl} target="_blank" rel="noopener noreferrer"
               className="inline-block bg-white text-destructive font-bold px-6 py-2 rounded-full text-sm hover:bg-white/90 transition-all shadow-md">
-              🚀 Open Live App ↗
+                🚀 Open This Preview in New Tab ↗
             </a>
           </div>
         </div>
