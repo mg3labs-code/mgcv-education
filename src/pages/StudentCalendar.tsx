@@ -142,7 +142,7 @@ const StudentCalendar = () => {
 
   return (
     <DashboardLayout role="student" breadcrumbItems={[{ label: "Dashboard", href: "/student" }, { label: "Calendar" }]}>
-      <div className="p-4 md:p-8 max-w-[1200px] mx-auto space-y-6">
+      <div className="p-4 md:p-8 max-w-[1200px] mx-auto space-y-6" style={{ background: "#FFFBF5", minHeight: "100vh", fontFamily: "'DM Sans', sans-serif" }}>
 
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
