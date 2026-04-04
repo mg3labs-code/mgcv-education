@@ -749,22 +749,22 @@ const TextbookEpisode = () => {
 
         {/* Header */}
         <div style={{
-          background: "linear-gradient(135deg, #1E3A5F, #1E293B)", borderRadius: 16,
+          background: "linear-gradient(135deg, #0F766E, #115E59)", borderRadius: 16,
           color: "white", padding: 24, marginBottom: 16,
         }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
             <button onClick={() => navigate(`/student/textbook/${chapterId}`)} style={{
-              display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "rgba(255,255,255,0.7)",
+              display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "rgba(255,255,255,0.85)",
               background: "none", border: "none", cursor: "pointer",
             }}>
               ← {chapter.title}
             </button>
-            <span style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", background: "rgba(255,255,255,0.1)", padding: "4px 12px", borderRadius: 20 }}>
+            <span style={{ fontSize: 12, color: "rgba(255,255,255,0.8)", background: "rgba(255,255,255,0.15)", padding: "4px 12px", borderRadius: 20 }}>
               ⏱️ {episode.duration}
             </span>
           </div>
-          <h1 style={{ fontSize: 22, fontWeight: 300, fontFamily: "'Source Serif 4', serif", margin: 0 }}>{episode.title}</h1>
-          {episode.subtitle && <p style={{ fontSize: 14, color: "rgba(255,255,255,0.7)", marginTop: 4 }}>{episode.subtitle}</p>}
+          <h1 style={{ fontSize: 22, fontWeight: 600, fontFamily: "'Source Serif 4', serif", margin: 0 }}>{episode.title}</h1>
+          {episode.subtitle && <p style={{ fontSize: 14, color: "rgba(255,255,255,0.85)", marginTop: 4 }}>{episode.subtitle}</p>}
         </div>
 
         {/* Language Progress Widget */}
@@ -817,7 +817,7 @@ const TextbookEpisode = () => {
               <div style={{
                 display: "flex", alignItems: "center", justifyContent: "space-between",
                 padding: "12px 16px", borderRadius: 12,
-                background: `${currentPhase.color}08`, border: `1px solid ${currentPhase.color}20`,
+                background: `${currentPhase.color}15`, border: `1px solid ${currentPhase.color}30`,
               }}>
                 <div>
                   <h3 style={{ fontSize: 16, fontWeight: 700, color: "#1C1917", margin: 0, display: "flex", alignItems: "center", gap: 8, fontFamily: "'Source Serif 4', serif" }}>
@@ -890,32 +890,49 @@ const TextbookEpisode = () => {
                 </div>
 
                 {!isLastBlock ? (
-                  <button
-                    onClick={() => {
-                      if (!isUnderstood) toggleUnderstood(activeBlock);
-                      goToBlock(activeBlock + 1);
-                    }}
-                    style={{
-                      padding: "12px 24px", borderRadius: 12, border: "none",
-                      background: "#0D9488", fontSize: 14, fontWeight: 600, color: "white",
-                      cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
-                    }}
-                  >
-                    Continue →
-                  </button>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
+                    <button
+                      disabled={!isUnderstood}
+                      onClick={() => goToBlock(activeBlock + 1)}
+                      style={{
+                        padding: "12px 24px", borderRadius: 12, border: "none",
+                        background: isUnderstood ? "#0D9488" : "#D6D3D1",
+                        fontSize: 14, fontWeight: 600, color: isUnderstood ? "white" : "#A8A29E",
+                        cursor: isUnderstood ? "pointer" : "not-allowed",
+                        fontFamily: "'DM Sans', sans-serif",
+                        transition: "all 0.2s ease",
+                      }}
+                    >
+                      Continue →
+                    </button>
+                    {!isUnderstood && (
+                      <span style={{ fontSize: 11, color: "#A8A29E", fontFamily: "'DM Sans', sans-serif" }}>
+                        Mark "Got it!" first
+                      </span>
+                    )}
+                  </div>
                 ) : (
-                  <button
-                    onClick={() => {
-                      if (!isUnderstood) toggleUnderstood(activeBlock);
-                    }}
-                    style={{
-                      padding: "12px 24px", borderRadius: 12, border: "none",
-                      background: "#059669", fontSize: 14, fontWeight: 600, color: "white",
-                      cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
-                    }}
-                  >
-                    Finish ✓
-                  </button>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
+                    <button
+                      disabled={!isUnderstood}
+                      onClick={() => {/* already marked */}}
+                      style={{
+                        padding: "12px 24px", borderRadius: 12, border: "none",
+                        background: isUnderstood ? "#059669" : "#D6D3D1",
+                        fontSize: 14, fontWeight: 600, color: isUnderstood ? "white" : "#A8A29E",
+                        cursor: isUnderstood ? "pointer" : "not-allowed",
+                        fontFamily: "'DM Sans', sans-serif",
+                        transition: "all 0.2s ease",
+                      }}
+                    >
+                      Finish ✓
+                    </button>
+                    {!isUnderstood && (
+                      <span style={{ fontSize: 11, color: "#A8A29E", fontFamily: "'DM Sans', sans-serif" }}>
+                        Mark "Got it!" first
+                      </span>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
