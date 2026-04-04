@@ -61,6 +61,14 @@ const TopNavbar = ({ role, phase = 4, activeTab, onTabChange }: TopNavbarProps) 
     { label: "Message Bar", modal: "message", type: "modal" as const },
   ];
 
+  const studentTabs = [
+    { id: "home", icon: "🏠", label: "Home" },
+    { id: "learn", icon: "📖", label: "Learn" },
+    { id: "tasks", icon: "📝", label: "Tasks" },
+    { id: "calendar", icon: "📅", label: "Calendar" },
+    ...(phase >= 2 ? [{ id: "growth", icon: "📊", label: "My Growth" }] : []),
+  ];
+
   const studentItems = [
     { label: "Dashboard", path: "/student", type: "nav" as const },
     { label: "Assignments", modal: "assignments", type: "modal" as const },
@@ -71,7 +79,7 @@ const TopNavbar = ({ role, phase = 4, activeTab, onTabChange }: TopNavbarProps) 
     { label: "Personalisation", modal: "personalisation", type: "modal" as const },
   ];
 
-  const items = role === "teacher" ? teacherItems : role === "student" ? studentItems : [];
+  const items = role === "teacher" ? teacherItems : role === "student" && !onTabChange ? studentItems : role === "teacher" ? teacherItems : [];
 
   const isActive = (path?: string) => path && location.pathname === path;
 
