@@ -265,7 +265,7 @@ const LearnTab = ({ methodCounts }: LearnTabProps) => {
                           <span style={{ fontSize: 11, color: "#78716C" }}>{completed}/{totalEps} lessons</span>
                         </div>
                         {ch.periods && <span style={{ fontSize: 11, color: "#A8A29E" }}>⏱ {ch.periods} periods</span>}
-                        {ch.page_range && <span style={{ fontSize: 11, color: "#A8A29E" }}>📄 Pages {ch.page_range}</span>}
+                        {ch.pageRange && <span style={{ fontSize: 11, color: "#A8A29E" }}>📄 Pages {ch.pageRange}</span>}
                       </div>
                     )}
                   </div>
