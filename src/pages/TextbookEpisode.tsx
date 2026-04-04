@@ -471,27 +471,16 @@ const TextbookEpisode = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // IntersectionObserver for active block
-  useEffect(() => {
-    if (!blocks || blocks.length === 0) return;
-    const observers: IntersectionObserver[] = [];
-    blockRefs.current.forEach((ref, index) => {
-      if (!ref) return;
-      const observer = new IntersectionObserver(([entry]) => { if (entry.isIntersecting) setActiveBlock(index); }, { rootMargin: "-20% 0px -60% 0px", threshold: 0 });
-      observer.observe(ref);
-      observers.push(observer);
-    });
-    return () => observers.forEach((o) => o.disconnect());
-  }, [blocks]);
-
-  const scrollToBlock = useCallback((index: number) => {
-    blockRefs.current[index]?.scrollIntoView({ behavior: "smooth", block: "start" });
+  // Navigate to block by index (paginated — no scroll needed)
+  const goToBlock = useCallback((index: number) => {
+    setActiveBlock(index);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
   const scrollToActivity = useCallback(() => {
     const actIdx = blocks.findIndex(b => b.type === "activity");
-    if (actIdx >= 0) scrollToBlock(actIdx);
-  }, [blocks, scrollToBlock]);
+    if (actIdx >= 0) goToBlock(actIdx);
+  }, [blocks, goToBlock]);
 
   // Auto-scroll to layer based on query param
   useEffect(() => {
@@ -500,10 +489,10 @@ const TextbookEpisode = () => {
       const targetSet = layerParam === "deep" ? DEEP_BLOCKS : layerParam === "quiz" ? PROVE_BLOCKS : null;
       if (!targetSet) return;
       const idx = blocks.findIndex(b => targetSet.has(b.type));
-      if (idx >= 0) scrollToBlock(idx);
+      if (idx >= 0) goToBlock(idx);
     }, 500);
     return () => clearTimeout(timer);
-  }, [layerParam, blocks, scrollToBlock]);
+  }, [layerParam, blocks, goToBlock]);
 
   if (isLoading) {
     return (
@@ -652,7 +641,7 @@ const TextbookEpisode = () => {
                     return (
                       <button
                         key={i}
-                        onClick={() => { scrollToBlock(i); setSidebarOpen(false); }}
+                        onClick={() => { goToBlock(i); setSidebarOpen(false); }}
                         style={{
                           width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "9px 10px",
                           borderRadius: 8, border: "none", textAlign: "left", marginBottom: 2,
@@ -812,156 +801,126 @@ const TextbookEpisode = () => {
                 <Check className="h-3 w-3" /> Saved
               </span>
             )}
-            <button
-              onClick={() => toggleAllCollapsed(blocks)}
-              style={{
-                display: "flex", alignItems: "center", gap: 6, padding: "6px 12px",
-                borderRadius: 8, border: "1px solid #E7E5E4", background: "white",
-                fontSize: 12, fontWeight: 500, color: "#57534E", cursor: "pointer",
-              }}
-            >
-              {collapsedBlocks.size === blocks.length ? (
-                <><Eye className="h-3.5 w-3.5" /> Expand All</>
-              ) : (
-                <><ChevronDown className="h-3.5 w-3.5 -rotate-90" /> Collapse All</>
-              )}
-            </button>
           </div>
         </div>
 
-        {/* ═══ Blocks grouped by Phase ═══ */}
-        <div className="space-y-8">
-          {phases.map((phase) => {
-            const phaseBlocks = blocks.map((b, i) => ({ block: b, index: i })).filter(({ block }) => phase.blockSet.has(block.type));
-            if (phaseBlocks.length === 0) return null;
-            const phaseUnderstood = phaseBlocks.filter(({ index }) => understoodBlocks.has(index)).length;
-            const phaseComplete = phaseUnderstood === phaseBlocks.length;
+        {/* ═══ Single Block — Paginated View ═══ */}
+        {blocks.length > 0 && activeBlock < blocks.length && (() => {
+          const block = blocks[activeBlock];
+          const meta = layerMeta[block.type] || defaultMeta;
+          const isUnderstood = understoodBlocks.has(activeBlock);
+          const isLastBlock = activeBlock === blocks.length - 1;
 
-            return (
-              <div key={phase.id} className={phase.className}>
-                {/* Phase Header */}
-                <div style={{
-                  display: "flex", alignItems: "center", justifyContent: "space-between",
-                  marginBottom: 16, padding: "12px 16px", borderRadius: 12,
-                  background: `${phase.color}08`, border: `1px solid ${phase.color}20`,
+          return (
+            <div className="space-y-4">
+              {/* Phase header for current block */}
+              <div style={{
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+                padding: "12px 16px", borderRadius: 12,
+                background: `${currentPhase.color}08`, border: `1px solid ${currentPhase.color}20`,
+              }}>
+                <div>
+                  <h3 style={{ fontSize: 16, fontWeight: 700, color: "#1C1917", margin: 0, display: "flex", alignItems: "center", gap: 8, fontFamily: "'Source Serif 4', serif" }}>
+                    {currentPhase.icon} {currentPhase.label}
+                  </h3>
+                  <p style={{ fontSize: 12, color: "#78716C", margin: "4px 0 0", fontFamily: "'DM Sans', sans-serif" }}>{currentPhase.subtitle}</p>
+                </div>
+                <span style={{
+                  fontSize: 12, fontWeight: 600, color: currentPhase.color,
+                  background: `${currentPhase.color}12`, padding: "4px 10px", borderRadius: 20,
+                  fontFamily: "'DM Sans', sans-serif",
                 }}>
-                  <div>
-                    <h3 style={{ fontSize: 16, fontWeight: 700, color: "#1C1917", margin: 0, display: "flex", alignItems: "center", gap: 8, fontFamily: "'Source Serif 4', serif" }}>
-                      {phase.icon} {phase.label}
-                      {phaseComplete && <span style={{ fontSize: 13, color: "#0D9488" }}>✓ Complete</span>}
-                    </h3>
-                    <p style={{ fontSize: 12, color: "#78716C", margin: "4px 0 0", fontFamily: "'DM Sans', sans-serif" }}>{phase.subtitle}</p>
-                  </div>
-                  <span style={{
-                    fontSize: 12, fontWeight: 600, color: phase.color,
-                    background: `${phase.color}12`, padding: "4px 10px", borderRadius: 20,
-                    fontFamily: "'DM Sans', sans-serif",
-                  }}>
-                    {phaseUnderstood}/{phaseBlocks.length}
-                  </span>
-                </div>
+                  {activeBlock + 1}/{blocks.length}
+                </span>
+              </div>
 
-                {/* Phase Blocks */}
-                <div className="space-y-4">
-                  {phaseBlocks.map(({ block, index: i }) => {
-                    const meta = layerMeta[block.type] || defaultMeta;
-                    const BlockIcon = blockIcons[block.type] || BookOpen;
-                    const isCollapsed = collapsedBlocks.has(i);
-
-                    return (
-                      <div
-                        key={i}
-                        ref={(el) => { blockRefs.current[i] = el; }}
-                        className={`bg-card rounded-xl scroll-mt-24 shadow-sm hover:shadow-md transition-all border-l-4 ${(meta as any).border || "border-l-primary"} hover:-translate-y-0.5 ${!isCollapsed ? "animate-block-unlock" : ""}`}
-                      >
-                        <button onClick={() => toggleBlock(i)} className="w-full flex items-center justify-between p-5 pb-3 cursor-pointer select-none group">
-                          <div className="flex items-center gap-3 min-w-0">
-                            <span className="text-xl shrink-0">{block.icon}</span>
-                            <div className="text-left min-w-0">
-                              <h2 className="text-[1.1rem] font-semibold text-foreground truncate">{block.title}</h2>
-                              <p className="text-xs text-muted-foreground italic mt-0.5">{blockSubtitles[block.type] || ""}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2 shrink-0">
-                            {meta.badge && (
-                              <span className={`text-[11px] font-semibold px-3 py-1 rounded-full ${meta.badgeColor || ""} hidden sm:inline-flex`}>
-                                {meta.badge}
-                              </span>
-                            )}
-                            {understoodBlocks.has(i) && <Check className="h-4 w-4 text-primary" />}
-                            <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform duration-300 ${isCollapsed ? "-rotate-90" : "rotate-0"}`} />
-                          </div>
-                        </button>
-
-                        <div className="overflow-hidden transition-all duration-300 ease-in-out" style={{ maxHeight: isCollapsed ? "0px" : "5000px", opacity: isCollapsed ? 0 : 1, padding: isCollapsed ? "0 1.25rem" : "1.25rem" }}>
-                          {renderBlock(block)}
-                          <div className="mt-4 pt-3 border-t border-border flex justify-end">
-                            <button
-                              onClick={(e) => { e.stopPropagation(); toggleUnderstood(i); }}
-                              className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${understoodBlocks.has(i) ? "bg-primary/10 text-primary border border-primary/30 animate-got-it" : "bg-muted text-muted-foreground hover:bg-muted/80 border border-border"}`}
-                            >
-                              <CheckCircle2 className={`h-4 w-4 ${understoodBlocks.has(i) ? "fill-primary" : ""}`} />
-                              {understoodBlocks.has(i) ? "Nailed it! 🎯" : "Got it! ✓"}
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* ═══ Section Navigation (Previous/Next) ═══ */}
-                {phaseBlocks.length > 0 && (
-                  <div style={{
-                    display: "flex", alignItems: "center", justifyContent: "space-between",
-                    marginTop: 12, padding: "8px 0",
-                  }}>
-                    {/* Previous phase button */}
-                    {phases.indexOf(phase) > 0 ? (
-                      <button
-                        onClick={() => {
-                          const prevPhase = phases[phases.indexOf(phase) - 1];
-                          const prevBlocks = blocks.map((b, i) => ({ block: b, index: i })).filter(({ block }) => prevPhase.blockSet.has(block.type));
-                          if (prevBlocks.length > 0) scrollToBlock(prevBlocks[0].index);
-                        }}
-                        style={{
-                          padding: "10px 20px", borderRadius: 12, border: "1px solid #E7E5E4",
-                          background: "white", fontSize: 13, fontWeight: 600, color: "#57534E",
-                          cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
-                        }}
-                      >
-                        ← Previous
-                      </button>
-                    ) : <div />}
-
-                    {phaseComplete && (
-                      <span style={{ fontSize: 12, fontWeight: 600, color: "#0D9488", fontFamily: "'DM Sans', sans-serif" }}>
-                        ✓ Phase complete
+              {/* The single block card */}
+              <div className={`bg-card rounded-xl shadow-sm border-l-4 ${(meta as any).border || "border-l-primary"}`}>
+                <div className="p-5 pb-3">
+                  <div className="flex items-center gap-3 mb-1">
+                    <span className="text-xl shrink-0">{block.icon}</span>
+                    <div>
+                      <h2 className="text-[1.1rem] font-semibold text-foreground">{block.title}</h2>
+                      <p className="text-xs text-muted-foreground italic mt-0.5">{blockSubtitles[block.type] || ""}</p>
+                    </div>
+                    {meta.badge && (
+                      <span className={`text-[11px] font-semibold px-3 py-1 rounded-full ${meta.badgeColor || ""} ml-auto hidden sm:inline-flex`}>
+                        {meta.badge}
                       </span>
                     )}
-
-                    {phases.indexOf(phase) < phases.length - 1 ? (
-                      <button
-                        onClick={() => {
-                          const nextPhase = phases[phases.indexOf(phase) + 1];
-                          const nextBlocks = blocks.map((b, i) => ({ block: b, index: i })).filter(({ block }) => nextPhase.blockSet.has(block.type));
-                          if (nextBlocks.length > 0) scrollToBlock(nextBlocks[0].index);
-                        }}
-                        style={{
-                          padding: "10px 20px", borderRadius: 12, border: "none",
-                          background: "#0D9488", fontSize: 13, fontWeight: 600, color: "white",
-                          cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
-                        }}
-                      >
-                        Next Phase →
-                      </button>
-                    ) : <div />}
                   </div>
+                </div>
+                <div className="px-5 pb-5">
+                  {renderBlock(block)}
+                </div>
+              </div>
+
+              {/* Bottom Navigation Bar */}
+              <div style={{
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+                padding: "16px 0", borderTop: "1px solid #E7E5E4", marginTop: 8,
+              }}>
+                <button
+                  onClick={() => activeBlock > 0 && goToBlock(activeBlock - 1)}
+                  disabled={activeBlock === 0}
+                  style={{
+                    padding: "12px 24px", borderRadius: 12, border: "1px solid #E7E5E4",
+                    background: "white", fontSize: 14, fontWeight: 600,
+                    color: activeBlock === 0 ? "#D6D3D1" : "#57534E",
+                    cursor: activeBlock === 0 ? "default" : "pointer",
+                    fontFamily: "'DM Sans', sans-serif",
+                  }}
+                >
+                  ← Previous
+                </button>
+
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  {isUnderstood && (
+                    <span style={{ fontSize: 12, fontWeight: 600, color: "#0D9488", fontFamily: "'DM Sans', sans-serif" }}>
+                      ✓ Section complete
+                    </span>
+                  )}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); toggleUnderstood(activeBlock); }}
+                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${isUnderstood ? "bg-primary/10 text-primary border border-primary/30" : "bg-muted text-muted-foreground hover:bg-muted/80 border border-border"}`}
+                  >
+                    <CheckCircle2 className={`h-4 w-4 ${isUnderstood ? "fill-primary" : ""}`} />
+                    {isUnderstood ? "Nailed it! 🎯" : "Got it! ✓"}
+                  </button>
+                </div>
+
+                {!isLastBlock ? (
+                  <button
+                    onClick={() => {
+                      if (!isUnderstood) toggleUnderstood(activeBlock);
+                      goToBlock(activeBlock + 1);
+                    }}
+                    style={{
+                      padding: "12px 24px", borderRadius: 12, border: "none",
+                      background: "#0D9488", fontSize: 14, fontWeight: 600, color: "white",
+                      cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+                    }}
+                  >
+                    Continue →
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      if (!isUnderstood) toggleUnderstood(activeBlock);
+                    }}
+                    style={{
+                      padding: "12px 24px", borderRadius: 12, border: "none",
+                      background: "#059669", fontSize: 14, fontWeight: 600, color: "white",
+                      cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+                    }}
+                  >
+                    Finish ✓
+                  </button>
                 )}
               </div>
-            );
-          })}
-        </div>
+            </div>
+          );
+        })()}
 
         {/* Completion Actions */}
         <div style={{
