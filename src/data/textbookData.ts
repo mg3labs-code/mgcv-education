@@ -762,6 +762,10 @@ export const chapters: Chapter[] = [
                 },
               ],
             } as RecallContent,
+            textbookRef: {
+              text: "Euclid's Algorithm: To obtain the HCF of two positive integers c and d (c > d), apply Euclid's Division Lemma repeatedly until the remainder is zero. The last divisor is the HCF.",
+              source: "TS SCERT Class 10 Maths, §1.2, p.5",
+            },
           },
           {
             type: "explain",
