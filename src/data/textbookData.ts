@@ -187,11 +187,11 @@ export const chapters: Chapter[] = [
             } as ConceptContent,
             textbookRef: {
               snippets: [
-                { text: "The counting numbers 1, 2, 3, 4, … are known as natural numbers. The collection of all natural numbers is denoted by N. So, N = {1, 2, 3, 4, 5, …}.", source: "Section 1.1, Page 2" },
-                { text: "If we include zero along with the natural numbers, we obtain the collection of whole numbers, denoted by W. Thus, W = {0, 1, 2, 3, 4, …}. Every natural number is a whole number, but zero is a whole number which is not a natural number.", source: "Section 1.1, Page 2" },
-                { text: "The collection of all whole numbers and their negatives is known as integers, denoted by Z (from the German word 'Zahlen' meaning 'to count'). Z = {…, −3, −2, −1, 0, 1, 2, 3, …}.", source: "Section 1.1, Page 3" },
-                { text: "A number r is called a rational number if it can be written in the form p/q, where p and q are integers and q ≠ 0. The collection of rational numbers is denoted by Q. The decimal expansion of a rational number is either terminating or non-terminating recurring.", source: "Section 1.1, Page 3" },
-                { text: "From our discussion, it is clear that every natural number is a whole number, every whole number is an integer, and every integer is a rational number. This gives us N ⊂ W ⊂ Z ⊂ Q.", source: "Section 1.1, Page 4" },
+                { text: "The counting numbers 1, 2, 3, 4, … are known as natural numbers. The collection of all natural numbers is denoted by N. So, N = {1, 2, 3, 4, 5, …}.", source: "TS SCERT Class 10 Maths, Ch.1 Introduction, p.1" },
+                { text: "If we include zero along with the natural numbers, we obtain the collection of whole numbers, denoted by W. Thus, W = {0, 1, 2, 3, 4, …}. Every natural number is a whole number, but zero is a whole number which is not a natural number.", source: "TS SCERT Class 10 Maths, Ch.1 Introduction, p.1" },
+                { text: "The collection of all whole numbers and their negatives is known as integers, denoted by Z (from the German word 'Zahlen' meaning 'to count'). Z = {…, −3, −2, −1, 0, 1, 2, 3, …}.", source: "TS SCERT Class 10 Maths, Ch.1 Introduction, p.2" },
+                { text: "A number r is called a rational number if it can be written in the form p/q, where p and q are integers and q ≠ 0. The collection of rational numbers is denoted by Q. The decimal expansion of a rational number is either terminating or non-terminating recurring.", source: "TS SCERT Class 10 Maths, Ch.1 Introduction, p.2" },
+                { text: "From our discussion, it is clear that every natural number is a whole number, every whole number is an integer, and every integer is a rational number. This gives us N ⊂ W ⊂ Z ⊂ Q.", source: "TS SCERT Class 10 Maths, Ch.1 Introduction, p.2" },
               ],
             },
           },
@@ -221,7 +221,7 @@ export const chapters: Chapter[] = [
             } as ActivityContent,
             textbookRef: {
               text: "State whether the following statements are true or false. Give reasons for your answers: (i) Every natural number is a whole number. (ii) Every integer is a whole number. (iii) Every rational number is an integer.",
-              source: "Exercise 1.1, Q4, Page 5",
+              source: "TS SCERT Class 10 Maths, Exercise 1.1, Q4",
             },
           },
           {
@@ -252,7 +252,7 @@ export const chapters: Chapter[] = [
             } as RecallContent,
             textbookRef: {
               text: "A number r is called a rational number if it can be written in the form p/q, where p and q are integers and q ≠ 0. Every natural number is a whole number, every whole number is an integer, and every integer is a rational number.",
-              source: "Section 1.1, Pages 2-4",
+              source: "TS SCERT Class 10 Maths, Ch.1 Introduction, pp.1-2",
             },
           },
           {
@@ -271,7 +271,7 @@ export const chapters: Chapter[] = [
             } as ExplainContent,
             textbookRef: {
               text: "Every integer n can be written as n/1, which is in p/q form with q ≠ 0. Therefore, every integer is a rational number.",
-              source: "Section 1.1, Page 3",
+              source: "TS SCERT Class 10 Maths, Ch.1 Introduction, p.2",
             },
           },
           {
@@ -308,7 +308,7 @@ export const chapters: Chapter[] = [
             } as AssessmentContent,
             textbookRef: {
               text: "Every natural number is a whole number (True). Every integer is NOT a whole number — negative integers like −1, −2 are not whole numbers (False). Every rational number is NOT an integer — for example, 3/4 is rational but not an integer (False).",
-              source: "Exercise 1.1, Q4, Page 5",
+              source: "TS SCERT Class 10 Maths, Exercise 1.1, Q4",
             },
           },
           {
@@ -327,7 +327,7 @@ export const chapters: Chapter[] = [
             } as ExerciseContent,
             textbookRef: {
               text: "Exercise 1.1: (1) Is zero a rational number? (2) Find six rational numbers between 3 and 4. (3) Find five rational numbers between 3/5 and 4/5. (4) State true or false with reasons for N, W, Z, Q relationships.",
-              source: "Exercise 1.1, Page 5",
+              source: "TS SCERT Class 10 Maths, Exercise 1.1",
             },
           },
           // ── Layer 3: Reasoning ──
@@ -357,7 +357,7 @@ export const chapters: Chapter[] = [
             } as ReasoningContent,
             textbookRef: {
               text: "In earlier classes, we have studied different types of numbers. We have seen that every rational number can be expressed in the form p/q. In this chapter, we shall explore real numbers more deeply and understand why each number type was needed.",
-              source: "Section 1.1, Introduction, Page 1",
+              source: "TS SCERT Class 10 Maths, Ch.1 Introduction, p.1",
             },
           },
           // ── Layer 4: Assumptions ──
@@ -388,7 +388,7 @@ export const chapters: Chapter[] = [
             } as AssumptionsContent,
             textbookRef: {
               text: "We have learnt that there are infinitely many rationals between any two given rational numbers. So, we might think that the number line is completely covered by rationals. But this is not so! In the next section, we shall show that there exist numbers which are NOT rational.",
-              source: "Section 1.2, Page 5",
+              source: "TS SCERT Class 10 Maths, §1.2, p.5",
             },
           },
           // ── Layer 5: Connections ──
@@ -433,7 +433,7 @@ export const chapters: Chapter[] = [
             } as ConnectionsContent,
             textbookRef: {
               text: "The word 'rational' comes from the word 'ratio'. The letter Z for integers comes from the German word 'Zahlen' meaning 'to count'. Q is used for rationals from the word 'quotient'.",
-              source: "Section 1.1, Pages 2-3",
+              source: "TS SCERT Class 10 Maths, Ch.1 Introduction, pp.1-2",
             },
           },
           // ── Layer 6: Application (Harvard Case) ──
@@ -464,7 +464,7 @@ export const chapters: Chapter[] = [
             } as ApplicationContent,
             textbookRef: {
               text: "Examples of rational numbers include 1/2, −3/4, 7 (which is 7/1), and 0 (which is 0/1). The decimal expansion of a rational number is either terminating (e.g., 1/4 = 0.25) or non-terminating recurring (e.g., 1/3 = 0.333…).",
-              source: "Section 1.1, Page 3",
+              source: "TS SCERT Class 10 Maths, Ch.1 Introduction, p.2",
             },
           },
           // ── Layer 7: Implications (Oxford Essay) ──
@@ -517,7 +517,7 @@ export const chapters: Chapter[] = [
             } as ImplicationsContent,
             textbookRef: {
               text: "So, we might think that there is nothing more to be said about real numbers. But it was not until the 19th century that mathematicians like Dedekind, Cantor, and Weierstrass gave a rigorous foundation to the theory of real numbers.",
-              source: "Section 1.4, Page 14",
+              source: "TS SCERT Class 10 Maths, §1.4, p.14",
             },
           },
         ],
@@ -554,6 +554,13 @@ export const chapters: Chapter[] = [
               ],
               keyFormulas: ["a = bq + r, where 0 ≤ r < b"],
             } as ConceptContent,
+            textbookRef: {
+              snippets: [
+                { text: "In a garden, a swarm of bees settles on flowers. This puzzle introduces the idea that when we divide a number, we always get a quotient and a remainder.", source: "TS SCERT Class 10 Maths, §1.1 Introduction, p.3" },
+                { text: "For any two positive integers a and b, there exist unique integers q and r satisfying a = bq + r, where 0 ≤ r < b. This result is known as Euclid's Division Lemma.", source: "TS SCERT Class 10 Maths, §1.1 Euclid's Division Lemma, p.4" },
+                { text: "The Division Algorithm is a restatement of Euclid's Division Lemma. It provides the method: divide 'a' by 'b', get quotient 'q' and remainder 'r'.", source: "TS SCERT Class 10 Maths, §1.1, p.4" },
+              ],
+            },
           },
           {
             type: "activity",
@@ -569,6 +576,10 @@ export const chapters: Chapter[] = [
                 { value: "a = 132, b = 11" },
               ],
             } as ActivityContent,
+            textbookRef: {
+              text: "Let us apply the Division Lemma to find q and r for various values of a and b. Remember: a = bq + r, where 0 ≤ r < b.",
+              source: "TS SCERT Class 10 Maths, §1.1 Example 1, p.4",
+            },
           },
           {
             type: "recall",
@@ -592,6 +603,10 @@ export const chapters: Chapter[] = [
                 },
               ],
             } as RecallContent,
+            textbookRef: {
+              text: "Euclid's Division Lemma: Given positive integers a and b, there exist unique integers q and r satisfying a = bq + r, 0 ≤ r < b.",
+              source: "TS SCERT Class 10 Maths, Theorem 1.1, p.4",
+            },
           },
           {
             type: "explain",
@@ -606,6 +621,10 @@ export const chapters: Chapter[] = [
               ],
               wordLimit: 100,
             } as ExplainContent,
+            textbookRef: {
+              text: "Note that the remainder r must always satisfy 0 ≤ r < b. If the remainder were equal to or greater than b, we could perform the division once more.",
+              source: "TS SCERT Class 10 Maths, §1.1, p.4",
+            },
           },
           {
             type: "assessment",
@@ -638,19 +657,27 @@ export const chapters: Chapter[] = [
                 },
               ],
             } as AssessmentContent,
+            textbookRef: {
+              text: "Apply Euclid's Division Lemma: for any pair of positive integers a and b, express a = bq + r and verify that 0 ≤ r < b.",
+              source: "TS SCERT Class 10 Maths, Exercise 1.1, p.6",
+            },
           },
           {
             type: "exercise",
             title: "Division Algorithm Practice",
             icon: "📝",
             content: {
-              source: "Section 1.1, Division Algorithm",
+              source: "TS SCERT Class 10 Maths, §1.1 Euclid's Division Lemma",
               problems: [
                 { number: "1", text: "Find q and r for a = 47, b = 5.", answer: "q = 9, r = 2" },
                 { number: "2", text: "Find q and r for a = 100, b = 7.", answer: "q = 14, r = 2" },
                 { number: "3", text: "Find q and r for a = 256, b = 13.", answer: "q = 19, r = 9" },
               ],
             } as ExerciseContent,
+            textbookRef: {
+              text: "Use Euclid's algorithm to find the HCF of the given pairs. Show that every positive even integer is of the form 2q, and every positive odd integer is of the form 2q+1.",
+              source: "TS SCERT Class 10 Maths, Exercise 1.1, p.7",
+            },
           },
         ],
       },
@@ -692,6 +719,13 @@ export const chapters: Chapter[] = [
                 },
               ],
             } as ConceptContent,
+            textbookRef: {
+              snippets: [
+                { text: "To obtain the HCF of two positive integers, say c and d (c > d), follow the steps: Apply Euclid's Division Lemma to c and d, to get c = dq + r.", source: "TS SCERT Class 10 Maths, §1.2 Euclid's Algorithm, p.5" },
+                { text: "Euclid's algorithm: Step 1 — Apply division algorithm: c = dq + r. Step 2 — If r = 0, d is the HCF. If r ≠ 0, apply Step 1 to d and r.", source: "TS SCERT Class 10 Maths, §1.2, p.6" },
+                { text: "Example: Find HCF of 4052 and 12576. 12576 = 4052 × 3 + 420; 4052 = 420 × 9 + 272; 420 = 272 × 1 + 148; 272 = 148 × 1 + 124; 148 = 124 × 1 + 24; 124 = 24 × 5 + 4; 24 = 4 × 6 + 0. HCF = 4.", source: "TS SCERT Class 10 Maths, §1.2 Example 3, p.6" },
+              ],
+            },
           },
           {
             type: "activity",
@@ -707,6 +741,10 @@ export const chapters: Chapter[] = [
                 { value: "1860 and 2015" },
               ],
             } as ActivityContent,
+            textbookRef: {
+              text: "Use Euclid's algorithm to find the HCF of (i) 900 and 270 (ii) 196 and 38220 (iii) 1651 and 2032.",
+              source: "TS SCERT Class 10 Maths, Exercise 1.1, Q1",
+            },
           },
           {
             type: "recall",
@@ -728,6 +766,10 @@ export const chapters: Chapter[] = [
                 },
               ],
             } as RecallContent,
+            textbookRef: {
+              text: "Euclid's Algorithm: To obtain the HCF of two positive integers c and d (c > d), apply Euclid's Division Lemma repeatedly until the remainder is zero. The last divisor is the HCF.",
+              source: "TS SCERT Class 10 Maths, §1.2, p.5",
+            },
           },
           {
             type: "explain",
@@ -742,6 +784,10 @@ export const chapters: Chapter[] = [
               ],
               wordLimit: 100,
             } as ExplainContent,
+            textbookRef: {
+              text: "The main idea behind Euclid's Algorithm is that HCF(c, d) = HCF(d, r), where r is the remainder when c is divided by d. This is because any common factor of c and d is also a common factor of d and r.",
+              source: "TS SCERT Class 10 Maths, §1.2, p.5",
+            },
           },
           {
             type: "assessment",
@@ -774,13 +820,17 @@ export const chapters: Chapter[] = [
                 },
               ],
             } as AssessmentContent,
+            textbookRef: {
+              text: "Apply Euclid's algorithm step by step. Remember: the last non-zero divisor when the remainder becomes 0 is the HCF.",
+              source: "TS SCERT Class 10 Maths, Exercise 1.1",
+            },
           },
           {
             type: "exercise",
             title: "Exercise 1.1 (Textbook)",
             icon: "📝",
             content: {
-              source: "Exercise 1.1, Page 6",
+              source: "TS SCERT Class 10 Maths, Exercise 1.1, p.7",
               problems: [
                 { number: "1(i)", text: "Use Euclid's algorithm to find the HCF of 900 and 270.", answer: "90" },
                 { number: "1(ii)", text: "Use Euclid's algorithm to find the HCF of 196 and 38220.", answer: "196" },
@@ -791,6 +841,10 @@ export const chapters: Chapter[] = [
                 { number: "5", text: "Show that one and only one out of n, n+2 or n+4 is divisible by 3, where n is any positive integer." },
               ],
             } as ExerciseContent,
+            textbookRef: {
+              text: "Use Euclid's algorithm to find the HCF of the given pairs. Show that every positive even integer is of the form 2q, and every positive odd integer is of the form 2q+1.",
+              source: "TS SCERT Class 10 Maths, Exercise 1.1, p.7",
+            },
           },
         ],
       },
@@ -840,6 +894,13 @@ export const chapters: Chapter[] = [
                 },
               ],
             } as ConceptContent,
+            textbookRef: {
+              snippets: [
+                { text: "Every composite number can be expressed (factorised) as a product of primes, and this factorisation is unique, apart from the order in which the prime factors occur.", source: "TS SCERT Class 10 Maths, Theorem 1.2 (FTA), p.8" },
+                { text: "HCF = product of the smallest power of each common prime factor. LCM = product of the greatest power of each prime factor.", source: "TS SCERT Class 10 Maths, §1.3, p.10" },
+                { text: "For any two positive integers a and b, HCF(a, b) × LCM(a, b) = a × b.", source: "TS SCERT Class 10 Maths, §1.3, p.10" },
+              ],
+            },
           },
           {
             type: "activity",
@@ -856,6 +917,10 @@ export const chapters: Chapter[] = [
                 { value: "Verify: HCF × LCM = 140 × 156" },
               ],
             } as ActivityContent,
+            textbookRef: {
+              text: "Express each of the following numbers as a product of its prime factors: (i) 140 (ii) 156 (iii) 3825 (iv) 5005 (v) 7429.",
+              source: "TS SCERT Class 10 Maths, Exercise 1.2, Q1",
+            },
           },
           {
             type: "recall",
@@ -883,6 +948,10 @@ export const chapters: Chapter[] = [
                 },
               ],
             } as RecallContent,
+            textbookRef: {
+              text: "The Fundamental Theorem of Arithmetic says that every composite number can be expressed as a product of primes in a unique way. This is used to find HCF and LCM by prime factorisation.",
+              source: "TS SCERT Class 10 Maths, Theorem 1.2, p.8",
+            },
           },
           {
             type: "explain",
@@ -897,6 +966,10 @@ export const chapters: Chapter[] = [
               ],
               wordLimit: 100,
             } as ExplainContent,
+            textbookRef: {
+              text: "The Fundamental Theorem of Arithmetic has many applications, both within mathematics and in other fields. For example, it is used in computing and cryptography.",
+              source: "TS SCERT Class 10 Maths, §1.3, p.8",
+            },
           },
           {
             type: "assessment",
@@ -924,13 +997,17 @@ export const chapters: Chapter[] = [
                 },
               ],
             } as AssessmentContent,
+            textbookRef: {
+              text: "To find prime factorisation, keep dividing by the smallest prime factor. Then use the factorisation to compute HCF (smallest powers of common primes) and LCM (greatest powers of all primes).",
+              source: "TS SCERT Class 10 Maths, §1.3, p.9",
+            },
           },
           {
             type: "exercise",
             title: "Exercise 1.2 — HCF & LCM (Textbook)",
             icon: "📝",
             content: {
-              source: "Exercise 1.2, Page 11",
+              source: "TS SCERT Class 10 Maths, Exercise 1.2, p.11",
               problems: [
                 { number: "1(i)", text: "Express 140 as a product of its prime factors.", answer: "2² × 5 × 7" },
                 { number: "1(ii)", text: "Express 156 as a product of its prime factors.", answer: "2² × 3 × 13" },
@@ -945,6 +1022,10 @@ export const chapters: Chapter[] = [
                 { number: "5", text: "How will you show that (17 × 11 × 2) + (17 × 11 × 5) is a composite number?", answer: "= 17 × 11 × (2+5) = 17 × 11 × 7, composite." },
               ],
             } as ExerciseContent,
+            textbookRef: {
+              text: "Express each number as a product of its prime factors. Find LCM and HCF by prime factorisation method. Verify HCF × LCM = product of the two numbers.",
+              source: "TS SCERT Class 10 Maths, Exercise 1.2, p.11",
+            },
           },
         ],
       },
@@ -983,6 +1064,13 @@ export const chapters: Chapter[] = [
                 "Irrational decimal: non-terminating AND non-recurring",
               ],
             } as ConceptContent,
+            textbookRef: {
+              snippets: [
+                { text: "A number 's' is called irrational if it cannot be written in the form p/q, where p and q are integers and q ≠ 0.", source: "TS SCERT Class 10 Maths, §1.4, p.13" },
+                { text: "Theorem: √2 is irrational. Proof: Assume √2 = p/q in lowest terms. Then p² = 2q², so p is even. Let p = 2k. Then q² = 2k², so q is also even. Contradiction!", source: "TS SCERT Class 10 Maths, Theorem 1.3, p.14" },
+                { text: "Theorem: Let p be a prime number. If p divides a², then p divides a. Using this, we can prove √p is irrational for any prime p.", source: "TS SCERT Class 10 Maths, Theorem 1.4, p.15" },
+              ],
+            },
           },
           {
             type: "activity",
@@ -1006,6 +1094,10 @@ export const chapters: Chapter[] = [
                 { id: "Irrational", label: "Irrational", description: "Cannot be written as p/q, decimal never terminates or recurs" },
               ],
             } as ActivityContent,
+            textbookRef: {
+              text: "Classify each number as rational or irrational. Remember: rational numbers have terminating or recurring decimals, while irrationals have non-terminating, non-recurring decimals.",
+              source: "TS SCERT Class 10 Maths, §1.4, p.13",
+            },
           },
           {
             type: "recall",
@@ -1032,6 +1124,10 @@ export const chapters: Chapter[] = [
                 },
               ],
             } as RecallContent,
+            textbookRef: {
+              text: "A number whose decimal expansion is non-terminating and non-recurring is called an irrational number. √p is irrational for any prime p.",
+              source: "TS SCERT Class 10 Maths, §1.4, p.13",
+            },
           },
           {
             type: "explain",
@@ -1046,6 +1142,10 @@ export const chapters: Chapter[] = [
               ],
               wordLimit: 120,
             } as ExplainContent,
+            textbookRef: {
+              text: "The proof uses 'contradiction' — we assume √2 is rational, then show both p and q must be even, contradicting the assumption that p/q is in lowest terms.",
+              source: "TS SCERT Class 10 Maths, Theorem 1.3, p.14",
+            },
           },
           {
             type: "assessment",
@@ -1073,13 +1173,17 @@ export const chapters: Chapter[] = [
                 },
               ],
             } as AssessmentContent,
+            textbookRef: {
+              text: "Remember: √p is irrational when p is prime. A rational number's decimal terminates or recurs. An irrational number's decimal never terminates and never recurs.",
+              source: "TS SCERT Class 10 Maths, §1.4, p.13",
+            },
           },
           {
             type: "exercise",
             title: "Exercise 1.3 (Textbook)",
             icon: "📝",
             content: {
-              source: "Exercise 1.3, Page 18",
+              source: "TS SCERT Class 10 Maths, Exercise 1.3, p.18",
               problems: [
                 { number: "1", text: "Prove that √5 is irrational." },
                 { number: "2", text: "Prove that 3 + 2√5 is irrational." },
@@ -1088,6 +1192,10 @@ export const chapters: Chapter[] = [
                 { number: "3(iii)", text: "Prove that 6 + √2 is irrational." },
               ],
             } as ExerciseContent,
+            textbookRef: {
+              text: "Prove that √5 is irrational. Prove that 3 + 2√5 is irrational. Prove that 1/√2, 7√5, and 6 + √2 are irrational.",
+              source: "TS SCERT Class 10 Maths, Exercise 1.3, p.18",
+            },
           },
         ],
       },
@@ -1127,6 +1235,13 @@ export const chapters: Chapter[] = [
                 "Terminating decimal: q = 2ᵐ × 5ⁿ",
               ],
             } as ConceptContent,
+            textbookRef: {
+              snippets: [
+                { text: "The collection of all rational and irrational numbers together make up the collection of real numbers, denoted by R. Every real number is represented by a unique point on the number line.", source: "TS SCERT Class 10 Maths, §1.5, p.18" },
+                { text: "Theorem: Let x = p/q be a rational number such that the prime factorisation of q is of the form 2ⁿ5ᵐ, where n, m are non-negative integers. Then x has a terminating decimal expansion.", source: "TS SCERT Class 10 Maths, Theorem 1.5, p.19" },
+                { text: "Theorem: Let x = p/q be a rational number, such that the prime factorisation of q is NOT of the form 2ⁿ5ᵐ. Then x has a non-terminating repeating decimal expansion.", source: "TS SCERT Class 10 Maths, Theorem 1.6, p.20" },
+              ],
+            },
           },
           {
             type: "activity",
@@ -1143,6 +1258,10 @@ export const chapters: Chapter[] = [
                 { value: "Without actual division, determine if 7/12 has a terminating decimal" },
               ],
             } as ActivityContent,
+            textbookRef: {
+              text: "Locate √2, √3, √5 on the number line using successive application of Pythagoras' theorem. Determine which fractions have terminating decimal expansions by examining the denominator's prime factorisation.",
+              source: "TS SCERT Class 10 Maths, §1.5, p.19",
+            },
           },
           {
             type: "recall",
@@ -1165,6 +1284,10 @@ export const chapters: Chapter[] = [
                 },
               ],
             } as RecallContent,
+            textbookRef: {
+              text: "p/q has a terminating decimal if q = 2ⁿ × 5ᵐ. Otherwise, it has a non-terminating recurring decimal. Every point on the number line represents a real number.",
+              source: "TS SCERT Class 10 Maths, Theorems 1.5-1.6, pp.19-20",
+            },
           },
           {
             type: "explain",
@@ -1179,6 +1302,10 @@ export const chapters: Chapter[] = [
               ],
               wordLimit: 100,
             } as ExplainContent,
+            textbookRef: {
+              text: "Without irrational numbers, there would be 'gaps' on the number line. For instance, the point corresponding to the diagonal of a unit square (√2) would have no number assigned to it.",
+              source: "TS SCERT Class 10 Maths, §1.5, p.18",
+            },
           },
           {
             type: "assessment",
@@ -1206,13 +1333,17 @@ export const chapters: Chapter[] = [
                 },
               ],
             } as AssessmentContent,
+            textbookRef: {
+              text: "Remember: √p is irrational when p is prime. A rational number's decimal terminates or recurs. An irrational number's decimal never terminates and never recurs.",
+              source: "TS SCERT Class 10 Maths, §1.4, p.13",
+            },
           },
           {
             type: "exercise",
             title: "Exercise 1.4 (Textbook)",
             icon: "📝",
             content: {
-              source: "Exercise 1.4, Page 21",
+              source: "TS SCERT Class 10 Maths, Exercise 1.4, p.21",
               problems: [
                 { number: "1", text: "Show that 3√2 is irrational." },
                 { number: "2(i)", text: "Without actually performing the division, state whether 13/3125 will have a terminating or non-terminating repeating decimal.", answer: "Terminating (3125 = 5⁵)" },
@@ -1224,6 +1355,10 @@ export const chapters: Chapter[] = [
                 { number: "4", text: "Find three irrational numbers between 5/7 and 9/11." },
               ],
             } as ExerciseContent,
+            textbookRef: {
+              text: "Without performing actual division, determine whether each fraction has a terminating or non-terminating repeating decimal by examining the denominator's prime factorisation.",
+              source: "TS SCERT Class 10 Maths, Exercise 1.4, p.21",
+            },
           },
         ],
       },
@@ -1278,6 +1413,14 @@ export const chapters: Chapter[] = [
                 },
               ],
             } as ConceptContent,
+            textbookRef: {
+              snippets: [
+                { text: "The sum or difference of a rational number and an irrational number is irrational. The product and quotient of a non-zero rational number with an irrational number is irrational.", source: "TS SCERT Class 10 Maths, §1.5, p.21" },
+                { text: "For positive real numbers a and b: √(ab) = √a × √b; √(a/b) = √a/√b; (√a + √b)(√a − √b) = a − b.", source: "TS SCERT Class 10 Maths, §1.5, p.22" },
+                { text: "To rationalise the denominator of 1/(a + b√c), multiply numerator and denominator by (a − b√c), which is called the rationalising factor.", source: "TS SCERT Class 10 Maths, §1.5, p.23" },
+                { text: "Laws of exponents for real numbers: aᵖ × aᑫ = aᵖ⁺ᑫ, (aᵖ)ᑫ = aᵖᑫ, aᵖ/aᑫ = aᵖ⁻ᑫ, aᵖbᵖ = (ab)ᵖ.", source: "TS SCERT Class 10 Maths, §1.5, p.24" },
+              ],
+            },
           },
           {
             type: "activity",
@@ -1294,6 +1437,10 @@ export const chapters: Chapter[] = [
                 { value: "Rationalise: (3 + √5)/(3 - √5)" },
               ],
             } as ActivityContent,
+            textbookRef: {
+              text: "Simplify expressions using properties of square roots. For fractions with irrational denominators, rationalise by multiplying by the conjugate.",
+              source: "TS SCERT Class 10 Maths, §1.5, p.23",
+            },
           },
           {
             type: "recall",
@@ -1319,6 +1466,10 @@ export const chapters: Chapter[] = [
                 },
               ],
             } as RecallContent,
+            textbookRef: {
+              text: "To rationalise 1/(√a + √b), multiply by (√a − √b)/(√a − √b). The result: (√a − √b)/(a − b). The conjugate eliminates the square root from the denominator.",
+              source: "TS SCERT Class 10 Maths, §1.5, p.23",
+            },
           },
           {
             type: "explain",
@@ -1333,6 +1484,10 @@ export const chapters: Chapter[] = [
               ],
               wordLimit: 120,
             } as ExplainContent,
+            textbookRef: {
+              text: "Rationalising the denominator makes expressions simpler to work with. When comparing fractions or adding them, having rational denominators is essential.",
+              source: "TS SCERT Class 10 Maths, §1.5, p.23",
+            },
           },
           {
             type: "assessment",
@@ -1366,13 +1521,17 @@ export const chapters: Chapter[] = [
                 },
               ],
             } as AssessmentContent,
+            textbookRef: {
+              text: "Remember: √p is irrational when p is prime. A rational number's decimal terminates or recurs. An irrational number's decimal never terminates and never recurs.",
+              source: "TS SCERT Class 10 Maths, §1.4, p.13",
+            },
           },
           {
             type: "exercise",
             title: "Exercise 1.5 (Textbook)",
             icon: "📝",
             content: {
-              source: "Exercise 1.5, Page 28",
+              source: "TS SCERT Class 10 Maths, Exercise 1.5, p.28",
               problems: [
                 { number: "1(i)", text: "Classify the following as rational or irrational: 2 - √5", answer: "Irrational" },
                 { number: "1(ii)", text: "Classify: (3 + √23) - √23", answer: "Rational (= 3)" },
@@ -1396,6 +1555,10 @@ export const chapters: Chapter[] = [
                 { number: "5(iv)", text: "Simplify: 7^(1/2) × 8^(1/2)", answer: "√56 = 2√14" },
               ],
             } as ExerciseContent,
+            textbookRef: {
+              text: "Classify as rational or irrational. Simplify expressions using properties of square roots. Rationalise denominators. Simplify using laws of exponents.",
+              source: "TS SCERT Class 10 Maths, Exercise 1.5, p.28",
+            },
           },
         ],
       },
