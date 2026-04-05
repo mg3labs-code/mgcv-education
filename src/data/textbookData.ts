@@ -1022,6 +1022,10 @@ export const chapters: Chapter[] = [
                 { number: "5", text: "How will you show that (17 × 11 × 2) + (17 × 11 × 5) is a composite number?", answer: "= 17 × 11 × (2+5) = 17 × 11 × 7, composite." },
               ],
             } as ExerciseContent,
+            textbookRef: {
+              text: "Express each number as a product of its prime factors. Find LCM and HCF by prime factorisation method. Verify HCF × LCM = product of the two numbers.",
+              source: "TS SCERT Class 10 Maths, Exercise 1.2, p.11",
+            },
           },
         ],
       },
