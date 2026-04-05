@@ -644,7 +644,7 @@ export const chapters: Chapter[] = [
             title: "Division Algorithm Practice",
             icon: "📝",
             content: {
-              source: "Section 1.1, Division Algorithm",
+              source: "TS SCERT Class 10 Maths, §1.1 Euclid's Division Lemma",
               problems: [
                 { number: "1", text: "Find q and r for a = 47, b = 5.", answer: "q = 9, r = 2" },
                 { number: "2", text: "Find q and r for a = 100, b = 7.", answer: "q = 14, r = 2" },
