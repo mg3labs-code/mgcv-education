@@ -767,30 +767,44 @@ const TextbookEpisode = () => {
                 </div>
               </div>
 
-              {/* Textbook toggle */}
-              <button
-                onClick={() => setShowTextbook(!showTextbook)}
-                style={{
-                  width: "100%", padding: "10px 14px", marginTop: 16,
-                  borderRadius: showTextbook ? "10px 10px 0 0" : 10,
-                  border: "1px solid #E9D5FF", background: showTextbook ? "#F5F3FF" : "white",
-                  cursor: "pointer", display: "flex", alignItems: "center", gap: 8,
-                  fontSize: 12, fontWeight: 600, color: "#7C3AED",
-                }}
-              >
-                📖 {showTextbook ? "Hide" : "See"} original textbook text {showTextbook ? "▲" : "▼"}
-              </button>
-              {showTextbook && (
-                <div style={{
-                  padding: "14px 16px", borderRadius: "0 0 10px 10px",
-                  border: "1px solid #E9D5FF", borderTop: "none", background: "#FAFAFE",
-                }}>
-                  <p style={{ fontSize: 13, color: "#57534E", lineHeight: 1.7, fontFamily: "'Source Serif 4', serif" }}>
-                    Textbook reference text for this section will appear here when available.
-                  </p>
-                  <p style={{ fontSize: 11, color: "#A8A29E", marginTop: 8, fontStyle: "italic" }}>
-                    — {chapter.title}, {episode.title}
-                  </p>
+              {/* Inline textbook reference callouts */}
+              {block.textbookRef && (
+                <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 10 }}>
+                  {block.textbookRef.snippets ? (
+                    block.textbookRef.snippets.map((snippet, i) => (
+                      <div key={i} style={{
+                        padding: "10px 14px", borderRadius: 8,
+                        borderLeft: "3px solid hsl(var(--primary) / 0.4)",
+                        background: "hsl(var(--muted) / 0.3)",
+                      }}>
+                        <p style={{
+                          fontSize: 12, color: "hsl(var(--muted-foreground))", lineHeight: 1.65,
+                          fontFamily: "'Source Serif 4', serif", fontStyle: "italic",
+                        }}>
+                          📖 "{snippet.text}"
+                        </p>
+                        <p style={{ fontSize: 10, color: "hsl(var(--muted-foreground) / 0.7)", marginTop: 6, fontStyle: "italic" }}>
+                          — {snippet.source}
+                        </p>
+                      </div>
+                    ))
+                  ) : block.textbookRef.text ? (
+                    <div style={{
+                      padding: "10px 14px", borderRadius: 8,
+                      borderLeft: "3px solid hsl(var(--primary) / 0.4)",
+                      background: "hsl(var(--muted) / 0.3)",
+                    }}>
+                      <p style={{
+                        fontSize: 12, color: "hsl(var(--muted-foreground))", lineHeight: 1.65,
+                        fontFamily: "'Source Serif 4', serif", fontStyle: "italic",
+                      }}>
+                        📖 "{block.textbookRef.text}"
+                      </p>
+                      <p style={{ fontSize: 10, color: "hsl(var(--muted-foreground) / 0.7)", marginTop: 6, fontStyle: "italic" }}>
+                        — {block.textbookRef.source}
+                      </p>
+                    </div>
+                  ) : null}
                 </div>
               )}
             </>
