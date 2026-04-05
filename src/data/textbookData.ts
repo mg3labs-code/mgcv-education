@@ -737,6 +737,10 @@ export const chapters: Chapter[] = [
                 { value: "1860 and 2015" },
               ],
             } as ActivityContent,
+            textbookRef: {
+              text: "Use Euclid's algorithm to find the HCF of (i) 900 and 270 (ii) 196 and 38220 (iii) 1651 and 2032.",
+              source: "TS SCERT Class 10 Maths, Exercise 1.1, Q1",
+            },
           },
           {
             type: "recall",
