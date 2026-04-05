@@ -1355,6 +1355,10 @@ export const chapters: Chapter[] = [
                 { number: "4", text: "Find three irrational numbers between 5/7 and 9/11." },
               ],
             } as ExerciseContent,
+            textbookRef: {
+              text: "Without performing actual division, determine whether each fraction has a terminating or non-terminating repeating decimal by examining the denominator's prime factorisation.",
+              source: "TS SCERT Class 10 Maths, Exercise 1.4, p.21",
+            },
           },
         ],
       },
