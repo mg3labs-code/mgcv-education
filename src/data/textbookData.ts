@@ -1555,6 +1555,10 @@ export const chapters: Chapter[] = [
                 { number: "5(iv)", text: "Simplify: 7^(1/2) × 8^(1/2)", answer: "√56 = 2√14" },
               ],
             } as ExerciseContent,
+            textbookRef: {
+              text: "Classify as rational or irrational. Simplify expressions using properties of square roots. Rationalise denominators. Simplify using laws of exponents.",
+              source: "TS SCERT Class 10 Maths, Exercise 1.5, p.28",
+            },
           },
         ],
       },
