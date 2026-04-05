@@ -187,11 +187,11 @@ export const chapters: Chapter[] = [
             } as ConceptContent,
             textbookRef: {
               snippets: [
-                { text: "The counting numbers 1, 2, 3, 4, … are known as natural numbers. The collection of all natural numbers is denoted by N. So, N = {1, 2, 3, 4, 5, …}.", source: "Section 1.1, Page 2" },
-                { text: "If we include zero along with the natural numbers, we obtain the collection of whole numbers, denoted by W. Thus, W = {0, 1, 2, 3, 4, …}. Every natural number is a whole number, but zero is a whole number which is not a natural number.", source: "Section 1.1, Page 2" },
-                { text: "The collection of all whole numbers and their negatives is known as integers, denoted by Z (from the German word 'Zahlen' meaning 'to count'). Z = {…, −3, −2, −1, 0, 1, 2, 3, …}.", source: "Section 1.1, Page 3" },
-                { text: "A number r is called a rational number if it can be written in the form p/q, where p and q are integers and q ≠ 0. The collection of rational numbers is denoted by Q. The decimal expansion of a rational number is either terminating or non-terminating recurring.", source: "Section 1.1, Page 3" },
-                { text: "From our discussion, it is clear that every natural number is a whole number, every whole number is an integer, and every integer is a rational number. This gives us N ⊂ W ⊂ Z ⊂ Q.", source: "Section 1.1, Page 4" },
+                { text: "The counting numbers 1, 2, 3, 4, … are known as natural numbers. The collection of all natural numbers is denoted by N. So, N = {1, 2, 3, 4, 5, …}.", source: "TS SCERT Class 10 Maths, Ch.1 Introduction, p.1" },
+                { text: "If we include zero along with the natural numbers, we obtain the collection of whole numbers, denoted by W. Thus, W = {0, 1, 2, 3, 4, …}. Every natural number is a whole number, but zero is a whole number which is not a natural number.", source: "TS SCERT Class 10 Maths, Ch.1 Introduction, p.1" },
+                { text: "The collection of all whole numbers and their negatives is known as integers, denoted by Z (from the German word 'Zahlen' meaning 'to count'). Z = {…, −3, −2, −1, 0, 1, 2, 3, …}.", source: "TS SCERT Class 10 Maths, Ch.1 Introduction, p.2" },
+                { text: "A number r is called a rational number if it can be written in the form p/q, where p and q are integers and q ≠ 0. The collection of rational numbers is denoted by Q. The decimal expansion of a rational number is either terminating or non-terminating recurring.", source: "TS SCERT Class 10 Maths, Ch.1 Introduction, p.2" },
+                { text: "From our discussion, it is clear that every natural number is a whole number, every whole number is an integer, and every integer is a rational number. This gives us N ⊂ W ⊂ Z ⊂ Q.", source: "TS SCERT Class 10 Maths, Ch.1 Introduction, p.2" },
               ],
             },
           },
