@@ -431,6 +431,10 @@ export const chapters: Chapter[] = [
                 },
               ],
             } as ConnectionsContent,
+            textbookRef: {
+              text: "The word 'rational' comes from the word 'ratio'. The letter Z for integers comes from the German word 'Zahlen' meaning 'to count'. Q is used for rationals from the word 'quotient'.",
+              source: "Section 1.1, Pages 2-3",
+            },
           },
           // ── Layer 6: Application (Harvard Case) ──
           {
