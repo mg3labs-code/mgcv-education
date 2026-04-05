@@ -886,6 +886,13 @@ export const chapters: Chapter[] = [
                 },
               ],
             } as ConceptContent,
+            textbookRef: {
+              snippets: [
+                { text: "Every composite number can be expressed (factorised) as a product of primes, and this factorisation is unique, apart from the order in which the prime factors occur.", source: "TS SCERT Class 10 Maths, Theorem 1.2 (FTA), p.8" },
+                { text: "HCF = product of the smallest power of each common prime factor. LCM = product of the greatest power of each prime factor.", source: "TS SCERT Class 10 Maths, §1.3, p.10" },
+                { text: "For any two positive integers a and b, HCF(a, b) × LCM(a, b) = a × b.", source: "TS SCERT Class 10 Maths, §1.3, p.10" },
+              ],
+            },
           },
           {
             type: "activity",
