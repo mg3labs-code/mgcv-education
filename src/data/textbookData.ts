@@ -462,6 +462,10 @@ export const chapters: Chapter[] = [
               careers: ["Data Analyst", "Sports Statistician", "Financial Planner", "Civil Engineer", "Physicist", "Software Developer"],
               harvardLabel: "The Cricket Score Problem",
             } as ApplicationContent,
+            textbookRef: {
+              text: "Examples of rational numbers include 1/2, −3/4, 7 (which is 7/1), and 0 (which is 0/1). The decimal expansion of a rational number is either terminating (e.g., 1/4 = 0.25) or non-terminating recurring (e.g., 1/3 = 0.333…).",
+              source: "Section 1.1, Page 3",
+            },
           },
           // ── Layer 7: Implications (Oxford Essay) ──
           {
