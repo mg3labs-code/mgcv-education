@@ -909,6 +909,10 @@ export const chapters: Chapter[] = [
                 { value: "Verify: HCF × LCM = 140 × 156" },
               ],
             } as ActivityContent,
+            textbookRef: {
+              text: "Express each of the following numbers as a product of its prime factors: (i) 140 (ii) 156 (iii) 3825 (iv) 5005 (v) 7429.",
+              source: "TS SCERT Class 10 Maths, Exercise 1.2, Q1",
+            },
           },
           {
             type: "recall",
