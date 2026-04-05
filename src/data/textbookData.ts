@@ -940,6 +940,10 @@ export const chapters: Chapter[] = [
                 },
               ],
             } as RecallContent,
+            textbookRef: {
+              text: "The Fundamental Theorem of Arithmetic says that every composite number can be expressed as a product of primes in a unique way. This is used to find HCF and LCM by prime factorisation.",
+              source: "TS SCERT Class 10 Maths, Theorem 1.2, p.8",
+            },
           },
           {
             type: "explain",
