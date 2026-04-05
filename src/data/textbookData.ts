@@ -621,6 +621,10 @@ export const chapters: Chapter[] = [
               ],
               wordLimit: 100,
             } as ExplainContent,
+            textbookRef: {
+              text: "Note that the remainder r must always satisfy 0 ≤ r < b. If the remainder were equal to or greater than b, we could perform the division once more.",
+              source: "TS SCERT Class 10 Maths, §1.1, p.4",
+            },
           },
           {
             type: "assessment",
