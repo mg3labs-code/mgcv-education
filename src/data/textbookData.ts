@@ -826,7 +826,7 @@ export const chapters: Chapter[] = [
             title: "Exercise 1.1 (Textbook)",
             icon: "📝",
             content: {
-              source: "Exercise 1.1, Page 6",
+              source: "TS SCERT Class 10 Maths, Exercise 1.1, p.7",
               problems: [
                 { number: "1(i)", text: "Use Euclid's algorithm to find the HCF of 900 and 270.", answer: "90" },
                 { number: "1(ii)", text: "Use Euclid's algorithm to find the HCF of 196 and 38220.", answer: "196" },
