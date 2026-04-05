@@ -517,7 +517,7 @@ export const chapters: Chapter[] = [
             } as ImplicationsContent,
             textbookRef: {
               text: "So, we might think that there is nothing more to be said about real numbers. But it was not until the 19th century that mathematicians like Dedekind, Cantor, and Weierstrass gave a rigorous foundation to the theory of real numbers.",
-              source: "Section 1.4, Page 14",
+              source: "TS SCERT Class 10 Maths, §1.4, p.14",
             },
           },
         ],
