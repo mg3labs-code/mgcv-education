@@ -999,7 +999,7 @@ export const chapters: Chapter[] = [
             title: "Exercise 1.2 — HCF & LCM (Textbook)",
             icon: "📝",
             content: {
-              source: "Exercise 1.2, Page 11",
+              source: "TS SCERT Class 10 Maths, Exercise 1.2, p.11",
               problems: [
                 { number: "1(i)", text: "Express 140 as a product of its prime factors.", answer: "2² × 5 × 7" },
                 { number: "1(ii)", text: "Express 156 as a product of its prime factors.", answer: "2² × 3 × 13" },
