@@ -219,6 +219,10 @@ export const chapters: Chapter[] = [
                 { id: "Q", label: "Rational Numbers", description: "p/q form, q ≠ 0" },
               ],
             } as ActivityContent,
+            textbookRef: {
+              text: "State whether the following statements are true or false. Give reasons for your answers: (i) Every natural number is a whole number. (ii) Every integer is a whole number. (iii) Every rational number is an integer.",
+              source: "Exercise 1.1, Q4, Page 5",
+            },
           },
           {
             type: "recall",
