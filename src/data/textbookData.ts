@@ -327,7 +327,7 @@ export const chapters: Chapter[] = [
             } as ExerciseContent,
             textbookRef: {
               text: "Exercise 1.1: (1) Is zero a rational number? (2) Find six rational numbers between 3 and 4. (3) Find five rational numbers between 3/5 and 4/5. (4) State true or false with reasons for N, W, Z, Q relationships.",
-              source: "Exercise 1.1, Page 5",
+              source: "TS SCERT Class 10 Maths, Exercise 1.1",
             },
           },
           // ── Layer 3: Reasoning ──
