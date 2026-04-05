@@ -603,6 +603,10 @@ export const chapters: Chapter[] = [
                 },
               ],
             } as RecallContent,
+            textbookRef: {
+              text: "Euclid's Division Lemma: Given positive integers a and b, there exist unique integers q and r satisfying a = bq + r, 0 ≤ r < b.",
+              source: "TS SCERT Class 10 Maths, Theorem 1.1, p.4",
+            },
           },
           {
             type: "explain",
