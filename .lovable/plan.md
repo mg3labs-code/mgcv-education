@@ -1,99 +1,104 @@
 
 
-# Transform TextbookEpisode into Immersive Module Mode
+# Better Textbook Reference: Inline Per-Block Snippets (Not a Full Toggle)
 
-## Design Philosophy — How Elite Teams Build This
+## Why the Current Toggle is Wrong
 
-Top 1% learning apps (Coursera, Duolingo, Brilliant, Khan Academy) follow one rule: **content IS the screen**. Everything else is hidden until needed. The current page has ~10 layers of chrome before content starts. Elite designers would:
+The current design has ONE toggle per block that shows a generic placeholder. Problems:
 
-- **Kill the shell**: No app header, no breadcrumbs, no sidebar. The lesson owns the viewport.
-- **Thin progress**: A single line — close button + segmented dots + counter. Nothing else.
-- **Bottom sheet for navigation**: Sections accessible via swipe/tap, not a persistent sidebar.
-- **Tools on demand**: Hidden behind a "⋯" button, not always visible.
-- **Exit with intent**: Close button triggers confirmation ("Leave? Progress saved.").
+1. **Extra tap friction** — students won't click it, so they never see the textbook
+2. **All-or-nothing** — when we populate it, dumping a whole section is overwhelming
+3. **No connection** — the textbook text doesn't visually connect to the specific concept the student just read
+
+## What Elite Learning Apps Actually Do
+
+Brilliant, Khan Academy, and Coursera don't hide reference text behind toggles. They **weave it into the flow** as a distinct visual element — like a quote callout or a "from your textbook" card that appears naturally after each concept.
+
+The best pattern: **inline textbook callout cards per concept section**, not one toggle per block.
 
 ```text
-CURRENT (10 layers before content):          IMMERSIVE (content at line 3):
-┌──────────────────────────┐                ┌──────────────────────────┐
-│ PageLayout header/nav    │                │ ✕  ■■■□□□□□□□□   3/11   │
-│ Breadcrumb trail         │                │ 🔍 Discover • Read      │
-│ Scroll progress bar      │                │                          │
-│ ☰ Sections + phase nav   │                │ The Number Family        │
-│ 3/11 progress + Tools    │                │                          │
-│ ┌── Gradient header ──┐  │                │ 🔢 Counting Numbers...   │
-│ │ ← Real Numbers 8min │  │                │ N = {1, 2, 3, ...}      │
-│ │ Number Types & ...   │  │                │                          │
-│ └─────────────────────┘  │                │ 📖 See textbook text ▼  │
-│ Stats: 11 | 11 | 8min   │                ├──────────────────────────┤
-│ Phase: 🔍 Discover       │                │ ☰  ←Prev  ⋯  [Got it✓] │
-│ Section card with icon   │                │            Continue →    │
-├──────────────────────────┤                └──────────────────────────┘
-│ CONTENT (finally!)       │
-└──────────────────────────┘
+CURRENT (one toggle per entire block):
+┌─────────────────────────────┐
+│ 🔢 The Number Family        │
+│ [5 concept sections...]     │
+│                              │
+│ 📖 See original textbook ▼  │  ← ONE toggle, dumps everything
+└─────────────────────────────┘
+
+BETTER (inline callout per section):
+┌─────────────────────────────┐
+│ 🔢 Counting Numbers (N)     │
+│ N = {1, 2, 3, 4, 5, ...}   │
+│ ┌─ 📖 Your Textbook Says ─┐│
+│ │ "The counting numbers    ││
+│ │ 1, 2, 3... are known as  ││
+│ │ natural numbers..."      ││
+│ │ — Ch.1, Section 1.1, p.2 ││
+│ └──────────────────────────┘│
+│                              │
+│ 0️⃣ Whole Numbers (W)        │
+│ W = {0, 1, 2, 3, ...}      │
+│ ┌─ 📖 Your Textbook Says ─┐│
+│ │ "If we include zero..."  ││
+│ └──────────────────────────┘│
+└─────────────────────────────┘
 ```
 
-## What Changes
+Each concept section gets its OWN small textbook snippet — just 1-2 sentences, not the whole page. Students read the simplified version first, then see the formal textbook language right below it. No tap needed. For activity/quiz/recall blocks, one small reference snippet at the top is enough.
 
-### File: `src/pages/TextbookEpisode.tsx`
+## Implementation
 
-**1. Remove outer shell**
-- Remove `<PageLayout>` wrapper entirely
-- Remove breadcrumbs, scroll progress bar
-- Render a `position: fixed; inset: 0` full-screen container with `#F9FAFB` background
-- Content area: `max-width: 720px`, centered, `overflow-y: auto`
+### 1. Add `textbookRef` field to `ContentBlock` interface (`src/data/textbookData.ts`)
 
-**2. New top bar (single line)**
-- Left: `✕` close button (triggers exit confirmation modal)
-- Center: segmented progress dots — one per block, filled = completed, highlighted = current
-- Right: `3/11` counter text
-- Height: ~44px total
+```ts
+textbookRef?: {
+  snippets: { text: string; source: string }[];  // per-section snippets for concept blocks
+} | {
+  text: string;    // single snippet for activity/quiz/recall blocks
+  source: string;
+};
+```
 
-**3. Phase indicator (tiny badge)**
-- One line below top bar: `🔍 Discover • Read` — phase icon + label + block type
-- No background card, just inline text, 12px font
+### 2. Populate Ch1 Ep1 blocks with NCERT content (`src/data/textbookData.ts`)
 
-**4. Content area**
-- Section title + subtitle as plain headings (no card wrapper for the header)
-- Existing `renderBlock()` renders the block content directly
-- Add collapsible "📖 See original textbook text" toggle at bottom of each block (purple border, inline expand)
-- Keep the "Got it! ✓" checkpoint gating logic (Continue disabled until marked)
+Map each concept section to its corresponding 1-2 sentence NCERT paragraph:
+- "Counting Numbers" → "The counting numbers 1, 2, 3... are known as natural numbers, denoted by N."
+- "Whole Numbers" → "If we include zero along with natural numbers, we obtain whole numbers, denoted by W."
+- "Integers" → "The collection of whole numbers and their negatives is known as integers, denoted by Z."
+- "Rational Numbers" → "A number r is called rational if it can be written as p/q, where p and q are integers and q ≠ 0."
+- "Containment" → "N ⊂ W ⊂ Z ⊂ Q"
 
-**5. Bottom bar (fixed)**
-- Left: `☰` button → opens sections bottom sheet
-- Center: `← Prev` + `⋯` tools popup
-- Right: `Got it! ✓` button + `Continue →` (gated)
-- Fixed to bottom, white background, border-top
+For non-concept blocks (activity, recall, explain, assessment): one short reference like "Exercise 1.1: Is zero a rational number? Find six rational numbers between 3 and 4."
 
-**6. Sections → bottom sheet (replaces sidebar)**
-- Convert current left sidebar into a bottom sheet overlay
-- Slides up from bottom with backdrop
-- Shows: progress bar, phase groups with section buttons, "Deep Path" teaser
-- Tap section → navigates and closes sheet
+### 3. Render inline callouts in `TextbookEpisode.tsx`
 
-**7. Exit confirmation modal**
-- When `✕` is tapped: "Leave this lesson? Progress is saved. You can continue from section N next time."
-- Two buttons: `Stay` / `Leave` (Leave navigates to chapter page)
+- **For concept blocks**: After each `<section>` rendered by `ConceptBlock`, insert a small callout card styled with a left purple border, serif font, cream background
+- **For other block types**: Show one callout card at the top of the block content
+- **No toggle** — always visible but compact (max 2-3 lines per snippet)
+- **Collapsible only if snippet is long** (>3 lines) — auto-shown for short ones
 
-**8. Completion screen**
-- Full-screen celebration when all blocks done: "Lesson Complete!" with stat gains
-- Shows +% for Clarity, Thinking, Focus
-- "Back to Chapter →" button to close module
-- Keep existing Tutorial Defense + First Principles buttons
+### 4. Remove the current single toggle
 
-**9. Responsive behavior**
-- Mobile: full viewport, content fills width with 16px padding
-- Tablet/Desktop: content centered at max-width 720px, comfortable reading
-- Bottom sheet works identically across all sizes
+Delete the existing "📖 See original textbook text" toggle button (lines 770-795) and replace with the inline rendering described above.
 
-### What stays unchanged
-- All block renderer components (ConceptBlock, DragDropActivityBlock, RecallBlock, etc.)
-- `renderBlock()` function logic
-- `useChapterEpisodes`, `useEpisodeBlocks` hooks
-- Progress persistence to database
-- `toggleUnderstood`, `goToBlock` state logic
-- Voice/AI integrations
-- TutorialDefenseModal, FirstPrinciplesModal
-- Tools toolbar content (just moved to bottom bar popup)
+## Visual Design of Callout Card
+
+```text
+┌─ 📖 ────────────────────────────┐
+│ "The counting numbers 1, 2, 3…  │  ← serif font, #57534E
+│ are known as natural numbers."   │
+│                   — Section 1.1  │  ← italic, #A8A29E, 11px
+└──────────────────────────────────┘
+  left-border: 3px solid #C4B5FD
+  background: #FAFAFE
+  padding: 10px 14px
+  border-radius: 8px
+```
+
+## Files Modified
+1. `src/data/textbookData.ts` — Add `textbookRef` field to interface + populate all 11 blocks of Ch1 Ep1
+2. `src/pages/TextbookEpisode.tsx` — Remove toggle, render inline callout cards per section
+3. `src/components/textbook/EnhancedReader.tsx` — May need minor update if it renders concept sections (to inject callouts after each section)
 
 ### No backend/DB changes
 
