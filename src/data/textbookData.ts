@@ -250,6 +250,10 @@ export const chapters: Chapter[] = [
                 },
               ],
             } as RecallContent,
+            textbookRef: {
+              text: "A number r is called a rational number if it can be written in the form p/q, where p and q are integers and q ≠ 0. Every natural number is a whole number, every whole number is an integer, and every integer is a rational number.",
+              source: "Section 1.1, Pages 2-4",
+            },
           },
           {
             type: "explain",
