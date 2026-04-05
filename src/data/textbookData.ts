@@ -554,6 +554,13 @@ export const chapters: Chapter[] = [
               ],
               keyFormulas: ["a = bq + r, where 0 ≤ r < b"],
             } as ConceptContent,
+            textbookRef: {
+              snippets: [
+                { text: "In a garden, a swarm of bees settles on flowers. This puzzle introduces the idea that when we divide a number, we always get a quotient and a remainder.", source: "TS SCERT Class 10 Maths, §1.1 Introduction, p.3" },
+                { text: "For any two positive integers a and b, there exist unique integers q and r satisfying a = bq + r, where 0 ≤ r < b. This result is known as Euclid's Division Lemma.", source: "TS SCERT Class 10 Maths, §1.1 Euclid's Division Lemma, p.4" },
+                { text: "The Division Algorithm is a restatement of Euclid's Division Lemma. It provides the method: divide 'a' by 'b', get quotient 'q' and remainder 'r'.", source: "TS SCERT Class 10 Maths, §1.1, p.4" },
+              ],
+            },
           },
           {
             type: "activity",
