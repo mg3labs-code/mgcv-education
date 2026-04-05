@@ -271,7 +271,7 @@ export const chapters: Chapter[] = [
             } as ExplainContent,
             textbookRef: {
               text: "Every integer n can be written as n/1, which is in p/q form with q ≠ 0. Therefore, every integer is a rational number.",
-              source: "Section 1.1, Page 3",
+              source: "TS SCERT Class 10 Maths, Ch.1 Introduction, p.2",
             },
           },
           {
