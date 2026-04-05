@@ -386,6 +386,10 @@ export const chapters: Chapter[] = [
               ],
               defensePrompt: "Defend this statement: 'The p/q definition of rational numbers is the BEST way to define them.' What are the alternatives? Why is this definition better?",
             } as AssumptionsContent,
+            textbookRef: {
+              text: "We have learnt that there are infinitely many rationals between any two given rational numbers. So, we might think that the number line is completely covered by rationals. But this is not so! In the next section, we shall show that there exist numbers which are NOT rational.",
+              source: "Section 1.2, Page 5",
+            },
           },
           // ── Layer 5: Connections ──
           {
