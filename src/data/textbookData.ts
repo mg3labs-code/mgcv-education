@@ -989,6 +989,10 @@ export const chapters: Chapter[] = [
                 },
               ],
             } as AssessmentContent,
+            textbookRef: {
+              text: "To find prime factorisation, keep dividing by the smallest prime factor. Then use the factorisation to compute HCF (smallest powers of common primes) and LCM (greatest powers of all primes).",
+              source: "TS SCERT Class 10 Maths, §1.3, p.9",
+            },
           },
           {
             type: "exercise",
