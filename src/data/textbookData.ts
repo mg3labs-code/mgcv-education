@@ -674,6 +674,10 @@ export const chapters: Chapter[] = [
                 { number: "3", text: "Find q and r for a = 256, b = 13.", answer: "q = 19, r = 9" },
               ],
             } as ExerciseContent,
+            textbookRef: {
+              text: "Use Euclid's algorithm to find the HCF of the given pairs. Show that every positive even integer is of the form 2q, and every positive odd integer is of the form 2q+1.",
+              source: "TS SCERT Class 10 Maths, Exercise 1.1, p.7",
+            },
           },
         ],
       },
@@ -837,6 +841,10 @@ export const chapters: Chapter[] = [
                 { number: "5", text: "Show that one and only one out of n, n+2 or n+4 is divisible by 3, where n is any positive integer." },
               ],
             } as ExerciseContent,
+            textbookRef: {
+              text: "Use Euclid's algorithm to find the HCF of the given pairs. Show that every positive even integer is of the form 2q, and every positive odd integer is of the form 2q+1.",
+              source: "TS SCERT Class 10 Maths, Exercise 1.1, p.7",
+            },
           },
         ],
       },
@@ -1052,6 +1060,13 @@ export const chapters: Chapter[] = [
                 "Irrational decimal: non-terminating AND non-recurring",
               ],
             } as ConceptContent,
+            textbookRef: {
+              snippets: [
+                { text: "A number 's' is called irrational if it cannot be written in the form p/q, where p and q are integers and q ≠ 0.", source: "TS SCERT Class 10 Maths, §1.4, p.13" },
+                { text: "Theorem: √2 is irrational. Proof: Assume √2 = p/q in lowest terms. Then p² = 2q², so p is even. Let p = 2k. Then q² = 2k², so q is also even. Contradiction!", source: "TS SCERT Class 10 Maths, Theorem 1.3, p.14" },
+                { text: "Theorem: Let p be a prime number. If p divides a², then p divides a. Using this, we can prove √p is irrational for any prime p.", source: "TS SCERT Class 10 Maths, Theorem 1.4, p.15" },
+              ],
+            },
           },
           {
             type: "activity",
@@ -1075,6 +1090,10 @@ export const chapters: Chapter[] = [
                 { id: "Irrational", label: "Irrational", description: "Cannot be written as p/q, decimal never terminates or recurs" },
               ],
             } as ActivityContent,
+            textbookRef: {
+              text: "Classify each number as rational or irrational. Remember: rational numbers have terminating or recurring decimals, while irrationals have non-terminating, non-recurring decimals.",
+              source: "TS SCERT Class 10 Maths, §1.4, p.13",
+            },
           },
           {
             type: "recall",
@@ -1101,6 +1120,10 @@ export const chapters: Chapter[] = [
                 },
               ],
             } as RecallContent,
+            textbookRef: {
+              text: "A number whose decimal expansion is non-terminating and non-recurring is called an irrational number. √p is irrational for any prime p.",
+              source: "TS SCERT Class 10 Maths, §1.4, p.13",
+            },
           },
           {
             type: "explain",
@@ -1115,6 +1138,10 @@ export const chapters: Chapter[] = [
               ],
               wordLimit: 120,
             } as ExplainContent,
+            textbookRef: {
+              text: "The proof uses 'contradiction' — we assume √2 is rational, then show both p and q must be even, contradicting the assumption that p/q is in lowest terms.",
+              source: "TS SCERT Class 10 Maths, Theorem 1.3, p.14",
+            },
           },
           {
             type: "assessment",
@@ -1142,13 +1169,17 @@ export const chapters: Chapter[] = [
                 },
               ],
             } as AssessmentContent,
+            textbookRef: {
+              text: "Remember: √p is irrational when p is prime. A rational number's decimal terminates or recurs. An irrational number's decimal never terminates and never recurs.",
+              source: "TS SCERT Class 10 Maths, §1.4, p.13",
+            },
           },
           {
             type: "exercise",
             title: "Exercise 1.3 (Textbook)",
             icon: "📝",
             content: {
-              source: "Exercise 1.3, Page 18",
+              source: "TS SCERT Class 10 Maths, Exercise 1.3, p.18",
               problems: [
                 { number: "1", text: "Prove that √5 is irrational." },
                 { number: "2", text: "Prove that 3 + 2√5 is irrational." },
@@ -1196,6 +1227,13 @@ export const chapters: Chapter[] = [
                 "Terminating decimal: q = 2ᵐ × 5ⁿ",
               ],
             } as ConceptContent,
+            textbookRef: {
+              snippets: [
+                { text: "The collection of all rational and irrational numbers together make up the collection of real numbers, denoted by R. Every real number is represented by a unique point on the number line.", source: "TS SCERT Class 10 Maths, §1.5, p.18" },
+                { text: "Theorem: Let x = p/q be a rational number such that the prime factorisation of q is of the form 2ⁿ5ᵐ, where n, m are non-negative integers. Then x has a terminating decimal expansion.", source: "TS SCERT Class 10 Maths, Theorem 1.5, p.19" },
+                { text: "Theorem: Let x = p/q be a rational number, such that the prime factorisation of q is NOT of the form 2ⁿ5ᵐ. Then x has a non-terminating repeating decimal expansion.", source: "TS SCERT Class 10 Maths, Theorem 1.6, p.20" },
+              ],
+            },
           },
           {
             type: "activity",
@@ -1212,6 +1250,10 @@ export const chapters: Chapter[] = [
                 { value: "Without actual division, determine if 7/12 has a terminating decimal" },
               ],
             } as ActivityContent,
+            textbookRef: {
+              text: "Locate √2, √3, √5 on the number line using successive application of Pythagoras' theorem. Determine which fractions have terminating decimal expansions by examining the denominator's prime factorisation.",
+              source: "TS SCERT Class 10 Maths, §1.5, p.19",
+            },
           },
           {
             type: "recall",
@@ -1234,6 +1276,10 @@ export const chapters: Chapter[] = [
                 },
               ],
             } as RecallContent,
+            textbookRef: {
+              text: "p/q has a terminating decimal if q = 2ⁿ × 5ᵐ. Otherwise, it has a non-terminating recurring decimal. Every point on the number line represents a real number.",
+              source: "TS SCERT Class 10 Maths, Theorems 1.5-1.6, pp.19-20",
+            },
           },
           {
             type: "explain",
@@ -1248,6 +1294,10 @@ export const chapters: Chapter[] = [
               ],
               wordLimit: 100,
             } as ExplainContent,
+            textbookRef: {
+              text: "Without irrational numbers, there would be 'gaps' on the number line. For instance, the point corresponding to the diagonal of a unit square (√2) would have no number assigned to it.",
+              source: "TS SCERT Class 10 Maths, §1.5, p.18",
+            },
           },
           {
             type: "assessment",
@@ -1275,13 +1325,17 @@ export const chapters: Chapter[] = [
                 },
               ],
             } as AssessmentContent,
+            textbookRef: {
+              text: "Remember: √p is irrational when p is prime. A rational number's decimal terminates or recurs. An irrational number's decimal never terminates and never recurs.",
+              source: "TS SCERT Class 10 Maths, §1.4, p.13",
+            },
           },
           {
             type: "exercise",
             title: "Exercise 1.4 (Textbook)",
             icon: "📝",
             content: {
-              source: "Exercise 1.4, Page 21",
+              source: "TS SCERT Class 10 Maths, Exercise 1.4, p.21",
               problems: [
                 { number: "1", text: "Show that 3√2 is irrational." },
                 { number: "2(i)", text: "Without actually performing the division, state whether 13/3125 will have a terminating or non-terminating repeating decimal.", answer: "Terminating (3125 = 5⁵)" },
@@ -1347,6 +1401,14 @@ export const chapters: Chapter[] = [
                 },
               ],
             } as ConceptContent,
+            textbookRef: {
+              snippets: [
+                { text: "The sum or difference of a rational number and an irrational number is irrational. The product and quotient of a non-zero rational number with an irrational number is irrational.", source: "TS SCERT Class 10 Maths, §1.5, p.21" },
+                { text: "For positive real numbers a and b: √(ab) = √a × √b; √(a/b) = √a/√b; (√a + √b)(√a − √b) = a − b.", source: "TS SCERT Class 10 Maths, §1.5, p.22" },
+                { text: "To rationalise the denominator of 1/(a + b√c), multiply numerator and denominator by (a − b√c), which is called the rationalising factor.", source: "TS SCERT Class 10 Maths, §1.5, p.23" },
+                { text: "Laws of exponents for real numbers: aᵖ × aᑫ = aᵖ⁺ᑫ, (aᵖ)ᑫ = aᵖᑫ, aᵖ/aᑫ = aᵖ⁻ᑫ, aᵖbᵖ = (ab)ᵖ.", source: "TS SCERT Class 10 Maths, §1.5, p.24" },
+              ],
+            },
           },
           {
             type: "activity",
@@ -1363,6 +1425,10 @@ export const chapters: Chapter[] = [
                 { value: "Rationalise: (3 + √5)/(3 - √5)" },
               ],
             } as ActivityContent,
+            textbookRef: {
+              text: "Simplify expressions using properties of square roots. For fractions with irrational denominators, rationalise by multiplying by the conjugate.",
+              source: "TS SCERT Class 10 Maths, §1.5, p.23",
+            },
           },
           {
             type: "recall",
@@ -1388,6 +1454,10 @@ export const chapters: Chapter[] = [
                 },
               ],
             } as RecallContent,
+            textbookRef: {
+              text: "To rationalise 1/(√a + √b), multiply by (√a − √b)/(√a − √b). The result: (√a − √b)/(a − b). The conjugate eliminates the square root from the denominator.",
+              source: "TS SCERT Class 10 Maths, §1.5, p.23",
+            },
           },
           {
             type: "explain",
@@ -1402,6 +1472,10 @@ export const chapters: Chapter[] = [
               ],
               wordLimit: 120,
             } as ExplainContent,
+            textbookRef: {
+              text: "Rationalising the denominator makes expressions simpler to work with. When comparing fractions or adding them, having rational denominators is essential.",
+              source: "TS SCERT Class 10 Maths, §1.5, p.23",
+            },
           },
           {
             type: "assessment",
@@ -1435,13 +1509,17 @@ export const chapters: Chapter[] = [
                 },
               ],
             } as AssessmentContent,
+            textbookRef: {
+              text: "Remember: √p is irrational when p is prime. A rational number's decimal terminates or recurs. An irrational number's decimal never terminates and never recurs.",
+              source: "TS SCERT Class 10 Maths, §1.4, p.13",
+            },
           },
           {
             type: "exercise",
             title: "Exercise 1.5 (Textbook)",
             icon: "📝",
             content: {
-              source: "Exercise 1.5, Page 28",
+              source: "TS SCERT Class 10 Maths, Exercise 1.5, p.28",
               problems: [
                 { number: "1(i)", text: "Classify the following as rational or irrational: 2 - √5", answer: "Irrational" },
                 { number: "1(ii)", text: "Classify: (3 + √23) - √23", answer: "Rational (= 3)" },
