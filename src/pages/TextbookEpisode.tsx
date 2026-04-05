@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import PageLayout from "@/components/PageLayout";
 import { ContentBlock, ConceptContent, ActivityContent as ActivityContentType, RecallContent, ExplainContent, AssessmentContent, ExerciseContent, ReasoningContent, AssumptionsContent, ConnectionsContent, ApplicationContent, ImplicationsContent, VisualAidContent } from "@/data/textbookData";
 import { useChapterEpisodes, useEpisodeBlocks } from "@/hooks/useTextbookData";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { ArrowLeft, BookOpen, Brain, Briefcase, Check, CheckCircle2, ChevronDown, Cloud, Compass, Eye, Image, Layers, Lightbulb, Link, Map, MessageSquare, Mic, PenLine, Search, Shield, Sparkles, Zap, RotateCcw, GripHorizontal } from "lucide-react";
+import { BookOpen, Brain, Briefcase, Check, CheckCircle2, Cloud, Compass, Eye, Image, Lightbulb, Link, Map, MessageSquare, Mic, PenLine, Search, Shield, Sparkles, Zap, RotateCcw, GripHorizontal, X, ChevronLeft, Menu, MoreHorizontal } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import VoiceExplainWidget from "@/components/textbook/VoiceExplainWidget";
@@ -375,24 +374,17 @@ const TextbookEpisode = () => {
   const { user } = useAuth();
   const [showDefense, setShowDefense] = useState(false);
   const [showFirstPrinciples, setShowFirstPrinciples] = useState(false);
-  const [scrollProgress, setScrollProgress] = useState(0);
   const [activeBlock, setActiveBlock] = useState(0);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [showToolbar, setShowToolbar] = useState(false);
-  const [collapsedBlocks, setCollapsedBlocks] = useState<Set<number>>(new Set());
+  const [showSectionsSheet, setShowSectionsSheet] = useState(false);
+  const [showToolsPopup, setShowToolsPopup] = useState(false);
   const [understoodBlocks, setUnderstoodBlocks] = useState<Set<number>>(new Set());
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
-  const blockRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [exitConfirm, setExitConfirm] = useState(false);
+  const [showCompletion, setShowCompletion] = useState(false);
+  const [showTextbook, setShowTextbook] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const totalBlocksRef = useRef(0);
-
-  const toggleBlock = useCallback((index: number) => {
-    setCollapsedBlocks(prev => {
-      const next = new Set(prev);
-      if (next.has(index)) next.delete(index); else next.add(index);
-      return next;
-    });
-  }, []);
 
   const persistUnderstood = useCallback((understood: Set<number>) => {
     if (!user || !chapterId || !episodeId) return;
@@ -422,16 +414,6 @@ const TextbookEpisode = () => {
     });
   }, [persistUnderstood]);
 
-  const toggleAllCollapsed = useCallback((blocks: any[]) => {
-    setCollapsedBlocks(prev => {
-      if (prev.size === blocks.length) return new Set();
-      return new Set(blocks.map((_, i) => i));
-    });
-  }, []);
-
-  const contentRef = useRef<HTMLDivElement>(null);
-  const activityRef = useRef<HTMLDivElement>(null);
-
   const { data: chapter, isLoading: chapterLoading } = useChapterEpisodes(chapterId);
   const { data: dbBlocks, isLoading: blocksLoading } = useEpisodeBlocks(chapterId, episodeId);
 
@@ -460,21 +442,9 @@ const TextbookEpisode = () => {
       });
   }, [user, chapterId, episodeId]);
 
-  // Scroll progress
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollTop = window.scrollY;
-      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-      setScrollProgress(docHeight > 0 ? Math.min((scrollTop / docHeight) * 100, 100) : 0);
-    };
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  // Navigate to block by index (paginated — no scroll needed)
   const goToBlock = useCallback((index: number) => {
     setActiveBlock(index);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    contentRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
   const scrollToActivity = useCallback(() => {
@@ -494,25 +464,26 @@ const TextbookEpisode = () => {
     return () => clearTimeout(timer);
   }, [layerParam, blocks, goToBlock]);
 
+  // Loading state — simple full-screen
   if (isLoading) {
     return (
-      <PageLayout role="student">
-        <div className="max-w-3xl mx-auto space-y-4 pt-8">
+      <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "#F9FAFB" }}>
+        <div className="space-y-4 w-full max-w-md px-6">
           <Skeleton className="h-8 w-48" /><Skeleton className="h-6 w-64" />
-          {[1, 2, 3].map((i) => <Skeleton key={i} className="h-48 w-full rounded-2xl" />)}
+          {[1, 2, 3].map((i) => <Skeleton key={i} className="h-32 w-full rounded-2xl" />)}
         </div>
-      </PageLayout>
+      </div>
     );
   }
 
   if (!chapter || !episode) {
     return (
-      <PageLayout role="student">
-        <div className="text-center py-20">
-          <p className="text-muted-foreground">Episode not found.</p>
-          <Button variant="outline" className="mt-4" onClick={() => navigate("/student/textbook")}>Back to Textbook</Button>
+      <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "#F9FAFB" }}>
+        <div className="text-center">
+          <p className="text-muted-foreground mb-4">Episode not found.</p>
+          <Button variant="outline" onClick={() => navigate("/student/textbook")}>Back to Textbook</Button>
         </div>
-      </PageLayout>
+      </div>
     );
   }
 
@@ -558,63 +529,435 @@ const TextbookEpisode = () => {
 
   const defaultMeta = { border: "border-l-primary", bg: "", dotColor: "bg-primary", badge: undefined, badgeColor: undefined } as const;
 
-  // Find current phase & section for breadcrumb
+  // Find current phase
   const allPhaseBlocks = phases.flatMap(p => blocks.map((b, i) => ({ block: b, index: i, phase: p })).filter(({ block }) => p.blockSet.has(block.type)));
   const currentPhaseBlock = allPhaseBlocks.find(pb => pb.index === activeBlock);
   const currentPhase = currentPhaseBlock?.phase || phases[0];
 
-  const breadcrumbs = [
-    { label: "Dashboard", href: "/student" },
-    { label: "Textbook", href: "/student/textbook" },
-    { label: chapter.title, href: `/student/textbook/${chapterId}` },
-    { label: episode.title },
-  ];
+  const handleExit = () => {
+    navigate(`/student/textbook/${chapterId}`);
+  };
+
+  const handleFinish = () => {
+    setShowCompletion(true);
+  };
+
+  // ═══ EXIT CONFIRMATION MODAL ═══
+  if (exitConfirm) {
+    return (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center" style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)" }}>
+        <div style={{
+          background: "white", borderRadius: 20, padding: 32, maxWidth: 360, width: "90%",
+          textAlign: "center", boxShadow: "0 25px 50px rgba(0,0,0,0.15)",
+        }}>
+          <div style={{ fontSize: 40, marginBottom: 16 }}>📖</div>
+          <h2 style={{ fontSize: 20, fontWeight: 700, color: "#1C1917", marginBottom: 8, fontFamily: "'DM Sans', sans-serif" }}>
+            Leave this lesson?
+          </h2>
+          <p style={{ fontSize: 14, color: "#78716C", marginBottom: 24, lineHeight: 1.5, fontFamily: "'DM Sans', sans-serif" }}>
+            Your progress is saved. You can continue from section {activeBlock + 1} next time.
+          </p>
+          <div style={{ display: "flex", gap: 12 }}>
+            <button
+              onClick={() => setExitConfirm(false)}
+              style={{
+                flex: 1, padding: "12px 0", borderRadius: 12, border: "1px solid #E7E5E4",
+                background: "white", fontSize: 14, fontWeight: 600, color: "#57534E",
+                cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+              }}
+            >
+              Stay
+            </button>
+            <button
+              onClick={handleExit}
+              style={{
+                flex: 1, padding: "12px 0", borderRadius: 12, border: "none",
+                background: "#EF4444", fontSize: 14, fontWeight: 600, color: "white",
+                cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+              }}
+            >
+              Leave
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ═══ COMPLETION SCREEN ═══
+  if (showCompletion) {
+    return (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center" style={{ background: "#F9FAFB" }}>
+        <div style={{ textAlign: "center", maxWidth: 420, width: "90%", padding: "40px 20px" }}>
+          <div style={{ fontSize: 56, marginBottom: 16 }}>✅</div>
+          <h1 style={{ fontSize: 28, fontWeight: 700, color: "#1C1917", marginBottom: 8, fontFamily: "'DM Sans', sans-serif" }}>
+            Lesson Complete!
+          </h1>
+          <p style={{ fontSize: 16, color: "#78716C", marginBottom: 8, fontFamily: "'DM Sans', sans-serif" }}>
+            {episode.title}
+          </p>
+          <p style={{ fontSize: 13, color: "#A8A29E", marginBottom: 32, fontFamily: "'DM Sans', sans-serif" }}>
+            Core Path done • {blocks.length} sections completed
+          </p>
+
+          {/* Stat gains */}
+          <div style={{ display: "flex", justifyContent: "center", gap: 24, marginBottom: 40 }}>
+            {[
+              { icon: "👁️", label: "Clarity", value: "+3%" },
+              { icon: "🧠", label: "Thinking", value: "+2%" },
+              { icon: "🎯", label: "Focus", value: "+4%" },
+            ].map(d => (
+              <div key={d.label} style={{ textAlign: "center" }}>
+                <div style={{ fontSize: 28, marginBottom: 4 }}>{d.icon}</div>
+                <div style={{ fontSize: 18, fontWeight: 700, color: "#0D9488", fontFamily: "'DM Sans', sans-serif" }}>{d.value}</div>
+                <div style={{ fontSize: 11, color: "#78716C", fontFamily: "'DM Sans', sans-serif" }}>{d.label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Challenge buttons */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 24 }}>
+            <button onClick={() => { setShowCompletion(false); setShowDefense(true); }} style={{
+              background: "white", border: "2px solid #E7E5E4", borderRadius: 14,
+              padding: 20, textAlign: "center", cursor: "pointer",
+            }}>
+              <div style={{ fontSize: 24, marginBottom: 8 }}>🎓</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#1C1917", fontFamily: "'DM Sans', sans-serif" }}>Defend it</div>
+              <div style={{ fontSize: 11, color: "#78716C", fontFamily: "'DM Sans', sans-serif" }}>Debate · 5 min</div>
+            </button>
+            <button onClick={() => { setShowCompletion(false); setShowFirstPrinciples(true); }} style={{
+              background: "white", border: "2px solid #E7E5E4", borderRadius: 14,
+              padding: 20, textAlign: "center", cursor: "pointer",
+            }}>
+              <div style={{ fontSize: 24, marginBottom: 8 }}>💡</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#1C1917", fontFamily: "'DM Sans', sans-serif" }}>Break it down</div>
+              <div style={{ fontSize: 11, color: "#78716C", fontFamily: "'DM Sans', sans-serif" }}>First principles · 10 min</div>
+            </button>
+          </div>
+
+          {/* Navigation */}
+          {nextEpisode ? (
+            <button
+              onClick={() => { navigate(`/student/textbook/${chapterId}/${nextEpisode.id}`); }}
+              style={{
+                width: "100%", padding: "14px 32px", borderRadius: 12, border: "none",
+                background: "#0D9488", color: "white", fontSize: 15, fontWeight: 700,
+                cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+              }}
+            >
+              Next: {nextEpisode.title} →
+            </button>
+          ) : (
+            <button
+              onClick={handleExit}
+              style={{
+                width: "100%", padding: "14px 32px", borderRadius: 12, border: "none",
+                background: "#059669", color: "white", fontSize: 15, fontWeight: 700,
+                cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+                display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8,
+              }}
+            >
+              <CheckCircle2 className="h-5 w-5" /> Back to Chapter
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ═══ IMMERSIVE MODULE ═══
+  const block = blocks.length > 0 && activeBlock < blocks.length ? blocks[activeBlock] : null;
+  const meta = block ? (layerMeta[block.type] || defaultMeta) : defaultMeta;
+  const isUnderstood = understoodBlocks.has(activeBlock);
+  const isLastBlock = activeBlock === blocks.length - 1;
 
   return (
-    <PageLayout role="student" breadcrumbItems={breadcrumbs}>
-      {/* Scroll Progress Bar */}
-      <div className="fixed top-0 left-0 right-0 z-50 h-1 bg-muted">
-        <div className="h-full bg-primary transition-all duration-150" style={{ width: `${scrollProgress}%` }} />
+    <div className="fixed inset-0 z-50 flex flex-col" style={{ background: "#F9FAFB", fontFamily: "'DM Sans', sans-serif" }}>
+
+      {/* ═══ TOP BAR — Single line ═══ */}
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: "8px 16px", borderBottom: "1px solid #E7E5E4", background: "white",
+        height: 48, flexShrink: 0,
+      }}>
+        {/* Close */}
+        <button
+          onClick={() => setExitConfirm(true)}
+          style={{
+            width: 32, height: 32, borderRadius: 8, border: "none",
+            background: "#F5F5F4", cursor: "pointer", display: "flex",
+            alignItems: "center", justifyContent: "center", color: "#78716C", flexShrink: 0,
+          }}
+        >
+          <X className="h-4 w-4" />
+        </button>
+
+        {/* Progress dots */}
+        <div style={{ display: "flex", alignItems: "center", gap: 3, flex: 1, justifyContent: "center", padding: "0 12px", overflow: "hidden" }}>
+          {blocks.map((_, i) => (
+            <div
+              key={i}
+              style={{
+                width: blocks.length > 15 ? 4 : blocks.length > 8 ? 6 : 8,
+                height: blocks.length > 15 ? 4 : blocks.length > 8 ? 6 : 8,
+                borderRadius: 2,
+                background: understoodBlocks.has(i) ? "#0D9488" : i === activeBlock ? "#1C1917" : "#D6D3D1",
+                transition: "all 0.2s",
+                flexShrink: 0,
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Counter + save */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+          {saveStatus === "saving" && (
+            <Cloud className="h-3 w-3" style={{ color: "#A8A29E" }} />
+          )}
+          {saveStatus === "saved" && (
+            <Check className="h-3 w-3" style={{ color: "#0D9488" }} />
+          )}
+          <span style={{ fontSize: 12, fontWeight: 600, color: "#78716C", minWidth: 32, textAlign: "right" }}>
+            {activeBlock + 1}/{blocks.length}
+          </span>
+        </div>
       </div>
 
-      {/* ═══ Phase Sidebar — Slide-in panel ═══ */}
-      {sidebarOpen && (
-        <div style={{
-          position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 45,
-          background: "rgba(0,0,0,0.3)", backdropFilter: "blur(2px)",
-        }} onClick={() => setSidebarOpen(false)}>
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              position: "fixed", top: 0, left: 0, bottom: 0, width: 300, maxWidth: "85vw",
-              background: "white", borderRight: "1px solid #E7E5E4", overflowY: "auto",
-              padding: 20, zIndex: 46,
-            }}
-          >
-            {/* Sidebar header */}
-            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 20 }}>
-              <div>
-                <div style={{ fontFamily: "'Source Serif 4', serif", fontWeight: 700, fontSize: 16, color: "#1C1917" }}>
-                  {episode.title}
-                </div>
-                <div style={{ fontSize: 12, color: "#78716C", fontFamily: "'DM Sans', sans-serif", marginTop: 4 }}>
-                  {chapter.title} • Lesson {episode.number}
+      {/* ═══ PHASE BADGE — Tiny ═══ */}
+      <div style={{
+        display: "flex", alignItems: "center", gap: 6, padding: "6px 16px",
+        fontSize: 12, color: "#78716C", flexShrink: 0,
+      }}>
+        <span>{currentPhase?.icon}</span>
+        <span style={{ fontWeight: 600, color: currentPhase?.color }}>{currentPhase?.label}</span>
+        <span style={{ color: "#D6D3D1" }}>•</span>
+        <span>{meta.badge?.split(" ").slice(1).join(" ") || block?.type || "Section"}</span>
+      </div>
+
+      {/* ═══ CONTENT AREA — Scrollable ═══ */}
+      <div
+        ref={contentRef}
+        style={{
+          flex: 1, overflowY: "auto", padding: "0 16px 120px",
+          WebkitOverflowScrolling: "touch",
+        }}
+      >
+        <div style={{ maxWidth: 720, margin: "0 auto", paddingTop: 16 }}>
+
+          {/* Language Progress Widget */}
+          {isLanguage && langSubject && <LanguageProgressWidget subjectName={langSubject} />}
+
+          {block && (
+            <>
+              {/* Section title */}
+              <h1 style={{
+                fontSize: 22, fontWeight: 700, color: "#1C1917", marginBottom: 4,
+                fontFamily: "'Source Serif 4', serif",
+              }}>
+                {block.icon} {block.title}
+              </h1>
+              <p style={{ fontSize: 13, color: "#A8A29E", marginBottom: 20, fontStyle: "italic" }}>
+                {blockSubtitles[block.type] || ""}
+              </p>
+
+              {/* Block content */}
+              <div className={`bg-card rounded-xl border-l-4 ${(meta as any).border || "border-l-primary"} shadow-sm`}>
+                <div className="p-5">
+                  {renderBlock(block)}
                 </div>
               </div>
-              <button onClick={() => setSidebarOpen(false)} style={{
-                background: "#F5F5F4", border: "none", width: 28, height: 28, borderRadius: "50%",
-                cursor: "pointer", fontSize: 14, color: "#78716C",
-                display: "flex", alignItems: "center", justifyContent: "center",
-              }}>✕</button>
+
+              {/* Textbook toggle */}
+              <button
+                onClick={() => setShowTextbook(!showTextbook)}
+                style={{
+                  width: "100%", padding: "10px 14px", marginTop: 16,
+                  borderRadius: showTextbook ? "10px 10px 0 0" : 10,
+                  border: "1px solid #E9D5FF", background: showTextbook ? "#F5F3FF" : "white",
+                  cursor: "pointer", display: "flex", alignItems: "center", gap: 8,
+                  fontSize: 12, fontWeight: 600, color: "#7C3AED",
+                }}
+              >
+                📖 {showTextbook ? "Hide" : "See"} original textbook text {showTextbook ? "▲" : "▼"}
+              </button>
+              {showTextbook && (
+                <div style={{
+                  padding: "14px 16px", borderRadius: "0 0 10px 10px",
+                  border: "1px solid #E9D5FF", borderTop: "none", background: "#FAFAFE",
+                }}>
+                  <p style={{ fontSize: 13, color: "#57534E", lineHeight: 1.7, fontFamily: "'Source Serif 4', serif" }}>
+                    Textbook reference text for this section will appear here when available.
+                  </p>
+                  <p style={{ fontSize: 11, color: "#A8A29E", marginTop: 8, fontStyle: "italic" }}>
+                    — {chapter.title}, {episode.title}
+                  </p>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* ═══ BOTTOM BAR — Fixed ═══ */}
+      <div style={{
+        position: "absolute", bottom: 0, left: 0, right: 0,
+        padding: "12px 16px", background: "white", borderTop: "1px solid #E7E5E4",
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        boxShadow: "0 -2px 10px rgba(0,0,0,0.04)",
+      }}>
+        {/* Left: Sections + Prev */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <button
+            onClick={() => setShowSectionsSheet(true)}
+            style={{
+              width: 36, height: 36, borderRadius: 8, border: "1px solid #E7E5E4",
+              background: "white", cursor: "pointer", display: "flex",
+              alignItems: "center", justifyContent: "center", color: "#78716C",
+            }}
+          >
+            <Menu className="h-4 w-4" />
+          </button>
+          {activeBlock > 0 && (
+            <button
+              onClick={() => goToBlock(activeBlock - 1)}
+              style={{
+                padding: "8px 14px", borderRadius: 8, border: "1px solid #E7E5E4",
+                background: "white", fontSize: 13, fontWeight: 600, color: "#57534E",
+                cursor: "pointer",
+              }}
+            >
+              ← Prev
+            </button>
+          )}
+        </div>
+
+        {/* Center: Tools */}
+        <div style={{ position: "relative" }}>
+          <button
+            onClick={() => setShowToolsPopup(!showToolsPopup)}
+            style={{
+              width: 36, height: 36, borderRadius: 8, border: "1px solid #E7E5E4",
+              background: showToolsPopup ? "#F0FDFA" : "white", cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center", color: "#78716C",
+            }}
+          >
+            <MoreHorizontal className="h-4 w-4" />
+          </button>
+
+          {/* Tools popup */}
+          {showToolsPopup && (
+            <div style={{
+              position: "absolute", bottom: 44, left: "50%", transform: "translateX(-50%)",
+              background: "white", borderRadius: 12, border: "1px solid #E7E5E4",
+              boxShadow: "0 8px 30px rgba(0,0,0,0.1)", padding: 8, display: "flex", gap: 4,
+              whiteSpace: "nowrap",
+            }}>
+              {[
+                { icon: "🗺️", label: "Mindmap" },
+                { icon: "✏️", label: "Practice", onClick: scrollToActivity },
+                { icon: "📚", label: "Q Bank" },
+                { icon: "🔍", label: "Search" },
+              ].map(t => (
+                <button
+                  key={t.label}
+                  onClick={() => { t.onClick?.(); setShowToolsPopup(false); }}
+                  style={{
+                    padding: "8px 12px", borderRadius: 8, border: "none",
+                    background: "transparent", fontSize: 12, fontWeight: 600,
+                    color: "#57534E", cursor: "pointer", display: "flex",
+                    flexDirection: "column", alignItems: "center", gap: 2,
+                  }}
+                >
+                  <span style={{ fontSize: 18 }}>{t.icon}</span>
+                  <span>{t.label}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Right: Got it + Continue/Finish */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <button
+            onClick={() => toggleUnderstood(activeBlock)}
+            style={{
+              padding: "8px 14px", borderRadius: 8,
+              border: isUnderstood ? "1.5px solid #0D9488" : "1px solid #E7E5E4",
+              background: isUnderstood ? "#F0FDFA" : "white",
+              fontSize: 13, fontWeight: 600,
+              color: isUnderstood ? "#0D9488" : "#78716C",
+              cursor: "pointer", display: "flex", alignItems: "center", gap: 4,
+            }}
+          >
+            <CheckCircle2 className="h-4 w-4" style={{ fill: isUnderstood ? "#0D9488" : "none" }} />
+            {isUnderstood ? "✓" : "Got it!"}
+          </button>
+
+          {!isLastBlock ? (
+            <button
+              disabled={!isUnderstood}
+              onClick={() => goToBlock(activeBlock + 1)}
+              style={{
+                padding: "8px 18px", borderRadius: 8, border: "none",
+                background: isUnderstood ? "#0D9488" : "#D6D3D1",
+                fontSize: 13, fontWeight: 700, color: isUnderstood ? "white" : "#A8A29E",
+                cursor: isUnderstood ? "pointer" : "not-allowed",
+                transition: "all 0.2s",
+              }}
+            >
+              Continue →
+            </button>
+          ) : (
+            <button
+              disabled={!isUnderstood}
+              onClick={handleFinish}
+              style={{
+                padding: "8px 18px", borderRadius: 8, border: "none",
+                background: isUnderstood ? "#059669" : "#D6D3D1",
+                fontSize: 13, fontWeight: 700, color: isUnderstood ? "white" : "#A8A29E",
+                cursor: isUnderstood ? "pointer" : "not-allowed",
+                transition: "all 0.2s",
+              }}
+            >
+              Finish ✓
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* ═══ SECTIONS BOTTOM SHEET ═══ */}
+      {showSectionsSheet && (
+        <>
+          <div
+            onClick={() => setShowSectionsSheet(false)}
+            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.3)", zIndex: 60 }}
+          />
+          <div style={{
+            position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 61,
+            background: "white", borderRadius: "16px 16px 0 0",
+            maxHeight: "70vh", overflowY: "auto",
+            boxShadow: "0 -10px 40px rgba(0,0,0,0.1)",
+            padding: "16px 20px 32px",
+          }}>
+            {/* Handle */}
+            <div style={{ width: 40, height: 4, borderRadius: 2, background: "#D6D3D1", margin: "0 auto 16px" }} />
+
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+              <div>
+                <h3 style={{ fontSize: 16, fontWeight: 700, color: "#1C1917", margin: 0 }}>{episode.title}</h3>
+                <p style={{ fontSize: 12, color: "#78716C", margin: "2px 0 0" }}>{chapter.title} • Lesson {episode.number}</p>
+              </div>
+              <span style={{ fontSize: 13, fontWeight: 700, color: "#0D9488" }}>
+                {understoodBlocks.size}/{blocks.length}
+              </span>
             </div>
 
             {/* Progress bar */}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-              <span style={{ fontSize: 12, fontWeight: 600, color: "#78716C", fontFamily: "'DM Sans', sans-serif" }}>Progress</span>
-              <span style={{ fontSize: 12, fontWeight: 700, color: "#0D9488", fontFamily: "'DM Sans', sans-serif" }}>{understoodBlocks.size}/{blocks.length}</span>
-            </div>
             <div style={{ height: 6, background: "#E7E5E4", borderRadius: 3, overflow: "hidden", marginBottom: 20 }}>
-              <div style={{ width: `${blocks.length > 0 ? Math.round((understoodBlocks.size / blocks.length) * 100) : 0}%`, height: "100%", background: "linear-gradient(90deg, #0D9488, #14B8A6)", borderRadius: 3, transition: "width 0.3s" }} />
+              <div style={{
+                width: `${blocks.length > 0 ? Math.round((understoodBlocks.size / blocks.length) * 100) : 0}%`,
+                height: "100%", background: "linear-gradient(90deg, #0D9488, #14B8A6)", borderRadius: 3, transition: "width 0.3s",
+              }} />
             </div>
 
             {/* Phases and sections */}
@@ -628,25 +971,25 @@ const TextbookEpisode = () => {
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                       <span style={{ fontSize: 14 }}>{phase.icon}</span>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: phase.color, fontFamily: "'DM Sans', sans-serif" }}>{phase.label}</span>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: phase.color }}>{phase.label}</span>
                     </div>
-                    <span style={{ fontSize: 11, fontWeight: 600, color: "#A8A29E", fontFamily: "'DM Sans', sans-serif" }}>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: "#A8A29E" }}>
                       {phaseUnderstood}/{phaseBlocks.length}
                     </span>
                   </div>
 
-                  {phaseBlocks.map(({ block, index: i }) => {
+                  {phaseBlocks.map(({ block: b, index: i }) => {
                     const isActive = i === activeBlock;
                     const isDone = understoodBlocks.has(i);
                     return (
                       <button
                         key={i}
-                        onClick={() => { goToBlock(i); setSidebarOpen(false); }}
+                        onClick={() => { goToBlock(i); setShowSectionsSheet(false); }}
                         style={{
                           width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "9px 10px",
                           borderRadius: 8, border: "none", textAlign: "left", marginBottom: 2,
                           background: isActive ? `${phase.color}10` : "transparent",
-                          cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+                          cursor: "pointer",
                         }}
                       >
                         <div style={{
@@ -656,14 +999,14 @@ const TextbookEpisode = () => {
                           display: "flex", alignItems: "center", justifyContent: "center",
                           color: isDone ? "white" : "#78716C", fontSize: 10, fontWeight: 700,
                         }}>
-                          {isDone ? "✓" : block.icon || (blockIcons[block.type] ? "•" : "•")}
+                          {isDone ? "✓" : "•"}
                         </div>
                         <div>
                           <div style={{ fontSize: 13, fontWeight: isActive ? 600 : 400, color: isActive ? phase.color : "#1C1917" }}>
-                            {blockLabels[block.type] || block.title || block.type}
+                            {blockLabels[b.type] || b.title || b.type}
                           </div>
                           <div style={{ fontSize: 11, color: "#A8A29E" }}>
-                            {layerMeta[block.type]?.badge?.split(" ").slice(1).join(" ") || block.type}
+                            {layerMeta[b.type]?.badge?.split(" ").slice(1).join(" ") || b.type}
                           </div>
                         </div>
                       </button>
@@ -672,341 +1015,23 @@ const TextbookEpisode = () => {
                 </div>
               );
             })}
+
+            {/* Deep Path teaser */}
+            <div style={{
+              padding: "14px 16px", borderRadius: 12, background: "#F5F5F4",
+              border: "1px dashed #D6D3D1", marginTop: 8,
+            }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: "#78716C" }}>🔒 Deep Path</div>
+              <div style={{ fontSize: 12, color: "#A8A29E", marginTop: 2 }}>Complete Core Path to unlock</div>
+            </div>
           </div>
-        </div>
+        </>
       )}
-
-      <div className="max-w-3xl mx-auto" ref={contentRef}>
-        {/* ═══ Lesson Top Bar ═══ */}
-        <div style={{
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          padding: "10px 0", marginBottom: 8, flexWrap: "wrap", gap: 8,
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              style={{
-                padding: "5px 10px", borderRadius: 6, border: "1px solid #E7E5E4",
-                background: sidebarOpen ? "#F0FDFA" : "white", fontSize: 12, cursor: "pointer",
-                color: "#57534E", fontWeight: 500, fontFamily: "'DM Sans', sans-serif",
-              }}
-            >
-              ☰ Sections
-            </button>
-            <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "#78716C", fontFamily: "'DM Sans', sans-serif" }}>
-              <span>{currentPhase?.icon}</span>
-              <span style={{ fontWeight: 600, color: currentPhase?.color }}>{currentPhase?.label}</span>
-              <span>›</span>
-              <span>{blockLabels[blocks[activeBlock]?.type] || "Section"}</span>
-            </div>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ fontSize: 11, fontWeight: 600, color: "#78716C", fontFamily: "'DM Sans', sans-serif" }}>
-              {understoodBlocks.size}/{blocks.length}
-            </span>
-            <div style={{ width: 60, height: 4, background: "#E7E5E4", borderRadius: 2, overflow: "hidden" }}>
-              <div style={{ width: `${blocks.length > 0 ? Math.round((understoodBlocks.size / blocks.length) * 100) : 0}%`, height: "100%", background: "#0D9488", borderRadius: 2 }} />
-            </div>
-            <button
-              onClick={() => setShowToolbar(!showToolbar)}
-              style={{
-                padding: "4px 10px", borderRadius: 6, border: "1px solid #E7E5E4",
-                background: showToolbar ? "#F0FDFA" : "white", fontSize: 11, cursor: "pointer",
-                color: "#57534E", fontFamily: "'DM Sans', sans-serif",
-              }}
-            >
-              ⋯ Tools
-            </button>
-          </div>
-        </div>
-
-        {/* ═══ Collapsible Tools Toolbar ═══ */}
-        {showToolbar && (
-          <div style={{
-            display: "flex", gap: 8, padding: "10px 0", marginBottom: 8, flexWrap: "wrap",
-          }}>
-            {[
-              { icon: "🗺️", label: "MINDMAP", color: "#0D9488", onClick: undefined },
-              { icon: "✏️", label: "PRACTICE", color: "#7C3AED", onClick: scrollToActivity },
-              { icon: "📚", label: "Q BANK", color: "#3B82F6", onClick: undefined },
-              { icon: "🔍", label: "SEARCH", color: "#F59E0B", onClick: undefined },
-            ].map(t => (
-              <button
-                key={t.label}
-                onClick={t.onClick}
-                style={{
-                  display: "flex", alignItems: "center", gap: 6, padding: "8px 14px",
-                  borderRadius: 8, border: `1.5px solid ${t.color}20`, background: "white",
-                  fontSize: 12, fontWeight: 700, color: t.color, cursor: "pointer",
-                  fontFamily: "'DM Sans', sans-serif",
-                }}
-              >
-                {t.icon} {t.label}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Header */}
-        <div style={{
-          background: "linear-gradient(135deg, #0F766E, #115E59)", borderRadius: 16,
-          color: "white", padding: 24, marginBottom: 16,
-        }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-            <button onClick={() => navigate(`/student/textbook/${chapterId}`)} style={{
-              display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "rgba(255,255,255,0.85)",
-              background: "none", border: "none", cursor: "pointer",
-            }}>
-              ← {chapter.title}
-            </button>
-            <span style={{ fontSize: 12, color: "rgba(255,255,255,0.8)", background: "rgba(255,255,255,0.15)", padding: "4px 12px", borderRadius: 20 }}>
-              ⏱️ {episode.duration}
-            </span>
-          </div>
-          <h1 style={{ fontSize: 22, fontWeight: 600, fontFamily: "'Source Serif 4', serif", margin: 0 }}>{episode.title}</h1>
-          {episode.subtitle && <p style={{ fontSize: 14, color: "rgba(255,255,255,0.85)", marginTop: 4 }}>{episode.subtitle}</p>}
-        </div>
-
-        {/* Language Progress Widget */}
-        {isLanguage && langSubject && <LanguageProgressWidget subjectName={langSubject} />}
-
-        {/* Stats Bar */}
-        <div style={{
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          background: "#FAFAF9", borderRadius: 12, padding: 16, marginBottom: 16,
-          border: "1px solid #E7E5E4",
-        }}>
-          <div style={{ display: "flex", gap: 24 }}>
-            <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 20, fontWeight: 700, color: "#0D9488" }}>{blocks.length}</div>
-              <div style={{ fontSize: 11, color: "#78716C", marginTop: 2 }}>Total Sections</div>
-            </div>
-            <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 20, fontWeight: 700, color: "#0D9488" }}>{understoodBlocks.size}</div>
-              <div style={{ fontSize: 11, color: "#78716C", marginTop: 2 }}>Completed</div>
-            </div>
-            <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 20, fontWeight: 700, color: "#0D9488" }}>{episode.duration}</div>
-              <div style={{ fontSize: 11, color: "#78716C", marginTop: 2 }}>Est. Time</div>
-            </div>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            {saveStatus === "saving" && (
-              <span style={{ fontSize: 11, color: "#A8A29E", display: "flex", alignItems: "center", gap: 4 }}>
-                <Cloud className="h-3 w-3" /> Saving…
-              </span>
-            )}
-            {saveStatus === "saved" && (
-              <span style={{ fontSize: 11, color: "#0D9488", display: "flex", alignItems: "center", gap: 4 }}>
-                <Check className="h-3 w-3" /> Saved
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* ═══ Single Block — Paginated View ═══ */}
-        {blocks.length > 0 && activeBlock < blocks.length && (() => {
-          const block = blocks[activeBlock];
-          const meta = layerMeta[block.type] || defaultMeta;
-          const isUnderstood = understoodBlocks.has(activeBlock);
-          const isLastBlock = activeBlock === blocks.length - 1;
-
-          return (
-            <div className="space-y-4">
-              {/* Phase header for current block */}
-              <div style={{
-                display: "flex", alignItems: "center", justifyContent: "space-between",
-                padding: "12px 16px", borderRadius: 12,
-                background: `${currentPhase.color}15`, border: `1px solid ${currentPhase.color}30`,
-              }}>
-                <div>
-                  <h3 style={{ fontSize: 16, fontWeight: 700, color: "#1C1917", margin: 0, display: "flex", alignItems: "center", gap: 8, fontFamily: "'Source Serif 4', serif" }}>
-                    {currentPhase.icon} {currentPhase.label}
-                  </h3>
-                  <p style={{ fontSize: 12, color: "#78716C", margin: "4px 0 0", fontFamily: "'DM Sans', sans-serif" }}>{currentPhase.subtitle}</p>
-                </div>
-                <span style={{
-                  fontSize: 12, fontWeight: 600, color: currentPhase.color,
-                  background: `${currentPhase.color}12`, padding: "4px 10px", borderRadius: 20,
-                  fontFamily: "'DM Sans', sans-serif",
-                }}>
-                  {activeBlock + 1}/{blocks.length}
-                </span>
-              </div>
-
-              {/* The single block card */}
-              <div className={`bg-card rounded-xl shadow-sm border-l-4 ${(meta as any).border || "border-l-primary"}`}>
-                <div className="p-5 pb-3">
-                  <div className="flex items-center gap-3 mb-1">
-                    <span className="text-xl shrink-0">{block.icon}</span>
-                    <div>
-                      <h2 className="text-[1.1rem] font-semibold text-foreground">{block.title}</h2>
-                      <p className="text-xs text-muted-foreground italic mt-0.5">{blockSubtitles[block.type] || ""}</p>
-                    </div>
-                    {meta.badge && (
-                      <span className={`text-[11px] font-semibold px-3 py-1 rounded-full ${meta.badgeColor || ""} ml-auto hidden sm:inline-flex`}>
-                        {meta.badge}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div className="px-5 pb-5">
-                  {renderBlock(block)}
-                </div>
-              </div>
-
-              {/* Bottom Navigation Bar */}
-              <div style={{
-                display: "flex", alignItems: "center", justifyContent: "space-between",
-                padding: "16px 0", borderTop: "1px solid #E7E5E4", marginTop: 8,
-              }}>
-                <button
-                  onClick={() => activeBlock > 0 && goToBlock(activeBlock - 1)}
-                  disabled={activeBlock === 0}
-                  style={{
-                    padding: "12px 24px", borderRadius: 12, border: "1px solid #E7E5E4",
-                    background: "white", fontSize: 14, fontWeight: 600,
-                    color: activeBlock === 0 ? "#D6D3D1" : "#57534E",
-                    cursor: activeBlock === 0 ? "default" : "pointer",
-                    fontFamily: "'DM Sans', sans-serif",
-                  }}
-                >
-                  ← Previous
-                </button>
-
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  {isUnderstood && (
-                    <span style={{ fontSize: 12, fontWeight: 600, color: "#0D9488", fontFamily: "'DM Sans', sans-serif" }}>
-                      ✓ Section complete
-                    </span>
-                  )}
-                  <button
-                    onClick={(e) => { e.stopPropagation(); toggleUnderstood(activeBlock); }}
-                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${isUnderstood ? "bg-primary/10 text-primary border border-primary/30" : "bg-muted text-muted-foreground hover:bg-muted/80 border border-border"}`}
-                  >
-                    <CheckCircle2 className={`h-4 w-4 ${isUnderstood ? "fill-primary" : ""}`} />
-                    {isUnderstood ? "Nailed it! 🎯" : "Got it! ✓"}
-                  </button>
-                </div>
-
-                {!isLastBlock ? (
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
-                    <button
-                      disabled={!isUnderstood}
-                      onClick={() => goToBlock(activeBlock + 1)}
-                      style={{
-                        padding: "12px 24px", borderRadius: 12, border: "none",
-                        background: isUnderstood ? "#0D9488" : "#D6D3D1",
-                        fontSize: 14, fontWeight: 600, color: isUnderstood ? "white" : "#A8A29E",
-                        cursor: isUnderstood ? "pointer" : "not-allowed",
-                        fontFamily: "'DM Sans', sans-serif",
-                        transition: "all 0.2s ease",
-                      }}
-                    >
-                      Continue →
-                    </button>
-                    {!isUnderstood && (
-                      <span style={{ fontSize: 11, color: "#A8A29E", fontFamily: "'DM Sans', sans-serif" }}>
-                        Mark "Got it!" first
-                      </span>
-                    )}
-                  </div>
-                ) : (
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
-                    <button
-                      disabled={!isUnderstood}
-                      onClick={() => {/* already marked */}}
-                      style={{
-                        padding: "12px 24px", borderRadius: 12, border: "none",
-                        background: isUnderstood ? "#059669" : "#D6D3D1",
-                        fontSize: 14, fontWeight: 600, color: isUnderstood ? "white" : "#A8A29E",
-                        cursor: isUnderstood ? "pointer" : "not-allowed",
-                        fontFamily: "'DM Sans', sans-serif",
-                        transition: "all 0.2s ease",
-                      }}
-                    >
-                      Finish ✓
-                    </button>
-                    {!isUnderstood && (
-                      <span style={{ fontSize: 11, color: "#A8A29E", fontFamily: "'DM Sans', sans-serif" }}>
-                        Mark "Got it!" first
-                      </span>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        })()}
-
-        {/* Completion Actions */}
-        <div style={{
-          marginTop: 40, marginBottom: 32, borderRadius: 16,
-          background: "#FAFAF9", border: "1px solid #E7E5E4", padding: 32, textAlign: "center",
-        }}>
-          <h2 style={{ fontSize: 24, fontWeight: 700, fontFamily: "'Source Serif 4', serif", color: "#1C1917", marginBottom: 8 }}>You crushed it! 🎉</h2>
-          <p style={{ fontSize: 15, color: "#78716C", marginBottom: 32, fontFamily: "'DM Sans', sans-serif" }}>What do you want to try next?</p>
-
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 16, marginBottom: 32 }}>
-            <button onClick={() => setShowDefense(true)} style={{
-              background: "white", border: "2px solid #E7E5E4", borderRadius: 14,
-              padding: 24, textAlign: "center", cursor: "pointer", transition: "all 0.15s",
-            }}>
-              <div style={{ fontSize: 32, marginBottom: 12 }}>🎓</div>
-              <h3 style={{ fontFamily: "'Source Serif 4', serif", fontWeight: 700, fontSize: 14, color: "#1C1917", marginBottom: 4 }}>Can you defend it?</h3>
-              <p style={{ fontSize: 12, color: "#78716C", fontFamily: "'DM Sans', sans-serif" }}>Friendly debate · 5 min</p>
-            </button>
-
-            <button onClick={() => setShowFirstPrinciples(true)} style={{
-              background: "white", border: "2px solid #E7E5E4", borderRadius: 14,
-              padding: 24, textAlign: "center", cursor: "pointer", transition: "all 0.15s",
-            }}>
-              <div style={{ fontSize: 32, marginBottom: 12 }}>💡</div>
-              <h3 style={{ fontFamily: "'Source Serif 4', serif", fontWeight: 700, fontSize: 14, color: "#1C1917", marginBottom: 4 }}>Break it to basics</h3>
-              <p style={{ fontSize: 12, color: "#78716C", fontFamily: "'DM Sans', sans-serif" }}>Strip down, rebuild · 10 min</p>
-            </button>
-
-            <button onClick={() => navigate("/student")} style={{
-              background: "white", border: "2px solid #E7E5E4", borderRadius: 14,
-              padding: 24, textAlign: "center", cursor: "pointer", transition: "all 0.15s",
-            }}>
-              <div style={{ fontSize: 32, marginBottom: 12 }}>📊</div>
-              <h3 style={{ fontFamily: "'Source Serif 4', serif", fontWeight: 700, fontSize: 14, color: "#1C1917", marginBottom: 4 }}>See how far you've come</h3>
-              <p style={{ fontSize: 12, color: "#78716C", fontFamily: "'DM Sans', sans-serif" }}>Track your growth</p>
-            </button>
-          </div>
-
-          {nextEpisode ? (
-            <button
-              onClick={() => { navigate(`/student/textbook/${chapterId}/${nextEpisode.id}`); window.scrollTo(0, 0); }}
-              style={{
-                padding: "14px 32px", borderRadius: 12, border: "none",
-                background: "#0D9488", color: "white", fontSize: 15, fontWeight: 700,
-                cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
-              }}
-            >
-              Continue to Episode {nextEpisode.number}: {nextEpisode.title} →
-            </button>
-          ) : (
-            <button
-              onClick={() => navigate(`/student/textbook/${chapterId}`)}
-              style={{
-                padding: "14px 32px", borderRadius: 12, border: "none",
-                background: "#059669", color: "white", fontSize: 15, fontWeight: 700,
-                cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
-                display: "inline-flex", alignItems: "center", gap: 8,
-              }}
-            >
-              <CheckCircle2 className="h-5 w-5" /> Complete Chapter
-            </button>
-          )}
-        </div>
-      </div>
 
       {/* Modals */}
       <TutorialDefenseModal open={showDefense} onOpenChange={setShowDefense} topic={episode.title} episodeTitle={`${chapter.title} — ${episode.title}`} subject={chapter.title} chapterId={chapterId} episodeId={episodeId} />
       <FirstPrinciplesModal open={showFirstPrinciples} onOpenChange={setShowFirstPrinciples} topic={episode.title} episodeTitle={`${chapter.title} — ${episode.title}`} subject={chapter.title} chapterId={chapterId} episodeId={episodeId} />
-    </PageLayout>
+    </div>
   );
 };
 
