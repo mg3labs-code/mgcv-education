@@ -657,6 +657,10 @@ export const chapters: Chapter[] = [
                 },
               ],
             } as AssessmentContent,
+            textbookRef: {
+              text: "Apply Euclid's Division Lemma: for any pair of positive integers a and b, express a = bq + r and verify that 0 ≤ r < b.",
+              source: "TS SCERT Class 10 Maths, Exercise 1.1, p.6",
+            },
           },
           {
             type: "exercise",
