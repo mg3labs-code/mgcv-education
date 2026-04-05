@@ -306,6 +306,10 @@ export const chapters: Chapter[] = [
                 },
               ],
             } as AssessmentContent,
+            textbookRef: {
+              text: "Every natural number is a whole number (True). Every integer is NOT a whole number — negative integers like −1, −2 are not whole numbers (False). Every rational number is NOT an integer — for example, 3/4 is rational but not an integer (False).",
+              source: "Exercise 1.1, Q4, Page 5",
+            },
           },
           {
             type: "exercise",
