@@ -576,6 +576,10 @@ export const chapters: Chapter[] = [
                 { value: "a = 132, b = 11" },
               ],
             } as ActivityContent,
+            textbookRef: {
+              text: "Let us apply the Division Lemma to find q and r for various values of a and b. Remember: a = bq + r, where 0 ≤ r < b.",
+              source: "TS SCERT Class 10 Maths, §1.1 Example 1, p.4",
+            },
           },
           {
             type: "recall",
