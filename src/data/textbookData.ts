@@ -388,7 +388,7 @@ export const chapters: Chapter[] = [
             } as AssumptionsContent,
             textbookRef: {
               text: "We have learnt that there are infinitely many rationals between any two given rational numbers. So, we might think that the number line is completely covered by rationals. But this is not so! In the next section, we shall show that there exist numbers which are NOT rational.",
-              source: "Section 1.2, Page 5",
+              source: "TS SCERT Class 10 Maths, §1.2, p.5",
             },
           },
           // ── Layer 5: Connections ──
