@@ -1192,6 +1192,10 @@ export const chapters: Chapter[] = [
                 { number: "3(iii)", text: "Prove that 6 + √2 is irrational." },
               ],
             } as ExerciseContent,
+            textbookRef: {
+              text: "Prove that √5 is irrational. Prove that 3 + 2√5 is irrational. Prove that 1/√2, 7√5, and 6 + √2 are irrational.",
+              source: "TS SCERT Class 10 Maths, Exercise 1.3, p.18",
+            },
           },
         ],
       },
