@@ -816,6 +816,10 @@ export const chapters: Chapter[] = [
                 },
               ],
             } as AssessmentContent,
+            textbookRef: {
+              text: "Apply Euclid's algorithm step by step. Remember: the last non-zero divisor when the remainder becomes 0 is the HCF.",
+              source: "TS SCERT Class 10 Maths, Exercise 1.1",
+            },
           },
           {
             type: "exercise",
