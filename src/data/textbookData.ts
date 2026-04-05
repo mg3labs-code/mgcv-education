@@ -958,6 +958,10 @@ export const chapters: Chapter[] = [
               ],
               wordLimit: 100,
             } as ExplainContent,
+            textbookRef: {
+              text: "The Fundamental Theorem of Arithmetic has many applications, both within mathematics and in other fields. For example, it is used in computing and cryptography.",
+              source: "TS SCERT Class 10 Maths, §1.3, p.8",
+            },
           },
           {
             type: "assessment",
