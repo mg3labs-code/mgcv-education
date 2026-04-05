@@ -355,6 +355,10 @@ export const chapters: Chapter[] = [
                 },
               ],
             } as ReasoningContent,
+            textbookRef: {
+              text: "In earlier classes, we have studied different types of numbers. We have seen that every rational number can be expressed in the form p/q. In this chapter, we shall explore real numbers more deeply and understand why each number type was needed.",
+              source: "Section 1.1, Introduction, Page 1",
+            },
           },
           // ── Layer 4: Assumptions ──
           {
