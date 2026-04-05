@@ -10,11 +10,21 @@ export interface VisualAidContent {
   searchTerms?: string;
 }
 
+export interface TextbookRefSnippet {
+  text: string;
+  source: string;
+}
+
 export interface ContentBlock {
   type: "concept" | "activity" | "recall" | "explain" | "assessment" | "exercise" | "reasoning" | "assumptions" | "connections" | "application" | "implications" | "bilingual_concept" | "vocabulary" | "grammar_pattern" | "story_reading" | "visual_aid";
   title: string;
   icon: string;
   content: ConceptContent | ActivityContent | RecallContent | ExplainContent | AssessmentContent | ExerciseContent | ReasoningContent | AssumptionsContent | ConnectionsContent | ApplicationContent | ImplicationsContent | VisualAidContent | Record<string, any>;
+  textbookRef?: {
+    snippets?: TextbookRefSnippet[];  // per-section for concept blocks
+    text?: string;                     // single snippet for other block types
+    source?: string;
+  };
 }
 
 export interface ConceptContent {
