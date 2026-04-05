@@ -715,6 +715,13 @@ export const chapters: Chapter[] = [
                 },
               ],
             } as ConceptContent,
+            textbookRef: {
+              snippets: [
+                { text: "To obtain the HCF of two positive integers, say c and d (c > d), follow the steps: Apply Euclid's Division Lemma to c and d, to get c = dq + r.", source: "TS SCERT Class 10 Maths, §1.2 Euclid's Algorithm, p.5" },
+                { text: "Euclid's algorithm: Step 1 — Apply division algorithm: c = dq + r. Step 2 — If r = 0, d is the HCF. If r ≠ 0, apply Step 1 to d and r.", source: "TS SCERT Class 10 Maths, §1.2, p.6" },
+                { text: "Example: Find HCF of 4052 and 12576. 12576 = 4052 × 3 + 420; 4052 = 420 × 9 + 272; 420 = 272 × 1 + 148; 272 = 148 × 1 + 124; 148 = 124 × 1 + 24; 124 = 24 × 5 + 4; 24 = 4 × 6 + 0. HCF = 4.", source: "TS SCERT Class 10 Maths, §1.2 Example 3, p.6" },
+              ],
+            },
           },
           {
             type: "activity",
