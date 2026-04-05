@@ -10,11 +10,21 @@ export interface VisualAidContent {
   searchTerms?: string;
 }
 
+export interface TextbookRefSnippet {
+  text: string;
+  source: string;
+}
+
 export interface ContentBlock {
   type: "concept" | "activity" | "recall" | "explain" | "assessment" | "exercise" | "reasoning" | "assumptions" | "connections" | "application" | "implications" | "bilingual_concept" | "vocabulary" | "grammar_pattern" | "story_reading" | "visual_aid";
   title: string;
   icon: string;
   content: ConceptContent | ActivityContent | RecallContent | ExplainContent | AssessmentContent | ExerciseContent | ReasoningContent | AssumptionsContent | ConnectionsContent | ApplicationContent | ImplicationsContent | VisualAidContent | Record<string, any>;
+  textbookRef?: {
+    snippets?: TextbookRefSnippet[];  // per-section for concept blocks
+    text?: string;                     // single snippet for other block types
+    source?: string;
+  };
 }
 
 export interface ConceptContent {
@@ -175,6 +185,15 @@ export const chapters: Chapter[] = [
                 },
               ],
             } as ConceptContent,
+            textbookRef: {
+              snippets: [
+                { text: "The counting numbers 1, 2, 3, 4, … are known as natural numbers. The collection of all natural numbers is denoted by N. So, N = {1, 2, 3, 4, 5, …}.", source: "Section 1.1, Page 2" },
+                { text: "If we include zero along with the natural numbers, we obtain the collection of whole numbers, denoted by W. Thus, W = {0, 1, 2, 3, 4, …}. Every natural number is a whole number, but zero is a whole number which is not a natural number.", source: "Section 1.1, Page 2" },
+                { text: "The collection of all whole numbers and their negatives is known as integers, denoted by Z (from the German word 'Zahlen' meaning 'to count'). Z = {…, −3, −2, −1, 0, 1, 2, 3, …}.", source: "Section 1.1, Page 3" },
+                { text: "A number r is called a rational number if it can be written in the form p/q, where p and q are integers and q ≠ 0. The collection of rational numbers is denoted by Q. The decimal expansion of a rational number is either terminating or non-terminating recurring.", source: "Section 1.1, Page 3" },
+                { text: "From our discussion, it is clear that every natural number is a whole number, every whole number is an integer, and every integer is a rational number. This gives us N ⊂ W ⊂ Z ⊂ Q.", source: "Section 1.1, Page 4" },
+              ],
+            },
           },
           {
             type: "activity",
@@ -200,6 +219,10 @@ export const chapters: Chapter[] = [
                 { id: "Q", label: "Rational Numbers", description: "p/q form, q ≠ 0" },
               ],
             } as ActivityContent,
+            textbookRef: {
+              text: "State whether the following statements are true or false. Give reasons for your answers: (i) Every natural number is a whole number. (ii) Every integer is a whole number. (iii) Every rational number is an integer.",
+              source: "Exercise 1.1, Q4, Page 5",
+            },
           },
           {
             type: "recall",
@@ -227,6 +250,10 @@ export const chapters: Chapter[] = [
                 },
               ],
             } as RecallContent,
+            textbookRef: {
+              text: "A number r is called a rational number if it can be written in the form p/q, where p and q are integers and q ≠ 0. Every natural number is a whole number, every whole number is an integer, and every integer is a rational number.",
+              source: "Section 1.1, Pages 2-4",
+            },
           },
           {
             type: "explain",
@@ -242,6 +269,10 @@ export const chapters: Chapter[] = [
               ],
               wordLimit: 80,
             } as ExplainContent,
+            textbookRef: {
+              text: "Every integer n can be written as n/1, which is in p/q form with q ≠ 0. Therefore, every integer is a rational number.",
+              source: "Section 1.1, Page 3",
+            },
           },
           {
             type: "assessment",
@@ -275,6 +306,10 @@ export const chapters: Chapter[] = [
                 },
               ],
             } as AssessmentContent,
+            textbookRef: {
+              text: "Every natural number is a whole number (True). Every integer is NOT a whole number — negative integers like −1, −2 are not whole numbers (False). Every rational number is NOT an integer — for example, 3/4 is rational but not an integer (False).",
+              source: "Exercise 1.1, Q4, Page 5",
+            },
           },
           {
             type: "exercise",
@@ -290,6 +325,10 @@ export const chapters: Chapter[] = [
                 { number: "5", text: "Classify the following numbers as N, W, Z, Q: -5, 0, 7, 3/4, -11/3, 100" },
               ],
             } as ExerciseContent,
+            textbookRef: {
+              text: "Exercise 1.1: (1) Is zero a rational number? (2) Find six rational numbers between 3 and 4. (3) Find five rational numbers between 3/5 and 4/5. (4) State true or false with reasons for N, W, Z, Q relationships.",
+              source: "Exercise 1.1, Page 5",
+            },
           },
           // ── Layer 3: Reasoning ──
           {
@@ -316,6 +355,10 @@ export const chapters: Chapter[] = [
                 },
               ],
             } as ReasoningContent,
+            textbookRef: {
+              text: "In earlier classes, we have studied different types of numbers. We have seen that every rational number can be expressed in the form p/q. In this chapter, we shall explore real numbers more deeply and understand why each number type was needed.",
+              source: "Section 1.1, Introduction, Page 1",
+            },
           },
           // ── Layer 4: Assumptions ──
           {
@@ -343,6 +386,10 @@ export const chapters: Chapter[] = [
               ],
               defensePrompt: "Defend this statement: 'The p/q definition of rational numbers is the BEST way to define them.' What are the alternatives? Why is this definition better?",
             } as AssumptionsContent,
+            textbookRef: {
+              text: "We have learnt that there are infinitely many rationals between any two given rational numbers. So, we might think that the number line is completely covered by rationals. But this is not so! In the next section, we shall show that there exist numbers which are NOT rational.",
+              source: "Section 1.2, Page 5",
+            },
           },
           // ── Layer 5: Connections ──
           {
@@ -384,6 +431,10 @@ export const chapters: Chapter[] = [
                 },
               ],
             } as ConnectionsContent,
+            textbookRef: {
+              text: "The word 'rational' comes from the word 'ratio'. The letter Z for integers comes from the German word 'Zahlen' meaning 'to count'. Q is used for rationals from the word 'quotient'.",
+              source: "Section 1.1, Pages 2-3",
+            },
           },
           // ── Layer 6: Application (Harvard Case) ──
           {
@@ -411,6 +462,10 @@ export const chapters: Chapter[] = [
               careers: ["Data Analyst", "Sports Statistician", "Financial Planner", "Civil Engineer", "Physicist", "Software Developer"],
               harvardLabel: "The Cricket Score Problem",
             } as ApplicationContent,
+            textbookRef: {
+              text: "Examples of rational numbers include 1/2, −3/4, 7 (which is 7/1), and 0 (which is 0/1). The decimal expansion of a rational number is either terminating (e.g., 1/4 = 0.25) or non-terminating recurring (e.g., 1/3 = 0.333…).",
+              source: "Section 1.1, Page 3",
+            },
           },
           // ── Layer 7: Implications (Oxford Essay) ──
           {
@@ -460,6 +515,10 @@ export const chapters: Chapter[] = [
                 },
               ],
             } as ImplicationsContent,
+            textbookRef: {
+              text: "So, we might think that there is nothing more to be said about real numbers. But it was not until the 19th century that mathematicians like Dedekind, Cantor, and Weierstrass gave a rigorous foundation to the theory of real numbers.",
+              source: "Section 1.4, Page 14",
+            },
           },
         ],
       },
