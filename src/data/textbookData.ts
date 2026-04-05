@@ -780,6 +780,10 @@ export const chapters: Chapter[] = [
               ],
               wordLimit: 100,
             } as ExplainContent,
+            textbookRef: {
+              text: "The main idea behind Euclid's Algorithm is that HCF(c, d) = HCF(d, r), where r is the remainder when c is divided by d. This is because any common factor of c and d is also a common factor of d and r.",
+              source: "TS SCERT Class 10 Maths, §1.2, p.5",
+            },
           },
           {
             type: "assessment",
