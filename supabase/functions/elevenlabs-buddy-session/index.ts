@@ -240,7 +240,7 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ token, agentId, model: "eleven_multilingual_v2" }),
+      JSON.stringify({ token, agentId, model: "eleven_v3_conversational" }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e) {
