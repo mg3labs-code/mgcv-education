@@ -59,7 +59,7 @@ const stemPhases = [
   { id: "deeper", label: "Challenge Yourself", icon: "🚀", color: "#8B5CF6", subtitle: "Ask why, challenge assumptions, see connections", className: "phase-deeper", blockSet: DEEP_BLOCKS },
 ];
 
-const LANG_READ_BLOCKS = new Set(["concept", "activity", "bilingual_concept", "story_reading", "visual_aid"]);
+const LANG_READ_BLOCKS = new Set(["concept", "activity", "bilingual_concept", "story_reading"]);
 const LANG_PRACTICE_BLOCKS = new Set(["recall", "exercise", "assessment", "explain", "vocabulary", "grammar_pattern"]);
 const LANG_EXPRESS_BLOCKS = new Set(["reasoning", "assumptions", "connections", "application", "implications"]);
 
