@@ -740,32 +740,34 @@ const TextbookEpisode = () => {
                   {phaseBlocks.map(({ block: b, index: i }) => {
                     const isActive = i === activeBlock;
                     const isDone = understoodBlocks.has(i);
+                    const locked = isBlockLocked(i);
                     return (
                       <button
                         key={i}
-                        onClick={() => { goToBlock(i); setShowSectionsSheet(false); }}
+                        onClick={() => { if (!locked) { goToBlock(i); setShowSectionsSheet(false); } else { toast.error("Complete all Discover & Test sections first 🔒"); } }}
                         style={{
                           width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "9px 10px",
                           borderRadius: 8, border: "none", textAlign: "left", marginBottom: 2,
                           background: isActive ? `${phase.color}10` : "transparent",
-                          cursor: "pointer",
+                          cursor: locked ? "not-allowed" : "pointer",
+                          opacity: locked ? 0.5 : 1,
                         }}
                       >
                         <div style={{
                           width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
-                          background: isDone ? phase.color : isActive ? "white" : "#E7E5E4",
-                          border: isActive && !isDone ? `2px solid ${phase.color}` : "none",
+                          background: locked ? "#D6D3D1" : isDone ? phase.color : isActive ? "white" : "#E7E5E4",
+                          border: isActive && !isDone && !locked ? `2px solid ${phase.color}` : "none",
                           display: "flex", alignItems: "center", justifyContent: "center",
                           color: isDone ? "white" : "#78716C", fontSize: 10, fontWeight: 700,
                         }}>
-                          {isDone ? "✓" : "•"}
+                          {locked ? "🔒" : isDone ? "✓" : "•"}
                         </div>
                         <div>
-                          <div style={{ fontSize: 13, fontWeight: isActive ? 600 : 400, color: isActive ? phase.color : "#1C1917" }}>
+                          <div style={{ fontSize: 13, fontWeight: isActive ? 600 : 400, color: locked ? "#A8A29E" : isActive ? phase.color : "#1C1917" }}>
                             {blockLabels[b.type] || b.title || b.type}
                           </div>
                           <div style={{ fontSize: 11, color: "#A8A29E" }}>
-                            {layerMeta[b.type]?.badge?.split(" ").slice(1).join(" ") || b.type}
+                            {locked ? "Complete previous phases to unlock" : layerMeta[b.type]?.badge?.split(" ").slice(1).join(" ") || b.type}
                           </div>
                         </div>
                       </button>
