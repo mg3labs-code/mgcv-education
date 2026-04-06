@@ -251,11 +251,10 @@ serve(async (req) => {
             language: "hi", // ElevenLabs doesn't support "te", use "hi" as closest
           },
           tts: {
-            voice_id: "cgSgspJ2msm6clMCkdW9", // Jessica
+            voice_id: "cgSgspJ2msm6clMCkdW9",
             model_id: "eleven_v3",
             stability: 0.5,
             similarity_boost: 0.75,
-            style: 0,
           },
         },
       };
