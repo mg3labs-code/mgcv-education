@@ -383,7 +383,7 @@ const TextbookEpisode = () => {
   const [exitConfirm, setExitConfirm] = useState(false);
   const [showCompletion, setShowCompletion] = useState(false);
   const [textbookRefOpen, setTextbookRefOpen] = useState(true);
-  
+  const [readingMode, setReadingMode] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const totalBlocksRef = useRef(0);
