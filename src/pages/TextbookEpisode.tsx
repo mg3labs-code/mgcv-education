@@ -189,11 +189,11 @@ const TextbookEpisode = () => {
 
   // Auto-scroll to layer based on query param
   useEffect(() => {
-    if (!layerParam || !blocks || blocks.length === 0) return;
+    if (!layerParam || !navBlocks || navBlocks.length === 0) return;
     const timer = setTimeout(() => {
       const targetSet = layerParam === "deep" ? DEEP_BLOCKS : layerParam === "quiz" ? PROVE_BLOCKS : null;
       if (!targetSet) return;
-      const idx = blocks.findIndex(b => targetSet.has(b.type));
+      const idx = navBlocks.findIndex(b => targetSet.has(b.type));
       if (idx >= 0) goToBlock(idx);
     }, 500);
     return () => clearTimeout(timer);
