@@ -278,14 +278,16 @@ IMPORTANT:
           continue;
         }
 
-        const rows = blocks.map((b: any, i: number) => ({
-          episode_id: ep.id,
-          block_type: b.block_type,
-          title: b.title || null,
-          icon: b.icon || null,
-          content: b.content || {},
-          sort_order: i,
-        }));
+        const rows = blocks
+          .filter((b: any) => b.content != null)
+          .map((b: any, i: number) => ({
+            episode_id: ep.id,
+            block_type: b.block_type || "concept",
+            title: b.title || "",
+            icon: b.icon || "📝",
+            content: b.content || {},
+            sort_order: i,
+          }));
 
         const { error: insertError } = await supabase
           .from("content_blocks")

@@ -172,15 +172,17 @@ Return ONLY the JSON array, no markdown wrapping.`;
         continue;
       }
 
-      // Insert blocks into DB
-      const blockInserts = generatedBlocks.map((block: any, idx: number) => ({
-        episode_id: ep.id,
-        block_type: block.block_type || block.type,
-        title: block.title,
-        icon: block.icon,
-        content: block.content,
-        sort_order: idx + 1,
-      }));
+      // Insert blocks into DB — filter out blocks with null/missing content
+      const blockInserts = generatedBlocks
+        .filter((block: any) => block.content != null && block.block_type || block.type)
+        .map((block: any, idx: number) => ({
+          episode_id: ep.id,
+          block_type: block.block_type || block.type,
+          title: block.title || "",
+          icon: block.icon || "📝",
+          content: block.content || {},
+          sort_order: idx + 1,
+        }));
 
       const { error: insertErr } = await supabase
         .from("content_blocks")
