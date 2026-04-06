@@ -173,91 +173,32 @@ async function getOrCreateAgent(supabaseAdmin: any, elevenlabsKey: string): Prom
         },
         tts: {
           voice_id: "cgSgspJ2msm6clMCkdW9",
-          model_id: "eleven_v3",
+          model_id: "eleven_multilingual_v2",
           stability: 0.5,
           similarity_boost: 0.75,
         },
       },
     }),
   });
-
-  if (!createResponse.ok) {
-    const errText = await createResponse.text();
-    console.error("Failed to create ElevenLabs agent:", createResponse.status, errText);
-    throw new Error(`Failed to create agent: ${createResponse.status} - ${errText}`);
-  }
-
-  const { agent_id } = await createResponse.json();
-  console.log("Created ElevenLabs agent:", agent_id);
-
-  // Store agent_id in config using service role (bypasses RLS)
-  const { error: insertError } = await supabaseAdmin
-    .from("app_config")
-    .upsert({ key: "elevenlabs_agent_id", value: agent_id });
-
-  if (insertError) {
-    console.error("Failed to store agent_id:", insertError);
-  }
-
-  return agent_id;
-}
-
-serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
-    const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY");
-    if (!ELEVENLABS_API_KEY) {
-      throw new Error("ELEVENLABS_API_KEY is not configured");
-    }
-
-    const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
-    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-      throw new Error("Supabase config missing");
-    }
-
-    // Parse optional language hint from request body
-    let language = "english";
-    try {
-      const body = await req.json();
-      if (body?.language) {
-        language = body.language.toLowerCase();
-      }
-    } catch {
-      // No body or invalid JSON — default to english
-    }
-
-    const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-
-    // Get or create the agent
-    const agentId = await getOrCreateAgent(supabaseAdmin, ELEVENLABS_API_KEY);
-
-    // Build conversation config overrides for Telugu
-    const isTeluguSession = language === "telugu";
-    const tokenUrl = `https://api.elevenlabs.io/v1/convai/conversation/token?agent_id=${agentId}`;
-
-    let tokenRequestBody: any = undefined;
-    if (isTeluguSession) {
-      console.log("🇮🇳 Telugu session detected — applying expressive voice overrides");
-      tokenRequestBody = {
-        conversation_config_override: {
-          agent: {
-            prompt: {
-              prompt: BUDDY_SYSTEM_PROMPT + TELUGU_ADDENDUM,
+...
+      if (isTeluguSession) {
+        console.log("🇮🇳 Telugu session detected — applying multilingual voice overrides");
+        tokenRequestBody = {
+          conversation_config_override: {
+            agent: {
+              prompt: {
+                prompt: BUDDY_SYSTEM_PROMPT + TELUGU_ADDENDUM,
+              },
+              language: "hi", // ElevenLabs doesn't support "te", use "hi" as closest
             },
-            language: "hi", // ElevenLabs doesn't support "te", use "hi" as closest
+            tts: {
+              voice_id: "cgSgspJ2msm6clMCkdW9",
+              model_id: "eleven_multilingual_v2",
+              stability: 0.5,
+              similarity_boost: 0.75,
+            },
           },
-          tts: {
-            voice_id: "cgSgspJ2msm6clMCkdW9",
-            model_id: "eleven_v3",
-            stability: 0.5,
-            similarity_boost: 0.75,
-          },
-        },
-      };
+        };
     }
 
     // Generate a conversation token (with optional overrides)
