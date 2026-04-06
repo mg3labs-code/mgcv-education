@@ -1,14 +1,9 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CheckCircle2, ChevronLeft, ChevronRight, BookOpen } from "lucide-react";
-
-interface Topic {
-  id: string;
-  title: string;
-  content: TopicBlock[];
-}
+import { ContentBlock } from "@/data/textbookData";
 
 interface TopicBlock {
   type: "definition" | "formula" | "example" | "steps" | "note" | "text" | "proof";
@@ -16,99 +11,150 @@ interface TopicBlock {
   content: string | string[];
 }
 
-const topics: Topic[] = [
-  {
-    id: "edl",
-    title: "Euclid's Division Lemma",
-    content: [
-      { type: "text", content: "This chapter begins with a fundamental result in number theory that forms the basis for Euclid's Algorithm — a method to compute the Highest Common Factor (HCF) of two positive integers." },
-      { type: "definition", title: "Euclid's Division Lemma", content: "Given positive integers a and b, there exist unique integers q and r satisfying a = bq + r, where 0 ≤ r < b." },
-      { type: "text", content: "This is essentially a restatement of the long division process. When we divide a by b, we get quotient q and remainder r." },
-      { type: "example", title: "Example 1", content: ["Use Euclid's Division Lemma for a = 17, b = 5", "Solution: 17 = 5 × 3 + 2", "Here q = 3 and r = 2", "Check: 0 ≤ 2 < 5 ✓"] },
-      { type: "example", title: "Example 2", content: ["Express 135 in terms of 19", "Solution: 135 = 19 × 7 + 2", "Verification: 19 × 7 + 2 = 133 + 2 = 135 ✓"] },
-      { type: "note", content: "The lemma guarantees both existence and uniqueness of q and r. This uniqueness is crucial for the algorithm that follows." }
-    ]
-  },
-  {
-    id: "algo",
-    title: "Euclid's Algorithm for HCF",
-    content: [
-      { type: "text", content: "Euclid's Algorithm is an efficient method to find the HCF of two positive integers. It uses the Division Lemma repeatedly." },
-      { type: "steps", title: "Algorithm Steps", content: [
-        "Step 1: Apply Division Lemma to a and b (a > b): a = bq + r",
-        "Step 2: If r = 0, then HCF(a, b) = b. Stop.",
-        "Step 3: If r ≠ 0, apply the lemma to b and r: replace a → b, b → r",
-        "Step 4: Repeat until the remainder is 0. The last divisor is the HCF."
-      ]},
-      { type: "formula", title: "Key Property", content: "HCF(a, b) = HCF(b, r) where a = bq + r" },
-      { type: "example", title: "Find HCF(56, 72)", content: [
-        "72 = 56 × 1 + 16",
-        "56 = 16 × 3 + 8",
-        "16 = 8 × 2 + 0",
-        "∴ HCF(56, 72) = 8"
-      ]},
-      { type: "example", title: "Find HCF(96, 404)", content: [
-        "404 = 96 × 4 + 20",
-        "96 = 20 × 4 + 16",
-        "20 = 16 × 1 + 4",
-        "16 = 4 × 4 + 0",
-        "∴ HCF(96, 404) = 4"
-      ]}
-    ]
-  },
-  {
-    id: "fta",
-    title: "Fundamental Theorem of Arithmetic",
-    content: [
-      { type: "definition", title: "Fundamental Theorem of Arithmetic", content: "Every composite number can be expressed (factorised) as a product of primes, and this factorisation is unique, apart from the order in which the prime factors occur." },
-      { type: "text", content: "This theorem has two parts: (1) existence — every number CAN be factored into primes, and (2) uniqueness — there's only ONE way to do it (ignoring order)." },
-      { type: "example", title: "Prime Factorisations", content: [
-        "36 = 2² × 3²",
-        "180 = 2² × 3² × 5",
-        "420 = 2² × 3 × 5 × 7"
-      ]},
-      { type: "formula", title: "Finding HCF & LCM", content: [
-        "HCF = Product of smallest powers of common prime factors",
-        "LCM = Product of greatest powers of all prime factors",
-        "HCF(a,b) × LCM(a,b) = a × b"
-      ] },
-      { type: "example", title: "HCF and LCM of 12 and 18", content: [
-        "12 = 2² × 3¹",
-        "18 = 2¹ × 3²",
-        "HCF = 2¹ × 3¹ = 6",
-        "LCM = 2² × 3² = 36",
-        "Check: 6 × 36 = 216 = 12 × 18 ✓"
-      ]}
-    ]
-  },
-  {
-    id: "irrational",
-    title: "Irrational Numbers",
-    content: [
-      { type: "definition", title: "Irrational Number", content: "A number that cannot be expressed in the form p/q, where p and q are integers and q ≠ 0." },
-      { type: "text", content: "Examples of irrational numbers include √2, √3, √5, and π. We can prove these are irrational using proof by contradiction and the Fundamental Theorem of Arithmetic." },
-      { type: "proof", title: "Proof: √2 is irrational", content: [
-        "Assume √2 is rational, so √2 = p/q where p/q is in lowest terms (HCF(p,q) = 1).",
-        "Squaring: 2 = p²/q², so p² = 2q².",
-        "This means p² is even, therefore p must be even. Let p = 2k.",
-        "Substituting: (2k)² = 2q² → 4k² = 2q² → q² = 2k².",
-        "So q² is even, meaning q is also even.",
-        "But if both p and q are even, HCF(p,q) ≥ 2, contradicting our assumption!",
-        "∴ √2 is irrational. □"
-      ]},
-      { type: "note", content: "The same method works for proving √3, √5, √7, etc. are irrational. The key insight from FTA: if p² is divisible by a prime, then p is also divisible by that prime." }
-    ]
-  }
-];
+interface Topic {
+  id: string;
+  title: string;
+  content: TopicBlock[];
+}
 
-const FullTextbookView = () => {
+interface FullTextbookViewProps {
+  blocks?: ContentBlock[];
+  chapterTitle?: string;
+  episodeTitle?: string;
+}
+
+// Convert a ContentBlock from the 7-layer system into simple readable TopicBlocks
+function convertBlock(block: ContentBlock): TopicBlock[] {
+  const out: TopicBlock[] = [];
+  const c = block.content as any;
+
+  switch (block.type) {
+    case "concept": {
+      if (c?.sections) {
+        for (const s of c.sections) {
+          out.push({ type: "text", title: s.heading, content: s.body });
+        }
+      }
+      if (c?.keyFormulas?.length) {
+        out.push({ type: "formula", title: "Key Formulas", content: c.keyFormulas });
+      }
+      break;
+    }
+    case "reasoning": {
+      if (c?.whyItWorks) out.push({ type: "text", title: "Why It Works", content: c.whyItWorks });
+      if (c?.proofSketch) out.push({ type: "proof", title: "Proof Sketch", content: c.proofSketch });
+      if (c?.commonMistakes?.length) {
+        out.push({ type: "note", content: `⚠️ Common mistakes: ${c.commonMistakes.join("; ")}` });
+      }
+      break;
+    }
+    case "assumptions": {
+      if (c?.assumptions?.length) {
+        out.push({
+          type: "steps",
+          title: "Assumptions & Conditions",
+          content: c.assumptions.map((a: any) => `${a.assumption}: ${a.explanation}`),
+        });
+      }
+      break;
+    }
+    case "connections": {
+      if (c?.connections?.length) {
+        out.push({
+          type: "note",
+          content: c.connections.map((conn: any) => `🔗 ${conn.topic}: ${conn.relationship}`).join("\n"),
+        });
+      }
+      break;
+    }
+    case "application": {
+      if (c?.realWorldExamples?.length) {
+        for (const ex of c.realWorldExamples) {
+          out.push({ type: "example", title: ex.title || "Real-World Example", content: ex.description || ex.explanation || "" });
+        }
+      }
+      break;
+    }
+    case "implications": {
+      if (c?.implications?.length) {
+        out.push({
+          type: "steps",
+          title: "Implications & Extensions",
+          content: c.implications.map((imp: any) => `${imp.title}: ${imp.description}`),
+        });
+      }
+      break;
+    }
+    case "activity": {
+      if (c?.instructions) out.push({ type: "steps", title: block.title || "Activity", content: Array.isArray(c.instructions) ? c.instructions : [c.instructions] });
+      break;
+    }
+    case "recall": {
+      if (c?.questions?.length) {
+        out.push({ type: "steps", title: "Recall Questions", content: c.questions.map((q: any, i: number) => `${i + 1}. ${typeof q === "string" ? q : q.question || q.text || ""}`) });
+      }
+      break;
+    }
+    case "explain": {
+      if (c?.summary) out.push({ type: "text", title: "Summary", content: c.summary });
+      if (c?.teacherNotes) out.push({ type: "note", content: c.teacherNotes });
+      break;
+    }
+    case "exercise": {
+      if (c?.problems?.length) {
+        for (const p of c.problems) {
+          const lines = [p.question || p.problem || ""];
+          if (p.hint) lines.push(`💡 Hint: ${p.hint}`);
+          if (p.answer) lines.push(`Answer: ${p.answer}`);
+          out.push({ type: "example", title: `Problem ${p.number || ""}`.trim(), content: lines });
+        }
+      }
+      break;
+    }
+    case "assessment": {
+      if (c?.questions?.length) {
+        for (const q of c.questions) {
+          out.push({ type: "example", title: `Q${q.number || ""}`, content: [q.question || q.text || "", ...(q.options || [])] });
+        }
+      }
+      break;
+    }
+    default: {
+      // Generic fallback — try to extract text
+      if (c?.text) out.push({ type: "text", content: c.text });
+      else if (c?.summary) out.push({ type: "text", content: c.summary });
+      else if (typeof c === "string") out.push({ type: "text", content: c });
+      break;
+    }
+  }
+
+  // If nothing extracted, show block title as a note
+  if (out.length === 0 && block.title) {
+    out.push({ type: "note", content: `${block.icon || "📖"} ${block.title}` });
+  }
+
+  return out;
+}
+
+const FullTextbookView = ({ blocks = [], chapterTitle, episodeTitle }: FullTextbookViewProps) => {
+  // Group blocks into "topics" — each 7-layer block becomes one topic
+  const topics: Topic[] = useMemo(() => {
+    if (!blocks.length) return [];
+    return blocks.map((block, i) => ({
+      id: `block-${i}`,
+      title: block.title || `${block.icon || "📖"} Section ${i + 1}`,
+      content: convertBlock(block),
+    })).filter(t => t.content.length > 0);
+  }, [blocks]);
+
   const [activeIndex, setActiveIndex] = useState(0);
   const [completed, setCompleted] = useState<Set<string>>(new Set());
 
   const topic = topics[activeIndex];
-  const progress = Math.round((completed.size / topics.length) * 100);
+  const progress = topics.length > 0 ? Math.round((completed.size / topics.length) * 100) : 0;
 
   const markComplete = () => {
+    if (!topic) return;
     setCompleted(prev => new Set(prev).add(topic.id));
     if (activeIndex < topics.length - 1) setActiveIndex(prev => prev + 1);
   };
@@ -155,24 +201,39 @@ const FullTextbookView = () => {
       case "note":
         return (
           <div key={i} className="p-3 rounded-lg bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800">
-            <p className="text-sm text-green-800 dark:text-green-300">📌 {lines[0]}</p>
+            <p className="text-sm text-green-800 dark:text-green-300 whitespace-pre-line">📌 {lines[0]}</p>
           </div>
         );
       default:
         return (
           <div key={i} className="space-y-1">
+            {block.title && <p className="text-xs font-bold uppercase tracking-wider text-foreground/70">{block.title}</p>}
             {lines.map((l, j) => <p key={j} className="text-sm leading-relaxed">{l}</p>)}
           </div>
         );
     }
   };
 
+  if (!topics.length) {
+    return (
+      <div className="flex items-center justify-center h-64 text-muted-foreground">
+        <div className="text-center space-y-2">
+          <BookOpen className="h-10 w-10 mx-auto opacity-40" />
+          <p className="text-sm">No textbook content available for this episode yet.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex gap-4 h-[calc(100vh-260px)] min-h-[500px]">
       {/* Sidebar */}
       <div className="w-56 shrink-0 border rounded-xl bg-card flex flex-col">
         <div className="p-3 border-b">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Chapter 1 Topics</p>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            {chapterTitle || "Topics"}
+          </p>
+          {episodeTitle && <p className="text-xs text-muted-foreground mt-0.5 truncate">{episodeTitle}</p>}
         </div>
         <ScrollArea className="flex-1">
           <div className="p-2 space-y-0.5">
@@ -206,19 +267,19 @@ const FullTextbookView = () => {
       {/* Main content */}
       <div className="flex-1 border rounded-xl bg-card flex flex-col">
         <div className="p-4 border-b flex items-center justify-between">
-          <h2 className="text-lg font-bold">{topic.title}</h2>
+          <h2 className="text-lg font-bold">{topic?.title}</h2>
           <span className="text-xs text-muted-foreground">{activeIndex + 1} of {topics.length}</span>
         </div>
         <ScrollArea className="flex-1 p-5">
           <div className="space-y-4 max-w-2xl">
-            {topic.content.map((block, i) => renderBlock(block, i))}
+            {topic?.content.map((block, i) => renderBlock(block, i))}
           </div>
         </ScrollArea>
         <div className="p-4 border-t flex items-center justify-between">
           <Button variant="outline" size="sm" disabled={activeIndex === 0} onClick={() => setActiveIndex(prev => prev - 1)}>
             <ChevronLeft className="h-4 w-4 mr-1" /> Previous
           </Button>
-          {!completed.has(topic.id) ? (
+          {!completed.has(topic?.id || "") ? (
             <Button size="sm" onClick={markComplete}>
               <CheckCircle2 className="h-4 w-4 mr-1" /> Mark Complete & Next
             </Button>
