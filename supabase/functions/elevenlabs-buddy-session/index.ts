@@ -174,6 +174,7 @@ async function getOrCreateAgent(supabaseAdmin: any, elevenlabsKey: string): Prom
         tts: {
           voice_id: "cgSgspJ2msm6clMCkdW9",
           model_id: "eleven_multilingual_v2",
+          expressive_mode: false,
           stability: 0.5,
           similarity_boost: 0.75,
         },
@@ -194,6 +195,7 @@ async function getOrCreateAgent(supabaseAdmin: any, elevenlabsKey: string): Prom
             tts: {
               voice_id: "cgSgspJ2msm6clMCkdW9",
               model_id: "eleven_multilingual_v2",
+              expressive_mode: false,
               stability: 0.5,
               similarity_boost: 0.75,
             },
