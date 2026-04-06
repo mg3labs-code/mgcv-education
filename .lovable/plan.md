@@ -1,60 +1,43 @@
 
 
-# Fix FullTextbookView: Remove Deep Path, Fix Blank Sections, Restore UI Quality
+# Redesign FullTextbookView: Reuse Interactive Components in Scroll Layout
 
-## Problems Found
+## Core Problem
+The reading mode currently converts rich content blocks into flat text (`TopicBlock` objects), losing all the interactive UI, colors, and layout that the interactive view provides. This creates a confusing, downgraded experience.
 
-1. **"Deep Path" teaser** (lines 1090-1097 in TextbookEpisode.tsx) — shows "🔒 Deep Path / Complete Core Path to unlock" in the sections bottom sheet. Remove it.
+## Solution: Render the SAME Components in a Continuous Scroll
+Instead of converting blocks to plain text, render the actual `ReasoningBlock`, `AssumptionsBlock`, `ConnectionsBlock`, `ApplicationBlock`, `ImplicationsBlock`, `RecallBlock`, `ExplainBlock`, `ExerciseBlock`, `AssessmentBlock`, `ActivityBlock`, `ConceptBlock`, and `VisualAidBlock` components — the same ones used in the interactive view — in a single continuous scrollable page.
 
-2. **Blank sections** — The `convertBlock` function in `FullTextbookView.tsx` uses WRONG field names for almost every block type. It doesn't match the actual TypeScript interfaces, so content extraction fails silently and sections render as empty notes.
+The only difference from the interactive view: no step-by-step navigation, no phase grouping, no "Mark as Understood" per block. Just clean linear reading with all content visible.
 
-   | Block Type | `convertBlock` expects | Actual interface has |
-   |---|---|---|
-   | reasoning | `whyItWorks`, `proofSketch`, `commonMistakes` | `centralQuestion`, `whyQuestions[]` |
-   | assumptions | `assumptions[].assumption/explanation` | `hiddenAssumptions[].assumption/whyItMatters/challenge` |
-   | connections | `connections[].topic/relationship` | `connections[].domain/link/explanation` |
-   | application | `realWorldExamples[].title/description` | `scenario`, `context`, `questions[]`, `realWorldWhy` |
-   | implications | `implications[].title/description` | `whatIfQuestion`, `reflectionPrompts[]`, `essayPrompt` |
-   | activity | `instructions` | `instruction` (singular) + `items[]` |
-   | explain | `summary`, `teacherNotes` | `prompt`, `guidePoints[]` |
-   | exercise | `problems[].question/hint/answer` | `problems[].number/text/answer` |
+## What Changes
 
-3. **UI quality downgrade** — The FullTextbookView uses plain generic cards (small text, minimal styling) instead of the rich color-coded blocks from the interactive view. The first 3-4 sections (concept, reasoning, assumptions) look particularly flat.
+### File: `src/components/textbook/FullTextbookView.tsx` — Full Rewrite
 
-## Plan
+**Remove**: The entire `convertBlock` / `TopicBlock` / `renderBlock` system (lines 8-336). This is the root cause of blank sections, wrong field names, and flat UI.
 
-### Step 1: Remove "Deep Path" teaser
-Delete lines 1090-1097 in `TextbookEpisode.tsx` — the locked "Deep Path" section in the bottom sheet.
+**Replace with**: Import and render the actual block components:
+- `ConceptBlock`, `ActivityBlock`, `RecallBlock`, `ExplainBlock`, `AssessmentBlock`, `ExerciseBlock` — extracted from `TextbookEpisode.tsx` into shared exports (or imported inline)
+- `ReasoningBlock`, `AssumptionsBlock`, `ConnectionsBlock`, `ApplicationBlock`, `ImplicationsBlock` — already separate component files
+- `VisualAidBlock`, `BilingualConceptBlock`, `VocabularyCardBlock`, `GrammarPatternBlock`, `StoryReadingBlock` — already separate
 
-### Step 2: Fix ALL `convertBlock` mappings in `FullTextbookView.tsx`
-Rewrite each case to match the actual content interfaces:
+**Layout**: 
+- Remove the sidebar + paginated navigation. Replace with a single-column continuous scroll
+- Each block gets the same header treatment as the interactive view: icon, label, subtitle, and colored badge (reuse `blockLabels`, `blockSubtitles`, `layerMeta` from TextbookEpisode)
+- Add a floating "table of contents" pill at the top showing section names as clickable anchors
+- Light separator between sections (thin line + spacing)
 
-- **reasoning**: Extract `centralQuestion` + each `whyQuestions[].question` / `deeperInsight`
-- **assumptions**: Extract `concept` + each `hiddenAssumptions[].assumption` / `whyItMatters` / `challenge`
-- **connections**: Extract `concept` + each `connections[].domain` / `link` / `explanation`
-- **application**: Extract `scenario` + `context` + `questions[]` + `realWorldWhy`
-- **implications**: Extract `whatIfQuestion` + `reflectionPrompts` + `essayPrompt`
-- **activity**: Use `instruction` (not `instructions`) + show `items[]`
-- **explain**: Use `prompt` + `guidePoints`
-- **exercise**: Use `problems[].number` / `text` / `answer`
-- **concept**: Already works (sections/keyFormulas), but also handle `solvedExamples`
-- **recall**: Fix to use `q.question` / `q.answer` / `q.hint`
+**Why this is elite UX**:
+- Student sees the EXACT same rich UI (expandable assumptions, drag-drop activities, click-to-reveal answers, textareas) — just in a continuous flow instead of step-by-step
+- No duplicate code means no data mapping bugs
+- Matches what the screenshots show as the "original" quality
 
-### Step 3: Upgrade UI styling to match interactive view quality
-Enhance `renderBlock` to use richer, color-coded cards matching the interactive view's visual language:
-- **Concept text**: Use the serif font, larger text, proper spacing
-- **Formulas**: Amber-themed with mono font (already decent)
-- **Reasoning**: Use amber/orange tones matching the interactive "🤔 Think Deeper" phase
-- **Assumptions**: Sky blue tones matching the interactive "🕵️ Investigate" badge
-- **Connections**: Emerald tones matching the interactive "🌐 Connect" badge  
-- **Application**: Orange tones matching "🚀 Apply"
-- **Recall/Assessment**: Amber border-dashed style matching interactive Quick Check
-- **Exercise**: Green-left-border matching interactive exercise blocks
+### File: `src/pages/TextbookEpisode.tsx` — Extract Block Components
 
-### Step 4: Verify across subjects
-The same `convertBlock` fixes apply to all subjects since the content block interfaces are shared. Language subjects may have additional block types (`bilingual_concept`, `vocabulary`, etc.) — add handlers for those too.
+Move `ConceptBlock`, `ActivityBlock`, `RecallBlock`, `ExplainBlock`, `AssessmentBlock`, `ExerciseBlock` into a shared file (`src/components/textbook/EpisodeBlocks.tsx`) so both the interactive view and reading mode can import them.
 
-## Files Modified
-- `src/pages/TextbookEpisode.tsx` — remove Deep Path teaser (lines 1090-1097)
-- `src/components/textbook/FullTextbookView.tsx` — fix all convertBlock cases + upgrade renderBlock UI styling
+## Summary of Files
+1. **New file**: `src/components/textbook/EpisodeBlocks.tsx` — shared block components extracted from TextbookEpisode
+2. **Rewrite**: `src/components/textbook/FullTextbookView.tsx` — continuous scroll using real components
+3. **Update**: `src/pages/TextbookEpisode.tsx` — import blocks from shared file instead of defining inline
 
