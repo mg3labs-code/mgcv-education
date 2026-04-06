@@ -1087,14 +1087,6 @@ const TextbookEpisode = () => {
               );
             })}
 
-            {/* Deep Path teaser */}
-            <div style={{
-              padding: "14px 16px", borderRadius: 12, background: "#F5F5F4",
-              border: "1px dashed #D6D3D1", marginTop: 8,
-            }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: "#78716C" }}>🔒 Deep Path</div>
-              <div style={{ fontSize: 12, color: "#A8A29E", marginTop: 2 }}>Complete Core Path to unlock</div>
-            </div>
           </div>
         </>
       )}
