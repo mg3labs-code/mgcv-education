@@ -143,6 +143,14 @@ const TextbookEpisode = () => {
     return map;
   }, [allBlocks]);
 
+  const currentEpisodeIndex = chapter?.episodes.findIndex((e) => e.id === episodeId) ?? -1;
+  const nextEpisode = chapter?.episodes[currentEpisodeIndex + 1];
+  const isLoading = chapterLoading || blocksLoading;
+
+  const langSubject = useMemo(() => getSubjectFromSlug(chapterId), [chapterId]);
+  const isLanguage = !!langSubject;
+  const phases = isLanguage ? langPhases : stemPhases;
+
   useEffect(() => { totalBlocksRef.current = navBlocks.length; }, [navBlocks.length]);
 
   // Load understood blocks from DB
