@@ -31,6 +31,7 @@ import TextbookLab from "./pages/TextbookLab";
 import StudentCalendarRedirect from "./pages/StudentCalendar";
 import ResetPassword from "./pages/ResetPassword";
 import AttractionDemo from "./pages/AttractionDemo";
+import TextbookReference from "./pages/TextbookReference";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
