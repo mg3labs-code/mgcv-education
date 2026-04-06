@@ -161,12 +161,12 @@ const TextbookEpisode = () => {
   // Phase 3 locking: check if all Phase 1+2 blocks are understood
   const phase3BlockTypes = isLanguage ? LANG_EXPRESS_BLOCKS : DEEP_BLOCKS;
   const phase12Indices = useMemo(() =>
-    blocks.map((b, i) => ({ type: b.type, i })).filter(({ type }) => !phase3BlockTypes.has(type)).map(({ i }) => i),
-    [blocks, phase3BlockTypes]
+    navBlocks.map((b, i) => ({ type: b.type, i })).filter(({ type }) => !phase3BlockTypes.has(type)).map(({ i }) => i),
+    [navBlocks, phase3BlockTypes]
   );
   const phase3Indices = useMemo(() =>
-    blocks.map((b, i) => ({ type: b.type, i })).filter(({ type }) => phase3BlockTypes.has(type)).map(({ i }) => i),
-    [blocks, phase3BlockTypes]
+    navBlocks.map((b, i) => ({ type: b.type, i })).filter(({ type }) => phase3BlockTypes.has(type)).map(({ i }) => i),
+    [navBlocks, phase3BlockTypes]
   );
   const isPhase3Unlocked = phase12Indices.length > 0 && phase12Indices.every(i => understoodBlocks.has(i));
   const isBlockLocked = useCallback((index: number) => {
