@@ -123,16 +123,27 @@ const TextbookEpisode = () => {
   const { data: dbBlocks, isLoading: blocksLoading } = useEpisodeBlocks(chapterId, episodeId);
 
   const episode = chapter?.episodes.find((e) => e.id === episodeId);
-  const blocks = dbBlocks && dbBlocks.length > 0 ? dbBlocks : (episode?.blocks || []);
-  const currentEpisodeIndex = chapter?.episodes.findIndex((e) => e.id === episodeId) ?? -1;
-  const nextEpisode = chapter?.episodes[currentEpisodeIndex + 1];
-  const isLoading = chapterLoading || blocksLoading;
+  const allBlocks = dbBlocks && dbBlocks.length > 0 ? dbBlocks : (episode?.blocks || []);
 
-  const langSubject = useMemo(() => getSubjectFromSlug(chapterId), [chapterId]);
-  const isLanguage = !!langSubject;
-  const phases = isLanguage ? langPhases : stemPhases;
+  // Filter out visual_aid blocks from navigation — they render inline with their preceding block
+  const navBlocks = useMemo(() => allBlocks.filter(b => b.type !== "visual_aid"), [allBlocks]);
 
-  useEffect(() => { totalBlocksRef.current = blocks.length; }, [blocks.length]);
+  // Map: navBlock index → array of visual_aid blocks that follow it in the original array
+  const attachedVisuals = useMemo(() => {
+    const map: Record<number, ContentBlock[]> = {};
+    let navIdx = -1;
+    for (const b of allBlocks) {
+      if (b.type !== "visual_aid") {
+        navIdx++;
+        map[navIdx] = [];
+      } else if (navIdx >= 0) {
+        map[navIdx].push(b);
+      }
+    }
+    return map;
+  }, [allBlocks]);
+
+  useEffect(() => { totalBlocksRef.current = navBlocks.length; }, [navBlocks.length]);
 
   // Load understood blocks from DB
   useEffect(() => {
