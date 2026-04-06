@@ -147,10 +147,29 @@ const TextbookEpisode = () => {
       });
   }, [user, chapterId, episodeId]);
 
+  // Phase 3 locking: check if all Phase 1+2 blocks are understood
+  const phase3BlockTypes = isLanguage ? LANG_EXPRESS_BLOCKS : DEEP_BLOCKS;
+  const phase12Indices = useMemo(() =>
+    blocks.map((b, i) => ({ type: b.type, i })).filter(({ type }) => !phase3BlockTypes.has(type)).map(({ i }) => i),
+    [blocks, phase3BlockTypes]
+  );
+  const phase3Indices = useMemo(() =>
+    blocks.map((b, i) => ({ type: b.type, i })).filter(({ type }) => phase3BlockTypes.has(type)).map(({ i }) => i),
+    [blocks, phase3BlockTypes]
+  );
+  const isPhase3Unlocked = phase12Indices.length > 0 && phase12Indices.every(i => understoodBlocks.has(i));
+  const isBlockLocked = useCallback((index: number) => {
+    return phase3Indices.includes(index) && !isPhase3Unlocked;
+  }, [phase3Indices, isPhase3Unlocked]);
+
   const goToBlock = useCallback((index: number) => {
+    if (isBlockLocked(index)) {
+      toast.error("Complete all Discover & Test sections first 🔒");
+      return;
+    }
     setActiveBlock(index);
     contentRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-  }, []);
+  }, [isBlockLocked]);
 
   const scrollToActivity = useCallback(() => {
     const actIdx = blocks.findIndex(b => b.type === "activity");
