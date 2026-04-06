@@ -5,7 +5,7 @@ import { useChapterEpisodes, useEpisodeBlocks } from "@/hooks/useTextbookData";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { BookOpen, Brain, Briefcase, Check, CheckCircle2, Cloud, Compass, Eye, Image, Lightbulb, Link, Map, MessageSquare, Mic, PenLine, Search, Shield, Sparkles, Zap, RotateCcw, GripHorizontal, X, ChevronLeft, Menu, MoreHorizontal } from "lucide-react";
-import FullTextbookView from "@/components/textbook/FullTextbookView";
+import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import VoiceExplainWidget from "@/components/textbook/VoiceExplainWidget";
@@ -87,7 +87,6 @@ const TextbookEpisode = () => {
   const [exitConfirm, setExitConfirm] = useState(false);
   const [showCompletion, setShowCompletion] = useState(false);
   const [textbookRefOpen, setTextbookRefOpen] = useState(true);
-  const [readingMode, setReadingMode] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const totalBlocksRef = useRef(0);
@@ -148,10 +147,29 @@ const TextbookEpisode = () => {
       });
   }, [user, chapterId, episodeId]);
 
+  // Phase 3 locking: check if all Phase 1+2 blocks are understood
+  const phase3BlockTypes = isLanguage ? LANG_EXPRESS_BLOCKS : DEEP_BLOCKS;
+  const phase12Indices = useMemo(() =>
+    blocks.map((b, i) => ({ type: b.type, i })).filter(({ type }) => !phase3BlockTypes.has(type)).map(({ i }) => i),
+    [blocks, phase3BlockTypes]
+  );
+  const phase3Indices = useMemo(() =>
+    blocks.map((b, i) => ({ type: b.type, i })).filter(({ type }) => phase3BlockTypes.has(type)).map(({ i }) => i),
+    [blocks, phase3BlockTypes]
+  );
+  const isPhase3Unlocked = phase12Indices.length > 0 && phase12Indices.every(i => understoodBlocks.has(i));
+  const isBlockLocked = useCallback((index: number) => {
+    return phase3Indices.includes(index) && !isPhase3Unlocked;
+  }, [phase3Indices, isPhase3Unlocked]);
+
   const goToBlock = useCallback((index: number) => {
+    if (isBlockLocked(index)) {
+      toast.error("Complete all Discover & Test sections first 🔒");
+      return;
+    }
     setActiveBlock(index);
     contentRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-  }, []);
+  }, [isBlockLocked]);
 
   const scrollToActivity = useCallback(() => {
     const actIdx = blocks.findIndex(b => b.type === "activity");
@@ -426,43 +444,9 @@ const TextbookEpisode = () => {
           <span style={{ fontSize: 12, fontWeight: 600, color: "#78716C", minWidth: 32, textAlign: "right" }}>
             {activeBlock + 1}/{blocks.length}
           </span>
-          {/* Reading Mode Slider Toggle */}
-          <button
-            onClick={() => setReadingMode(!readingMode)}
-            style={{
-              display: "flex", alignItems: "center", gap: 6,
-              padding: "4px 10px", borderRadius: 20,
-              border: readingMode ? "1.5px solid #0D9488" : "1px solid #E7E5E4",
-              background: readingMode ? "#F0FDFA" : "white",
-              cursor: "pointer", fontSize: 11, fontWeight: 600,
-              color: readingMode ? "#0D9488" : "#78716C",
-              transition: "all 0.2s",
-            }}
-          >
-            <BookOpen className="h-3.5 w-3.5" />
-            <span style={{ display: "none" }} className="sm:!inline">Textbook</span>
-            <div style={{
-              width: 28, height: 16, borderRadius: 8,
-              background: readingMode ? "#0D9488" : "#D6D3D1",
-              position: "relative", transition: "background 0.2s",
-            }}>
-              <div style={{
-                width: 12, height: 12, borderRadius: "50%",
-                background: "white", position: "absolute", top: 2,
-                left: readingMode ? 14 : 2,
-                transition: "left 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
-              }} />
-            </div>
-          </button>
         </div>
       </div>
 
-      {/* Reading Mode — Full Textbook View */}
-      {readingMode ? (
-        <div style={{ flex: 1, overflow: "auto", padding: "16px" }}>
-          <FullTextbookView blocks={blocks || []} chapterTitle={chapter?.title} episodeTitle={episode?.title} />
-        </div>
-      ) : (
       <>
       {/* ═══ PHASE BADGE — Tiny ═══ */}
       <div style={{
@@ -756,32 +740,34 @@ const TextbookEpisode = () => {
                   {phaseBlocks.map(({ block: b, index: i }) => {
                     const isActive = i === activeBlock;
                     const isDone = understoodBlocks.has(i);
+                    const locked = isBlockLocked(i);
                     return (
                       <button
                         key={i}
-                        onClick={() => { goToBlock(i); setShowSectionsSheet(false); }}
+                        onClick={() => { if (!locked) { goToBlock(i); setShowSectionsSheet(false); } else { toast.error("Complete all Discover & Test sections first 🔒"); } }}
                         style={{
                           width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "9px 10px",
                           borderRadius: 8, border: "none", textAlign: "left", marginBottom: 2,
                           background: isActive ? `${phase.color}10` : "transparent",
-                          cursor: "pointer",
+                          cursor: locked ? "not-allowed" : "pointer",
+                          opacity: locked ? 0.5 : 1,
                         }}
                       >
                         <div style={{
                           width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
-                          background: isDone ? phase.color : isActive ? "white" : "#E7E5E4",
-                          border: isActive && !isDone ? `2px solid ${phase.color}` : "none",
+                          background: locked ? "#D6D3D1" : isDone ? phase.color : isActive ? "white" : "#E7E5E4",
+                          border: isActive && !isDone && !locked ? `2px solid ${phase.color}` : "none",
                           display: "flex", alignItems: "center", justifyContent: "center",
                           color: isDone ? "white" : "#78716C", fontSize: 10, fontWeight: 700,
                         }}>
-                          {isDone ? "✓" : "•"}
+                          {locked ? "🔒" : isDone ? "✓" : "•"}
                         </div>
                         <div>
-                          <div style={{ fontSize: 13, fontWeight: isActive ? 600 : 400, color: isActive ? phase.color : "#1C1917" }}>
+                          <div style={{ fontSize: 13, fontWeight: isActive ? 600 : 400, color: locked ? "#A8A29E" : isActive ? phase.color : "#1C1917" }}>
                             {blockLabels[b.type] || b.title || b.type}
                           </div>
                           <div style={{ fontSize: 11, color: "#A8A29E" }}>
-                            {layerMeta[b.type]?.badge?.split(" ").slice(1).join(" ") || b.type}
+                            {locked ? "Complete previous phases to unlock" : layerMeta[b.type]?.badge?.split(" ").slice(1).join(" ") || b.type}
                           </div>
                         </div>
                       </button>
@@ -796,7 +782,6 @@ const TextbookEpisode = () => {
       )}
 
       </>
-      )}
 
       {/* Modals */}
       <TutorialDefenseModal open={showDefense} onOpenChange={setShowDefense} topic={episode.title} episodeTitle={`${chapter.title} — ${episode.title}`} subject={chapter.title} chapterId={chapterId} episodeId={episodeId} />
