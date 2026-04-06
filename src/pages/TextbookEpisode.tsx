@@ -503,6 +503,13 @@ const TextbookEpisode = () => {
                 </div>
               </div>
 
+              {/* Inline visual aids attached to this section */}
+              {attachedVisuals[activeBlock]?.map((vb, vi) => (
+                <div key={vi} className="mt-4">
+                  <VisualAidBlock content={vb.content as VisualAidContent} />
+                </div>
+              ))}
+
               {/* Inline textbook reference callouts — collapsible */}
               {block.textbookRef && (
                 <div style={{ marginTop: 16 }}>
