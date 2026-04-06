@@ -756,7 +756,7 @@ const TextbookEpisode = () => {
       {/* Reading Mode — Full Textbook View */}
       {readingMode ? (
         <div style={{ flex: 1, overflow: "auto", padding: "16px" }}>
-          <FullTextbookView />
+          <FullTextbookView blocks={blocks || []} chapterTitle={chapter?.title} episodeTitle={episode?.title} />
         </div>
       ) : (
       <>
