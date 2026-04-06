@@ -1,43 +1,35 @@
 
 
-# Redesign FullTextbookView: Reuse Interactive Components in Scroll Layout
+# Confirmation: Collapsible Textbook Status & Remaining Work
 
-## Core Problem
-The reading mode currently converts rich content blocks into flat text (`TopicBlock` objects), losing all the interactive UI, colors, and layout that the interactive view provides. This creates a confusing, downgraded experience.
+## Current State
 
-## Solution: Render the SAME Components in a Continuous Scroll
-Instead of converting blocks to plain text, render the actual `ReasoningBlock`, `AssumptionsBlock`, `ConnectionsBlock`, `ApplicationBlock`, `ImplicationsBlock`, `RecallBlock`, `ExplainBlock`, `ExerciseBlock`, `AssessmentBlock`, `ActivityBlock`, `ConceptBlock`, and `VisualAidBlock` components — the same ones used in the interactive view — in a single continuous scrollable page.
+| Feature | Status |
+|---------|--------|
+| Collapsible "📖 Your Textbook Says…" in interactive view | ✅ Already works (TextbookEpisode.tsx lines 511-570) |
+| Reading mode slider toggle | Still present — needs to be REMOVED |
+| FullTextbookView (full reading mode) | Still renders inside episode — needs to move to standalone route |
+| Phase 3 locking (sections 8-12) | Not implemented yet |
 
-The only difference from the interactive view: no step-by-step navigation, no phase grouping, no "Mark as Understood" per block. Just clean linear reading with all content visible.
+## What Needs to Be Done
 
-## What Changes
+### 1. Remove the reading mode slider from TextbookEpisode.tsx
+- Delete `readingMode` state and the toggle UI
+- Delete the conditional `FullTextbookView` rendering
+- Students see ONLY the interactive 11-section view with the existing collapsible textbook refs
 
-### File: `src/components/textbook/FullTextbookView.tsx` — Full Rewrite
+### 2. Add Phase 3 locking
+- Sections 8-12 (Reasoning, Assumptions, Connections, Application, Implications) locked until all Phase 1+2 sections marked "Got it!"
+- Locked sections show 🔒 in the bottom sheet
+- Toast message when trying to access locked sections
 
-**Remove**: The entire `convertBlock` / `TopicBlock` / `renderBlock` system (lines 8-336). This is the root cause of blank sections, wrong field names, and flat UI.
+### 3. Standalone textbook reference route
+- New route `/textbook-reference/:chapterId/:episodeId`
+- New page `src/pages/TextbookReference.tsx` rendering `FullTextbookView`
+- For schools/clients only — no student nav links
 
-**Replace with**: Import and render the actual block components:
-- `ConceptBlock`, `ActivityBlock`, `RecallBlock`, `ExplainBlock`, `AssessmentBlock`, `ExerciseBlock` — extracted from `TextbookEpisode.tsx` into shared exports (or imported inline)
-- `ReasoningBlock`, `AssumptionsBlock`, `ConnectionsBlock`, `ApplicationBlock`, `ImplicationsBlock` — already separate component files
-- `VisualAidBlock`, `BilingualConceptBlock`, `VocabularyCardBlock`, `GrammarPatternBlock`, `StoryReadingBlock` — already separate
-
-**Layout**: 
-- Remove the sidebar + paginated navigation. Replace with a single-column continuous scroll
-- Each block gets the same header treatment as the interactive view: icon, label, subtitle, and colored badge (reuse `blockLabels`, `blockSubtitles`, `layerMeta` from TextbookEpisode)
-- Add a floating "table of contents" pill at the top showing section names as clickable anchors
-- Light separator between sections (thin line + spacing)
-
-**Why this is elite UX**:
-- Student sees the EXACT same rich UI (expandable assumptions, drag-drop activities, click-to-reveal answers, textareas) — just in a continuous flow instead of step-by-step
-- No duplicate code means no data mapping bugs
-- Matches what the screenshots show as the "original" quality
-
-### File: `src/pages/TextbookEpisode.tsx` — Extract Block Components
-
-Move `ConceptBlock`, `ActivityBlock`, `RecallBlock`, `ExplainBlock`, `AssessmentBlock`, `ExerciseBlock` into a shared file (`src/components/textbook/EpisodeBlocks.tsx`) so both the interactive view and reading mode can import them.
-
-## Summary of Files
-1. **New file**: `src/components/textbook/EpisodeBlocks.tsx` — shared block components extracted from TextbookEpisode
-2. **Rewrite**: `src/components/textbook/FullTextbookView.tsx` — continuous scroll using real components
-3. **Update**: `src/pages/TextbookEpisode.tsx` — import blocks from shared file instead of defining inline
+## Files
+- `src/pages/TextbookEpisode.tsx` — remove slider, add phase lock
+- `src/App.tsx` — add route
+- `src/pages/TextbookReference.tsx` — new standalone page
 
