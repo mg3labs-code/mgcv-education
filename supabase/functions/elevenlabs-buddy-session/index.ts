@@ -189,61 +189,66 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const { isTeluguSession } = await req.json().catch(() => ({ isTeluguSession: false }));
+    const { isTeluguSession: requestedTeluguSession, language } = await req.json().catch(() => ({
+      isTeluguSession: false,
+      language: null,
+    }));
+
+    const isTeluguSession =
+      requestedTeluguSession === true ||
+      language === "telugu" ||
+      language === "te";
 
     const agentId = await getOrCreateAgent(supabaseAdmin, ELEVENLABS_API_KEY);
-    const tokenUrl = `https://api.elevenlabs.io/v1/convai/conversation/get-signed-url?agent_id=${agentId}`;
+    const tokenUrl = `https://api.elevenlabs.io/v1/convai/conversation/token?agent_id=${agentId}`;
 
-    let tokenRequestBody: any = null;
-
-    if (isTeluguSession) {
-      console.log("🇮🇳 Telugu session detected — applying multilingual voice overrides");
-      tokenRequestBody = {
-        conversation_config_override: {
-          agent: {
-            prompt: {
-              prompt: BUDDY_SYSTEM_PROMPT + TELUGU_ADDENDUM,
+    const tokenRequestBody = isTeluguSession
+      ? {
+          conversation_config_override: {
+            agent: {
+              prompt: {
+                prompt: BUDDY_SYSTEM_PROMPT + TELUGU_ADDENDUM,
+              },
+              language: "hi",
             },
-            language: "hi",
+            tts: {
+              voice_id: "cgSgspJ2msm6clMCkdW9",
+              model_id: "eleven_multilingual_v2",
+              stability: 0.5,
+              similarity_boost: 0.75,
+            },
           },
-          tts: {
-            voice_id: "cgSgspJ2msm6clMCkdW9",
-            model_id: "eleven_multilingual_v2",
-            stability: 0.5,
-            similarity_boost: 0.75,
-          },
-        },
-      };
-    }
+        }
+      : null;
 
-    const fetchOptions: any = {
-      method: isTeluguSession ? "POST" : "GET",
-      headers: {
-        "xi-api-key": ELEVENLABS_API_KEY,
-        ...(isTeluguSession ? { "Content-Type": "application/json" } : {}),
-      },
-    };
-    if (isTeluguSession && tokenRequestBody) {
-      fetchOptions.body = JSON.stringify(tokenRequestBody);
-    }
-
-    let tokenResponse: Response | null = null;
+    let token: string | null = null;
     for (let attempt = 0; attempt < 3; attempt++) {
-      tokenResponse = await fetch(tokenUrl, fetchOptions);
-      if (tokenResponse.ok) break;
+      const tokenResponse = await fetch(tokenUrl, {
+        method: tokenRequestBody ? "POST" : "GET",
+        headers: {
+          "xi-api-key": ELEVENLABS_API_KEY,
+          ...(tokenRequestBody ? { "Content-Type": "application/json" } : {}),
+        },
+        ...(tokenRequestBody ? { body: JSON.stringify(tokenRequestBody) } : {}),
+      });
+
+      if (tokenResponse.ok) {
+        const data = await tokenResponse.json();
+        token = data.token;
+        break;
+      }
+
       const errText = await tokenResponse.text();
       console.error(`Token attempt ${attempt + 1} failed:`, tokenResponse.status, errText);
-      if (attempt < 2) await new Promise(r => setTimeout(r, 1500));
+      if (attempt < 2) await new Promise((r) => setTimeout(r, 1500));
     }
 
-    if (!tokenResponse || !tokenResponse.ok) {
-      throw new Error("Failed to get token after 3 attempts");
+    if (!token) {
+      throw new Error("Failed to get conversation token after 3 attempts");
     }
-
-    const { token } = await tokenResponse.json();
 
     return new Response(
-      JSON.stringify({ token, agentId }),
+      JSON.stringify({ token, agentId, model: "eleven_multilingual_v2" }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e) {
