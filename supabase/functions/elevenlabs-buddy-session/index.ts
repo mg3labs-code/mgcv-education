@@ -61,14 +61,11 @@ const CLIENT_TOOLS = [
   {
     type: "client" as const,
     name: "navigateTo",
-    description: "Navigate the student to a page in the app. Use when student asks to go somewhere like dashboard, textbook, assignments, calendar, exam room, deep dive, or onboarding.",
+    description: "Navigate the student to a page in the app.",
     parameters: {
       type: "object" as const,
       properties: {
-        page: {
-          type: "string" as const,
-          description: "The page name to navigate to. One of: dashboard, textbook, assignments, calendar, exam room, deep dive, onboarding"
-        }
+        page: { type: "string" as const, description: "One of: dashboard, textbook, assignments, calendar, exam room, deep dive, onboarding" }
       },
       required: ["page"]
     }
@@ -76,18 +73,12 @@ const CLIENT_TOOLS = [
   {
     type: "client" as const,
     name: "openTextbook",
-    description: "Open a specific textbook chapter or episode. Use when student asks to open or go to a specific chapter or episode.",
+    description: "Open a specific textbook chapter or episode.",
     parameters: {
       type: "object" as const,
       properties: {
-        chapterId: {
-          type: "string" as const,
-          description: "The chapter ID like ch1, ch2, ch3 etc."
-        },
-        episodeId: {
-          type: "string" as const,
-          description: "Optional episode ID like ch1-ep1, ch1-ep3 etc."
-        }
+        chapterId: { type: "string" as const, description: "The chapter ID like ch1, ch2, ch3 etc." },
+        episodeId: { type: "string" as const, description: "Optional episode ID like ch1-ep1, ch1-ep3 etc." }
       },
       required: ["chapterId"]
     }
@@ -95,14 +86,11 @@ const CLIENT_TOOLS = [
   {
     type: "client" as const,
     name: "startQuiz",
-    description: "Start a pop quiz for the student on a subject. Use when student asks to be quizzed or tested.",
+    description: "Start a pop quiz for the student on a subject.",
     parameters: {
       type: "object" as const,
       properties: {
-        subject: {
-          type: "string" as const,
-          description: "The subject to quiz on. One of: Mathematics, Science, English, Social Science, Hindi, Sanskrit"
-        }
+        subject: { type: "string" as const, description: "One of: Mathematics, Science, English, Social Science, Hindi, Sanskrit" }
       },
       required: ["subject"]
     }
@@ -110,37 +98,24 @@ const CLIENT_TOOLS = [
   {
     type: "client" as const,
     name: "getCurrentPage",
-    description: "Get information about what page the student is currently viewing. Use this to understand context before helping.",
-    parameters: {
-      type: "object" as const,
-      properties: {},
-      required: []
-    }
+    description: "Get information about what page the student is currently viewing.",
+    parameters: { type: "object" as const, properties: {}, required: [] }
   },
   {
     type: "client" as const,
     name: "getChapterList",
-    description: "Get the list of all available textbook chapters and their episodes. Use when student asks what they can study.",
-    parameters: {
-      type: "object" as const,
-      properties: {},
-      required: []
-    }
+    description: "Get the list of all available textbook chapters and their episodes.",
+    parameters: { type: "object" as const, properties: {}, required: [] }
   },
   {
     type: "client" as const,
     name: "explainCurrentTopic",
-    description: "Get the content of what the student is currently reading in the textbook. Use when student asks to explain the current page or topic.",
-    parameters: {
-      type: "object" as const,
-      properties: {},
-      required: []
-    }
+    description: "Get the content of what the student is currently reading in the textbook.",
+    parameters: { type: "object" as const, properties: {}, required: [] }
   }
 ];
 
 async function getOrCreateAgent(supabaseAdmin: any, elevenlabsKey: string): Promise<string> {
-  // Check if agent_id exists in config
   const { data: config } = await supabaseAdmin
     .from("app_config")
     .select("value")
@@ -151,7 +126,6 @@ async function getOrCreateAgent(supabaseAdmin: any, elevenlabsKey: string): Prom
     return config.value;
   }
 
-  // Create new agent via ElevenLabs API
   console.log("Creating new ElevenLabs Conversational AI agent with 6 client tools...");
 
   const createResponse = await fetch("https://api.elevenlabs.io/v1/convai/agents/create", {
@@ -174,36 +148,74 @@ async function getOrCreateAgent(supabaseAdmin: any, elevenlabsKey: string): Prom
         tts: {
           voice_id: "cgSgspJ2msm6clMCkdW9",
           model_id: "eleven_multilingual_v2",
-          expressive_mode: false,
           stability: 0.5,
           similarity_boost: 0.75,
         },
       },
     }),
   });
-...
-      if (isTeluguSession) {
-        console.log("🇮🇳 Telugu session detected — applying multilingual voice overrides");
-        tokenRequestBody = {
-          conversation_config_override: {
-            agent: {
-              prompt: {
-                prompt: BUDDY_SYSTEM_PROMPT + TELUGU_ADDENDUM,
-              },
-              language: "hi", // ElevenLabs doesn't support "te", use "hi" as closest
-            },
-            tts: {
-              voice_id: "cgSgspJ2msm6clMCkdW9",
-              model_id: "eleven_multilingual_v2",
-              expressive_mode: false,
-              stability: 0.5,
-              similarity_boost: 0.75,
-            },
-          },
-        };
+
+  if (!createResponse.ok) {
+    const errText = await createResponse.text();
+    console.error("Failed to create agent:", createResponse.status, "-", errText);
+    throw new Error(`Failed to create agent: ${createResponse.status} - ${errText}`);
+  }
+
+  const agentData = await createResponse.json();
+  const agentId = agentData.agent_id;
+  console.log("Agent created successfully:", agentId);
+
+  await supabaseAdmin.from("app_config").upsert({
+    key: "elevenlabs_agent_id",
+    value: agentId,
+  });
+
+  return agentId;
+}
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY");
+    if (!ELEVENLABS_API_KEY) {
+      throw new Error("ELEVENLABS_API_KEY not set");
     }
 
-    // Generate a conversation token (with optional overrides)
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
+    const { isTeluguSession } = await req.json().catch(() => ({ isTeluguSession: false }));
+
+    const agentId = await getOrCreateAgent(supabaseAdmin, ELEVENLABS_API_KEY);
+    const tokenUrl = `https://api.elevenlabs.io/v1/convai/conversation/get-signed-url?agent_id=${agentId}`;
+
+    let tokenRequestBody: any = null;
+
+    if (isTeluguSession) {
+      console.log("🇮🇳 Telugu session detected — applying multilingual voice overrides");
+      tokenRequestBody = {
+        conversation_config_override: {
+          agent: {
+            prompt: {
+              prompt: BUDDY_SYSTEM_PROMPT + TELUGU_ADDENDUM,
+            },
+            language: "hi",
+          },
+          tts: {
+            voice_id: "cgSgspJ2msm6clMCkdW9",
+            model_id: "eleven_multilingual_v2",
+            stability: 0.5,
+            similarity_boost: 0.75,
+          },
+        },
+      };
+    }
+
     const fetchOptions: any = {
       method: isTeluguSession ? "POST" : "GET",
       headers: {
@@ -215,7 +227,6 @@ async function getOrCreateAgent(supabaseAdmin: any, elevenlabsKey: string): Prom
       fetchOptions.body = JSON.stringify(tokenRequestBody);
     }
 
-    // Retry logic for token fetch
     let tokenResponse: Response | null = null;
     for (let attempt = 0; attempt < 3; attempt++) {
       tokenResponse = await fetch(tokenUrl, fetchOptions);
@@ -226,7 +237,7 @@ async function getOrCreateAgent(supabaseAdmin: any, elevenlabsKey: string): Prom
     }
 
     if (!tokenResponse || !tokenResponse.ok) {
-      throw new Error(`Failed to get token after 3 attempts`);
+      throw new Error("Failed to get token after 3 attempts");
     }
 
     const { token } = await tokenResponse.json();
