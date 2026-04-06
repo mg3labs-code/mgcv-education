@@ -739,7 +739,7 @@ const TextbookEpisode = () => {
 
             {/* Phases and sections */}
             {phases.map((phase) => {
-              const phaseBlocks = blocks.map((b, i) => ({ block: b, index: i })).filter(({ block }) => phase.blockSet.has(block.type));
+              const phaseBlocks = navBlocks.map((b, i) => ({ block: b, index: i })).filter(({ block }) => phase.blockSet.has(block.type));
               if (phaseBlocks.length === 0) return null;
               const phaseUnderstood = phaseBlocks.filter(({ index }) => understoodBlocks.has(index)).length;
 

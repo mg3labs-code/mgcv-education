@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
-import { X, ZoomIn, ExternalLink, Play } from "lucide-react";
+import { X, ZoomIn, ExternalLink, Play, Search, Image } from "lucide-react";
 
 export interface VisualAidContent {
   type: "image" | "video";
@@ -20,15 +20,18 @@ const VisualAidBlock = ({ content }: VisualAidBlockProps) => {
   const [zoomed, setZoomed] = useState(false);
   const [imgError, setImgError] = useState(false);
 
-  if (!content?.url) return null;
+  if (!content?.url && !content?.explanation && !content?.caption) return null;
 
   const isVideo = content.type === "video";
 
-  // Extract YouTube video ID from various URL formats
   const getYouTubeId = (url: string) => {
     const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|shorts\/))([^&?\s]+)/);
-    return match?.[1] || url; // fallback: treat as raw ID
+    return match?.[1] || url;
   };
+
+  const searchUrl = content.searchTerms
+    ? `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(content.searchTerms)}`
+    : null;
 
   if (isVideo) {
     const videoId = getYouTubeId(content.url);
@@ -61,15 +64,17 @@ const VisualAidBlock = ({ content }: VisualAidBlockProps) => {
     );
   }
 
-  // Image rendering
+  // Image rendering — with smart fallback
+  const hasValidUrl = content.url && !imgError;
+
   return (
     <>
       <div className="space-y-3">
-        <div
-          className="relative rounded-xl overflow-hidden border border-border shadow-sm cursor-pointer group"
-          onClick={() => setZoomed(true)}
-        >
-          {!imgError ? (
+        {hasValidUrl ? (
+          <div
+            className="relative rounded-xl overflow-hidden border border-border shadow-sm cursor-pointer group"
+            onClick={() => setZoomed(true)}
+          >
             <img
               src={content.url}
               alt={content.alt || content.caption || "Visual aid"}
@@ -77,16 +82,42 @@ const VisualAidBlock = ({ content }: VisualAidBlockProps) => {
               className="w-full h-auto max-h-[400px] object-contain bg-muted/20 transition-transform duration-300 group-hover:scale-[1.02]"
               onError={() => setImgError(true)}
             />
-          ) : (
-            <div className="w-full h-48 bg-muted/30 flex items-center justify-center text-muted-foreground text-sm rounded-xl">
-              <span>🖼️ Image unavailable</span>
+            <div className="absolute bottom-2 right-2 bg-background/80 backdrop-blur-sm rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+              <ZoomIn className="h-4 w-4 text-foreground" />
             </div>
-          )}
-          <div className="absolute bottom-2 right-2 bg-background/80 backdrop-blur-sm rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-            <ZoomIn className="h-4 w-4 text-foreground" />
           </div>
-        </div>
-        {content.caption && (
+        ) : (
+          /* Fallback: show explanation + search link when image fails */
+          <div className="rounded-xl border border-border bg-muted/20 p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Image className="h-4 w-4 text-primary" />
+              </div>
+              <span className="text-sm font-semibold text-foreground">
+                {content.caption || "Visual Reference"}
+              </span>
+            </div>
+            {content.explanation && (
+              <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+                {content.explanation}
+              </p>
+            )}
+            {searchUrl && (
+              <a
+                href={searchUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+              >
+                <Search className="h-3 w-3" />
+                Search for "{content.searchTerms}"
+                <ExternalLink className="h-3 w-3" />
+              </a>
+            )}
+          </div>
+        )}
+
+        {content.caption && hasValidUrl && (
           <p className="text-sm text-muted-foreground text-center italic flex items-center justify-center gap-1.5 flex-wrap">
             📷 {content.caption}
             {content.source && (
@@ -100,7 +131,7 @@ const VisualAidBlock = ({ content }: VisualAidBlockProps) => {
             )}
           </p>
         )}
-        {content.explanation && (
+        {content.explanation && hasValidUrl && (
           <p className="text-sm text-muted-foreground leading-relaxed bg-muted/30 rounded-lg p-3">
             {content.explanation}
           </p>
@@ -108,7 +139,7 @@ const VisualAidBlock = ({ content }: VisualAidBlockProps) => {
       </div>
 
       {/* Zoom modal */}
-      {zoomed && !imgError && (
+      {zoomed && hasValidUrl && (
         <div
           className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
           onClick={() => setZoomed(false)}
