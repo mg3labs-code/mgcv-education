@@ -725,14 +725,14 @@ const TextbookEpisode = () => {
                 <p style={{ fontSize: 12, color: "#78716C", margin: "2px 0 0" }}>{chapter.title} • Lesson {episode.number}</p>
               </div>
               <span style={{ fontSize: 13, fontWeight: 700, color: "#0D9488" }}>
-                {understoodBlocks.size}/{blocks.length}
+                {understoodBlocks.size}/{navBlocks.length}
               </span>
             </div>
 
             {/* Progress bar */}
             <div style={{ height: 6, background: "#E7E5E4", borderRadius: 3, overflow: "hidden", marginBottom: 20 }}>
               <div style={{
-                width: `${blocks.length > 0 ? Math.round((understoodBlocks.size / blocks.length) * 100) : 0}%`,
+                width: `${navBlocks.length > 0 ? Math.round((understoodBlocks.size / navBlocks.length) * 100) : 0}%`,
                 height: "100%", background: "linear-gradient(90deg, #0D9488, #14B8A6)", borderRadius: 3, transition: "width 0.3s",
               }} />
             </div>
