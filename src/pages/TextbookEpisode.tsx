@@ -424,15 +424,10 @@ const TextbookEpisode = () => {
           )}
           <span style={{ fontSize: 12, fontWeight: 600, color: "#78716C", minWidth: 32, textAlign: "right" }}>
             {activeBlock + 1}/{blocks.length}
+          </span>
         </div>
       </div>
 
-      {/* Reading Mode — Full Textbook View */}
-      {readingMode ? (
-        <div style={{ flex: 1, overflow: "auto", padding: "16px" }}>
-          <FullTextbookView blocks={blocks || []} chapterTitle={chapter?.title} episodeTitle={episode?.title} />
-        </div>
-      ) : (
       <>
       {/* ═══ PHASE BADGE — Tiny ═══ */}
       <div style={{
