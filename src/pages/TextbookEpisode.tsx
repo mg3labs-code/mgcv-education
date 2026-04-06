@@ -401,10 +401,10 @@ const TextbookEpisode = () => {
   }
 
   // ═══ IMMERSIVE MODULE ═══
-  const block = blocks.length > 0 && activeBlock < blocks.length ? blocks[activeBlock] : null;
+  const block = navBlocks.length > 0 && activeBlock < navBlocks.length ? navBlocks[activeBlock] : null;
   const meta = block ? (layerMeta[block.type] || defaultMeta) : defaultMeta;
   const isUnderstood = understoodBlocks.has(activeBlock);
-  const isLastBlock = activeBlock === blocks.length - 1;
+  const isLastBlock = activeBlock === navBlocks.length - 1;
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col" style={{ background: "#F9FAFB", fontFamily: "'DM Sans', sans-serif" }}>
