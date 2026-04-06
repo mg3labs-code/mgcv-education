@@ -183,7 +183,7 @@ const TextbookEpisode = () => {
   }, [isBlockLocked]);
 
   const scrollToActivity = useCallback(() => {
-    const actIdx = blocks.findIndex(b => b.type === "activity");
+    const actIdx = navBlocks.findIndex(b => b.type === "activity");
     if (actIdx >= 0) goToBlock(actIdx);
   }, [blocks, goToBlock]);
 
