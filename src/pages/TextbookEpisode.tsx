@@ -49,7 +49,7 @@ const blockLabels: Record<string, string> = {
 };
 
 const DEEP_BLOCKS = new Set(["reasoning", "assumptions", "connections", "application", "implications"]);
-const DISCOVER_BLOCKS = new Set(["concept", "activity", "exercise", "visual_aid"]);
+const DISCOVER_BLOCKS = new Set(["concept", "activity", "exercise"]);
 const PROVE_BLOCKS = new Set(["recall", "assessment", "explain"]);
 
 // Phase config
