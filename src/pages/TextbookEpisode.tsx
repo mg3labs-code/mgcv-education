@@ -265,7 +265,7 @@ const TextbookEpisode = () => {
   const defaultMeta = { border: "border-l-primary", bg: "", dotColor: "bg-primary", badge: undefined, badgeColor: undefined } as const;
 
   // Find current phase
-  const allPhaseBlocks = phases.flatMap(p => blocks.map((b, i) => ({ block: b, index: i, phase: p })).filter(({ block }) => p.blockSet.has(block.type)));
+  const allPhaseBlocks = phases.flatMap(p => navBlocks.map((b, i) => ({ block: b, index: i, phase: p })).filter(({ block }) => p.blockSet.has(block.type)));
   const currentPhaseBlock = allPhaseBlocks.find(pb => pb.index === activeBlock);
   const currentPhase = currentPhaseBlock?.phase || phases[0];
 
