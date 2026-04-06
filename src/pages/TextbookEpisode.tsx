@@ -23,6 +23,25 @@ import StoryReadingBlock from "@/components/textbook/StoryReadingBlock";
 import LanguageProgressWidget from "@/components/textbook/LanguageProgressWidget";
 import VisualAidBlock from "@/components/textbook/VisualAidBlock";
 import InlineMedia from "@/components/textbook/InlineMedia";
+import { ConceptBlock, ActivityBlock, RecallBlock, ExplainBlock, AssessmentBlock, ExerciseBlock, blockSubtitles, layerMeta, type ActivityContent } from "@/components/textbook/EpisodeBlocks";
+import FullTextbookView from "@/components/textbook/FullTextbookView";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import VoiceExplainWidget from "@/components/textbook/VoiceExplainWidget";
+import ReasoningBlock from "@/components/textbook/ReasoningBlock";
+import AssumptionsBlock from "@/components/textbook/AssumptionsBlock";
+import ConnectionsBlock from "@/components/textbook/ConnectionsBlock";
+import ApplicationBlock from "@/components/textbook/ApplicationBlock";
+import ImplicationsBlock from "@/components/textbook/ImplicationsBlock";
+import TutorialDefenseModal from "@/components/textbook/TutorialDefenseModal";
+import FirstPrinciplesModal from "@/components/textbook/FirstPrinciplesModal";
+import BilingualConceptBlock from "@/components/textbook/BilingualConceptBlock";
+import VocabularyCardBlock from "@/components/textbook/VocabularyCardBlock";
+import GrammarPatternBlock from "@/components/textbook/GrammarPatternBlock";
+import StoryReadingBlock from "@/components/textbook/StoryReadingBlock";
+import LanguageProgressWidget from "@/components/textbook/LanguageProgressWidget";
+import VisualAidBlock from "@/components/textbook/VisualAidBlock";
+import InlineMedia from "@/components/textbook/InlineMedia";
 
 const LANGUAGE_SUBJECTS = new Set(["Telugu", "Hindi"]);
 
