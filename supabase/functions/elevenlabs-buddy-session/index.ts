@@ -147,9 +147,7 @@ async function getOrCreateAgent(supabaseAdmin: any, elevenlabsKey: string): Prom
         },
         tts: {
           voice_id: "cgSgspJ2msm6clMCkdW9",
-          model_id: "eleven_multilingual_v2",
-          stability: 0.5,
-          similarity_boost: 0.75,
+          model_id: "eleven_v3_conversational",
         },
       },
     }),
@@ -211,12 +209,6 @@ serve(async (req) => {
               },
               language: "hi",
             },
-            tts: {
-              voice_id: "cgSgspJ2msm6clMCkdW9",
-              model_id: "eleven_multilingual_v2",
-              stability: 0.5,
-              similarity_boost: 0.75,
-            },
           },
         }
       : null;
@@ -248,7 +240,7 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ token, agentId, model: "eleven_multilingual_v2" }),
+      JSON.stringify({ token, agentId, model: "eleven_v3_conversational" }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e) {
