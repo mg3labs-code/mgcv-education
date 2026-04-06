@@ -5,6 +5,7 @@ import { useChapterEpisodes, useEpisodeBlocks } from "@/hooks/useTextbookData";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { BookOpen, Brain, Briefcase, Check, CheckCircle2, Cloud, Compass, Eye, Image, Lightbulb, Link, Map, MessageSquare, Mic, PenLine, Search, Shield, Sparkles, Zap, RotateCcw, GripHorizontal, X, ChevronLeft, Menu, MoreHorizontal } from "lucide-react";
+import FullTextbookView from "@/components/textbook/FullTextbookView";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import VoiceExplainWidget from "@/components/textbook/VoiceExplainWidget";
@@ -382,7 +383,7 @@ const TextbookEpisode = () => {
   const [exitConfirm, setExitConfirm] = useState(false);
   const [showCompletion, setShowCompletion] = useState(false);
   const [textbookRefOpen, setTextbookRefOpen] = useState(true);
-  
+  const [readingMode, setReadingMode] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const totalBlocksRef = useRef(0);
@@ -710,7 +711,7 @@ const TextbookEpisode = () => {
           ))}
         </div>
 
-        {/* Counter + save */}
+        {/* Counter + save + reading mode toggle */}
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
           {saveStatus === "saving" && (
             <Cloud className="h-3 w-3" style={{ color: "#A8A29E" }} />
@@ -721,9 +722,44 @@ const TextbookEpisode = () => {
           <span style={{ fontSize: 12, fontWeight: 600, color: "#78716C", minWidth: 32, textAlign: "right" }}>
             {activeBlock + 1}/{blocks.length}
           </span>
+          {/* Reading Mode Slider Toggle */}
+          <button
+            onClick={() => setReadingMode(!readingMode)}
+            style={{
+              display: "flex", alignItems: "center", gap: 6,
+              padding: "4px 10px", borderRadius: 20,
+              border: readingMode ? "1.5px solid #0D9488" : "1px solid #E7E5E4",
+              background: readingMode ? "#F0FDFA" : "white",
+              cursor: "pointer", fontSize: 11, fontWeight: 600,
+              color: readingMode ? "#0D9488" : "#78716C",
+              transition: "all 0.2s",
+            }}
+          >
+            <BookOpen className="h-3.5 w-3.5" />
+            <span style={{ display: "none" }} className="sm:!inline">Textbook</span>
+            <div style={{
+              width: 28, height: 16, borderRadius: 8,
+              background: readingMode ? "#0D9488" : "#D6D3D1",
+              position: "relative", transition: "background 0.2s",
+            }}>
+              <div style={{
+                width: 12, height: 12, borderRadius: "50%",
+                background: "white", position: "absolute", top: 2,
+                left: readingMode ? 14 : 2,
+                transition: "left 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
+              }} />
+            </div>
+          </button>
         </div>
       </div>
 
+      {/* Reading Mode — Full Textbook View */}
+      {readingMode ? (
+        <div style={{ flex: 1, overflow: "auto", padding: "16px" }}>
+          <FullTextbookView />
+        </div>
+      ) : (
+      <>
       {/* ═══ PHASE BADGE — Tiny ═══ */}
       <div style={{
         display: "flex", alignItems: "center", gap: 6, padding: "6px 16px",
@@ -1061,6 +1097,9 @@ const TextbookEpisode = () => {
             </div>
           </div>
         </>
+      )}
+
+      </>
       )}
 
       {/* Modals */}
