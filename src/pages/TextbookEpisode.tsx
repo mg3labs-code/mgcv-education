@@ -753,6 +753,13 @@ const TextbookEpisode = () => {
         </div>
       </div>
 
+      {/* Reading Mode — Full Textbook View */}
+      {readingMode ? (
+        <div style={{ flex: 1, overflow: "auto", padding: "16px" }}>
+          <FullTextbookView />
+        </div>
+      ) : (
+      <>
       {/* ═══ PHASE BADGE — Tiny ═══ */}
       <div style={{
         display: "flex", alignItems: "center", gap: 6, padding: "6px 16px",
