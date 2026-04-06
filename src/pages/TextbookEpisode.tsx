@@ -51,8 +51,8 @@ const blockLabels: Record<string, string> = {
 const DEEP_BLOCKS = new Set(["reasoning", "assumptions", "connections", "application", "implications"]);
 const DISCOVER_BLOCKS = new Set(["concept", "activity", "exercise", "visual_aid"]);
 const PROVE_BLOCKS = new Set(["recall", "assessment", "explain"]);
-  <div className="space-y-5">
-    {content.sections.map((s, i) => (
+
+
       <div key={i}>
         <h4 className="font-semibold text-foreground text-[1.1rem] mb-2">{s.heading}</h4>
         <div className="text-[0.95rem] text-muted-foreground leading-[1.8] whitespace-pre-line">{s.body}</div>
