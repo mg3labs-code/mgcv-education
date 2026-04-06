@@ -254,10 +254,10 @@ serve(async (req) => {
           },
           tts: {
             voice_id: "cgSgspJ2msm6clMCkdW9", // Jessica
-            model_id: "eleven_multilingual_v2",
-            stability: 0.3,
-            similarity_boost: 0.8,
-            style: 0.5,
+            model_id: "eleven_v3",
+            stability: 0.5,
+            similarity_boost: 0.75,
+            style: 0,
           },
         },
       };
