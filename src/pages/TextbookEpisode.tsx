@@ -205,7 +205,7 @@ const TextbookEpisode = () => {
       if (idx >= 0) goToBlock(idx);
     }, 500);
     return () => clearTimeout(timer);
-  }, [layerParam, blocks, goToBlock]);
+  }, [layerParam, navBlocks, goToBlock]);
 
   // Loading state
   if (isLoading) {
