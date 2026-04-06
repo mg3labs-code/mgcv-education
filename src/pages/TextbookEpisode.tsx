@@ -429,12 +429,12 @@ const TextbookEpisode = () => {
 
         {/* Progress dots */}
         <div style={{ display: "flex", alignItems: "center", gap: 3, flex: 1, justifyContent: "center", padding: "0 12px", overflow: "hidden" }}>
-          {blocks.map((_, i) => (
+          {navBlocks.map((_, i) => (
             <div
               key={i}
               style={{
-                width: blocks.length > 15 ? 4 : blocks.length > 8 ? 6 : 8,
-                height: blocks.length > 15 ? 4 : blocks.length > 8 ? 6 : 8,
+                width: navBlocks.length > 15 ? 4 : navBlocks.length > 8 ? 6 : 8,
+                height: navBlocks.length > 15 ? 4 : navBlocks.length > 8 ? 6 : 8,
                 borderRadius: 2,
                 background: understoodBlocks.has(i) ? "#0D9488" : i === activeBlock ? "#1C1917" : "#D6D3D1",
                 transition: "all 0.2s",
