@@ -5,7 +5,7 @@ import { useChapterEpisodes, useEpisodeBlocks } from "@/hooks/useTextbookData";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { BookOpen, Brain, Briefcase, Check, CheckCircle2, Cloud, Compass, Eye, Image, Lightbulb, Link, Map, MessageSquare, Mic, PenLine, Search, Shield, Sparkles, Zap, RotateCcw, GripHorizontal, X, ChevronLeft, Menu, MoreHorizontal } from "lucide-react";
-import FullTextbookView from "@/components/textbook/FullTextbookView";
+import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import VoiceExplainWidget from "@/components/textbook/VoiceExplainWidget";
