@@ -49,7 +49,7 @@ const blockLabels: Record<string, string> = {
 };
 
 const DEEP_BLOCKS = new Set(["reasoning", "assumptions", "connections", "application", "implications"]);
-const DISCOVER_BLOCKS = new Set(["concept", "activity", "exercise", "visual_aid"]);
+const DISCOVER_BLOCKS = new Set(["concept", "activity", "exercise"]);
 const PROVE_BLOCKS = new Set(["recall", "assessment", "explain"]);
 
 // Phase config
@@ -59,7 +59,7 @@ const stemPhases = [
   { id: "deeper", label: "Challenge Yourself", icon: "🚀", color: "#8B5CF6", subtitle: "Ask why, challenge assumptions, see connections", className: "phase-deeper", blockSet: DEEP_BLOCKS },
 ];
 
-const LANG_READ_BLOCKS = new Set(["concept", "activity", "bilingual_concept", "story_reading", "visual_aid"]);
+const LANG_READ_BLOCKS = new Set(["concept", "activity", "bilingual_concept", "story_reading"]);
 const LANG_PRACTICE_BLOCKS = new Set(["recall", "exercise", "assessment", "explain", "vocabulary", "grammar_pattern"]);
 const LANG_EXPRESS_BLOCKS = new Set(["reasoning", "assumptions", "connections", "application", "implications"]);
 
@@ -123,7 +123,26 @@ const TextbookEpisode = () => {
   const { data: dbBlocks, isLoading: blocksLoading } = useEpisodeBlocks(chapterId, episodeId);
 
   const episode = chapter?.episodes.find((e) => e.id === episodeId);
-  const blocks = dbBlocks && dbBlocks.length > 0 ? dbBlocks : (episode?.blocks || []);
+  const allBlocks = dbBlocks && dbBlocks.length > 0 ? dbBlocks : (episode?.blocks || []);
+
+  // Filter out visual_aid blocks from navigation — they render inline with their preceding block
+  const navBlocks = useMemo(() => allBlocks.filter(b => b.type !== "visual_aid"), [allBlocks]);
+
+  // Map: navBlock index → array of visual_aid blocks that follow it in the original array
+  const attachedVisuals = useMemo(() => {
+    const map: Record<number, ContentBlock[]> = {};
+    let navIdx = -1;
+    for (const b of allBlocks) {
+      if (b.type !== "visual_aid") {
+        navIdx++;
+        map[navIdx] = [];
+      } else if (navIdx >= 0) {
+        map[navIdx].push(b);
+      }
+    }
+    return map;
+  }, [allBlocks]);
+
   const currentEpisodeIndex = chapter?.episodes.findIndex((e) => e.id === episodeId) ?? -1;
   const nextEpisode = chapter?.episodes[currentEpisodeIndex + 1];
   const isLoading = chapterLoading || blocksLoading;
@@ -132,7 +151,7 @@ const TextbookEpisode = () => {
   const isLanguage = !!langSubject;
   const phases = isLanguage ? langPhases : stemPhases;
 
-  useEffect(() => { totalBlocksRef.current = blocks.length; }, [blocks.length]);
+  useEffect(() => { totalBlocksRef.current = navBlocks.length; }, [navBlocks.length]);
 
   // Load understood blocks from DB
   useEffect(() => {
@@ -150,12 +169,12 @@ const TextbookEpisode = () => {
   // Phase 3 locking: check if all Phase 1+2 blocks are understood
   const phase3BlockTypes = isLanguage ? LANG_EXPRESS_BLOCKS : DEEP_BLOCKS;
   const phase12Indices = useMemo(() =>
-    blocks.map((b, i) => ({ type: b.type, i })).filter(({ type }) => !phase3BlockTypes.has(type)).map(({ i }) => i),
-    [blocks, phase3BlockTypes]
+    navBlocks.map((b, i) => ({ type: b.type, i })).filter(({ type }) => !phase3BlockTypes.has(type)).map(({ i }) => i),
+    [navBlocks, phase3BlockTypes]
   );
   const phase3Indices = useMemo(() =>
-    blocks.map((b, i) => ({ type: b.type, i })).filter(({ type }) => phase3BlockTypes.has(type)).map(({ i }) => i),
-    [blocks, phase3BlockTypes]
+    navBlocks.map((b, i) => ({ type: b.type, i })).filter(({ type }) => phase3BlockTypes.has(type)).map(({ i }) => i),
+    [navBlocks, phase3BlockTypes]
   );
   const isPhase3Unlocked = phase12Indices.length > 0 && phase12Indices.every(i => understoodBlocks.has(i));
   const isBlockLocked = useCallback((index: number) => {
@@ -172,21 +191,21 @@ const TextbookEpisode = () => {
   }, [isBlockLocked]);
 
   const scrollToActivity = useCallback(() => {
-    const actIdx = blocks.findIndex(b => b.type === "activity");
+    const actIdx = navBlocks.findIndex(b => b.type === "activity");
     if (actIdx >= 0) goToBlock(actIdx);
-  }, [blocks, goToBlock]);
+  }, [navBlocks, goToBlock]);
 
   // Auto-scroll to layer based on query param
   useEffect(() => {
-    if (!layerParam || !blocks || blocks.length === 0) return;
+    if (!layerParam || !navBlocks || navBlocks.length === 0) return;
     const timer = setTimeout(() => {
       const targetSet = layerParam === "deep" ? DEEP_BLOCKS : layerParam === "quiz" ? PROVE_BLOCKS : null;
       if (!targetSet) return;
-      const idx = blocks.findIndex(b => targetSet.has(b.type));
+      const idx = navBlocks.findIndex(b => targetSet.has(b.type));
       if (idx >= 0) goToBlock(idx);
     }, 500);
     return () => clearTimeout(timer);
-  }, [layerParam, blocks, goToBlock]);
+  }, [layerParam, navBlocks, goToBlock]);
 
   // Loading state
   if (isLoading) {
@@ -254,7 +273,7 @@ const TextbookEpisode = () => {
   const defaultMeta = { border: "border-l-primary", bg: "", dotColor: "bg-primary", badge: undefined, badgeColor: undefined } as const;
 
   // Find current phase
-  const allPhaseBlocks = phases.flatMap(p => blocks.map((b, i) => ({ block: b, index: i, phase: p })).filter(({ block }) => p.blockSet.has(block.type)));
+  const allPhaseBlocks = phases.flatMap(p => navBlocks.map((b, i) => ({ block: b, index: i, phase: p })).filter(({ block }) => p.blockSet.has(block.type)));
   const currentPhaseBlock = allPhaseBlocks.find(pb => pb.index === activeBlock);
   const currentPhase = currentPhaseBlock?.phase || phases[0];
 
@@ -321,7 +340,7 @@ const TextbookEpisode = () => {
             {episode.title}
           </p>
           <p style={{ fontSize: 13, color: "#A8A29E", marginBottom: 32, fontFamily: "'DM Sans', sans-serif" }}>
-            Core Path done • {blocks.length} sections completed
+            Core Path done • {navBlocks.length} sections completed
           </p>
 
           {/* Stat gains */}
@@ -390,10 +409,10 @@ const TextbookEpisode = () => {
   }
 
   // ═══ IMMERSIVE MODULE ═══
-  const block = blocks.length > 0 && activeBlock < blocks.length ? blocks[activeBlock] : null;
+  const block = navBlocks.length > 0 && activeBlock < navBlocks.length ? navBlocks[activeBlock] : null;
   const meta = block ? (layerMeta[block.type] || defaultMeta) : defaultMeta;
   const isUnderstood = understoodBlocks.has(activeBlock);
-  const isLastBlock = activeBlock === blocks.length - 1;
+  const isLastBlock = activeBlock === navBlocks.length - 1;
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col" style={{ background: "#F9FAFB", fontFamily: "'DM Sans', sans-serif" }}>
@@ -418,12 +437,12 @@ const TextbookEpisode = () => {
 
         {/* Progress dots */}
         <div style={{ display: "flex", alignItems: "center", gap: 3, flex: 1, justifyContent: "center", padding: "0 12px", overflow: "hidden" }}>
-          {blocks.map((_, i) => (
+          {navBlocks.map((_, i) => (
             <div
               key={i}
               style={{
-                width: blocks.length > 15 ? 4 : blocks.length > 8 ? 6 : 8,
-                height: blocks.length > 15 ? 4 : blocks.length > 8 ? 6 : 8,
+                width: navBlocks.length > 15 ? 4 : navBlocks.length > 8 ? 6 : 8,
+                height: navBlocks.length > 15 ? 4 : navBlocks.length > 8 ? 6 : 8,
                 borderRadius: 2,
                 background: understoodBlocks.has(i) ? "#0D9488" : i === activeBlock ? "#1C1917" : "#D6D3D1",
                 transition: "all 0.2s",
@@ -442,7 +461,7 @@ const TextbookEpisode = () => {
             <Check className="h-3 w-3" style={{ color: "#0D9488" }} />
           )}
           <span style={{ fontSize: 12, fontWeight: 600, color: "#78716C", minWidth: 32, textAlign: "right" }}>
-            {activeBlock + 1}/{blocks.length}
+            {activeBlock + 1}/{navBlocks.length}
           </span>
         </div>
       </div>
@@ -491,6 +510,13 @@ const TextbookEpisode = () => {
                   {renderBlock(block)}
                 </div>
               </div>
+
+              {/* Inline visual aids attached to this section */}
+              {attachedVisuals[activeBlock]?.map((vb, vi) => (
+                <div key={vi} className="mt-4">
+                  <VisualAidBlock content={vb.content as VisualAidContent} />
+                </div>
+              ))}
 
               {/* Inline textbook reference callouts — collapsible */}
               {block.textbookRef && (
@@ -707,21 +733,21 @@ const TextbookEpisode = () => {
                 <p style={{ fontSize: 12, color: "#78716C", margin: "2px 0 0" }}>{chapter.title} • Lesson {episode.number}</p>
               </div>
               <span style={{ fontSize: 13, fontWeight: 700, color: "#0D9488" }}>
-                {understoodBlocks.size}/{blocks.length}
+                {understoodBlocks.size}/{navBlocks.length}
               </span>
             </div>
 
             {/* Progress bar */}
             <div style={{ height: 6, background: "#E7E5E4", borderRadius: 3, overflow: "hidden", marginBottom: 20 }}>
               <div style={{
-                width: `${blocks.length > 0 ? Math.round((understoodBlocks.size / blocks.length) * 100) : 0}%`,
+                width: `${navBlocks.length > 0 ? Math.round((understoodBlocks.size / navBlocks.length) * 100) : 0}%`,
                 height: "100%", background: "linear-gradient(90deg, #0D9488, #14B8A6)", borderRadius: 3, transition: "width 0.3s",
               }} />
             </div>
 
             {/* Phases and sections */}
             {phases.map((phase) => {
-              const phaseBlocks = blocks.map((b, i) => ({ block: b, index: i })).filter(({ block }) => phase.blockSet.has(block.type));
+              const phaseBlocks = navBlocks.map((b, i) => ({ block: b, index: i })).filter(({ block }) => phase.blockSet.has(block.type));
               if (phaseBlocks.length === 0) return null;
               const phaseUnderstood = phaseBlocks.filter(({ index }) => understoodBlocks.has(index)).length;
 
