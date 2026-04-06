@@ -172,12 +172,10 @@ async function getOrCreateAgent(supabaseAdmin: any, elevenlabsKey: string): Prom
           language: "en",
         },
         tts: {
-          voice_id: "cgSgspJ2msm6clMCkdW9", // Jessica - Playful, Bright, Warm
+          voice_id: "cgSgspJ2msm6clMCkdW9",
           model_id: "eleven_v3",
           stability: 0.5,
           similarity_boost: 0.75,
-          style: 0,
-          use_speaker_boost: true,
         },
       },
     }),
@@ -253,11 +251,10 @@ serve(async (req) => {
             language: "hi", // ElevenLabs doesn't support "te", use "hi" as closest
           },
           tts: {
-            voice_id: "cgSgspJ2msm6clMCkdW9", // Jessica
+            voice_id: "cgSgspJ2msm6clMCkdW9",
             model_id: "eleven_v3",
             stability: 0.5,
             similarity_boost: 0.75,
-            style: 0,
           },
         },
       };
