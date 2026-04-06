@@ -34,9 +34,23 @@ const getSubjectFromSlug = (slug?: string): string | null => {
   return null;
 };
 
-// ─── Block Renderers ────────────────────────────────────────
+const blockIcons: Record<string, React.ElementType> = {
+  concept: BookOpen, activity: PenLine, recall: Brain, explain: MessageSquare,
+  assessment: CheckCircle2, exercise: Lightbulb, reasoning: Zap, assumptions: Shield,
+  connections: Link, application: Briefcase, implications: Compass, visual_aid: Image,
+};
 
-const ConceptBlock = ({ content }: { content: ConceptContent }) => (
+const blockLabels: Record<string, string> = {
+  concept: "What's the big idea?", activity: "Try it yourself!", recall: "Can you remember?",
+  explain: "Teach your friend", assessment: "Prove it!", exercise: "Level up",
+  reasoning: "But WHY though?", assumptions: "What if we're wrong?",
+  connections: "Where else does this hide?", application: "Use it in real life",
+  implications: "What does this change?", visual_aid: "See it in action",
+};
+
+const DEEP_BLOCKS = new Set(["reasoning", "assumptions", "connections", "application", "implications"]);
+const DISCOVER_BLOCKS = new Set(["concept", "activity", "exercise", "visual_aid"]);
+const PROVE_BLOCKS = new Set(["recall", "assessment", "explain"]);
   <div className="space-y-5">
     {content.sections.map((s, i) => (
       <div key={i}>
