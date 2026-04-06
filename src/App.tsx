@@ -56,6 +56,7 @@ const App = () => (
             
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/attraction-demo" element={<AttractionDemo />} />
+            <Route path="/textbook-reference/:chapterId/:episodeId" element={<TextbookReference />} />
             <Route path="/student" element={<ProtectedRoute><StudentDashboard /></ProtectedRoute>} />
             <Route path="/student/episode/:id" element={<ProtectedRoute><LearningEpisode /></ProtectedRoute>} />
             <Route path="/student/onboarding" element={<ProtectedRoute><StudentOnboarding /></ProtectedRoute>} />
