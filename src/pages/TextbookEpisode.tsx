@@ -453,7 +453,7 @@ const TextbookEpisode = () => {
             <Check className="h-3 w-3" style={{ color: "#0D9488" }} />
           )}
           <span style={{ fontSize: 12, fontWeight: 600, color: "#78716C", minWidth: 32, textAlign: "right" }}>
-            {activeBlock + 1}/{blocks.length}
+            {activeBlock + 1}/{navBlocks.length}
           </span>
         </div>
       </div>
