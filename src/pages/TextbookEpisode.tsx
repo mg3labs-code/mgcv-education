@@ -332,7 +332,7 @@ const TextbookEpisode = () => {
             {episode.title}
           </p>
           <p style={{ fontSize: 13, color: "#A8A29E", marginBottom: 32, fontFamily: "'DM Sans', sans-serif" }}>
-            Core Path done • {blocks.length} sections completed
+            Core Path done • {navBlocks.length} sections completed
           </p>
 
           {/* Stat gains */}
