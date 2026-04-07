@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
-import { X, ZoomIn, ExternalLink, Play, Search, Image } from "lucide-react";
+import { X, ZoomIn, Play, Image, BookOpen } from "lucide-react";
 
 export interface VisualAidContent {
   type: "image" | "video";
@@ -28,10 +28,6 @@ const VisualAidBlock = ({ content }: VisualAidBlockProps) => {
     const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|shorts\/))([^&?\s]+)/);
     return match?.[1] || url;
   };
-
-  const searchUrl = content.searchTerms
-    ? `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(content.searchTerms)}`
-    : null;
 
   if (isVideo) {
     const videoId = getYouTubeId(content.url);
@@ -87,32 +83,23 @@ const VisualAidBlock = ({ content }: VisualAidBlockProps) => {
             </div>
           </div>
         ) : (
-          /* Fallback: show explanation + search link when image fails */
-          <div className="rounded-xl border border-border bg-muted/20 p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Image className="h-4 w-4 text-primary" />
+          /* Fallback: show explanation prominently */
+          <div className="rounded-xl border-2 border-dashed border-border bg-muted/10 p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <BookOpen className="h-5 w-5 text-primary" />
               </div>
-              <span className="text-sm font-semibold text-foreground">
-                {content.caption || "Visual Reference"}
-              </span>
+              <div>
+                <p className="text-sm font-semibold text-foreground">
+                  {content.caption || "Diagram Description"}
+                </p>
+                <p className="text-xs text-muted-foreground">Visual reference</p>
+              </div>
             </div>
             {content.explanation && (
-              <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+              <p className="text-sm text-muted-foreground leading-relaxed bg-muted/30 rounded-lg p-3">
                 {content.explanation}
               </p>
-            )}
-            {searchUrl && (
-              <a
-                href={searchUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
-              >
-                <Search className="h-3 w-3" />
-                Search for "{content.searchTerms}"
-                <ExternalLink className="h-3 w-3" />
-              </a>
             )}
           </div>
         )}
@@ -120,15 +107,6 @@ const VisualAidBlock = ({ content }: VisualAidBlockProps) => {
         {content.caption && hasValidUrl && (
           <p className="text-sm text-muted-foreground text-center italic flex items-center justify-center gap-1.5 flex-wrap">
             📷 {content.caption}
-            {content.source && (
-              <span className={`inline-flex items-center text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
-                content.source === "web" 
-                  ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300" 
-                  : "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300"
-              }`}>
-                {content.source === "web" ? "🌐 Web" : "🎨 AI"}
-              </span>
-            )}
           </p>
         )}
         {content.explanation && hasValidUrl && (
