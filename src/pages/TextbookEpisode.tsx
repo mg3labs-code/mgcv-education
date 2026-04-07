@@ -643,10 +643,46 @@ const TextbookEpisode = () => {
         </div>
       </div>
 
-      {/* ═══ BOTTOM BAR — Fixed ═══ */}
+      {/* ═══ "Did you understand?" confirm popover ═══ */}
+      {showUnderstandConfirm && (
+        <div style={{
+          position: "absolute", bottom: 72, left: "50%", transform: "translateX(-50%)",
+          background: "white", borderRadius: 16, padding: "16px 20px", textAlign: "center",
+          boxShadow: "0 8px 30px rgba(0,0,0,0.15)", border: "1px solid #E7E5E4",
+          zIndex: 55, width: 280,
+        }}>
+          <p style={{ fontSize: 14, fontWeight: 600, color: "#1C1917", marginBottom: 12, fontFamily: "'DM Sans', sans-serif" }}>
+            Did you understand this? 🤔
+          </p>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button
+              onClick={() => { setShowUnderstandConfirm(false); markBlockInteracted(activeBlock); toggleUnderstood(activeBlock); }}
+              style={{
+                flex: 1, padding: "10px 0", borderRadius: 10, border: "none",
+                background: "#0D9488", color: "white", fontSize: 13, fontWeight: 700,
+                cursor: "pointer",
+              }}
+            >
+              Yes, got it! ✓
+            </button>
+            <button
+              onClick={() => setShowUnderstandConfirm(false)}
+              style={{
+                flex: 1, padding: "10px 0", borderRadius: 10, border: "1px solid #E7E5E4",
+                background: "white", color: "#78716C", fontSize: 13, fontWeight: 600,
+                cursor: "pointer",
+              }}
+            >
+              Not yet
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ═══ BOTTOM BAR — Fixed (with right padding for chatbot) ═══ */}
       <div style={{
         position: "absolute", bottom: 0, left: 0, right: 0,
-        padding: "12px 16px", background: "white", borderTop: "1px solid #E7E5E4",
+        padding: "12px 16px", paddingRight: 80, background: "white", borderTop: "1px solid #E7E5E4",
         display: "flex", alignItems: "center", justifyContent: "space-between",
         boxShadow: "0 -2px 10px rgba(0,0,0,0.04)",
       }}>
@@ -726,16 +762,17 @@ const TextbookEpisode = () => {
           <button
             onClick={() => toggleUnderstood(activeBlock)}
             style={{
-              padding: "8px 14px", borderRadius: 8,
-              border: isUnderstood ? "1.5px solid #0D9488" : "1px solid #E7E5E4",
+              padding: "8px 14px", borderRadius: 10,
+              border: isUnderstood ? "2px solid #0D9488" : "1px solid #E7E5E4",
               background: isUnderstood ? "#F0FDFA" : "white",
               fontSize: 13, fontWeight: 600,
               color: isUnderstood ? "#0D9488" : "#78716C",
               cursor: "pointer", display: "flex", alignItems: "center", gap: 4,
+              transition: "all 0.2s",
             }}
           >
             <CheckCircle2 className="h-4 w-4" style={{ fill: isUnderstood ? "#0D9488" : "none" }} />
-            {isUnderstood ? "✓" : "Got it!"}
+            {isUnderstood ? "Nailed it ✓" : "Got it!"}
           </button>
 
           {!isLastBlock ? (
@@ -743,11 +780,12 @@ const TextbookEpisode = () => {
               disabled={!isUnderstood}
               onClick={() => goToBlock(activeBlock + 1)}
               style={{
-                padding: "8px 18px", borderRadius: 8, border: "none",
-                background: isUnderstood ? "#0D9488" : "#D6D3D1",
+                padding: "8px 18px", borderRadius: 10, border: "none",
+                background: isUnderstood ? "linear-gradient(135deg, #0D9488, #14B8A6)" : "#D6D3D1",
                 fontSize: 13, fontWeight: 700, color: isUnderstood ? "white" : "#A8A29E",
                 cursor: isUnderstood ? "pointer" : "not-allowed",
                 transition: "all 0.2s",
+                boxShadow: isUnderstood ? "0 2px 8px rgba(13,148,136,0.3)" : "none",
               }}
             >
               Continue →
@@ -757,11 +795,12 @@ const TextbookEpisode = () => {
               disabled={!isUnderstood}
               onClick={handleFinish}
               style={{
-                padding: "8px 18px", borderRadius: 8, border: "none",
-                background: isUnderstood ? "#059669" : "#D6D3D1",
+                padding: "8px 18px", borderRadius: 10, border: "none",
+                background: isUnderstood ? "linear-gradient(135deg, #059669, #10B981)" : "#D6D3D1",
                 fontSize: 13, fontWeight: 700, color: isUnderstood ? "white" : "#A8A29E",
                 cursor: isUnderstood ? "pointer" : "not-allowed",
                 transition: "all 0.2s",
+                boxShadow: isUnderstood ? "0 2px 8px rgba(5,150,105,0.3)" : "none",
               }}
             >
               Finish ✓
