@@ -87,6 +87,9 @@ const TextbookEpisode = () => {
   const [exitConfirm, setExitConfirm] = useState(false);
   const [showCompletion, setShowCompletion] = useState(false);
   const [textbookRefOpen, setTextbookRefOpen] = useState(true);
+  const [blockCompleted, setBlockCompleted] = useState<Set<number>>(new Set());
+  const [showUnderstandConfirm, setShowUnderstandConfirm] = useState(false);
+  const [celebrationVisible, setCelebrationVisible] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const totalBlocksRef = useRef(0);
@@ -110,14 +113,13 @@ const TextbookEpisode = () => {
     }, 500);
   }, [user, chapterId, episodeId]);
 
-  const toggleUnderstood = useCallback((index: number) => {
-    setUnderstoodBlocks(prev => {
+  const markBlockInteracted = useCallback((index: number) => {
+    setBlockCompleted(prev => {
       const next = new Set(prev);
-      if (next.has(index)) next.delete(index); else next.add(index);
-      persistUnderstood(next);
+      next.add(index);
       return next;
     });
-  }, [persistUnderstood]);
+  }, []);
 
   const { data: chapter, isLoading: chapterLoading } = useChapterEpisodes(chapterId);
   const { data: dbBlocks, isLoading: blocksLoading } = useEpisodeBlocks(chapterId, episodeId);
@@ -127,6 +129,33 @@ const TextbookEpisode = () => {
 
   // Filter out visual_aid blocks from navigation — they render inline with their preceding block
   const navBlocks = useMemo(() => allBlocks.filter(b => b.type !== "visual_aid"), [allBlocks]);
+
+  const INTERACTIVE_TYPES = useMemo(() => new Set(["activity", "recall", "explain", "assessment", "exercise"]), []);
+
+  const toggleUnderstood = useCallback((index: number) => {
+    const block = navBlocks[index];
+    const isInteractive = block && INTERACTIVE_TYPES.has(block.type);
+
+    // For interactive blocks, require completion first
+    if (isInteractive && !blockCompleted.has(index)) {
+      toast.error("Complete the activity first before marking as understood! 🎯");
+      return;
+    }
+
+    // For content-only blocks, show confirm dialog
+    if (!isInteractive && !blockCompleted.has(index) && !showUnderstandConfirm) {
+      setShowUnderstandConfirm(true);
+      return;
+    }
+
+    setShowUnderstandConfirm(false);
+    setUnderstoodBlocks(prev => {
+      const next = new Set(prev);
+      if (next.has(index)) next.delete(index); else next.add(index);
+      persistUnderstood(next);
+      return next;
+    });
+  }, [persistUnderstood, navBlocks, blockCompleted, showUnderstandConfirm, INTERACTIVE_TYPES]);
 
   // Map: navBlock index → array of visual_aid blocks that follow it in the original array
   const attachedVisuals = useMemo(() => {
@@ -208,6 +237,8 @@ const TextbookEpisode = () => {
   }, [layerParam, navBlocks, goToBlock]);
 
   // Loading state
+  const onBlockComplete = useCallback(() => markBlockInteracted(activeBlock), [markBlockInteracted, activeBlock]);
+
   if (isLoading) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "#F9FAFB" }}>
@@ -230,6 +261,7 @@ const TextbookEpisode = () => {
     );
   }
 
+
   const renderBlock = (block: ContentBlock) => {
     switch (block.type) {
       case "bilingual_concept": return <BilingualConceptBlock content={block.content as any} subjectName={langSubject || "Telugu"} />;
@@ -242,9 +274,9 @@ const TextbookEpisode = () => {
       switch (block.type) {
         case "concept": return <BilingualConceptBlock content={block.content as any} subjectName={langSubject} />;
         case "activity": return <VocabularyCardBlock content={block.content as any} subjectName={langSubject} />;
-        case "recall": return <RecallBlock content={block.content as RecallContent} />;
-        case "explain": return <ExplainBlock content={block.content as ExplainContent} />;
-        case "assessment": return <AssessmentBlock content={block.content as AssessmentContent} />;
+        case "recall": return <RecallBlock content={block.content as RecallContent} onComplete={onBlockComplete} />;
+        case "explain": return <ExplainBlock content={block.content as ExplainContent} onComplete={onBlockComplete} />;
+        case "assessment": return <AssessmentBlock content={block.content as AssessmentContent} onComplete={onBlockComplete} />;
         case "exercise": return <GrammarPatternBlock content={block.content as any} />;
         case "reasoning": return <StoryReadingBlock content={block.content as any} subjectName={langSubject} />;
         case "assumptions": return <AssumptionsBlock content={block.content as AssumptionsContent} onStartDefense={() => setShowDefense(true)} />;
@@ -255,12 +287,12 @@ const TextbookEpisode = () => {
       }
     }
     switch (block.type) {
-      case "concept": return <ConceptBlock content={block.content as ConceptContent} />;
-      case "activity": return <ActivityBlock content={block.content as ActivityContent} />;
-      case "recall": return <RecallBlock content={block.content as RecallContent} />;
-      case "explain": return <ExplainBlock content={block.content as ExplainContent} />;
-      case "assessment": return <AssessmentBlock content={block.content as AssessmentContent} />;
-      case "exercise": return <ExerciseBlock content={block.content as ExerciseContent} />;
+      case "concept": return <ConceptBlock content={block.content as ConceptContent} onComplete={onBlockComplete} />;
+      case "activity": return <ActivityBlock content={block.content as ActivityContent} onComplete={onBlockComplete} />;
+      case "recall": return <RecallBlock content={block.content as RecallContent} onComplete={onBlockComplete} />;
+      case "explain": return <ExplainBlock content={block.content as ExplainContent} onComplete={onBlockComplete} />;
+      case "assessment": return <AssessmentBlock content={block.content as AssessmentContent} onComplete={onBlockComplete} />;
+      case "exercise": return <ExerciseBlock content={block.content as ExerciseContent} onComplete={onBlockComplete} />;
       case "reasoning": return <ReasoningBlock content={block.content as ReasoningContent} />;
       case "assumptions": return <AssumptionsBlock content={block.content as AssumptionsContent} onStartDefense={() => setShowDefense(true)} />;
       case "connections": return <ConnectionsBlock content={block.content as ConnectionsContent} />;
@@ -327,54 +359,80 @@ const TextbookEpisode = () => {
     );
   }
 
-  // ═══ COMPLETION SCREEN ═══
+  // ═══ COMPLETION SCREEN — Centered Celebration ═══
   if (showCompletion) {
     return (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center" style={{ background: "#F9FAFB" }}>
-        <div style={{ textAlign: "center", maxWidth: 420, width: "90%", padding: "40px 20px" }}>
-          <div style={{ fontSize: 56, marginBottom: 16 }}>✅</div>
-          <h1 style={{ fontSize: 28, fontWeight: 700, color: "#1C1917", marginBottom: 8, fontFamily: "'DM Sans', sans-serif" }}>
-            Lesson Complete!
+      <div className="fixed inset-0 z-[100] flex items-center justify-center" style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)" }}>
+        {/* Sparkle particles */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {Array.from({ length: 20 }).map((_, i) => (
+            <div
+              key={i}
+              className="absolute rounded-full animate-ping"
+              style={{
+                width: Math.random() * 8 + 4,
+                height: Math.random() * 8 + 4,
+                background: ["#0D9488", "#F59E0B", "#8B5CF6", "#EC4899", "#3B82F6"][i % 5],
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animationDelay: `${Math.random() * 2}s`,
+                animationDuration: `${Math.random() * 2 + 1}s`,
+                opacity: 0.7,
+              }}
+            />
+          ))}
+        </div>
+
+        <div style={{
+          textAlign: "center", maxWidth: 420, width: "90%", padding: "48px 28px",
+          background: "white", borderRadius: 28, position: "relative",
+          boxShadow: "0 25px 60px rgba(0,0,0,0.2)",
+        }} className="animate-scale-in">
+          <div style={{ fontSize: 72, marginBottom: 8, lineHeight: 1 }}>🎉</div>
+          <h1 style={{ fontSize: 32, fontWeight: 800, color: "#1C1917", marginBottom: 4, fontFamily: "'DM Sans', sans-serif" }}>
+            Nailed it!
           </h1>
-          <p style={{ fontSize: 16, color: "#78716C", marginBottom: 8, fontFamily: "'DM Sans', sans-serif" }}>
+          <p style={{ fontSize: 16, color: "#0D9488", fontWeight: 600, marginBottom: 4, fontFamily: "'DM Sans', sans-serif" }}>
             {episode.title}
           </p>
-          <p style={{ fontSize: 13, color: "#A8A29E", marginBottom: 32, fontFamily: "'DM Sans', sans-serif" }}>
-            Core Path done • {navBlocks.length} sections completed
+          <p style={{ fontSize: 13, color: "#A8A29E", marginBottom: 28, fontFamily: "'DM Sans', sans-serif" }}>
+            {navBlocks.length} sections completed ✨
           </p>
 
           {/* Stat gains */}
-          <div style={{ display: "flex", justifyContent: "center", gap: 24, marginBottom: 40 }}>
+          <div style={{ display: "flex", justifyContent: "center", gap: 20, marginBottom: 32 }}>
             {[
               { icon: "👁️", label: "Clarity", value: "+3%" },
               { icon: "🧠", label: "Thinking", value: "+2%" },
               { icon: "🎯", label: "Focus", value: "+4%" },
             ].map(d => (
-              <div key={d.label} style={{ textAlign: "center" }}>
-                <div style={{ fontSize: 28, marginBottom: 4 }}>{d.icon}</div>
+              <div key={d.label} style={{
+                textAlign: "center", background: "#F0FDFA", borderRadius: 16, padding: "12px 16px",
+              }}>
+                <div style={{ fontSize: 24, marginBottom: 2 }}>{d.icon}</div>
                 <div style={{ fontSize: 18, fontWeight: 700, color: "#0D9488", fontFamily: "'DM Sans', sans-serif" }}>{d.value}</div>
-                <div style={{ fontSize: 11, color: "#78716C", fontFamily: "'DM Sans', sans-serif" }}>{d.label}</div>
+                <div style={{ fontSize: 10, color: "#78716C", fontFamily: "'DM Sans', sans-serif" }}>{d.label}</div>
               </div>
             ))}
           </div>
 
           {/* Challenge buttons */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 24 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
             <button onClick={() => { setShowCompletion(false); setShowDefense(true); }} style={{
-              background: "white", border: "2px solid #E7E5E4", borderRadius: 14,
-              padding: 20, textAlign: "center", cursor: "pointer",
+              background: "#F9FAFB", border: "2px solid #E7E5E4", borderRadius: 14,
+              padding: 16, textAlign: "center", cursor: "pointer",
             }}>
-              <div style={{ fontSize: 24, marginBottom: 8 }}>🎓</div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "#1C1917", fontFamily: "'DM Sans', sans-serif" }}>Defend it</div>
-              <div style={{ fontSize: 11, color: "#78716C", fontFamily: "'DM Sans', sans-serif" }}>Debate · 5 min</div>
+              <div style={{ fontSize: 22, marginBottom: 4 }}>🎓</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#1C1917", fontFamily: "'DM Sans', sans-serif" }}>Defend it</div>
+              <div style={{ fontSize: 10, color: "#78716C", fontFamily: "'DM Sans', sans-serif" }}>Debate · 5 min</div>
             </button>
             <button onClick={() => { setShowCompletion(false); setShowFirstPrinciples(true); }} style={{
-              background: "white", border: "2px solid #E7E5E4", borderRadius: 14,
-              padding: 20, textAlign: "center", cursor: "pointer",
+              background: "#F9FAFB", border: "2px solid #E7E5E4", borderRadius: 14,
+              padding: 16, textAlign: "center", cursor: "pointer",
             }}>
-              <div style={{ fontSize: 24, marginBottom: 8 }}>💡</div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "#1C1917", fontFamily: "'DM Sans', sans-serif" }}>Break it down</div>
-              <div style={{ fontSize: 11, color: "#78716C", fontFamily: "'DM Sans', sans-serif" }}>First principles · 10 min</div>
+              <div style={{ fontSize: 22, marginBottom: 4 }}>💡</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#1C1917", fontFamily: "'DM Sans', sans-serif" }}>Break it down</div>
+              <div style={{ fontSize: 10, color: "#78716C", fontFamily: "'DM Sans', sans-serif" }}>First principles · 10 min</div>
             </button>
           </div>
 
@@ -383,9 +441,10 @@ const TextbookEpisode = () => {
             <button
               onClick={() => { navigate(`/student/textbook/${chapterId}/${nextEpisode.id}`); }}
               style={{
-                width: "100%", padding: "14px 32px", borderRadius: 12, border: "none",
-                background: "#0D9488", color: "white", fontSize: 15, fontWeight: 700,
+                width: "100%", padding: "14px 32px", borderRadius: 14, border: "none",
+                background: "linear-gradient(135deg, #0D9488, #14B8A6)", color: "white", fontSize: 15, fontWeight: 700,
                 cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+                boxShadow: "0 4px 14px rgba(13,148,136,0.4)",
               }}
             >
               Next: {nextEpisode.title} →
@@ -394,10 +453,11 @@ const TextbookEpisode = () => {
             <button
               onClick={handleExit}
               style={{
-                width: "100%", padding: "14px 32px", borderRadius: 12, border: "none",
-                background: "#059669", color: "white", fontSize: 15, fontWeight: 700,
+                width: "100%", padding: "14px 32px", borderRadius: 14, border: "none",
+                background: "linear-gradient(135deg, #059669, #10B981)", color: "white", fontSize: 15, fontWeight: 700,
                 cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
                 display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8,
+                boxShadow: "0 4px 14px rgba(5,150,105,0.4)",
               }}
             >
               <CheckCircle2 className="h-5 w-5" /> Back to Chapter
@@ -583,10 +643,46 @@ const TextbookEpisode = () => {
         </div>
       </div>
 
-      {/* ═══ BOTTOM BAR — Fixed ═══ */}
+      {/* ═══ "Did you understand?" confirm popover ═══ */}
+      {showUnderstandConfirm && (
+        <div style={{
+          position: "absolute", bottom: 72, left: "50%", transform: "translateX(-50%)",
+          background: "white", borderRadius: 16, padding: "16px 20px", textAlign: "center",
+          boxShadow: "0 8px 30px rgba(0,0,0,0.15)", border: "1px solid #E7E5E4",
+          zIndex: 55, width: 280,
+        }}>
+          <p style={{ fontSize: 14, fontWeight: 600, color: "#1C1917", marginBottom: 12, fontFamily: "'DM Sans', sans-serif" }}>
+            Did you understand this? 🤔
+          </p>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button
+              onClick={() => { setShowUnderstandConfirm(false); markBlockInteracted(activeBlock); toggleUnderstood(activeBlock); }}
+              style={{
+                flex: 1, padding: "10px 0", borderRadius: 10, border: "none",
+                background: "#0D9488", color: "white", fontSize: 13, fontWeight: 700,
+                cursor: "pointer",
+              }}
+            >
+              Yes, got it! ✓
+            </button>
+            <button
+              onClick={() => setShowUnderstandConfirm(false)}
+              style={{
+                flex: 1, padding: "10px 0", borderRadius: 10, border: "1px solid #E7E5E4",
+                background: "white", color: "#78716C", fontSize: 13, fontWeight: 600,
+                cursor: "pointer",
+              }}
+            >
+              Not yet
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ═══ BOTTOM BAR — Fixed (with right padding for chatbot) ═══ */}
       <div style={{
         position: "absolute", bottom: 0, left: 0, right: 0,
-        padding: "12px 16px", background: "white", borderTop: "1px solid #E7E5E4",
+        padding: "12px 16px", paddingRight: 80, background: "white", borderTop: "1px solid #E7E5E4",
         display: "flex", alignItems: "center", justifyContent: "space-between",
         boxShadow: "0 -2px 10px rgba(0,0,0,0.04)",
       }}>
@@ -666,16 +762,17 @@ const TextbookEpisode = () => {
           <button
             onClick={() => toggleUnderstood(activeBlock)}
             style={{
-              padding: "8px 14px", borderRadius: 8,
-              border: isUnderstood ? "1.5px solid #0D9488" : "1px solid #E7E5E4",
+              padding: "8px 14px", borderRadius: 10,
+              border: isUnderstood ? "2px solid #0D9488" : "1px solid #E7E5E4",
               background: isUnderstood ? "#F0FDFA" : "white",
               fontSize: 13, fontWeight: 600,
               color: isUnderstood ? "#0D9488" : "#78716C",
               cursor: "pointer", display: "flex", alignItems: "center", gap: 4,
+              transition: "all 0.2s",
             }}
           >
             <CheckCircle2 className="h-4 w-4" style={{ fill: isUnderstood ? "#0D9488" : "none" }} />
-            {isUnderstood ? "✓" : "Got it!"}
+            {isUnderstood ? "Nailed it ✓" : "Got it!"}
           </button>
 
           {!isLastBlock ? (
@@ -683,11 +780,12 @@ const TextbookEpisode = () => {
               disabled={!isUnderstood}
               onClick={() => goToBlock(activeBlock + 1)}
               style={{
-                padding: "8px 18px", borderRadius: 8, border: "none",
-                background: isUnderstood ? "#0D9488" : "#D6D3D1",
+                padding: "8px 18px", borderRadius: 10, border: "none",
+                background: isUnderstood ? "linear-gradient(135deg, #0D9488, #14B8A6)" : "#D6D3D1",
                 fontSize: 13, fontWeight: 700, color: isUnderstood ? "white" : "#A8A29E",
                 cursor: isUnderstood ? "pointer" : "not-allowed",
                 transition: "all 0.2s",
+                boxShadow: isUnderstood ? "0 2px 8px rgba(13,148,136,0.3)" : "none",
               }}
             >
               Continue →
@@ -697,11 +795,12 @@ const TextbookEpisode = () => {
               disabled={!isUnderstood}
               onClick={handleFinish}
               style={{
-                padding: "8px 18px", borderRadius: 8, border: "none",
-                background: isUnderstood ? "#059669" : "#D6D3D1",
+                padding: "8px 18px", borderRadius: 10, border: "none",
+                background: isUnderstood ? "linear-gradient(135deg, #059669, #10B981)" : "#D6D3D1",
                 fontSize: 13, fontWeight: 700, color: isUnderstood ? "white" : "#A8A29E",
                 cursor: isUnderstood ? "pointer" : "not-allowed",
                 transition: "all 0.2s",
+                boxShadow: isUnderstood ? "0 2px 8px rgba(5,150,105,0.3)" : "none",
               }}
             >
               Finish ✓

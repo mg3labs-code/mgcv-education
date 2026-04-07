@@ -1,45 +1,62 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ConceptContent, RecallContent, ExplainContent, AssessmentContent, ExerciseContent } from "@/data/textbookData";
 import { Button } from "@/components/ui/button";
-import { GripHorizontal, Mic, PenLine, RotateCcw } from "lucide-react";
+import { GripHorizontal, Mic, PenLine, RotateCcw, ChevronDown, ChevronUp } from "lucide-react";
 import VoiceExplainWidget from "@/components/textbook/VoiceExplainWidget";
 import InlineMedia from "@/components/textbook/InlineMedia";
 
 // ─── Concept Block ──────────────────────────────────────────
 
-export const ConceptBlock = ({ content }: { content: ConceptContent }) => (
-  <div className="space-y-5">
-    {content.sections.map((s, i) => (
-      <div key={i}>
-        <h4 className="font-semibold text-foreground text-[1.1rem] mb-2">{s.heading}</h4>
-        <div className="text-[0.95rem] text-muted-foreground leading-[1.8] whitespace-pre-line">{s.body}</div>
-      </div>
-    ))}
-    {content.keyFormulas && content.keyFormulas.length > 0 && (
-      <div className="rounded-lg bg-muted/40 border-2 border-primary/30 p-5 text-center">
-        <h4 className="text-sm font-semibold text-primary mb-3 flex items-center justify-center gap-2">
-          🎯 Key Formulas
-        </h4>
-        <div className="space-y-1">
-          {content.keyFormulas.map((f, i) => (
-            <p key={i} className="text-lg font-mono text-foreground">{f}</p>
+export const ConceptBlock = ({ content, onComplete }: { content: ConceptContent; onComplete?: () => void }) => {
+  // Auto-complete for content-only blocks after render
+  useEffect(() => { onComplete?.(); }, []);
+
+  return (
+    <div className="space-y-5">
+      {content.sections.map((s, i) => {
+        const hasQuestion = s.body?.includes("?");
+        return (
+          <div key={i} className="rounded-xl p-4" style={{ background: i % 2 === 0 ? "hsl(var(--muted) / 0.4)" : "transparent" }}>
+            <h4 className="font-semibold text-foreground text-[1.1rem] mb-2 flex items-center gap-2">
+              <span className="w-1.5 h-6 rounded-full bg-primary inline-block" />
+              {s.heading}
+            </h4>
+            <div className={`text-[0.95rem] text-muted-foreground leading-[1.8] whitespace-pre-line ${hasQuestion ? "border-l-3 border-teal-400 pl-4 py-1 bg-teal-50/40 dark:bg-teal-950/10 rounded-r-lg" : ""}`}>
+              {s.body}
+            </div>
+          </div>
+        );
+      })}
+
+      {content.keyFormulas && content.keyFormulas.length > 0 && (
+        <div className="rounded-xl border-2 border-rose-300 dark:border-rose-700 bg-rose-50/50 dark:bg-rose-950/20 p-5 text-center">
+          <h4 className="text-sm font-bold text-rose-600 dark:text-rose-400 mb-3 flex items-center justify-center gap-2">
+            🎯 Key Formulas
+          </h4>
+          <div className="space-y-2">
+            {content.keyFormulas.map((f, i) => (
+              <p key={i} className="text-lg font-mono text-foreground bg-white/70 dark:bg-card rounded-lg py-2 px-4 inline-block">{f}</p>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {(content as any).solvedExamples && (content as any).solvedExamples.length > 0 && (
+        <div className="space-y-3">
+          <h4 className="text-sm font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-2">✍️ Solved Examples</h4>
+          {(content as any).solvedExamples.map((ex: any, i: number) => (
+            <div key={i} className="rounded-xl border-2 border-emerald-200 dark:border-emerald-800 bg-emerald-50/40 dark:bg-emerald-950/10 p-5">
+              <p className="text-sm font-semibold text-foreground mb-2">{ex.question}</p>
+              <p className="text-base text-muted-foreground leading-relaxed whitespace-pre-line">{ex.solution}</p>
+            </div>
           ))}
         </div>
-      </div>
-    )}
-    {(content as any).solvedExamples && (content as any).solvedExamples.length > 0 && (
-      <div className="space-y-3">
-        {(content as any).solvedExamples.map((ex: any, i: number) => (
-          <div key={i} className="rounded-xl bg-muted/30 border border-border p-5">
-            <p className="text-sm font-semibold text-foreground mb-1">🎯 {ex.question}</p>
-            <p className="text-base text-muted-foreground leading-relaxed whitespace-pre-line">{ex.solution}</p>
-          </div>
-        ))}
-      </div>
-    )}
-    {(content as any).media && <InlineMedia media={(content as any).media} />}
-  </div>
-);
+      )}
+
+      {(content as any).media && <InlineMedia media={(content as any).media} />}
+    </div>
+  );
+};
 
 // ─── Drag-Drop Activity Block ───────────────────────────────
 
@@ -47,7 +64,7 @@ interface DragDropItem { value: string; categories?: string[] }
 interface ActivityCategory { id: string; description: string }
 export interface ActivityContent { instruction: string; type?: string; items?: DragDropItem[]; categories?: ActivityCategory[] }
 
-const DragDropActivityBlock = ({ content }: { content: ActivityContent }) => {
+const DragDropActivityBlock = ({ content, onComplete }: { content: ActivityContent; onComplete?: () => void }) => {
   const [dragItem, setDragItem] = useState<string | null>(null);
   const [placements, setPlacements] = useState<Record<string, string[]>>({});
   const [feedback, setFeedback] = useState<Record<string, Record<string, "correct" | "wrong">>>({});
@@ -62,9 +79,13 @@ const DragDropActivityBlock = ({ content }: { content: ActivityContent }) => {
     if (!item) return;
     if (placements[categoryId]?.includes(value)) return;
     const isCorrect = item.categories?.includes(categoryId);
-    setPlacements(prev => ({ ...prev, [categoryId]: [...(prev[categoryId] || []), value] }));
+    const newPlacements = { ...placements, [categoryId]: [...(placements[categoryId] || []), value] };
+    setPlacements(newPlacements);
     setFeedback(prev => ({ ...prev, [categoryId]: { ...(prev[categoryId] || {}), [value]: isCorrect ? "correct" : "wrong" } }));
     setDragItem(null);
+    // Check if all items placed
+    const totalPlaced = Object.values(newPlacements).flat().length;
+    if (totalPlaced >= items.length) onComplete?.();
   };
   const handleReset = () => { setPlacements({}); setFeedback({}); };
   const totalPlaced = Object.values(placements).flat().length;
@@ -116,8 +137,12 @@ const DragDropActivityBlock = ({ content }: { content: ActivityContent }) => {
   );
 };
 
-const FallbackActivityBlock = ({ content }: { content: ActivityContent }) => {
+const FallbackActivityBlock = ({ content, onComplete }: { content: ActivityContent; onComplete?: () => void }) => {
   const [answers, setAnswers] = useState<Record<number, string>>({});
+  useEffect(() => {
+    const filled = Object.values(answers).filter(v => v.trim().length > 0).length;
+    if (filled > 0) onComplete?.();
+  }, [answers]);
   return (
     <div className="space-y-4">
       <div className="rounded-xl bg-primary/5 border border-primary/20 p-4">
@@ -133,15 +158,19 @@ const FallbackActivityBlock = ({ content }: { content: ActivityContent }) => {
   );
 };
 
-export const ActivityBlock = ({ content }: { content: ActivityContent }) => {
-  if (content.type === "classify" && content.categories && content.items) return <DragDropActivityBlock content={content} />;
-  return <FallbackActivityBlock content={content} />;
+export const ActivityBlock = ({ content, onComplete }: { content: ActivityContent; onComplete?: () => void }) => {
+  if (content.type === "classify" && content.categories && content.items) return <DragDropActivityBlock content={content} onComplete={onComplete} />;
+  return <FallbackActivityBlock content={content} onComplete={onComplete} />;
 };
 
 // ─── Recall Block ───────────────────────────────────────────
 
-export const RecallBlock = ({ content }: { content: RecallContent }) => {
+export const RecallBlock = ({ content, onComplete }: { content: RecallContent; onComplete?: () => void }) => {
   const [revealed, setRevealed] = useState<Record<number, boolean>>({});
+  useEffect(() => {
+    const revealedCount = Object.values(revealed).filter(Boolean).length;
+    if (revealedCount === content.questions.length) onComplete?.();
+  }, [revealed]);
   return (
     <div className="border-2 border-dashed border-amber-400 rounded-lg p-5 bg-amber-50/50 dark:bg-amber-950/10">
       <h4 className="text-amber-600 dark:text-amber-400 font-semibold mb-4 flex items-center gap-2">🧠 Quick Check</h4>
@@ -161,10 +190,13 @@ export const RecallBlock = ({ content }: { content: RecallContent }) => {
 
 // ─── Explain Block ──────────────────────────────────────────
 
-export const ExplainBlock = ({ content }: { content: ExplainContent }) => {
+export const ExplainBlock = ({ content, onComplete }: { content: ExplainContent; onComplete?: () => void }) => {
   const [text, setText] = useState("");
   const [mode, setMode] = useState<"text" | "voice">("voice");
   const wordCount = text.trim().split(/\s+/).filter(Boolean).length;
+  useEffect(() => {
+    if (wordCount >= 5) onComplete?.();
+  }, [wordCount]);
   return (
     <div className="space-y-4">
       <div className="rounded-xl bg-primary/5 border border-primary/20 p-4">
@@ -205,11 +237,15 @@ export const ExplainBlock = ({ content }: { content: ExplainContent }) => {
 
 // ─── Assessment Block ───────────────────────────────────────
 
-export const AssessmentBlock = ({ content }: { content: AssessmentContent }) => {
+export const AssessmentBlock = ({ content, onComplete }: { content: AssessmentContent; onComplete?: () => void }) => {
   const [selected, setSelected] = useState<Record<number, number>>({});
   const [submitted, setSubmitted] = useState<Record<number, boolean>>({});
   const handleSelect = (qi: number, oi: number) => { if (submitted[qi]) return; setSelected({ ...selected, [qi]: oi }); };
-  const handleSubmit = (qi: number) => { setSubmitted({ ...submitted, [qi]: true }); };
+  const handleSubmit = (qi: number) => {
+    const newSubmitted = { ...submitted, [qi]: true };
+    setSubmitted(newSubmitted);
+    if (Object.keys(newSubmitted).length === content.questions.length) onComplete?.();
+  };
   return (
     <div className="space-y-5">
       {content.questions.map((q, qi) => {
@@ -248,25 +284,91 @@ export const AssessmentBlock = ({ content }: { content: AssessmentContent }) => 
 
 // ─── Exercise Block ─────────────────────────────────────────
 
-export const ExerciseBlock = ({ content }: { content: ExerciseContent }) => {
+export const ExerciseBlock = ({ content, onComplete }: { content: ExerciseContent; onComplete?: () => void }) => {
   const [showAnswer, setShowAnswer] = useState<Record<number, boolean>>({});
+  const [tfAnswers, setTfAnswers] = useState<Record<number, string>>({});
+
+  // Detect True/False problems
+  const isTrueFalse = (text: string) => {
+    const lower = text.toLowerCase();
+    return lower.includes("true or false") || lower.includes("true/false") || lower.includes("(true/false)") || lower.includes("state whether");
+  };
+
+  const handleReveal = (i: number) => {
+    const next = { ...showAnswer, [i]: true };
+    setShowAnswer(next);
+    const revealedCount = Object.values(next).filter(Boolean).length;
+    if (revealedCount === content.problems.length) onComplete?.();
+  };
+
+  const handleTfSelect = (i: number, val: string) => {
+    const next = { ...tfAnswers, [i]: val };
+    setTfAnswers(next);
+    // Auto-reveal after selection
+    setTimeout(() => handleReveal(i), 600);
+  };
+
   return (
     <div className="space-y-3">
       <div className="border-l-4 border-blue-500 bg-blue-50/60 dark:bg-blue-950/20 rounded-r-lg px-4 py-3 text-sm text-muted-foreground">📖 {content.source}</div>
-      {content.problems.map((p, i) => (
-        <div key={i} className="bg-white dark:bg-card rounded-lg border-l-3 border-green-500 p-4 cursor-pointer" onClick={() => !showAnswer[i] && setShowAnswer({ ...showAnswer, [i]: true })}>
-          <p className="text-[0.95rem] text-foreground leading-[1.8]"><span className="font-semibold">{p.number}.</span> {p.text}</p>
-          {p.answer && (
-            <div className="mt-2">
-              {showAnswer[i] ? (
-                <div className="rounded-md bg-green-100 dark:bg-green-950/30 p-3 text-[0.95rem] text-green-800 dark:text-green-300">✓ Answer: {p.answer}</div>
-              ) : (
-                <p className="text-xs text-muted-foreground mt-1">Click to reveal answer</p>
-              )}
-            </div>
-          )}
-        </div>
-      ))}
+      {content.problems.map((p, i) => {
+        const isTF = isTrueFalse(p.text);
+        const answered = tfAnswers[i] !== undefined;
+        const correctAnswer = p.answer?.toLowerCase().includes("true") ? "true" : p.answer?.toLowerCase().includes("false") ? "false" : null;
+
+        return (
+          <div key={i} className="bg-white dark:bg-card rounded-xl border shadow-sm p-4">
+            <p className="text-[0.95rem] text-foreground leading-[1.8] mb-3">
+              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold mr-2">{p.number || i + 1}</span>
+              {p.text}
+            </p>
+
+            {isTF && !showAnswer[i] ? (
+              <div className="flex gap-3 mt-2">
+                <button
+                  onClick={() => handleTfSelect(i, "true")}
+                  className={`flex-1 py-3 rounded-xl font-semibold text-sm border-2 transition-all ${
+                    tfAnswers[i] === "true"
+                      ? correctAnswer === "true"
+                        ? "border-green-500 bg-green-50 text-green-700"
+                        : "border-red-500 bg-red-50 text-red-700"
+                      : "border-border bg-muted/30 text-foreground hover:border-emerald-400 hover:bg-emerald-50/50"
+                  }`}
+                >
+                  ✅ True
+                </button>
+                <button
+                  onClick={() => handleTfSelect(i, "false")}
+                  className={`flex-1 py-3 rounded-xl font-semibold text-sm border-2 transition-all ${
+                    tfAnswers[i] === "false"
+                      ? correctAnswer === "false"
+                        ? "border-green-500 bg-green-50 text-green-700"
+                        : "border-red-500 bg-red-50 text-red-700"
+                      : "border-border bg-muted/30 text-foreground hover:border-rose-400 hover:bg-rose-50/50"
+                  }`}
+                >
+                  ❌ False
+                </button>
+              </div>
+            ) : p.answer ? (
+              <div className="mt-2">
+                {showAnswer[i] ? (
+                  <div className="rounded-lg bg-green-100 dark:bg-green-950/30 p-3 text-[0.95rem] text-green-800 dark:text-green-300 border border-green-200 dark:border-green-800">
+                    ✓ Answer: {p.answer}
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => handleReveal(i)}
+                    className="text-sm text-primary font-medium hover:underline flex items-center gap-1"
+                  >
+                    <ChevronDown className="h-3.5 w-3.5" /> Click to reveal answer
+                  </button>
+                )}
+              </div>
+            ) : null}
+          </div>
+        );
+      })}
     </div>
   );
 };
@@ -305,16 +407,16 @@ export const layerMeta: Record<string, { border: string; bg: string; badge?: str
   activity:    { border: "border-l-rose-500",    bg: "",  badge: "🎮 Play",         badgeColor: "bg-rose-500 text-white", dotColor: "bg-rose-500" },
   recall:      { border: "border-l-amber-500",   bg: "",  badge: "🧩 Challenge",    badgeColor: "bg-amber-500 text-white", dotColor: "bg-amber-500" },
   explain:     { border: "border-l-purple-500",  bg: "",  badge: "🗣️ Your Turn",    badgeColor: "bg-purple-500 text-white", dotColor: "bg-purple-500" },
-  assessment:  { border: "border-l-emerald-500", bg: "",  badge: "🏆 Quiz Time",    badgeColor: "bg-emerald-500 text-white", dotColor: "bg-emerald-500" },
-  exercise:    { border: "border-l-cyan-500",    bg: "",  badge: "💪 Workout",      badgeColor: "bg-cyan-600 text-white", dotColor: "bg-cyan-500" },
-  reasoning:   { border: "border-l-amber-600",   bg: "",  badge: "🤔 Think Deeper", badgeColor: "bg-amber-600 text-white", dotColor: "bg-amber-600" },
-  assumptions: { border: "border-l-sky-500",     bg: "",  badge: "🕵️ Investigate",  badgeColor: "bg-sky-500 text-white", dotColor: "bg-sky-500" },
-  connections: { border: "border-l-emerald-600", bg: "",  badge: "🌐 Connect",      badgeColor: "bg-emerald-600 text-white", dotColor: "bg-emerald-600" },
-  application: { border: "border-l-orange-500",  bg: "",  badge: "🚀 Apply",        badgeColor: "bg-orange-500 text-white", dotColor: "bg-orange-500" },
-  implications:{ border: "border-l-indigo-500",  bg: "",  badge: "🔮 Imagine",      badgeColor: "bg-indigo-500 text-white", dotColor: "bg-indigo-500" },
-  visual_aid:  { border: "border-l-pink-500",    bg: "",  badge: "🖼️ Visual",     badgeColor: "bg-pink-500 text-white", dotColor: "bg-pink-500" },
-  bilingual_concept: { border: "border-l-blue-600",    bg: "",  badge: "📖 Read",       badgeColor: "bg-blue-500 text-white", dotColor: "bg-blue-600" },
-  story_reading:     { border: "border-l-rose-500",    bg: "",  badge: "📚 Story",      badgeColor: "bg-rose-500 text-white", dotColor: "bg-rose-500" },
-  vocabulary:        { border: "border-l-amber-500",   bg: "",  badge: "🔤 Words",      badgeColor: "bg-amber-500 text-white", dotColor: "bg-amber-500" },
-  grammar_pattern:   { border: "border-l-emerald-500", bg: "",  badge: "🧩 Grammar",    badgeColor: "bg-emerald-500 text-white", dotColor: "bg-emerald-500" },
+  assessment:  { border: "border-l-green-600",   bg: "",  badge: "✅ Prove It",      badgeColor: "bg-green-600 text-white", dotColor: "bg-green-600" },
+  exercise:    { border: "border-l-indigo-500",  bg: "",  badge: "📝 Practice",     badgeColor: "bg-indigo-500 text-white", dotColor: "bg-indigo-500" },
+  reasoning:   { border: "border-l-orange-500",  bg: "",  badge: "🧪 Deep Dive",    badgeColor: "bg-orange-500 text-white", dotColor: "bg-orange-500" },
+  assumptions: { border: "border-l-red-500",     bg: "",  badge: "🔥 Challenge",    badgeColor: "bg-red-500 text-white", dotColor: "bg-red-500" },
+  connections: { border: "border-l-cyan-500",    bg: "",  badge: "🌐 Connect",      badgeColor: "bg-cyan-500 text-white", dotColor: "bg-cyan-500" },
+  application: { border: "border-l-emerald-500", bg: "",  badge: "🛠️ Apply",        badgeColor: "bg-emerald-500 text-white", dotColor: "bg-emerald-500" },
+  implications:{ border: "border-l-violet-500",  bg: "",  badge: "💡 Impact",       badgeColor: "bg-violet-500 text-white", dotColor: "bg-violet-500" },
+  visual_aid:  { border: "border-l-pink-500",    bg: "",  badge: "👁️ Visual",       badgeColor: "bg-pink-500 text-white", dotColor: "bg-pink-500" },
+  bilingual_concept: { border: "border-l-teal-500", bg: "", badge: "📖 Read", badgeColor: "bg-teal-500 text-white", dotColor: "bg-teal-500" },
+  story_reading: { border: "border-l-amber-600", bg: "", badge: "📚 Story", badgeColor: "bg-amber-600 text-white", dotColor: "bg-amber-600" },
+  vocabulary:  { border: "border-l-sky-500",     bg: "",  badge: "📝 Words",        badgeColor: "bg-sky-500 text-white", dotColor: "bg-sky-500" },
+  grammar_pattern: { border: "border-l-fuchsia-500", bg: "", badge: "🔤 Grammar", badgeColor: "bg-fuchsia-500 text-white", dotColor: "bg-fuchsia-500" },
 };
