@@ -121,7 +121,16 @@ const TextbookEpisode = () => {
     });
   }, []);
 
-  const INTERACTIVE_TYPES = new Set(["activity", "recall", "explain", "assessment", "exercise"]);
+  const { data: chapter, isLoading: chapterLoading } = useChapterEpisodes(chapterId);
+  const { data: dbBlocks, isLoading: blocksLoading } = useEpisodeBlocks(chapterId, episodeId);
+
+  const episode = chapter?.episodes.find((e) => e.id === episodeId);
+  const allBlocks = dbBlocks && dbBlocks.length > 0 ? dbBlocks : (episode?.blocks || []);
+
+  // Filter out visual_aid blocks from navigation — they render inline with their preceding block
+  const navBlocks = useMemo(() => allBlocks.filter(b => b.type !== "visual_aid"), [allBlocks]);
+
+  const INTERACTIVE_TYPES = useMemo(() => new Set(["activity", "recall", "explain", "assessment", "exercise"]), []);
 
   const toggleUnderstood = useCallback((index: number) => {
     const block = navBlocks[index];
@@ -146,16 +155,7 @@ const TextbookEpisode = () => {
       persistUnderstood(next);
       return next;
     });
-  }, [persistUnderstood, navBlocks, blockCompleted, showUnderstandConfirm]);
-
-  const { data: chapter, isLoading: chapterLoading } = useChapterEpisodes(chapterId);
-  const { data: dbBlocks, isLoading: blocksLoading } = useEpisodeBlocks(chapterId, episodeId);
-
-  const episode = chapter?.episodes.find((e) => e.id === episodeId);
-  const allBlocks = dbBlocks && dbBlocks.length > 0 ? dbBlocks : (episode?.blocks || []);
-
-  // Filter out visual_aid blocks from navigation — they render inline with their preceding block
-  const navBlocks = useMemo(() => allBlocks.filter(b => b.type !== "visual_aid"), [allBlocks]);
+  }, [persistUnderstood, navBlocks, blockCompleted, showUnderstandConfirm, INTERACTIVE_TYPES]);
 
   // Map: navBlock index → array of visual_aid blocks that follow it in the original array
   const attachedVisuals = useMemo(() => {
