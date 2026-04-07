@@ -591,35 +591,7 @@ const TextbookEpisode = () => {
         </div>
       </div>
 
-      {/* ═══ "Did you understand?" confirm popover ═══ */}
-      {showUnderstandConfirm && (
-        <div style={{
-          position: "absolute", bottom: 80, left: "50%", transform: "translateX(-50%)",
-          background: "white", borderRadius: 16, padding: "16px 20px", textAlign: "center",
-          boxShadow: "0 8px 30px rgba(0,0,0,0.15)", border: "1px solid #E7E5E4",
-          zIndex: 55, width: 280,
-        }}>
-          <p style={{ fontSize: 14, fontWeight: 600, color: "#1C1917", marginBottom: 12 }}>
-            Did you understand this? 🤔
-          </p>
-          <div style={{ display: "flex", gap: 8 }}>
-            <button
-              onClick={() => { setShowUnderstandConfirm(false); markBlockInteracted(activeBlock); toggleUnderstood(activeBlock); }}
-              style={{
-                flex: 1, padding: "10px 0", borderRadius: 10, border: "none",
-                background: "#0D9488", color: "white", fontSize: 13, fontWeight: 700, cursor: "pointer",
-              }}
-            >Yes, got it! ✓</button>
-            <button
-              onClick={() => setShowUnderstandConfirm(false)}
-              style={{
-                flex: 1, padding: "10px 0", borderRadius: 10, border: "1px solid #E7E5E4",
-                background: "white", color: "#78716C", fontSize: 13, fontWeight: 600, cursor: "pointer",
-              }}
-            >Not yet</button>
-          </div>
-        </div>
-      )}
+      {/* "Did you understand?" is now rendered inline inside content area — see below */}
 
       {/* ═══ BOTTOM BAR (right padding to avoid chatbot FAB) ═══ */}
       <div style={{
