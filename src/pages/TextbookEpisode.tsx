@@ -113,14 +113,40 @@ const TextbookEpisode = () => {
     }, 500);
   }, [user, chapterId, episodeId]);
 
+  const markBlockInteracted = useCallback((index: number) => {
+    setBlockCompleted(prev => {
+      const next = new Set(prev);
+      next.add(index);
+      return next;
+    });
+  }, []);
+
+  const INTERACTIVE_TYPES = new Set(["activity", "recall", "explain", "assessment", "exercise"]);
+
   const toggleUnderstood = useCallback((index: number) => {
+    const block = navBlocks[index];
+    const isInteractive = block && INTERACTIVE_TYPES.has(block.type);
+
+    // For interactive blocks, require completion first
+    if (isInteractive && !blockCompleted.has(index)) {
+      toast.error("Complete the activity first before marking as understood! 🎯");
+      return;
+    }
+
+    // For content-only blocks, show confirm dialog
+    if (!isInteractive && !blockCompleted.has(index) && !showUnderstandConfirm) {
+      setShowUnderstandConfirm(true);
+      return;
+    }
+
+    setShowUnderstandConfirm(false);
     setUnderstoodBlocks(prev => {
       const next = new Set(prev);
       if (next.has(index)) next.delete(index); else next.add(index);
       persistUnderstood(next);
       return next;
     });
-  }, [persistUnderstood]);
+  }, [persistUnderstood, navBlocks, blockCompleted, showUnderstandConfirm]);
 
   const { data: chapter, isLoading: chapterLoading } = useChapterEpisodes(chapterId);
   const { data: dbBlocks, isLoading: blocksLoading } = useEpisodeBlocks(chapterId, episodeId);
