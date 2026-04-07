@@ -259,6 +259,8 @@ const TextbookEpisode = () => {
     );
   }
 
+  const onBlockComplete = useCallback(() => markBlockInteracted(activeBlock), [markBlockInteracted, activeBlock]);
+
   const renderBlock = (block: ContentBlock) => {
     switch (block.type) {
       case "bilingual_concept": return <BilingualConceptBlock content={block.content as any} subjectName={langSubject || "Telugu"} />;
@@ -271,9 +273,9 @@ const TextbookEpisode = () => {
       switch (block.type) {
         case "concept": return <BilingualConceptBlock content={block.content as any} subjectName={langSubject} />;
         case "activity": return <VocabularyCardBlock content={block.content as any} subjectName={langSubject} />;
-        case "recall": return <RecallBlock content={block.content as RecallContent} />;
-        case "explain": return <ExplainBlock content={block.content as ExplainContent} />;
-        case "assessment": return <AssessmentBlock content={block.content as AssessmentContent} />;
+        case "recall": return <RecallBlock content={block.content as RecallContent} onComplete={onBlockComplete} />;
+        case "explain": return <ExplainBlock content={block.content as ExplainContent} onComplete={onBlockComplete} />;
+        case "assessment": return <AssessmentBlock content={block.content as AssessmentContent} onComplete={onBlockComplete} />;
         case "exercise": return <GrammarPatternBlock content={block.content as any} />;
         case "reasoning": return <StoryReadingBlock content={block.content as any} subjectName={langSubject} />;
         case "assumptions": return <AssumptionsBlock content={block.content as AssumptionsContent} onStartDefense={() => setShowDefense(true)} />;
@@ -284,12 +286,12 @@ const TextbookEpisode = () => {
       }
     }
     switch (block.type) {
-      case "concept": return <ConceptBlock content={block.content as ConceptContent} />;
-      case "activity": return <ActivityBlock content={block.content as ActivityContent} />;
-      case "recall": return <RecallBlock content={block.content as RecallContent} />;
-      case "explain": return <ExplainBlock content={block.content as ExplainContent} />;
-      case "assessment": return <AssessmentBlock content={block.content as AssessmentContent} />;
-      case "exercise": return <ExerciseBlock content={block.content as ExerciseContent} />;
+      case "concept": return <ConceptBlock content={block.content as ConceptContent} onComplete={onBlockComplete} />;
+      case "activity": return <ActivityBlock content={block.content as ActivityContent} onComplete={onBlockComplete} />;
+      case "recall": return <RecallBlock content={block.content as RecallContent} onComplete={onBlockComplete} />;
+      case "explain": return <ExplainBlock content={block.content as ExplainContent} onComplete={onBlockComplete} />;
+      case "assessment": return <AssessmentBlock content={block.content as AssessmentContent} onComplete={onBlockComplete} />;
+      case "exercise": return <ExerciseBlock content={block.content as ExerciseContent} onComplete={onBlockComplete} />;
       case "reasoning": return <ReasoningBlock content={block.content as ReasoningContent} />;
       case "assumptions": return <AssumptionsBlock content={block.content as AssumptionsContent} onStartDefense={() => setShowDefense(true)} />;
       case "connections": return <ConnectionsBlock content={block.content as ConnectionsContent} />;
@@ -356,54 +358,80 @@ const TextbookEpisode = () => {
     );
   }
 
-  // ═══ COMPLETION SCREEN ═══
+  // ═══ COMPLETION SCREEN — Centered Celebration ═══
   if (showCompletion) {
     return (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center" style={{ background: "#F9FAFB" }}>
-        <div style={{ textAlign: "center", maxWidth: 420, width: "90%", padding: "40px 20px" }}>
-          <div style={{ fontSize: 56, marginBottom: 16 }}>✅</div>
-          <h1 style={{ fontSize: 28, fontWeight: 700, color: "#1C1917", marginBottom: 8, fontFamily: "'DM Sans', sans-serif" }}>
-            Lesson Complete!
+      <div className="fixed inset-0 z-[100] flex items-center justify-center" style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)" }}>
+        {/* Sparkle particles */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {Array.from({ length: 20 }).map((_, i) => (
+            <div
+              key={i}
+              className="absolute rounded-full animate-ping"
+              style={{
+                width: Math.random() * 8 + 4,
+                height: Math.random() * 8 + 4,
+                background: ["#0D9488", "#F59E0B", "#8B5CF6", "#EC4899", "#3B82F6"][i % 5],
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animationDelay: `${Math.random() * 2}s`,
+                animationDuration: `${Math.random() * 2 + 1}s`,
+                opacity: 0.7,
+              }}
+            />
+          ))}
+        </div>
+
+        <div style={{
+          textAlign: "center", maxWidth: 420, width: "90%", padding: "48px 28px",
+          background: "white", borderRadius: 28, position: "relative",
+          boxShadow: "0 25px 60px rgba(0,0,0,0.2)",
+        }} className="animate-scale-in">
+          <div style={{ fontSize: 72, marginBottom: 8, lineHeight: 1 }}>🎉</div>
+          <h1 style={{ fontSize: 32, fontWeight: 800, color: "#1C1917", marginBottom: 4, fontFamily: "'DM Sans', sans-serif" }}>
+            Nailed it!
           </h1>
-          <p style={{ fontSize: 16, color: "#78716C", marginBottom: 8, fontFamily: "'DM Sans', sans-serif" }}>
+          <p style={{ fontSize: 16, color: "#0D9488", fontWeight: 600, marginBottom: 4, fontFamily: "'DM Sans', sans-serif" }}>
             {episode.title}
           </p>
-          <p style={{ fontSize: 13, color: "#A8A29E", marginBottom: 32, fontFamily: "'DM Sans', sans-serif" }}>
-            Core Path done • {navBlocks.length} sections completed
+          <p style={{ fontSize: 13, color: "#A8A29E", marginBottom: 28, fontFamily: "'DM Sans', sans-serif" }}>
+            {navBlocks.length} sections completed ✨
           </p>
 
           {/* Stat gains */}
-          <div style={{ display: "flex", justifyContent: "center", gap: 24, marginBottom: 40 }}>
+          <div style={{ display: "flex", justifyContent: "center", gap: 20, marginBottom: 32 }}>
             {[
               { icon: "👁️", label: "Clarity", value: "+3%" },
               { icon: "🧠", label: "Thinking", value: "+2%" },
               { icon: "🎯", label: "Focus", value: "+4%" },
             ].map(d => (
-              <div key={d.label} style={{ textAlign: "center" }}>
-                <div style={{ fontSize: 28, marginBottom: 4 }}>{d.icon}</div>
+              <div key={d.label} style={{
+                textAlign: "center", background: "#F0FDFA", borderRadius: 16, padding: "12px 16px",
+              }}>
+                <div style={{ fontSize: 24, marginBottom: 2 }}>{d.icon}</div>
                 <div style={{ fontSize: 18, fontWeight: 700, color: "#0D9488", fontFamily: "'DM Sans', sans-serif" }}>{d.value}</div>
-                <div style={{ fontSize: 11, color: "#78716C", fontFamily: "'DM Sans', sans-serif" }}>{d.label}</div>
+                <div style={{ fontSize: 10, color: "#78716C", fontFamily: "'DM Sans', sans-serif" }}>{d.label}</div>
               </div>
             ))}
           </div>
 
           {/* Challenge buttons */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 24 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
             <button onClick={() => { setShowCompletion(false); setShowDefense(true); }} style={{
-              background: "white", border: "2px solid #E7E5E4", borderRadius: 14,
-              padding: 20, textAlign: "center", cursor: "pointer",
+              background: "#F9FAFB", border: "2px solid #E7E5E4", borderRadius: 14,
+              padding: 16, textAlign: "center", cursor: "pointer",
             }}>
-              <div style={{ fontSize: 24, marginBottom: 8 }}>🎓</div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "#1C1917", fontFamily: "'DM Sans', sans-serif" }}>Defend it</div>
-              <div style={{ fontSize: 11, color: "#78716C", fontFamily: "'DM Sans', sans-serif" }}>Debate · 5 min</div>
+              <div style={{ fontSize: 22, marginBottom: 4 }}>🎓</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#1C1917", fontFamily: "'DM Sans', sans-serif" }}>Defend it</div>
+              <div style={{ fontSize: 10, color: "#78716C", fontFamily: "'DM Sans', sans-serif" }}>Debate · 5 min</div>
             </button>
             <button onClick={() => { setShowCompletion(false); setShowFirstPrinciples(true); }} style={{
-              background: "white", border: "2px solid #E7E5E4", borderRadius: 14,
-              padding: 20, textAlign: "center", cursor: "pointer",
+              background: "#F9FAFB", border: "2px solid #E7E5E4", borderRadius: 14,
+              padding: 16, textAlign: "center", cursor: "pointer",
             }}>
-              <div style={{ fontSize: 24, marginBottom: 8 }}>💡</div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "#1C1917", fontFamily: "'DM Sans', sans-serif" }}>Break it down</div>
-              <div style={{ fontSize: 11, color: "#78716C", fontFamily: "'DM Sans', sans-serif" }}>First principles · 10 min</div>
+              <div style={{ fontSize: 22, marginBottom: 4 }}>💡</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#1C1917", fontFamily: "'DM Sans', sans-serif" }}>Break it down</div>
+              <div style={{ fontSize: 10, color: "#78716C", fontFamily: "'DM Sans', sans-serif" }}>First principles · 10 min</div>
             </button>
           </div>
 
@@ -412,9 +440,10 @@ const TextbookEpisode = () => {
             <button
               onClick={() => { navigate(`/student/textbook/${chapterId}/${nextEpisode.id}`); }}
               style={{
-                width: "100%", padding: "14px 32px", borderRadius: 12, border: "none",
-                background: "#0D9488", color: "white", fontSize: 15, fontWeight: 700,
+                width: "100%", padding: "14px 32px", borderRadius: 14, border: "none",
+                background: "linear-gradient(135deg, #0D9488, #14B8A6)", color: "white", fontSize: 15, fontWeight: 700,
                 cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+                boxShadow: "0 4px 14px rgba(13,148,136,0.4)",
               }}
             >
               Next: {nextEpisode.title} →
@@ -423,10 +452,11 @@ const TextbookEpisode = () => {
             <button
               onClick={handleExit}
               style={{
-                width: "100%", padding: "14px 32px", borderRadius: 12, border: "none",
-                background: "#059669", color: "white", fontSize: 15, fontWeight: 700,
+                width: "100%", padding: "14px 32px", borderRadius: 14, border: "none",
+                background: "linear-gradient(135deg, #059669, #10B981)", color: "white", fontSize: 15, fontWeight: 700,
                 cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
                 display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8,
+                boxShadow: "0 4px 14px rgba(5,150,105,0.4)",
               }}
             >
               <CheckCircle2 className="h-5 w-5" /> Back to Chapter
