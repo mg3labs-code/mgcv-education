@@ -8,8 +8,7 @@ import InlineMedia from "@/components/textbook/InlineMedia";
 // ─── Concept Block ──────────────────────────────────────────
 
 export const ConceptBlock = ({ content, onComplete }: { content: ConceptContent; onComplete?: () => void }) => {
-  // Auto-complete for content-only blocks after render
-  useEffect(() => { onComplete?.(); }, []);
+  // Content-only block: do NOT auto-complete. "Got it" triggers "Did you understand?" confirmation first.
 
   return (
     <div className="space-y-5">

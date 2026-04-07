@@ -513,6 +513,39 @@ const TextbookEpisode = () => {
                 </div>
               </div>
 
+              {/* ═══ INLINE "Did you understand?" for content-only blocks ═══ */}
+              {showUnderstandConfirm && !INTERACTIVE_TYPES.has(block.type) && (
+                <div style={{
+                  marginTop: 16, padding: "16px 20px",
+                  background: "linear-gradient(135deg, #F0FDFA, #ECFDF5)",
+                  borderRadius: 14, border: "1.5px solid #99F6E4",
+                  textAlign: "center",
+                }}>
+                  <p style={{ fontSize: 15, fontWeight: 700, color: "#1C1917", marginBottom: 4 }}>
+                    Did you understand this section? 🤔
+                  </p>
+                  <p style={{ fontSize: 12, color: "#78716C", marginBottom: 14 }}>
+                    Make sure you've read through everything above
+                  </p>
+                  <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+                    <button
+                      onClick={() => { setShowUnderstandConfirm(false); markBlockInteracted(activeBlock); toggleUnderstood(activeBlock); }}
+                      style={{
+                        padding: "10px 28px", borderRadius: 10, border: "none",
+                        background: "#0D9488", color: "white", fontSize: 14, fontWeight: 700, cursor: "pointer",
+                        boxShadow: "0 2px 8px rgba(13,148,136,0.3)",
+                      }}
+                    >Yes, got it! ✓</button>
+                    <button
+                      onClick={() => setShowUnderstandConfirm(false)}
+                      style={{
+                        padding: "10px 28px", borderRadius: 10, border: "1.5px solid #E7E5E4",
+                        background: "white", color: "#78716C", fontSize: 14, fontWeight: 600, cursor: "pointer",
+                      }}
+                    >Not yet</button>
+                  </div>
+                </div>
+              )}
               {/* Inline visual aids */}
               {attachedVisuals[activeBlock]?.map((vb, vi) => (
                 <div key={vi} className="mt-4">
@@ -591,35 +624,7 @@ const TextbookEpisode = () => {
         </div>
       </div>
 
-      {/* ═══ "Did you understand?" confirm popover ═══ */}
-      {showUnderstandConfirm && (
-        <div style={{
-          position: "absolute", bottom: 80, left: "50%", transform: "translateX(-50%)",
-          background: "white", borderRadius: 16, padding: "16px 20px", textAlign: "center",
-          boxShadow: "0 8px 30px rgba(0,0,0,0.15)", border: "1px solid #E7E5E4",
-          zIndex: 55, width: 280,
-        }}>
-          <p style={{ fontSize: 14, fontWeight: 600, color: "#1C1917", marginBottom: 12 }}>
-            Did you understand this? 🤔
-          </p>
-          <div style={{ display: "flex", gap: 8 }}>
-            <button
-              onClick={() => { setShowUnderstandConfirm(false); markBlockInteracted(activeBlock); toggleUnderstood(activeBlock); }}
-              style={{
-                flex: 1, padding: "10px 0", borderRadius: 10, border: "none",
-                background: "#0D9488", color: "white", fontSize: 13, fontWeight: 700, cursor: "pointer",
-              }}
-            >Yes, got it! ✓</button>
-            <button
-              onClick={() => setShowUnderstandConfirm(false)}
-              style={{
-                flex: 1, padding: "10px 0", borderRadius: 10, border: "1px solid #E7E5E4",
-                background: "white", color: "#78716C", fontSize: 13, fontWeight: 600, cursor: "pointer",
-              }}
-            >Not yet</button>
-          </div>
-        </div>
-      )}
+      {/* "Did you understand?" is now rendered inline inside content area — see below */}
 
       {/* ═══ BOTTOM BAR (right padding to avoid chatbot FAB) ═══ */}
       <div style={{
