@@ -237,6 +237,8 @@ const TextbookEpisode = () => {
   }, [layerParam, navBlocks, goToBlock]);
 
   // Loading state
+  const onBlockComplete = useCallback(() => markBlockInteracted(activeBlock), [markBlockInteracted, activeBlock]);
+
   if (isLoading) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "#F9FAFB" }}>
@@ -259,7 +261,6 @@ const TextbookEpisode = () => {
     );
   }
 
-  const onBlockComplete = useCallback(() => markBlockInteracted(activeBlock), [markBlockInteracted, activeBlock]);
 
   const renderBlock = (block: ContentBlock) => {
     switch (block.type) {
