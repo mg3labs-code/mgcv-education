@@ -48,25 +48,30 @@ const blockLabels: Record<string, string> = {
   implications: "What does this change?", visual_aid: "See it in action",
 };
 
-const DEEP_BLOCKS = new Set(["reasoning", "assumptions", "connections", "application", "implications"]);
-const DISCOVER_BLOCKS = new Set(["concept", "activity", "exercise"]);
-const PROVE_BLOCKS = new Set(["recall", "assessment", "explain"]);
+const CORE_BLOCKS = new Set(["concept", "activity", "recall", "explain", "assessment"]);
+const DEEP_BLOCKS = new Set(["exercise", "reasoning", "assumptions", "connections", "application", "implications"]);
 
-// Phase config
-const stemPhases = [
-  { id: "discover", label: "Discover & Explore", icon: "🔍", color: "#0D9488", subtitle: "Learn the big ideas and try them out", className: "phase-discover", blockSet: DISCOVER_BLOCKS },
-  { id: "prove", label: "Test Yourself", icon: "🎯", color: "#3B82F6", subtitle: "Can you recall, explain & apply?", className: "phase-prove", blockSet: PROVE_BLOCKS },
-  { id: "deeper", label: "Challenge Yourself", icon: "🚀", color: "#8B5CF6", subtitle: "Ask why, challenge assumptions, see connections", className: "phase-deeper", blockSet: DEEP_BLOCKS },
-];
+// Phase config for two-track
+const coreTrack = {
+  id: "core", label: "✅ Core Path", color: "#0D9488",
+  subtitle: "Complete these to finish the lesson",
+  blockSet: CORE_BLOCKS,
+};
+const deepTrack = {
+  id: "deep", label: "🚀 Deep Path", color: "#8B5CF6",
+  subtitle: "Go deeper — challenge assumptions, find connections",
+  blockSet: DEEP_BLOCKS,
+};
 
+// Language overrides
 const LANG_READ_BLOCKS = new Set(["concept", "activity", "bilingual_concept", "story_reading"]);
 const LANG_PRACTICE_BLOCKS = new Set(["recall", "exercise", "assessment", "explain", "vocabulary", "grammar_pattern"]);
 const LANG_EXPRESS_BLOCKS = new Set(["reasoning", "assumptions", "connections", "application", "implications"]);
 
 const langPhases = [
-  { id: "read", label: "Read & Discover", icon: "📖", color: "#0D9488", subtitle: "Read side-by-side, learn new words, hear the sounds", className: "phase-discover", blockSet: LANG_READ_BLOCKS },
-  { id: "practice", label: "Practice & Pattern", icon: "🧩", color: "#3B82F6", subtitle: "Spot grammar patterns, recall what you learned", className: "phase-prove", blockSet: LANG_PRACTICE_BLOCKS },
-  { id: "express", label: "Express Yourself", icon: "✍️", color: "#8B5CF6", subtitle: "Write, think, and connect to culture", className: "phase-deeper", blockSet: LANG_EXPRESS_BLOCKS },
+  { id: "read", label: "📖 Read & Discover", icon: "📖", color: "#0D9488", subtitle: "Read side-by-side, learn new words", className: "phase-discover", blockSet: LANG_READ_BLOCKS },
+  { id: "practice", label: "🧩 Practice & Pattern", icon: "🧩", color: "#3B82F6", subtitle: "Spot grammar patterns, recall", className: "phase-prove", blockSet: LANG_PRACTICE_BLOCKS },
+  { id: "express", label: "✍️ Express Yourself", icon: "✍️", color: "#8B5CF6", subtitle: "Write, think, connect", className: "phase-deeper", blockSet: LANG_EXPRESS_BLOCKS },
 ];
 
 // ─── Main Component ─────────────────────────────────────────
@@ -86,10 +91,9 @@ const TextbookEpisode = () => {
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
   const [exitConfirm, setExitConfirm] = useState(false);
   const [showCompletion, setShowCompletion] = useState(false);
-  const [textbookRefOpen, setTextbookRefOpen] = useState(true);
   const [blockCompleted, setBlockCompleted] = useState<Set<number>>(new Set());
   const [showUnderstandConfirm, setShowUnderstandConfirm] = useState(false);
-  const [celebrationVisible, setCelebrationVisible] = useState(false);
+  const [expandedTextbookRef, setExpandedTextbookRef] = useState<number | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const totalBlocksRef = useRef(0);
@@ -127,7 +131,7 @@ const TextbookEpisode = () => {
   const episode = chapter?.episodes.find((e) => e.id === episodeId);
   const allBlocks = dbBlocks && dbBlocks.length > 0 ? dbBlocks : (episode?.blocks || []);
 
-  // Filter out visual_aid blocks from navigation — they render inline with their preceding block
+  // Filter out visual_aid blocks from navigation
   const navBlocks = useMemo(() => allBlocks.filter(b => b.type !== "visual_aid"), [allBlocks]);
 
   const INTERACTIVE_TYPES = useMemo(() => new Set(["activity", "recall", "explain", "assessment", "exercise"]), []);
@@ -136,13 +140,11 @@ const TextbookEpisode = () => {
     const block = navBlocks[index];
     const isInteractive = block && INTERACTIVE_TYPES.has(block.type);
 
-    // For interactive blocks, require completion first
     if (isInteractive && !blockCompleted.has(index)) {
       toast.error("Complete the activity first before marking as understood! 🎯");
       return;
     }
 
-    // For content-only blocks, show confirm dialog
     if (!isInteractive && !blockCompleted.has(index) && !showUnderstandConfirm) {
       setShowUnderstandConfirm(true);
       return;
@@ -157,7 +159,7 @@ const TextbookEpisode = () => {
     });
   }, [persistUnderstood, navBlocks, blockCompleted, showUnderstandConfirm, INTERACTIVE_TYPES]);
 
-  // Map: navBlock index → array of visual_aid blocks that follow it in the original array
+  // Map: navBlock index → array of visual_aid blocks that follow it
   const attachedVisuals = useMemo(() => {
     const map: Record<number, ContentBlock[]> = {};
     let navIdx = -1;
@@ -178,7 +180,23 @@ const TextbookEpisode = () => {
 
   const langSubject = useMemo(() => getSubjectFromSlug(chapterId), [chapterId]);
   const isLanguage = !!langSubject;
-  const phases = isLanguage ? langPhases : stemPhases;
+
+  // Two-track: Core vs Deep
+  const coreIndices = useMemo(() =>
+    navBlocks.map((b, i) => ({ type: b.type, i })).filter(({ type }) => CORE_BLOCKS.has(type)).map(({ i }) => i),
+    [navBlocks]
+  );
+  const deepIndices = useMemo(() =>
+    navBlocks.map((b, i) => ({ type: b.type, i })).filter(({ type }) => DEEP_BLOCKS.has(type)).map(({ i }) => i),
+    [navBlocks]
+  );
+  const coreComplete = coreIndices.filter(i => understoodBlocks.has(i)).length;
+  const isCoreComplete = coreIndices.length > 0 && coreIndices.every(i => understoodBlocks.has(i));
+  const isDeepUnlocked = isCoreComplete;
+
+  const isBlockLocked = useCallback((index: number) => {
+    return deepIndices.includes(index) && !isDeepUnlocked;
+  }, [deepIndices, isDeepUnlocked]);
 
   useEffect(() => { totalBlocksRef.current = navBlocks.length; }, [navBlocks.length]);
 
@@ -195,24 +213,9 @@ const TextbookEpisode = () => {
       });
   }, [user, chapterId, episodeId]);
 
-  // Phase 3 locking: check if all Phase 1+2 blocks are understood
-  const phase3BlockTypes = isLanguage ? LANG_EXPRESS_BLOCKS : DEEP_BLOCKS;
-  const phase12Indices = useMemo(() =>
-    navBlocks.map((b, i) => ({ type: b.type, i })).filter(({ type }) => !phase3BlockTypes.has(type)).map(({ i }) => i),
-    [navBlocks, phase3BlockTypes]
-  );
-  const phase3Indices = useMemo(() =>
-    navBlocks.map((b, i) => ({ type: b.type, i })).filter(({ type }) => phase3BlockTypes.has(type)).map(({ i }) => i),
-    [navBlocks, phase3BlockTypes]
-  );
-  const isPhase3Unlocked = phase12Indices.length > 0 && phase12Indices.every(i => understoodBlocks.has(i));
-  const isBlockLocked = useCallback((index: number) => {
-    return phase3Indices.includes(index) && !isPhase3Unlocked;
-  }, [phase3Indices, isPhase3Unlocked]);
-
   const goToBlock = useCallback((index: number) => {
     if (isBlockLocked(index)) {
-      toast.error("Complete all Discover & Test sections first 🔒");
+      toast.error("Complete all Core sections first 🔒");
       return;
     }
     setActiveBlock(index);
@@ -224,11 +227,10 @@ const TextbookEpisode = () => {
     if (actIdx >= 0) goToBlock(actIdx);
   }, [navBlocks, goToBlock]);
 
-  // Auto-scroll to layer based on query param
   useEffect(() => {
     if (!layerParam || !navBlocks || navBlocks.length === 0) return;
     const timer = setTimeout(() => {
-      const targetSet = layerParam === "deep" ? DEEP_BLOCKS : layerParam === "quiz" ? PROVE_BLOCKS : null;
+      const targetSet = layerParam === "deep" ? DEEP_BLOCKS : layerParam === "quiz" ? new Set(["recall", "assessment", "explain"]) : null;
       if (!targetSet) return;
       const idx = navBlocks.findIndex(b => targetSet.has(b.type));
       if (idx >= 0) goToBlock(idx);
@@ -236,7 +238,6 @@ const TextbookEpisode = () => {
     return () => clearTimeout(timer);
   }, [layerParam, navBlocks, goToBlock]);
 
-  // Loading state
   const onBlockComplete = useCallback(() => markBlockInteracted(activeBlock), [markBlockInteracted, activeBlock]);
 
   if (isLoading) {
@@ -260,7 +261,6 @@ const TextbookEpisode = () => {
       </div>
     );
   }
-
 
   const renderBlock = (block: ContentBlock) => {
     switch (block.type) {
@@ -304,11 +304,6 @@ const TextbookEpisode = () => {
 
   const defaultMeta = { border: "border-l-primary", bg: "", dotColor: "bg-primary", badge: undefined, badgeColor: undefined } as const;
 
-  // Find current phase
-  const allPhaseBlocks = phases.flatMap(p => navBlocks.map((b, i) => ({ block: b, index: i, phase: p })).filter(({ block }) => p.blockSet.has(block.type)));
-  const currentPhaseBlock = allPhaseBlocks.find(pb => pb.index === activeBlock);
-  const currentPhase = currentPhaseBlock?.phase || phases[0];
-
   const handleExit = () => {
     navigate(`/student/textbook/${chapterId}`);
   };
@@ -333,26 +328,14 @@ const TextbookEpisode = () => {
             Your progress is saved. You can continue from section {activeBlock + 1} next time.
           </p>
           <div style={{ display: "flex", gap: 12 }}>
-            <button
-              onClick={() => setExitConfirm(false)}
-              style={{
-                flex: 1, padding: "12px 0", borderRadius: 12, border: "1px solid #E7E5E4",
-                background: "white", fontSize: 14, fontWeight: 600, color: "#57534E",
-                cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
-              }}
-            >
-              Stay
-            </button>
-            <button
-              onClick={handleExit}
-              style={{
-                flex: 1, padding: "12px 0", borderRadius: 12, border: "none",
-                background: "#EF4444", fontSize: 14, fontWeight: 600, color: "white",
-                cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
-              }}
-            >
-              Leave
-            </button>
+            <button onClick={() => setExitConfirm(false)} style={{
+              flex: 1, padding: "12px 0", borderRadius: 12, border: "1px solid #E7E5E4",
+              background: "white", fontSize: 14, fontWeight: 600, color: "#57534E", cursor: "pointer",
+            }}>Stay</button>
+            <button onClick={handleExit} style={{
+              flex: 1, padding: "12px 0", borderRadius: 12, border: "none",
+              background: "#EF4444", fontSize: 14, fontWeight: 600, color: "white", cursor: "pointer",
+            }}>Leave</button>
           </div>
         </div>
       </div>
@@ -363,105 +346,67 @@ const TextbookEpisode = () => {
   if (showCompletion) {
     return (
       <div className="fixed inset-0 z-[100] flex items-center justify-center" style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)" }}>
-        {/* Sparkle particles */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           {Array.from({ length: 20 }).map((_, i) => (
-            <div
-              key={i}
-              className="absolute rounded-full animate-ping"
-              style={{
-                width: Math.random() * 8 + 4,
-                height: Math.random() * 8 + 4,
-                background: ["#0D9488", "#F59E0B", "#8B5CF6", "#EC4899", "#3B82F6"][i % 5],
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                animationDelay: `${Math.random() * 2}s`,
-                animationDuration: `${Math.random() * 2 + 1}s`,
-                opacity: 0.7,
-              }}
-            />
+            <div key={i} className="absolute rounded-full animate-ping" style={{
+              width: Math.random() * 8 + 4, height: Math.random() * 8 + 4,
+              background: ["#0D9488", "#F59E0B", "#8B5CF6", "#EC4899", "#3B82F6"][i % 5],
+              left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 2}s`, animationDuration: `${Math.random() * 2 + 1}s`, opacity: 0.7,
+            }} />
           ))}
         </div>
-
         <div style={{
           textAlign: "center", maxWidth: 420, width: "90%", padding: "48px 28px",
           background: "white", borderRadius: 28, position: "relative",
           boxShadow: "0 25px 60px rgba(0,0,0,0.2)",
         }} className="animate-scale-in">
           <div style={{ fontSize: 72, marginBottom: 8, lineHeight: 1 }}>🎉</div>
-          <h1 style={{ fontSize: 32, fontWeight: 800, color: "#1C1917", marginBottom: 4, fontFamily: "'DM Sans', sans-serif" }}>
-            Nailed it!
-          </h1>
-          <p style={{ fontSize: 16, color: "#0D9488", fontWeight: 600, marginBottom: 4, fontFamily: "'DM Sans', sans-serif" }}>
-            {episode.title}
-          </p>
-          <p style={{ fontSize: 13, color: "#A8A29E", marginBottom: 28, fontFamily: "'DM Sans', sans-serif" }}>
-            {navBlocks.length} sections completed ✨
-          </p>
-
-          {/* Stat gains */}
+          <h1 style={{ fontSize: 32, fontWeight: 800, color: "#1C1917", marginBottom: 4 }}>Nailed it!</h1>
+          <p style={{ fontSize: 16, color: "#0D9488", fontWeight: 600, marginBottom: 4 }}>{episode.title}</p>
+          <p style={{ fontSize: 13, color: "#A8A29E", marginBottom: 28 }}>{navBlocks.length} sections completed ✨</p>
           <div style={{ display: "flex", justifyContent: "center", gap: 20, marginBottom: 32 }}>
             {[
               { icon: "👁️", label: "Clarity", value: "+3%" },
               { icon: "🧠", label: "Thinking", value: "+2%" },
               { icon: "🎯", label: "Focus", value: "+4%" },
             ].map(d => (
-              <div key={d.label} style={{
-                textAlign: "center", background: "#F0FDFA", borderRadius: 16, padding: "12px 16px",
-              }}>
+              <div key={d.label} style={{ textAlign: "center", background: "#F0FDFA", borderRadius: 16, padding: "12px 16px" }}>
                 <div style={{ fontSize: 24, marginBottom: 2 }}>{d.icon}</div>
-                <div style={{ fontSize: 18, fontWeight: 700, color: "#0D9488", fontFamily: "'DM Sans', sans-serif" }}>{d.value}</div>
-                <div style={{ fontSize: 10, color: "#78716C", fontFamily: "'DM Sans', sans-serif" }}>{d.label}</div>
+                <div style={{ fontSize: 18, fontWeight: 700, color: "#0D9488" }}>{d.value}</div>
+                <div style={{ fontSize: 10, color: "#78716C" }}>{d.label}</div>
               </div>
             ))}
           </div>
-
-          {/* Challenge buttons */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
             <button onClick={() => { setShowCompletion(false); setShowDefense(true); }} style={{
-              background: "#F9FAFB", border: "2px solid #E7E5E4", borderRadius: 14,
-              padding: 16, textAlign: "center", cursor: "pointer",
+              background: "#F9FAFB", border: "2px solid #E7E5E4", borderRadius: 14, padding: 16, textAlign: "center", cursor: "pointer",
             }}>
               <div style={{ fontSize: 22, marginBottom: 4 }}>🎓</div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: "#1C1917", fontFamily: "'DM Sans', sans-serif" }}>Defend it</div>
-              <div style={{ fontSize: 10, color: "#78716C", fontFamily: "'DM Sans', sans-serif" }}>Debate · 5 min</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#1C1917" }}>Defend it</div>
+              <div style={{ fontSize: 10, color: "#78716C" }}>Debate · 5 min</div>
             </button>
             <button onClick={() => { setShowCompletion(false); setShowFirstPrinciples(true); }} style={{
-              background: "#F9FAFB", border: "2px solid #E7E5E4", borderRadius: 14,
-              padding: 16, textAlign: "center", cursor: "pointer",
+              background: "#F9FAFB", border: "2px solid #E7E5E4", borderRadius: 14, padding: 16, textAlign: "center", cursor: "pointer",
             }}>
               <div style={{ fontSize: 22, marginBottom: 4 }}>💡</div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: "#1C1917", fontFamily: "'DM Sans', sans-serif" }}>Break it down</div>
-              <div style={{ fontSize: 10, color: "#78716C", fontFamily: "'DM Sans', sans-serif" }}>First principles · 10 min</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#1C1917" }}>Break it down</div>
+              <div style={{ fontSize: 10, color: "#78716C" }}>First principles · 10 min</div>
             </button>
           </div>
-
-          {/* Navigation */}
           {nextEpisode ? (
-            <button
-              onClick={() => { navigate(`/student/textbook/${chapterId}/${nextEpisode.id}`); }}
-              style={{
-                width: "100%", padding: "14px 32px", borderRadius: 14, border: "none",
-                background: "linear-gradient(135deg, #0D9488, #14B8A6)", color: "white", fontSize: 15, fontWeight: 700,
-                cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
-                boxShadow: "0 4px 14px rgba(13,148,136,0.4)",
-              }}
-            >
-              Next: {nextEpisode.title} →
-            </button>
+            <button onClick={() => navigate(`/student/textbook/${chapterId}/${nextEpisode.id}`)} style={{
+              width: "100%", padding: "14px 32px", borderRadius: 14, border: "none",
+              background: "linear-gradient(135deg, #0D9488, #14B8A6)", color: "white", fontSize: 15, fontWeight: 700,
+              cursor: "pointer", boxShadow: "0 4px 14px rgba(13,148,136,0.4)",
+            }}>Next: {nextEpisode.title} →</button>
           ) : (
-            <button
-              onClick={handleExit}
-              style={{
-                width: "100%", padding: "14px 32px", borderRadius: 14, border: "none",
-                background: "linear-gradient(135deg, #059669, #10B981)", color: "white", fontSize: 15, fontWeight: 700,
-                cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
-                display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8,
-                boxShadow: "0 4px 14px rgba(5,150,105,0.4)",
-              }}
-            >
-              <CheckCircle2 className="h-5 w-5" /> Back to Chapter
-            </button>
+            <button onClick={handleExit} style={{
+              width: "100%", padding: "14px 32px", borderRadius: 14, border: "none",
+              background: "linear-gradient(135deg, #059669, #10B981)", color: "white", fontSize: 15, fontWeight: 700,
+              cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8,
+              boxShadow: "0 4px 14px rgba(5,150,105,0.4)",
+            }}><CheckCircle2 className="h-5 w-5" /> Back to Chapter</button>
           )}
         </div>
       </div>
@@ -473,53 +418,49 @@ const TextbookEpisode = () => {
   const meta = block ? (layerMeta[block.type] || defaultMeta) : defaultMeta;
   const isUnderstood = understoodBlocks.has(activeBlock);
   const isLastBlock = activeBlock === navBlocks.length - 1;
+  const isInCore = block && CORE_BLOCKS.has(block.type);
+  const currentTrack = isInCore ? coreTrack : deepTrack;
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col" style={{ background: "#F9FAFB", fontFamily: "'DM Sans', sans-serif" }}>
 
-      {/* ═══ TOP BAR — Single line ═══ */}
+      {/* ═══ TOP BAR ═══ */}
       <div style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
         padding: "8px 16px", borderBottom: "1px solid #E7E5E4", background: "white",
         height: 48, flexShrink: 0,
       }}>
-        {/* Close */}
-        <button
-          onClick={() => setExitConfirm(true)}
-          style={{
-            width: 32, height: 32, borderRadius: 8, border: "none",
-            background: "#F5F5F4", cursor: "pointer", display: "flex",
-            alignItems: "center", justifyContent: "center", color: "#78716C", flexShrink: 0,
-          }}
-        >
-          <X className="h-4 w-4" />
-        </button>
+        <button onClick={() => setExitConfirm(true)} style={{
+          width: 32, height: 32, borderRadius: 8, border: "none",
+          background: "#F5F5F4", cursor: "pointer", display: "flex",
+          alignItems: "center", justifyContent: "center", color: "#78716C", flexShrink: 0,
+        }}><X className="h-4 w-4" /></button>
 
-        {/* Progress dots */}
+        {/* Core progress dots */}
         <div style={{ display: "flex", alignItems: "center", gap: 3, flex: 1, justifyContent: "center", padding: "0 12px", overflow: "hidden" }}>
-          {navBlocks.map((_, i) => (
-            <div
-              key={i}
-              style={{
+          {navBlocks.map((nb, i) => {
+            const isCore = CORE_BLOCKS.has(nb.type);
+            const isDeep = DEEP_BLOCKS.has(nb.type);
+            return (
+              <div key={i} onClick={() => goToBlock(i)} style={{
                 width: navBlocks.length > 15 ? 4 : navBlocks.length > 8 ? 6 : 8,
                 height: navBlocks.length > 15 ? 4 : navBlocks.length > 8 ? 6 : 8,
-                borderRadius: 2,
-                background: understoodBlocks.has(i) ? "#0D9488" : i === activeBlock ? "#1C1917" : "#D6D3D1",
-                transition: "all 0.2s",
-                flexShrink: 0,
-              }}
-            />
-          ))}
+                borderRadius: 2, cursor: isBlockLocked(i) ? "not-allowed" : "pointer",
+                background: understoodBlocks.has(i)
+                  ? (isCore ? "#0D9488" : "#8B5CF6")
+                  : i === activeBlock ? "#1C1917"
+                  : isBlockLocked(i) ? "#E7E5E4"
+                  : "#D6D3D1",
+                transition: "all 0.2s", flexShrink: 0,
+                opacity: isBlockLocked(i) ? 0.4 : 1,
+              }} />
+            );
+          })}
         </div>
 
-        {/* Counter + save + reading mode toggle */}
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-          {saveStatus === "saving" && (
-            <Cloud className="h-3 w-3" style={{ color: "#A8A29E" }} />
-          )}
-          {saveStatus === "saved" && (
-            <Check className="h-3 w-3" style={{ color: "#0D9488" }} />
-          )}
+          {saveStatus === "saving" && <Cloud className="h-3 w-3" style={{ color: "#A8A29E" }} />}
+          {saveStatus === "saved" && <Check className="h-3 w-3" style={{ color: "#0D9488" }} />}
           <span style={{ fontSize: 12, fontWeight: 600, color: "#78716C", minWidth: 32, textAlign: "right" }}>
             {activeBlock + 1}/{navBlocks.length}
           </span>
@@ -527,109 +468,116 @@ const TextbookEpisode = () => {
       </div>
 
       <>
-      {/* ═══ PHASE BADGE — Tiny ═══ */}
+      {/* ═══ TRACK BADGE ═══ */}
       <div style={{
-        display: "flex", alignItems: "center", gap: 6, padding: "6px 16px",
-        fontSize: 12, color: "#78716C", flexShrink: 0,
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: "6px 16px", fontSize: 12, flexShrink: 0,
+        background: isInCore ? "#F0FDFA" : isDeepUnlocked ? "#F5F3FF" : "#FAFAF9",
+        borderBottom: "1px solid #F5F5F4",
       }}>
-        <span>{currentPhase?.icon}</span>
-        <span style={{ fontWeight: 600, color: currentPhase?.color }}>{currentPhase?.label}</span>
-        <span style={{ color: "#D6D3D1" }}>•</span>
-        <span>{meta.badge?.split(" ").slice(1).join(" ") || block?.type || "Section"}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <span style={{ fontWeight: 700, color: currentTrack.color }}>
+            {isInCore ? `✅ Core Path` : isDeepUnlocked ? `🚀 Deep Path` : `🔒 Deep Path`}
+          </span>
+          <span style={{ color: "#D6D3D1" }}>•</span>
+          <span style={{ color: "#78716C" }}>{meta.badge?.split(" ").slice(1).join(" ") || block?.type}</span>
+        </div>
+        <span style={{ fontWeight: 600, color: currentTrack.color, fontSize: 11 }}>
+          {isInCore
+            ? `${coreComplete}/${coreIndices.length} done`
+            : `${deepIndices.filter(i => understoodBlocks.has(i)).length}/${deepIndices.length}`
+          }
+        </span>
       </div>
 
-      {/* ═══ CONTENT AREA — Scrollable ═══ */}
-      <div
-        ref={contentRef}
-        style={{
-          flex: 1, overflowY: "auto", padding: "0 16px 120px",
-          WebkitOverflowScrolling: "touch",
-        }}
-      >
+      {/* ═══ CONTENT AREA ═══ */}
+      <div ref={contentRef} style={{ flex: 1, overflowY: "auto", padding: "0 16px 140px", WebkitOverflowScrolling: "touch" }}>
         <div style={{ maxWidth: 720, margin: "0 auto", paddingTop: 16 }}>
 
-          {/* Language Progress Widget */}
           {isLanguage && langSubject && <LanguageProgressWidget subjectName={langSubject} />}
 
           {block && (
             <>
               {/* Section title */}
-              <h1 style={{
-                fontSize: 22, fontWeight: 700, color: "#1C1917", marginBottom: 4,
-                fontFamily: "'Source Serif 4', serif",
-              }}>
+              <h1 style={{ fontSize: 22, fontWeight: 700, color: "#1C1917", marginBottom: 4, fontFamily: "'Source Serif 4', serif" }}>
                 {block.icon} {block.title}
               </h1>
               <p style={{ fontSize: 13, color: "#A8A29E", marginBottom: 20, fontStyle: "italic" }}>
                 {blockSubtitles[block.type] || ""}
               </p>
 
-              {/* Block content */}
+              {/* Block content with colored border */}
               <div className={`bg-card rounded-xl border-l-4 ${(meta as any).border || "border-l-primary"} shadow-sm`}>
                 <div className="p-5">
                   {renderBlock(block)}
                 </div>
               </div>
 
-              {/* Inline visual aids attached to this section */}
+              {/* Inline visual aids */}
               {attachedVisuals[activeBlock]?.map((vb, vi) => (
                 <div key={vi} className="mt-4">
                   <VisualAidBlock content={vb.content as VisualAidContent} />
                 </div>
               ))}
 
-              {/* Inline textbook reference callouts — collapsible */}
+              {/* ═══ COLLAPSIBLE TEXTBOOK REFERENCE (Option C) ═══ */}
               {block.textbookRef && (
-                <div style={{ marginTop: 16 }}>
+                <div style={{ marginTop: 12 }}>
                   <button
-                    onClick={() => setTextbookRefOpen(!textbookRefOpen)}
+                    onClick={() => setExpandedTextbookRef(expandedTextbookRef === activeBlock ? null : activeBlock)}
                     style={{
-                      display: "flex", alignItems: "center", gap: 6,
-                      padding: "6px 12px", borderRadius: 8,
-                      border: "1px solid hsl(var(--border))",
-                      background: textbookRefOpen ? "hsl(var(--muted) / 0.3)" : "transparent",
-                      cursor: "pointer", fontSize: 11, fontWeight: 600,
-                      color: "hsl(var(--primary))",
-                      width: "100%", textAlign: "left",
+                      width: "100%", padding: "10px 14px",
+                      background: expandedTextbookRef === activeBlock ? "#FFFEF5" : "#FAFAF9",
+                      border: "1px solid #E7E5E4",
+                      borderRadius: expandedTextbookRef === activeBlock ? "12px 12px 0 0" : 12,
+                      cursor: "pointer", display: "flex", alignItems: "center", gap: 8,
+                      fontSize: 12, fontWeight: 600, color: "#7C3AED", textAlign: "left",
                       transition: "all 0.15s ease",
                     }}
                   >
-                    📖 {textbookRefOpen ? "Hide textbook reference ▲" : "Your Textbook Says… ▼"}
+                    <span>📖</span>
+                    <span>{expandedTextbookRef === activeBlock ? "Hide original textbook text ▲" : "See original textbook text ▼"}</span>
                   </button>
 
-                  {textbookRefOpen && (
-                    <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 10 }}>
+                  {expandedTextbookRef === activeBlock && (
+                    <div style={{
+                      padding: "16px 14px", background: "#FFFEF5",
+                      border: "1px solid #E7E5E4", borderTop: "none",
+                      borderRadius: "0 0 12px 12px",
+                    }}>
                       {block.textbookRef.snippets ? (
-                        block.textbookRef.snippets.map((snippet, i) => (
-                          <div key={i} style={{
-                            padding: "10px 14px", borderRadius: 8,
-                            borderLeft: "3px solid hsl(var(--primary) / 0.4)",
-                            background: "hsl(var(--muted) / 0.3)",
-                          }}>
-                            <p style={{
-                              fontSize: 12, color: "hsl(var(--muted-foreground))", lineHeight: 1.65,
-                              fontFamily: "'Source Serif 4', serif", fontStyle: "italic",
+                        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                          {block.textbookRef.snippets.map((snippet, i) => (
+                            <div key={i} style={{
+                              padding: "12px 14px", borderRadius: 8,
+                              borderLeft: "3px solid #7C3AED40",
+                              background: "white",
                             }}>
-                              "{snippet.text}"
-                            </p>
-                            <p style={{ fontSize: 10, color: "hsl(var(--muted-foreground) / 0.7)", marginTop: 6, fontStyle: "italic" }}>
-                              — {snippet.source}
-                            </p>
-                          </div>
-                        ))
+                              <p style={{
+                                fontSize: 13, color: "#44403C", lineHeight: 1.7,
+                                fontFamily: "'Source Serif 4', serif", fontStyle: "italic",
+                              }}>
+                                "{snippet.text}"
+                              </p>
+                              <p style={{ fontSize: 10, color: "#A8A29E", marginTop: 6, fontStyle: "italic" }}>
+                                — {snippet.source}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
                       ) : block.textbookRef.text ? (
                         <div style={{
-                          padding: "10px 14px", borderRadius: 8,
-                          borderLeft: "3px solid hsl(var(--primary) / 0.4)",
-                          background: "hsl(var(--muted) / 0.3)",
+                          padding: "12px 14px", borderRadius: 8,
+                          borderLeft: "3px solid #7C3AED40",
+                          background: "white",
                         }}>
                           <p style={{
-                            fontSize: 12, color: "hsl(var(--muted-foreground))", lineHeight: 1.65,
+                            fontSize: 13, color: "#44403C", lineHeight: 1.7,
                             fontFamily: "'Source Serif 4', serif", fontStyle: "italic",
                           }}>
                             "{block.textbookRef.text}"
                           </p>
-                          <p style={{ fontSize: 10, color: "hsl(var(--muted-foreground) / 0.7)", marginTop: 6, fontStyle: "italic" }}>
+                          <p style={{ fontSize: 10, color: "#A8A29E", marginTop: 6, fontStyle: "italic" }}>
                             — {block.textbookRef.source}
                           </p>
                         </div>
@@ -646,12 +594,12 @@ const TextbookEpisode = () => {
       {/* ═══ "Did you understand?" confirm popover ═══ */}
       {showUnderstandConfirm && (
         <div style={{
-          position: "absolute", bottom: 72, left: "50%", transform: "translateX(-50%)",
+          position: "absolute", bottom: 80, left: "50%", transform: "translateX(-50%)",
           background: "white", borderRadius: 16, padding: "16px 20px", textAlign: "center",
           boxShadow: "0 8px 30px rgba(0,0,0,0.15)", border: "1px solid #E7E5E4",
           zIndex: 55, width: 280,
         }}>
-          <p style={{ fontSize: 14, fontWeight: 600, color: "#1C1917", marginBottom: 12, fontFamily: "'DM Sans', sans-serif" }}>
+          <p style={{ fontSize: 14, fontWeight: 600, color: "#1C1917", marginBottom: 12 }}>
             Did you understand this? 🤔
           </p>
           <div style={{ display: "flex", gap: 8 }}>
@@ -659,27 +607,21 @@ const TextbookEpisode = () => {
               onClick={() => { setShowUnderstandConfirm(false); markBlockInteracted(activeBlock); toggleUnderstood(activeBlock); }}
               style={{
                 flex: 1, padding: "10px 0", borderRadius: 10, border: "none",
-                background: "#0D9488", color: "white", fontSize: 13, fontWeight: 700,
-                cursor: "pointer",
+                background: "#0D9488", color: "white", fontSize: 13, fontWeight: 700, cursor: "pointer",
               }}
-            >
-              Yes, got it! ✓
-            </button>
+            >Yes, got it! ✓</button>
             <button
               onClick={() => setShowUnderstandConfirm(false)}
               style={{
                 flex: 1, padding: "10px 0", borderRadius: 10, border: "1px solid #E7E5E4",
-                background: "white", color: "#78716C", fontSize: 13, fontWeight: 600,
-                cursor: "pointer",
+                background: "white", color: "#78716C", fontSize: 13, fontWeight: 600, cursor: "pointer",
               }}
-            >
-              Not yet
-            </button>
+            >Not yet</button>
           </div>
         </div>
       )}
 
-      {/* ═══ BOTTOM BAR — Fixed (with right padding for chatbot) ═══ */}
+      {/* ═══ BOTTOM BAR (right padding to avoid chatbot FAB) ═══ */}
       <div style={{
         position: "absolute", bottom: 0, left: 0, right: 0,
         padding: "12px 16px", paddingRight: 80, background: "white", borderTop: "1px solid #E7E5E4",
@@ -688,44 +630,27 @@ const TextbookEpisode = () => {
       }}>
         {/* Left: Sections + Prev */}
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <button
-            onClick={() => setShowSectionsSheet(true)}
-            style={{
-              width: 36, height: 36, borderRadius: 8, border: "1px solid #E7E5E4",
-              background: "white", cursor: "pointer", display: "flex",
-              alignItems: "center", justifyContent: "center", color: "#78716C",
-            }}
-          >
-            <Menu className="h-4 w-4" />
-          </button>
+          <button onClick={() => setShowSectionsSheet(true)} style={{
+            width: 36, height: 36, borderRadius: 8, border: "1px solid #E7E5E4",
+            background: "white", cursor: "pointer", display: "flex",
+            alignItems: "center", justifyContent: "center", color: "#78716C",
+          }}><Menu className="h-4 w-4" /></button>
           {activeBlock > 0 && (
-            <button
-              onClick={() => goToBlock(activeBlock - 1)}
-              style={{
-                padding: "8px 14px", borderRadius: 8, border: "1px solid #E7E5E4",
-                background: "white", fontSize: 13, fontWeight: 600, color: "#57534E",
-                cursor: "pointer",
-              }}
-            >
-              ← Prev
-            </button>
+            <button onClick={() => goToBlock(activeBlock - 1)} style={{
+              padding: "8px 14px", borderRadius: 8, border: "1px solid #E7E5E4",
+              background: "white", fontSize: 13, fontWeight: 600, color: "#57534E", cursor: "pointer",
+            }}>← Prev</button>
           )}
         </div>
 
         {/* Center: Tools */}
         <div style={{ position: "relative" }}>
-          <button
-            onClick={() => setShowToolsPopup(!showToolsPopup)}
-            style={{
-              width: 36, height: 36, borderRadius: 8, border: "1px solid #E7E5E4",
-              background: showToolsPopup ? "#F0FDFA" : "white", cursor: "pointer",
-              display: "flex", alignItems: "center", justifyContent: "center", color: "#78716C",
-            }}
-          >
-            <MoreHorizontal className="h-4 w-4" />
-          </button>
+          <button onClick={() => setShowToolsPopup(!showToolsPopup)} style={{
+            width: 36, height: 36, borderRadius: 8, border: "1px solid #E7E5E4",
+            background: showToolsPopup ? "#F0FDFA" : "white", cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center", color: "#78716C",
+          }}><MoreHorizontal className="h-4 w-4" /></button>
 
-          {/* Tools popup */}
           {showToolsPopup && (
             <div style={{
               position: "absolute", bottom: 44, left: "50%", transform: "translateX(-50%)",
@@ -739,16 +664,12 @@ const TextbookEpisode = () => {
                 { icon: "📚", label: "Q Bank" },
                 { icon: "🔍", label: "Search" },
               ].map(t => (
-                <button
-                  key={t.label}
-                  onClick={() => { t.onClick?.(); setShowToolsPopup(false); }}
-                  style={{
-                    padding: "8px 12px", borderRadius: 8, border: "none",
-                    background: "transparent", fontSize: 12, fontWeight: 600,
-                    color: "#57534E", cursor: "pointer", display: "flex",
-                    flexDirection: "column", alignItems: "center", gap: 2,
-                  }}
-                >
+                <button key={t.label} onClick={() => { t.onClick?.(); setShowToolsPopup(false); }} style={{
+                  padding: "8px 12px", borderRadius: 8, border: "none",
+                  background: "transparent", fontSize: 12, fontWeight: 600,
+                  color: "#57534E", cursor: "pointer", display: "flex",
+                  flexDirection: "column", alignItems: "center", gap: 2,
+                }}>
                   <span style={{ fontSize: 18 }}>{t.icon}</span>
                   <span>{t.label}</span>
                 </button>
@@ -759,63 +680,45 @@ const TextbookEpisode = () => {
 
         {/* Right: Got it + Continue/Finish */}
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <button
-            onClick={() => toggleUnderstood(activeBlock)}
-            style={{
-              padding: "8px 14px", borderRadius: 10,
-              border: isUnderstood ? "2px solid #0D9488" : "1px solid #E7E5E4",
-              background: isUnderstood ? "#F0FDFA" : "white",
-              fontSize: 13, fontWeight: 600,
-              color: isUnderstood ? "#0D9488" : "#78716C",
-              cursor: "pointer", display: "flex", alignItems: "center", gap: 4,
-              transition: "all 0.2s",
-            }}
-          >
+          <button onClick={() => toggleUnderstood(activeBlock)} style={{
+            padding: "8px 14px", borderRadius: 10,
+            border: isUnderstood ? "2px solid #0D9488" : "1px solid #E7E5E4",
+            background: isUnderstood ? "#F0FDFA" : "white",
+            fontSize: 13, fontWeight: 600,
+            color: isUnderstood ? "#0D9488" : "#78716C",
+            cursor: "pointer", display: "flex", alignItems: "center", gap: 4,
+            transition: "all 0.2s",
+          }}>
             <CheckCircle2 className="h-4 w-4" style={{ fill: isUnderstood ? "#0D9488" : "none" }} />
             {isUnderstood ? "Nailed it ✓" : "Got it!"}
           </button>
 
           {!isLastBlock ? (
-            <button
-              disabled={!isUnderstood}
-              onClick={() => goToBlock(activeBlock + 1)}
-              style={{
-                padding: "8px 18px", borderRadius: 10, border: "none",
-                background: isUnderstood ? "linear-gradient(135deg, #0D9488, #14B8A6)" : "#D6D3D1",
-                fontSize: 13, fontWeight: 700, color: isUnderstood ? "white" : "#A8A29E",
-                cursor: isUnderstood ? "pointer" : "not-allowed",
-                transition: "all 0.2s",
-                boxShadow: isUnderstood ? "0 2px 8px rgba(13,148,136,0.3)" : "none",
-              }}
-            >
-              Continue →
-            </button>
+            <button disabled={!isUnderstood} onClick={() => goToBlock(activeBlock + 1)} style={{
+              padding: "8px 18px", borderRadius: 10, border: "none",
+              background: isUnderstood ? "linear-gradient(135deg, #0D9488, #14B8A6)" : "#D6D3D1",
+              fontSize: 13, fontWeight: 700, color: isUnderstood ? "white" : "#A8A29E",
+              cursor: isUnderstood ? "pointer" : "not-allowed",
+              transition: "all 0.2s",
+              boxShadow: isUnderstood ? "0 2px 8px rgba(13,148,136,0.3)" : "none",
+            }}>Continue →</button>
           ) : (
-            <button
-              disabled={!isUnderstood}
-              onClick={handleFinish}
-              style={{
-                padding: "8px 18px", borderRadius: 10, border: "none",
-                background: isUnderstood ? "linear-gradient(135deg, #059669, #10B981)" : "#D6D3D1",
-                fontSize: 13, fontWeight: 700, color: isUnderstood ? "white" : "#A8A29E",
-                cursor: isUnderstood ? "pointer" : "not-allowed",
-                transition: "all 0.2s",
-                boxShadow: isUnderstood ? "0 2px 8px rgba(5,150,105,0.3)" : "none",
-              }}
-            >
-              Finish ✓
-            </button>
+            <button disabled={!isUnderstood} onClick={handleFinish} style={{
+              padding: "8px 18px", borderRadius: 10, border: "none",
+              background: isUnderstood ? "linear-gradient(135deg, #059669, #10B981)" : "#D6D3D1",
+              fontSize: 13, fontWeight: 700, color: isUnderstood ? "white" : "#A8A29E",
+              cursor: isUnderstood ? "pointer" : "not-allowed",
+              transition: "all 0.2s",
+              boxShadow: isUnderstood ? "0 2px 8px rgba(5,150,105,0.3)" : "none",
+            }}>Finish ✓</button>
           )}
         </div>
       </div>
 
-      {/* ═══ SECTIONS BOTTOM SHEET ═══ */}
+      {/* ═══ SECTIONS BOTTOM SHEET — Two-Track Layout ═══ */}
       {showSectionsSheet && (
         <>
-          <div
-            onClick={() => setShowSectionsSheet(false)}
-            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.3)", zIndex: 60 }}
-          />
+          <div onClick={() => setShowSectionsSheet(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.3)", zIndex: 60 }} />
           <div style={{
             position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 61,
             background: "white", borderRadius: "16px 16px 0 0",
@@ -823,7 +726,6 @@ const TextbookEpisode = () => {
             boxShadow: "0 -10px 40px rgba(0,0,0,0.1)",
             padding: "16px 20px 32px",
           }}>
-            {/* Handle */}
             <div style={{ width: 40, height: 4, borderRadius: 2, background: "#D6D3D1", margin: "0 auto 16px" }} />
 
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
@@ -844,64 +746,144 @@ const TextbookEpisode = () => {
               }} />
             </div>
 
-            {/* Phases and sections */}
-            {phases.map((phase) => {
-              const phaseBlocks = navBlocks.map((b, i) => ({ block: b, index: i })).filter(({ block }) => phase.blockSet.has(block.type));
-              if (phaseBlocks.length === 0) return null;
-              const phaseUnderstood = phaseBlocks.filter(({ index }) => understoodBlocks.has(index)).length;
-
-              return (
-                <div key={phase.id} style={{ marginBottom: 16 }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <span style={{ fontSize: 14 }}>{phase.icon}</span>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: phase.color }}>{phase.label}</span>
-                    </div>
-                    <span style={{ fontSize: 11, fontWeight: 600, color: "#A8A29E" }}>
-                      {phaseUnderstood}/{phaseBlocks.length}
-                    </span>
-                  </div>
-
-                  {phaseBlocks.map(({ block: b, index: i }) => {
-                    const isActive = i === activeBlock;
-                    const isDone = understoodBlocks.has(i);
-                    const locked = isBlockLocked(i);
-                    return (
-                      <button
-                        key={i}
-                        onClick={() => { if (!locked) { goToBlock(i); setShowSectionsSheet(false); } else { toast.error("Complete all Discover & Test sections first 🔒"); } }}
-                        style={{
-                          width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "9px 10px",
-                          borderRadius: 8, border: "none", textAlign: "left", marginBottom: 2,
-                          background: isActive ? `${phase.color}10` : "transparent",
-                          cursor: locked ? "not-allowed" : "pointer",
-                          opacity: locked ? 0.5 : 1,
-                        }}
-                      >
-                        <div style={{
-                          width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
-                          background: locked ? "#D6D3D1" : isDone ? phase.color : isActive ? "white" : "#E7E5E4",
-                          border: isActive && !isDone && !locked ? `2px solid ${phase.color}` : "none",
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                          color: isDone ? "white" : "#78716C", fontSize: 10, fontWeight: 700,
-                        }}>
-                          {locked ? "🔒" : isDone ? "✓" : "•"}
-                        </div>
-                        <div>
-                          <div style={{ fontSize: 13, fontWeight: isActive ? 600 : 400, color: locked ? "#A8A29E" : isActive ? phase.color : "#1C1917" }}>
-                            {blockLabels[b.type] || b.title || b.type}
-                          </div>
-                          <div style={{ fontSize: 11, color: "#A8A29E" }}>
-                            {locked ? "Complete previous phases to unlock" : layerMeta[b.type]?.badge?.split(" ").slice(1).join(" ") || b.type}
-                          </div>
-                        </div>
-                      </button>
-                    );
-                  })}
+            {/* ═══ CORE PATH ═══ */}
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: "#0D9488" }}>✅ Core Path</span>
                 </div>
-              );
-            })}
+                <span style={{ fontSize: 11, fontWeight: 600, color: "#A8A29E" }}>
+                  {coreComplete}/{coreIndices.length} complete
+                </span>
+              </div>
+              <p style={{ fontSize: 11, color: "#78716C", marginBottom: 8 }}>Complete these to finish the lesson (~10 min)</p>
 
+              {/* Core progress dots */}
+              <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 10, padding: "0 4px" }}>
+                {coreIndices.map((idx, ci) => (
+                  <React.Fragment key={idx}>
+                    <div style={{
+                      width: 24, height: 24, borderRadius: "50%", fontSize: 12, fontWeight: 700,
+                      display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                      background: understoodBlocks.has(idx) ? "#0D9488" : idx === activeBlock ? "#E7E5E4" : "#F5F5F4",
+                      color: understoodBlocks.has(idx) ? "white" : "#78716C",
+                      border: idx === activeBlock && !understoodBlocks.has(idx) ? "2px solid #0D9488" : "none",
+                    }}>
+                      {understoodBlocks.has(idx) ? "✓" : navBlocks[idx]?.icon || "•"}
+                    </div>
+                    {ci < coreIndices.length - 1 && (
+                      <div style={{ flex: 1, height: 2, background: understoodBlocks.has(idx) ? "#0D9488" : "#E7E5E4", borderRadius: 1 }} />
+                    )}
+                  </React.Fragment>
+                ))}
+              </div>
+
+              {coreIndices.map(i => {
+                const b = navBlocks[i];
+                const isActive = i === activeBlock;
+                const isDone = understoodBlocks.has(i);
+                return (
+                  <button key={i} onClick={() => { goToBlock(i); setShowSectionsSheet(false); }} style={{
+                    width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 12px",
+                    borderRadius: 10, border: isDone ? "1px solid #BBF7D0" : "1px solid #E7E5E4",
+                    textAlign: "left", marginBottom: 4, cursor: "pointer",
+                    background: isDone ? "#F0FDF4" : isActive ? "#F0FDFA" : "white",
+                    transition: "all 0.15s",
+                  }}>
+                    <div style={{
+                      width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
+                      background: isDone ? "#0D9488" : "#F5F5F4",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      color: isDone ? "white" : "#78716C", fontSize: 12, fontWeight: 700,
+                    }}>
+                      {isDone ? "✓" : b.icon || "•"}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: "#1C1917" }}>
+                        {blockLabels[b.type] || b.title}
+                      </div>
+                      <div style={{ fontSize: 11, color: "#A8A29E" }}>
+                        {layerMeta[b.type]?.badge?.split(" ").slice(1).join(" ") || b.type}
+                      </div>
+                    </div>
+                    {isDone && <span style={{ fontSize: 11, fontWeight: 600, color: "#0D9488" }}>✓ Done</span>}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* ═══ DEEP PATH ═══ */}
+            <div>
+              <div style={{
+                display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8,
+                padding: "8px 12px", borderRadius: 10,
+                background: isDeepUnlocked ? "#F5F3FF" : "#FAFAF9",
+                border: isDeepUnlocked ? "1px solid #DDD6FE" : "1px solid #E7E5E4",
+              }}>
+                <span style={{ fontSize: 14, fontWeight: 700, color: isDeepUnlocked ? "#8B5CF6" : "#A8A29E" }}>
+                  {isDeepUnlocked ? "🚀 Deep Path — Unlocked!" : "🔒 Deep Path"}
+                </span>
+                {!isDeepUnlocked && (
+                  <span style={{ fontSize: 11, color: "#A8A29E" }}>
+                    {coreComplete}/{coreIndices.length} core done
+                  </span>
+                )}
+              </div>
+
+              <p style={{ fontSize: 11, color: "#78716C", marginBottom: 8 }}>
+                {isDeepUnlocked
+                  ? "Go deeper — challenge assumptions, find real-world connections, think big"
+                  : `Complete all ${coreIndices.length} core sections to unlock`
+                }
+              </p>
+
+              {!isDeepUnlocked && (
+                <div style={{
+                  display: "flex", alignItems: "center", gap: 8, padding: "10px 12px",
+                  background: "#FFFBEB", borderRadius: 10, border: "1px solid #FEF3C7", marginBottom: 8,
+                }}>
+                  <span>💡</span>
+                  <span style={{ fontSize: 11, color: "#92400E", lineHeight: 1.4 }}>
+                    Students who complete the Deep Path score 25% higher in exams
+                  </span>
+                </div>
+              )}
+
+              {deepIndices.map(i => {
+                const b = navBlocks[i];
+                const locked = isBlockLocked(i);
+                const isDone = understoodBlocks.has(i);
+                return (
+                  <button key={i} onClick={() => {
+                    if (locked) { toast.error("Complete all Core sections first 🔒"); return; }
+                    goToBlock(i); setShowSectionsSheet(false);
+                  }} style={{
+                    width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 12px",
+                    borderRadius: 10, border: "1px solid #E7E5E4",
+                    textAlign: "left", marginBottom: 4, cursor: locked ? "not-allowed" : "pointer",
+                    background: isDone ? "#F5F3FF" : "white",
+                    opacity: locked ? 0.5 : 1, transition: "all 0.15s",
+                  }}>
+                    <div style={{
+                      width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
+                      background: locked ? "#E7E5E4" : isDone ? "#8B5CF6" : "#F5F5F4",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      color: isDone ? "white" : locked ? "#A8A29E" : "#78716C", fontSize: 12,
+                    }}>
+                      {locked ? "🔒" : isDone ? "✓" : b.icon || "•"}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: locked ? "#A8A29E" : "#1C1917" }}>
+                        {blockLabels[b.type] || b.title}
+                      </div>
+                      <div style={{ fontSize: 11, color: "#A8A29E" }}>
+                        {locked ? "Complete core to unlock" : layerMeta[b.type]?.badge?.split(" ").slice(1).join(" ") || b.type}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </>
       )}
