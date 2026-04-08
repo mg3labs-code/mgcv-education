@@ -413,8 +413,7 @@ const TextbookEpisode = () => {
   const meta = block ? (layerMeta[block.type] || defaultMeta) : defaultMeta;
   const isUnderstood = understoodBlocks.has(activeBlock);
   const isLastBlock = activeBlock === navBlocks.length - 1;
-  const isInCore = block && CORE_BLOCKS.has(block.type);
-  const currentTrack = isInCore ? coreTrack : deepTrack;
+  const currentPhase = block ? getPhaseForBlock(block.type) : phases[0];
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col" style={{ background: "#F9FAFB", fontFamily: "'DM Sans', sans-serif" }}>
@@ -431,23 +430,20 @@ const TextbookEpisode = () => {
           alignItems: "center", justifyContent: "center", color: "#78716C", flexShrink: 0,
         }}><X className="h-4 w-4" /></button>
 
-        {/* Core progress dots */}
+        {/* Progress dots — colored by phase */}
         <div style={{ display: "flex", alignItems: "center", gap: 3, flex: 1, justifyContent: "center", padding: "0 12px", overflow: "hidden" }}>
           {navBlocks.map((nb, i) => {
-            const isCore = CORE_BLOCKS.has(nb.type);
-            const isDeep = DEEP_BLOCKS.has(nb.type);
+            const phase = getPhaseForBlock(nb.type);
             return (
               <div key={i} onClick={() => goToBlock(i)} style={{
                 width: navBlocks.length > 15 ? 4 : navBlocks.length > 8 ? 6 : 8,
                 height: navBlocks.length > 15 ? 4 : navBlocks.length > 8 ? 6 : 8,
-                borderRadius: 2, cursor: isBlockLocked(i) ? "not-allowed" : "pointer",
+                borderRadius: 2, cursor: "pointer",
                 background: understoodBlocks.has(i)
-                  ? (isCore ? "#0D9488" : "#8B5CF6")
+                  ? phase.color
                   : i === activeBlock ? "#1C1917"
-                  : isBlockLocked(i) ? "#E7E5E4"
                   : "#D6D3D1",
                 transition: "all 0.2s", flexShrink: 0,
-                opacity: isBlockLocked(i) ? 0.4 : 1,
               }} />
             );
           })}
@@ -463,16 +459,16 @@ const TextbookEpisode = () => {
       </div>
 
       <>
-      {/* ═══ TRACK BADGE (simplified — no split counts) ═══ */}
+      {/* ═══ PHASE BADGE ═══ */}
       <div style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
         padding: "6px 16px", fontSize: 12, flexShrink: 0,
-        background: isInCore ? "#F0FDFA" : isDeepUnlocked ? "#F5F3FF" : "#FAFAF9",
+        background: currentPhase.color === "#0D9488" ? "#F0FDFA" : currentPhase.color === "#3B82F6" ? "#EFF6FF" : "#F5F3FF",
         borderBottom: "1px solid #F5F5F4",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <span style={{ fontWeight: 700, color: currentTrack.color }}>
-            {isInCore ? `✅ Core Path` : isDeepUnlocked ? `🚀 Deep Path` : `🔒 Deep Path`}
+          <span style={{ fontWeight: 700, color: currentPhase.color, textTransform: "uppercase", letterSpacing: "0.05em", fontSize: 11 }}>
+            {currentPhase.shortLabel}
           </span>
           <span style={{ color: "#D6D3D1" }}>•</span>
           <span style={{ color: "#78716C" }}>{blockLabels[block?.type || "concept"] || block?.type}</span>
