@@ -113,7 +113,6 @@ const StudentOnboarding = () => {
 
       if (prefError) throw prefError;
 
-      localStorage.setItem(`onboarding_complete_${user.id}`, 'true');
       toast.success("You're all set! Let's start learning 🚀");
       navigate('/student');
     } catch (err: any) {
@@ -124,8 +123,10 @@ const StudentOnboarding = () => {
     }
   };
 
-  const handleSkip = () => {
-    if (user) localStorage.setItem(`onboarding_complete_${user.id}`, 'true');
+  const handleSkip = async () => {
+    if (user) {
+      await supabase.from('student_preferences').update({ onboarding_completed: true }).eq('user_id', user.id);
+    }
     navigate('/student');
   };
 
