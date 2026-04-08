@@ -86,7 +86,7 @@ export function useChapters(subjectSlug?: string) {
 
       let query = supabase
         .from("tb_chapters")
-        .select("*, tb_episodes(id)")
+        .select("*, tb_episodes(id, slug, number, title, subtitle, duration, type, sort_order, is_published)")
         .order("sort_order");
       
       if (subjectId) {
