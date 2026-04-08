@@ -86,7 +86,7 @@ export function useChapters(subjectSlug?: string) {
 
       let query = supabase
         .from("tb_chapters")
-        .select("*, tb_episodes(id)")
+        .select("*, tb_episodes(id, slug, number, title, subtitle, duration, type, sort_order, is_published)")
         .order("sort_order");
       
       if (subjectId) {
@@ -105,15 +105,17 @@ export function useChapters(subjectSlug?: string) {
         color: ch.color || "#6366f1",
         periods: ch.periods || 0,
         pageRange: ch.page_range || "",
-        episodes: (ch.tb_episodes || []).map((_: any, i: number) => ({
-          id: `placeholder-${i}`,
-          number: i + 1,
-          title: "",
-          subtitle: "",
-          duration: "",
-          type: "Concept" as const,
-          blocks: [],
-        })),
+        episodes: (ch.tb_episodes || [])
+          .sort((a: any, b: any) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+          .map((ep: any) => ({
+            id: ep.slug,
+            number: ep.number,
+            title: ep.title || "",
+            subtitle: ep.subtitle || "",
+            duration: ep.duration || "",
+            type: ep.type || "Concept",
+            blocks: [],
+          })),
       }));
 
       // Merge: prefer DB data, fall back to hardcoded for chapters with content
