@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -5,36 +6,57 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import StudyCompanion from "./components/student/StudyCompanion";
 import CommandPalette from "./components/CommandPalette";
 import Index from "./pages/Index";
 
-import StudentDashboard from "./pages/StudentDashboard";
-import LearningEpisode from "./pages/LearningEpisode";
-import TeacherDashboard from "./pages/TeacherDashboard";
-import AdminDashboard from "./pages/AdminDashboard";
-import StudentOnboarding from "./pages/StudentOnboarding";
-import TeacherSchedule from "./pages/TeacherSchedule";
-import TeacherAnalytics from "./pages/TeacherAnalytics";
-import StudentCalendar from "./pages/StudentCalendar";
-import StudentAssignments from "./pages/StudentAssignments";
-import TeacherAssignments from "./pages/TeacherAssignments";
-import TeacherAttendance from "./pages/TeacherAttendance";
-import TeacherPerformance from "./pages/TeacherPerformance";
-import TeacherDailyTodo from "./pages/TeacherDailyTodo";
-import TeacherInsights from "./pages/TeacherInsights";
-import StudentExamRoom from "./pages/StudentExamRoom";
-import StudentTextbook from "./pages/StudentTextbook";
-import TextbookChapter from "./pages/TextbookChapter";
-import TextbookEpisode from "./pages/TextbookEpisode";
-import TextbookLab from "./pages/TextbookLab";
-import StudentCalendarRedirect from "./pages/StudentCalendar";
-import ResetPassword from "./pages/ResetPassword";
-import AttractionDemo from "./pages/AttractionDemo";
-import TextbookReference from "./pages/TextbookReference";
-import NotFound from "./pages/NotFound";
+const StudentDashboard = lazy(() => import("./pages/StudentDashboard"));
+const LearningEpisode = lazy(() => import("./pages/LearningEpisode"));
+const TeacherDashboard = lazy(() => import("./pages/TeacherDashboard"));
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const StudentOnboarding = lazy(() => import("./pages/StudentOnboarding"));
+const TeacherSchedule = lazy(() => import("./pages/TeacherSchedule"));
+const TeacherAnalytics = lazy(() => import("./pages/TeacherAnalytics"));
+const StudentCalendar = lazy(() => import("./pages/StudentCalendar"));
+const StudentAssignments = lazy(() => import("./pages/StudentAssignments"));
+const TeacherAssignments = lazy(() => import("./pages/TeacherAssignments"));
+const TeacherAttendance = lazy(() => import("./pages/TeacherAttendance"));
+const TeacherPerformance = lazy(() => import("./pages/TeacherPerformance"));
+const TeacherDailyTodo = lazy(() => import("./pages/TeacherDailyTodo"));
+const TeacherInsights = lazy(() => import("./pages/TeacherInsights"));
+const StudentExamRoom = lazy(() => import("./pages/StudentExamRoom"));
+const StudentTextbook = lazy(() => import("./pages/StudentTextbook"));
+const TextbookChapter = lazy(() => import("./pages/TextbookChapter"));
+const TextbookEpisode = lazy(() => import("./pages/TextbookEpisode"));
+const TextbookLab = lazy(() => import("./pages/TextbookLab"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const AttractionDemo = lazy(() => import("./pages/AttractionDemo"));
+const TextbookReference = lazy(() => import("./pages/TextbookReference"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 2,
+      staleTime: 2 * 60 * 1000,
+      gcTime: 10 * 60 * 1000,
+      refetchOnWindowFocus: false,
+    },
+    mutations: {
+      retry: 1,
+    },
+  },
+});
+
+const PageLoader = () => (
+  <div className="min-h-screen bg-background flex items-center justify-center">
+    <div className="text-center animate-fade-in">
+      <h2 className="text-lg font-serif font-semibold text-foreground">Loading...</h2>
+      <p className="text-sm text-muted-foreground mt-1">Preparing your workspace</p>
+    </div>
+  </div>
+);
 
 const CompanionWrapper = () => {
   const { role } = useAuth();
@@ -49,43 +71,47 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <CommandPalette />
-          <CompanionWrapper />
-          <Routes>
-            <Route path="/" element={<Index />} />
-            
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/attraction-demo" element={<AttractionDemo />} />
-            <Route path="/textbook-reference/:chapterId/:episodeId" element={<TextbookReference />} />
-            <Route path="/student" element={<ProtectedRoute><StudentDashboard /></ProtectedRoute>} />
-            <Route path="/student/episode/:id" element={<ProtectedRoute><LearningEpisode /></ProtectedRoute>} />
-            <Route path="/student/onboarding" element={<ProtectedRoute><StudentOnboarding /></ProtectedRoute>} />
-            <Route path="/student/episodes" element={<ProtectedRoute><StudentDashboard /></ProtectedRoute>} />
-            <Route path="/student/progress" element={<ProtectedRoute><StudentDashboard /></ProtectedRoute>} />
-            <Route path="/student/calendar" element={<ProtectedRoute><StudentCalendar /></ProtectedRoute>} />
-            <Route path="/student/assignments" element={<ProtectedRoute><StudentAssignments /></ProtectedRoute>} />
-            <Route path="/student/textbook" element={<ProtectedRoute><StudentTextbook /></ProtectedRoute>} />
-            <Route path="/student/textbook/:chapterId" element={<ProtectedRoute><TextbookChapter /></ProtectedRoute>} />
-            <Route path="/student/textbook/:chapterId/:episodeId" element={<ProtectedRoute><TextbookEpisode /></ProtectedRoute>} />
-            <Route path="/student/textbook-lab" element={<ProtectedRoute><TextbookLab /></ProtectedRoute>} />
-            <Route path="/student/deep-dive" element={<ProtectedRoute><StudentCalendarRedirect /></ProtectedRoute>} />
-            <Route path="/teacher" element={<ProtectedRoute><TeacherDashboard /></ProtectedRoute>} />
-            <Route path="/teacher/students" element={<ProtectedRoute><TeacherDashboard /></ProtectedRoute>} />
-            <Route path="/teacher/daily-todo" element={<ProtectedRoute><TeacherDailyTodo /></ProtectedRoute>} />
-            <Route path="/teacher/schedule" element={<ProtectedRoute><TeacherSchedule /></ProtectedRoute>} />
-            <Route path="/teacher/analytics" element={<ProtectedRoute><TeacherAnalytics /></ProtectedRoute>} />
-            <Route path="/teacher/assignments" element={<ProtectedRoute><TeacherAssignments /></ProtectedRoute>} />
-            <Route path="/teacher/attendance" element={<ProtectedRoute><TeacherAttendance /></ProtectedRoute>} />
-            <Route path="/teacher/performance" element={<ProtectedRoute><TeacherPerformance /></ProtectedRoute>} />
-            <Route path="/teacher/quiz" element={<ProtectedRoute><TeacherDashboard /></ProtectedRoute>} />
-            <Route path="/teacher/insights" element={<ProtectedRoute><TeacherInsights /></ProtectedRoute>} />
-            <Route path="/teacher/exam-room" element={<ProtectedRoute><StudentExamRoom /></ProtectedRoute>} />
-            <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
-            <Route path="/admin/schools" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
-            <Route path="/admin/analytics" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
-            <Route path="/admin/settings" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <ErrorBoundary>
+            <CommandPalette />
+            <CompanionWrapper />
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/attraction-demo" element={<AttractionDemo />} />
+                <Route path="/textbook-reference/:chapterId/:episodeId" element={<TextbookReference />} />
+                <Route path="/student" element={<ProtectedRoute><StudentDashboard /></ProtectedRoute>} />
+                <Route path="/student/episode/:id" element={<ProtectedRoute><LearningEpisode /></ProtectedRoute>} />
+                <Route path="/student/onboarding" element={<ProtectedRoute><StudentOnboarding /></ProtectedRoute>} />
+                <Route path="/student/episodes" element={<ProtectedRoute><StudentDashboard /></ProtectedRoute>} />
+                <Route path="/student/progress" element={<ProtectedRoute><StudentDashboard /></ProtectedRoute>} />
+                <Route path="/student/calendar" element={<ProtectedRoute><StudentCalendar /></ProtectedRoute>} />
+                <Route path="/student/assignments" element={<ProtectedRoute><StudentAssignments /></ProtectedRoute>} />
+                <Route path="/student/textbook" element={<ProtectedRoute><StudentTextbook /></ProtectedRoute>} />
+                <Route path="/student/textbook/:chapterId" element={<ProtectedRoute><TextbookChapter /></ProtectedRoute>} />
+                <Route path="/student/textbook/:chapterId/:episodeId" element={<ProtectedRoute><TextbookEpisode /></ProtectedRoute>} />
+                <Route path="/student/textbook-lab" element={<ProtectedRoute><TextbookLab /></ProtectedRoute>} />
+                <Route path="/student/deep-dive" element={<ProtectedRoute><StudentCalendar /></ProtectedRoute>} />
+                <Route path="/teacher" element={<ProtectedRoute><TeacherDashboard /></ProtectedRoute>} />
+                <Route path="/teacher/students" element={<ProtectedRoute><TeacherDashboard /></ProtectedRoute>} />
+                <Route path="/teacher/daily-todo" element={<ProtectedRoute><TeacherDailyTodo /></ProtectedRoute>} />
+                <Route path="/teacher/schedule" element={<ProtectedRoute><TeacherSchedule /></ProtectedRoute>} />
+                <Route path="/teacher/analytics" element={<ProtectedRoute><TeacherAnalytics /></ProtectedRoute>} />
+                <Route path="/teacher/assignments" element={<ProtectedRoute><TeacherAssignments /></ProtectedRoute>} />
+                <Route path="/teacher/attendance" element={<ProtectedRoute><TeacherAttendance /></ProtectedRoute>} />
+                <Route path="/teacher/performance" element={<ProtectedRoute><TeacherPerformance /></ProtectedRoute>} />
+                <Route path="/teacher/quiz" element={<ProtectedRoute><TeacherDashboard /></ProtectedRoute>} />
+                <Route path="/teacher/insights" element={<ProtectedRoute><TeacherInsights /></ProtectedRoute>} />
+                <Route path="/teacher/exam-room" element={<ProtectedRoute><StudentExamRoom /></ProtectedRoute>} />
+                <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+                <Route path="/admin/schools" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+                <Route path="/admin/analytics" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+                <Route path="/admin/settings" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
+          </ErrorBoundary>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
