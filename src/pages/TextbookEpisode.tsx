@@ -739,144 +739,65 @@ const TextbookEpisode = () => {
               }} />
             </div>
 
-            {/* ═══ CORE PATH ═══ */}
-            <div style={{ marginBottom: 20 }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <span style={{ fontSize: 14, fontWeight: 700, color: "#0D9488" }}>✅ Core Path</span>
-                </div>
-                <span style={{ fontSize: 11, fontWeight: 600, color: "#A8A29E" }}>
-                  {coreComplete}/{coreIndices.length} complete
-                </span>
-              </div>
-              <p style={{ fontSize: 11, color: "#78716C", marginBottom: 8 }}>Complete these to finish the lesson (~10 min)</p>
-
-              {/* Core progress dots */}
-              <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 10, padding: "0 4px" }}>
-                {coreIndices.map((idx, ci) => (
-                  <React.Fragment key={idx}>
-                    <div style={{
-                      width: 24, height: 24, borderRadius: "50%", fontSize: 12, fontWeight: 700,
-                      display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-                      background: understoodBlocks.has(idx) ? "#0D9488" : idx === activeBlock ? "#E7E5E4" : "#F5F5F4",
-                      color: understoodBlocks.has(idx) ? "white" : "#78716C",
-                      border: idx === activeBlock && !understoodBlocks.has(idx) ? "2px solid #0D9488" : "none",
-                    }}>
-                      {understoodBlocks.has(idx) ? "✓" : navBlocks[idx]?.icon || "•"}
-                    </div>
-                    {ci < coreIndices.length - 1 && (
-                      <div style={{ flex: 1, height: 2, background: understoodBlocks.has(idx) ? "#0D9488" : "#E7E5E4", borderRadius: 1 }} />
-                    )}
-                  </React.Fragment>
-                ))}
-              </div>
-
-              {coreIndices.map(i => {
-                const b = navBlocks[i];
-                const isActive = i === activeBlock;
-                const isDone = understoodBlocks.has(i);
-                return (
-                  <button key={i} onClick={() => { goToBlock(i); setShowSectionsSheet(false); }} style={{
-                    width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 12px",
-                    borderRadius: 10, border: isDone ? "1px solid #BBF7D0" : "1px solid #E7E5E4",
-                    textAlign: "left", marginBottom: 4, cursor: "pointer",
-                    background: isDone ? "#F0FDF4" : isActive ? "#F0FDFA" : "white",
-                    transition: "all 0.15s",
+            {/* ═══ 3-PHASE SECTIONS ═══ */}
+            {phaseIndices.map((phase, pi) => {
+              const phaseDone = phase.indices.filter(i => understoodBlocks.has(i)).length;
+              return (
+                <div key={phase.id} style={{ marginBottom: 20 }}>
+                  {/* Phase header */}
+                  <div style={{
+                    display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8,
+                    padding: "8px 12px", borderRadius: 10,
+                    background: phase.color === "#0D9488" ? "#F0FDFA" : phase.color === "#3B82F6" ? "#EFF6FF" : "#F5F3FF",
+                    borderTop: `3px solid ${phase.color}`,
                   }}>
-                    <div style={{
-                      width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
-                      background: isDone ? "#0D9488" : "#F5F5F4",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      color: isDone ? "white" : "#78716C", fontSize: 12, fontWeight: 700,
-                    }}>
-                      {isDone ? "✓" : b.icon || "•"}
+                    <div>
+                      <span style={{ fontSize: 11, fontWeight: 800, color: phase.color, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                        {phase.shortLabel}
+                      </span>
+                      <p style={{ fontSize: 13, fontWeight: 700, color: "#1C1917", margin: "2px 0 0" }}>{phase.label}</p>
                     </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: "#1C1917" }}>
-                        {blockLabels[b.type] || b.title}
-                      </div>
-                      <div style={{ fontSize: 11, color: "#A8A29E" }}>
-                        {layerMeta[b.type]?.badge?.split(" ").slice(1).join(" ") || b.type}
-                      </div>
-                    </div>
-                    {isDone && <span style={{ fontSize: 11, fontWeight: 600, color: "#0D9488" }}>✓ Done</span>}
-                  </button>
-                );
-              })}
-            </div>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: "#A8A29E" }}>
+                      {phaseDone}/{phase.indices.length}
+                    </span>
+                  </div>
+                  <p style={{ fontSize: 11, color: "#78716C", marginBottom: 8 }}>{phase.subtitle}</p>
 
-            {/* ═══ DEEP PATH ═══ */}
-            <div>
-              <div style={{
-                display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8,
-                padding: "8px 12px", borderRadius: 10,
-                background: isDeepUnlocked ? "#F5F3FF" : "#FAFAF9",
-                border: isDeepUnlocked ? "1px solid #DDD6FE" : "1px solid #E7E5E4",
-              }}>
-                <span style={{ fontSize: 14, fontWeight: 700, color: isDeepUnlocked ? "#8B5CF6" : "#A8A29E" }}>
-                  {isDeepUnlocked ? "🚀 Deep Path — Unlocked!" : "🔒 Deep Path"}
-                </span>
-                {!isDeepUnlocked && (
-                  <span style={{ fontSize: 11, color: "#A8A29E" }}>
-                    {coreComplete}/{coreIndices.length} core done
-                  </span>
-                )}
-              </div>
-
-              <p style={{ fontSize: 11, color: "#78716C", marginBottom: 8 }}>
-                {isDeepUnlocked
-                  ? "Go deeper — challenge assumptions, find real-world connections, think big"
-                  : `Complete all ${coreIndices.length} core sections to unlock`
-                }
-              </p>
-
-              {!isDeepUnlocked && (
-                <div style={{
-                  display: "flex", alignItems: "center", gap: 8, padding: "10px 12px",
-                  background: "#FFFBEB", borderRadius: 10, border: "1px solid #FEF3C7", marginBottom: 8,
-                }}>
-                  <span>💡</span>
-                  <span style={{ fontSize: 11, color: "#92400E", lineHeight: 1.4 }}>
-                    Students who complete the Deep Path score 25% higher in exams
-                  </span>
+                  {phase.indices.map(i => {
+                    const b = navBlocks[i];
+                    const isActive = i === activeBlock;
+                    const isDone = understoodBlocks.has(i);
+                    return (
+                      <button key={i} onClick={() => { goToBlock(i); setShowSectionsSheet(false); }} style={{
+                        width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 12px",
+                        borderRadius: 10, border: isDone ? `1px solid ${phase.color}40` : "1px solid #E7E5E4",
+                        textAlign: "left", marginBottom: 4, cursor: "pointer",
+                        background: isDone ? `${phase.color}08` : isActive ? "#F0FDFA" : "white",
+                        transition: "all 0.15s",
+                      }}>
+                        <div style={{
+                          width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
+                          background: isDone ? phase.color : "#F5F5F4",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          color: isDone ? "white" : "#78716C", fontSize: 12, fontWeight: 700,
+                        }}>
+                          {isDone ? "✓" : b.icon || "•"}
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: "#1C1917" }}>
+                            {blockLabels[b.type] || b.title}
+                          </div>
+                          <div style={{ fontSize: 11, color: "#A8A29E" }}>
+                            {layerMeta[b.type]?.badge?.split(" ").slice(1).join(" ") || b.type}
+                          </div>
+                        </div>
+                        {isDone && <span style={{ fontSize: 11, fontWeight: 600, color: phase.color }}>✓ Done</span>}
+                      </button>
+                    );
+                  })}
                 </div>
-              )}
-
-              {deepIndices.map(i => {
-                const b = navBlocks[i];
-                const locked = isBlockLocked(i);
-                const isDone = understoodBlocks.has(i);
-                return (
-                  <button key={i} onClick={() => {
-                    if (locked) { toast.error("Complete all Core sections first 🔒"); return; }
-                    goToBlock(i); setShowSectionsSheet(false);
-                  }} style={{
-                    width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 12px",
-                    borderRadius: 10, border: "1px solid #E7E5E4",
-                    textAlign: "left", marginBottom: 4, cursor: locked ? "not-allowed" : "pointer",
-                    background: isDone ? "#F5F3FF" : "white",
-                    opacity: locked ? 0.5 : 1, transition: "all 0.15s",
-                  }}>
-                    <div style={{
-                      width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
-                      background: locked ? "#E7E5E4" : isDone ? "#8B5CF6" : "#F5F5F4",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      color: isDone ? "white" : locked ? "#A8A29E" : "#78716C", fontSize: 12,
-                    }}>
-                      {locked ? "🔒" : isDone ? "✓" : b.icon || "•"}
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: locked ? "#A8A29E" : "#1C1917" }}>
-                        {blockLabels[b.type] || b.title}
-                      </div>
-                      <div style={{ fontSize: 11, color: "#A8A29E" }}>
-                        {locked ? "Complete core to unlock" : layerMeta[b.type]?.badge?.split(" ").slice(1).join(" ") || b.type}
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
+              );
+            })}
           </div>
         </>
       )}
