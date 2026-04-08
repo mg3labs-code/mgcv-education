@@ -177,22 +177,21 @@ const TextbookEpisode = () => {
   const langSubject = useMemo(() => getSubjectFromSlug(chapterId), [chapterId]);
   const isLanguage = !!langSubject;
 
-  // Two-track: Core vs Deep
-  const coreIndices = useMemo(() =>
-    navBlocks.map((b, i) => ({ type: b.type, i })).filter(({ type }) => CORE_BLOCKS.has(type)).map(({ i }) => i),
-    [navBlocks]
-  );
-  const deepIndices = useMemo(() =>
-    navBlocks.map((b, i) => ({ type: b.type, i })).filter(({ type }) => DEEP_BLOCKS.has(type)).map(({ i }) => i),
-    [navBlocks]
-  );
-  const coreComplete = coreIndices.filter(i => understoodBlocks.has(i)).length;
-  const isCoreComplete = coreIndices.length > 0 && coreIndices.every(i => understoodBlocks.has(i));
-  const isDeepUnlocked = isCoreComplete;
+  // 3-Phase indices
+  const getPhaseForBlock = useCallback((type: string) => {
+    if (UNDERSTAND_BLOCKS.has(type)) return phases[0];
+    if (PROVE_BLOCKS.has(type)) return phases[1];
+    if (MASTER_BLOCKS.has(type)) return phases[2];
+    return phases[0];
+  }, []);
 
-  const isBlockLocked = useCallback((index: number) => {
-    return deepIndices.includes(index) && !isDeepUnlocked;
-  }, [deepIndices, isDeepUnlocked]);
+  const phaseIndices = useMemo(() => phases.map(p => ({
+    ...p,
+    indices: navBlocks.map((b, i) => ({ type: b.type, i })).filter(({ type }) => p.blockSet.has(type)).map(({ i }) => i),
+  })), [navBlocks]);
+
+  // No blocks are locked in 3-phase system
+  const isBlockLocked = useCallback((_index: number) => false, []);
 
   useEffect(() => { totalBlocksRef.current = navBlocks.length; }, [navBlocks.length]);
 
