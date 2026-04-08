@@ -468,7 +468,7 @@ const TextbookEpisode = () => {
       </div>
 
       <>
-      {/* ═══ TRACK BADGE ═══ */}
+      {/* ═══ TRACK BADGE (simplified — no split counts) ═══ */}
       <div style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
         padding: "6px 16px", fontSize: 12, flexShrink: 0,
@@ -480,13 +480,10 @@ const TextbookEpisode = () => {
             {isInCore ? `✅ Core Path` : isDeepUnlocked ? `🚀 Deep Path` : `🔒 Deep Path`}
           </span>
           <span style={{ color: "#D6D3D1" }}>•</span>
-          <span style={{ color: "#78716C" }}>{meta.badge?.split(" ").slice(1).join(" ") || block?.type}</span>
+          <span style={{ color: "#78716C" }}>{blockLabels[block?.type || "concept"] || block?.type}</span>
         </div>
-        <span style={{ fontWeight: 600, color: currentTrack.color, fontSize: 11 }}>
-          {isInCore
-            ? `${coreComplete}/${coreIndices.length} done`
-            : `${deepIndices.filter(i => understoodBlocks.has(i)).length}/${deepIndices.length}`
-          }
+        <span style={{ fontWeight: 600, color: "#78716C", fontSize: 11 }}>
+          {understoodBlocks.size}/{navBlocks.length} done
         </span>
       </div>
 
