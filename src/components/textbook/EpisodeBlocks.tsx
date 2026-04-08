@@ -57,51 +57,74 @@ export const ConceptBlock = ({ content, onComplete }: { content: ConceptContent;
   );
 };
 
-// ─── Drag-Drop Activity Block ───────────────────────────────
+// ─── Tap-to-Place Activity Block (touch + desktop friendly) ─
 
 interface DragDropItem { value: string; categories?: string[] }
 interface ActivityCategory { id: string; description: string }
 export interface ActivityContent { instruction: string; type?: string; items?: DragDropItem[]; categories?: ActivityCategory[] }
 
 const DragDropActivityBlock = ({ content, onComplete }: { content: ActivityContent; onComplete?: () => void }) => {
-  const [dragItem, setDragItem] = useState<string | null>(null);
+  const [selectedItem, setSelectedItem] = useState<string | null>(null);
   const [placements, setPlacements] = useState<Record<string, string[]>>({});
   const [feedback, setFeedback] = useState<Record<string, Record<string, "correct" | "wrong">>>({});
   const items = content.items || [];
   const categories = content.categories || [];
-  const handleDragStart = (e: React.DragEvent, value: string) => { e.dataTransfer.setData("text/plain", value); setDragItem(value); };
-  const handleDragOver = (e: React.DragEvent) => e.preventDefault();
-  const handleDrop = (e: React.DragEvent, categoryId: string) => {
-    e.preventDefault();
-    const value = e.dataTransfer.getData("text/plain");
-    const item = items.find(it => it.value === value);
+
+  const placedValues = new Set(Object.values(placements).flat());
+
+  const handleSelectItem = (value: string) => {
+    if (placedValues.has(value)) return;
+    setSelectedItem(prev => prev === value ? null : value);
+  };
+
+  const handlePlaceInCategory = (categoryId: string) => {
+    if (!selectedItem) return;
+    const item = items.find(it => it.value === selectedItem);
     if (!item) return;
-    if (placements[categoryId]?.includes(value)) return;
+    if (placements[categoryId]?.includes(selectedItem)) return;
     const isCorrect = item.categories?.includes(categoryId);
-    const newPlacements = { ...placements, [categoryId]: [...(placements[categoryId] || []), value] };
+    const newPlacements = { ...placements, [categoryId]: [...(placements[categoryId] || []), selectedItem] };
     setPlacements(newPlacements);
-    setFeedback(prev => ({ ...prev, [categoryId]: { ...(prev[categoryId] || {}), [value]: isCorrect ? "correct" : "wrong" } }));
-    setDragItem(null);
-    // Check if all items placed
+    setFeedback(prev => ({ ...prev, [categoryId]: { ...(prev[categoryId] || {}), [selectedItem]: isCorrect ? "correct" : "wrong" } }));
+    setSelectedItem(null);
     const totalPlaced = Object.values(newPlacements).flat().length;
     if (totalPlaced >= items.length) onComplete?.();
   };
-  const handleReset = () => { setPlacements({}); setFeedback({}); };
+
+  const handleReset = () => { setPlacements({}); setFeedback({}); setSelectedItem(null); };
   const totalPlaced = Object.values(placements).flat().length;
   const totalCorrect = Object.values(feedback).flatMap(f => Object.values(f)).filter(v => v === "correct").length;
+
   return (
     <div className="space-y-5">
       <div className="rounded-xl bg-primary/5 border border-primary/20 p-4">
         <p className="text-base font-medium text-foreground leading-relaxed">{content.instruction}</p>
       </div>
       <div className="space-y-2">
-        <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Drag these numbers</p>
+        <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+          {selectedItem ? "Now tap a category below to place it ↓" : "Tap an item to select it"}
+        </p>
         <div className="flex flex-wrap gap-3">
-          {items.map((item) => (
-            <div key={item.value} draggable onDragStart={(e) => handleDragStart(e, item.value)} className="px-5 py-2.5 rounded-full bg-card border-2 border-border text-foreground font-semibold text-base cursor-grab active:cursor-grabbing hover:border-primary hover:shadow-md transition-all select-none flex items-center gap-2">
-              <GripHorizontal className="h-3.5 w-3.5 text-muted-foreground" />{item.value}
-            </div>
-          ))}
+          {items.map((item) => {
+            const isPlaced = placedValues.has(item.value);
+            const isSelected = selectedItem === item.value;
+            return (
+              <button
+                key={item.value}
+                onClick={() => handleSelectItem(item.value)}
+                disabled={isPlaced}
+                className={`px-5 py-2.5 rounded-full font-semibold text-base transition-all select-none flex items-center gap-2 border-2 ${
+                  isPlaced
+                    ? "opacity-40 cursor-not-allowed border-border bg-muted text-muted-foreground"
+                    : isSelected
+                    ? "border-primary bg-primary/10 text-primary ring-2 ring-primary/30 scale-105"
+                    : "border-border bg-card text-foreground hover:border-primary hover:shadow-md cursor-pointer"
+                }`}
+              >
+                <GripHorizontal className="h-3.5 w-3.5 text-muted-foreground" />{item.value}
+              </button>
+            );
+          })}
         </div>
       </div>
       <div className="grid grid-cols-2 gap-4">
@@ -109,20 +132,29 @@ const DragDropActivityBlock = ({ content, onComplete }: { content: ActivityConte
           const catPlacements = placements[cat.id] || [];
           const catFeedback = feedback[cat.id] || {};
           return (
-            <div key={cat.id} onDragOver={handleDragOver} onDrop={(e) => handleDrop(e, cat.id)} className={`rounded-xl border-2 border-dashed p-4 min-h-[120px] transition-all ${dragItem ? "border-primary/60 bg-primary/5" : "border-border bg-muted/20"}`}>
+            <button
+              key={cat.id}
+              onClick={() => handlePlaceInCategory(cat.id)}
+              disabled={!selectedItem}
+              className={`rounded-xl border-2 border-dashed p-4 min-h-[120px] transition-all text-left ${
+                selectedItem
+                  ? "border-primary/60 bg-primary/5 cursor-pointer hover:bg-primary/10"
+                  : "border-border bg-muted/20 cursor-default"
+              }`}
+            >
               <div className="mb-3">
                 <span className="inline-block px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-bold">{cat.id}</span>
                 <p className="text-xs text-muted-foreground mt-1">{cat.description}</p>
               </div>
               <div className="flex flex-wrap gap-2 min-h-[40px]">
-                {catPlacements.length === 0 && <p className="text-xs text-muted-foreground/50 italic">Drop numbers here…</p>}
+                {catPlacements.length === 0 && <p className="text-xs text-muted-foreground/50 italic">Tap to place here…</p>}
                 {catPlacements.map((val) => (
                   <span key={val} className={`px-3 py-1.5 rounded-full text-sm font-semibold border-2 transition-all ${catFeedback[val] === "correct" ? "bg-green-50 border-green-400 text-green-800" : catFeedback[val] === "wrong" ? "bg-red-50 border-red-400 text-red-800 line-through" : "bg-card border-border text-foreground"}`}>
                     {val} {catFeedback[val] === "correct" ? "✓" : catFeedback[val] === "wrong" ? "✗" : ""}
                   </span>
                 ))}
               </div>
-            </div>
+            </button>
           );
         })}
       </div>
