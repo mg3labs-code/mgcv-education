@@ -225,7 +225,7 @@ const TextbookEpisode = () => {
   useEffect(() => {
     if (!layerParam || !navBlocks || navBlocks.length === 0) return;
     const timer = setTimeout(() => {
-      const targetSet = layerParam === "deep" ? DEEP_BLOCKS : layerParam === "quiz" ? new Set(["recall", "assessment", "explain"]) : null;
+      const targetSet = layerParam === "deep" ? MASTER_BLOCKS : layerParam === "quiz" ? new Set(["recall", "assessment", "explain"]) : null;
       if (!targetSet) return;
       const idx = navBlocks.findIndex(b => targetSet.has(b.type));
       if (idx >= 0) goToBlock(idx);
