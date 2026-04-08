@@ -48,20 +48,16 @@ const blockLabels: Record<string, string> = {
   implications: "What does this change?", visual_aid: "See it in action",
 };
 
-const CORE_BLOCKS = new Set(["concept", "activity", "recall", "explain", "assessment"]);
-const DEEP_BLOCKS = new Set(["exercise", "reasoning", "assumptions", "connections", "application", "implications"]);
+// 3-Phase system: UNDERSTAND → PROVE → MASTER
+const UNDERSTAND_BLOCKS = new Set(["concept", "activity", "exercise"]);
+const PROVE_BLOCKS = new Set(["recall", "explain", "assessment"]);
+const MASTER_BLOCKS = new Set(["reasoning", "assumptions", "connections", "application", "implications"]);
 
-// Phase config for two-track
-const coreTrack = {
-  id: "core", label: "✅ Core Path", color: "#0D9488",
-  subtitle: "Complete these to finish the lesson",
-  blockSet: CORE_BLOCKS,
-};
-const deepTrack = {
-  id: "deep", label: "🚀 Deep Path", color: "#8B5CF6",
-  subtitle: "Go deeper — challenge assumptions, find connections",
-  blockSet: DEEP_BLOCKS,
-};
+const phases = [
+  { id: "understand", label: "🔍 Discover & Explore", shortLabel: "UNDERSTAND", color: "#0D9488", subtitle: "Core concept + interactive activity + practice", blockSet: UNDERSTAND_BLOCKS },
+  { id: "prove", label: "🎯 Test Yourself", shortLabel: "PROVE", color: "#3B82F6", subtitle: "Quick recall + explain in own words + quiz", blockSet: PROVE_BLOCKS },
+  { id: "master", label: "🚀 Challenge Yourself", shortLabel: "MASTER", color: "#8B5CF6", subtitle: "Deep reasoning + myth-busting + real life", blockSet: MASTER_BLOCKS },
+];
 
 // Language overrides
 const LANG_READ_BLOCKS = new Set(["concept", "activity", "bilingual_concept", "story_reading"]);
