@@ -1,64 +1,104 @@
 
 
-# Fix Textbook Episode UI: Richer Styling, Smart "Got It", Centered Celebration, Interactive Exercises
+# Production Readiness Review & Launch Plan
 
-## Problems Identified
+## Current State Assessment
 
-### 1. Concept sections look "dry" — no color, no visual differentiation
-The `ConceptBlock` renders plain text with minimal styling. The reference screenshot (from production) shows rich colored cards, bordered callouts, highlighted formulas with colored backgrounds, and teal question callouts. Currently, sections render inside a generic `bg-card border-l-4` wrapper but the inner content blocks (especially `ConceptBlock`) have no colored backgrounds, no callout cards, no visual hierarchy.
+Your app is a **fully functional MVP** with authentication, role-based access (student/teacher/admin), a 7-layer textbook system, AI companion, voice features, assignments, attendance, and analytics. However, it has **critical security gaps** and missing production infrastructure that must be fixed before real users touch it.
 
-### 2. Visual aids with broken images show a wiki-style search link
-When images fail to load, the fallback shows a "Search for..." link to Google Images which looks unprofessional. Should show the explanation text prominently with an illustrated placeholder instead.
+---
 
-### 3. "Got it" / "Nailed it" button turns green on click without activity completion
-Currently `toggleUnderstood` is a simple toggle — click once and it's green. It should only activate (turn green) when the student has interacted with all activities in that section (answered quiz questions, revealed recall answers, typed explanation, etc.). For content-only sections (concept), it should show a brief "Did you understand?" confirmation.
+## 🔴 CRITICAL — Fix Before Launch (Week 1)
 
-### 4. "Got it" and "Continue" buttons collide with chatbot FAB
-The bottom bar's right side (`Got it` + `Continue`) sits at bottom-right where the floating chatbot button overlaps. Need to add right padding or reposition.
+### 1. Security Vulnerabilities (3 found by scan)
 
-### 5. "Nailed it" celebration is at bottom — should be centered
-The completion screen shows a simple `✅` emoji. Should be a centered, delightful celebration overlay with confetti/sparkle animation and "Nailed it! 🎉" text.
+| Issue | Risk | Fix |
+|-------|------|-----|
+| **Privilege escalation** — any logged-in user can INSERT into `user_roles` and make themselves admin/teacher | **Critical** | Add RLS INSERT/UPDATE/DELETE policies restricting role changes to admins only using `has_role()` |
+| **API keys publicly readable** — `app_config` table (ElevenLabs agent ID etc.) has `USING: true` SELECT policy | **High** | Restrict to authenticated users or move secrets to environment variables |
+| **Missing INSERT policy on `student_inner_os`** — anyone can create score records for any user | **Medium** | Add `WITH CHECK (auth.uid() = user_id)` INSERT policy |
+| **Teacher alerts** — students can create fake teacher alerts | **Medium** | Add `has_role` check to INSERT policy |
+| **Answer file storage** — no DELETE/UPDATE policies | **Medium** | Add owner-scoped storage policies |
 
-### 6. Exercise/Practice sections lost True/False interactive format
-The reference shows True/False quiz cards with A/B pill buttons. Current `ExerciseBlock` only shows text problems with "Click to reveal answer". Need to detect True/False questions and render interactive pill-button format.
+### 2. Enable Leaked Password Protection
+Currently disabled. One toggle in Cloud → Users → Auth Settings.
 
-## Plan
+### 3. Add Error Boundary
+No React Error Boundary exists. A crash in any component takes down the entire app with a white screen. Add a global `ErrorBoundary` component wrapping `<Routes>`.
 
-### Step 1: Upgrade ConceptBlock styling (EpisodeBlocks.tsx)
-- Add subtle colored background panels for each section (`bg-blue-50/40` or similar)
-- Style `keyFormulas` block with a prominent colored border card (like the reference: red/coral border with centered formulas)
-- Add "think about it" question callouts with teal left-border styling for any section body containing `?`
-- Add solved examples with distinct card styling
+### 4. Onboarding State in localStorage
+`ProtectedRoute` checks `localStorage` for onboarding completion — this resets if student clears browser data or switches devices. Move to database (profiles table).
 
-### Step 2: Fix "Got it" button logic (TextbookEpisode.tsx)
-- Track per-section activity completion state via a new `blockCompleted` map
-- For interactive blocks (assessment, recall, exercise, activity, explain): "Got it" only enables after user has interacted (answered at least one question, revealed answers, typed text)
-- For content-only blocks (concept, reasoning, etc.): clicking "Got it" shows a small inline confirmation "Did you understand?" with Yes/No before marking complete
-- Pass an `onComplete` callback from parent to each block component so blocks can signal completion
+---
 
-### Step 3: Fix bottom bar layout to avoid chatbot collision
-- Add `padding-right: 80px` to the bottom bar or `margin-bottom` to push above the chatbot FAB
-- Or reposition "Got it" + "Continue" to center-right with adequate spacing
+## 🟡 IMPORTANT — Fix Before Scaling (Week 2)
 
-### Step 4: Centered "Nailed it!" celebration overlay
-- Replace the current completion screen with a centered modal overlay
-- Large "🎉 Nailed it!" text with sparkle animation
-- Stat gains displayed below
-- Add CSS keyframe animation for a brief confetti/sparkle burst
-- "Continue" button appears after 1.5s delay
+### 5. Performance & Reliability
+- **No query error handling UI** — when Supabase queries fail, users see blank screens. Add error states to all data-fetching pages.
+- **No retry/offline handling** — configure React Query with sensible `retry`, `staleTime`, and `gcTime` defaults instead of bare `new QueryClient()`.
+- **Bundle size** — 30+ pages loaded eagerly. Add `React.lazy()` + `Suspense` for route-level code splitting.
 
-### Step 5: Upgrade ExerciseBlock with True/False format
-- Detect if exercise problems have True/False answer patterns
-- Render pill-button A/B format matching the reference screenshot
-- Keep the "reveal answer" format for non-True/False problems
+### 6. Edge Function Hardening
+- Add request validation (check required fields, sanitize inputs) on all 14 edge functions.
+- Add consistent error response format across all functions.
+- Add request size limits to prevent abuse.
 
-### Step 6: Clean up VisualAidBlock fallback
-- Remove the Google Images search link
-- Show explanation text as the primary content with a cleaner illustrated placeholder icon
-- Add a subtle "diagram description" label
+### 7. Monitoring & Logging
+- Add a frontend error tracking service (e.g., Sentry via a script tag — no backend needed).
+- Add basic analytics to track user engagement (page views, feature usage).
 
-## Files Modified
-- `src/components/textbook/EpisodeBlocks.tsx` — ConceptBlock styling, ExerciseBlock True/False, add `onComplete` callbacks
-- `src/pages/TextbookEpisode.tsx` — "Got it" completion logic, bottom bar spacing, celebration overlay redesign
-- `src/components/textbook/VisualAidBlock.tsx` — clean up fallback UI
+---
+
+## 🟢 RECOMMENDED — Polish for Market (Week 3-4)
+
+### 8. Content Completeness
+- Currently only Math Chapter 1 has rich hardcoded content. Other subjects rely on AI-generated content which may have gaps.
+- Audit all 8 subjects × Chapter 1 to ensure every episode has working blocks.
+
+### 9. Mobile Testing
+- Test all critical flows on actual mobile devices (textbook reading, assignments, voice features).
+- The textbook episode page has complex interactions (tap-to-place, swipe) that need real device testing.
+
+### 10. SEO & Meta Tags
+- Add proper `<title>`, `<meta description>`, Open Graph tags for the landing page.
+- Add `robots.txt` rules (already exists but verify).
+
+### 11. Legal & Compliance
+- Privacy Policy and Terms of Service pages (required for any education product handling student data).
+- Cookie consent if targeting EU users.
+- Data retention and deletion policies.
+
+---
+
+## Launch Checklist Summary
+
+```text
+WEEK 1 (Must-have):
+ □ Fix 5 RLS security vulnerabilities
+ □ Enable leaked password protection
+ □ Add React Error Boundary
+ □ Move onboarding state to database
+ □ Test auth flows end-to-end
+
+WEEK 2 (Should-have):
+ □ Add error states to all pages
+ □ Configure React Query defaults
+ □ Route-level code splitting
+ □ Edge function input validation
+ □ Error tracking (Sentry or similar)
+
+WEEK 3-4 (Nice-to-have):
+ □ Audit content for all subjects
+ □ Mobile device testing
+ □ SEO meta tags
+ □ Privacy Policy / Terms pages
+ □ Performance audit (Lighthouse)
+```
+
+## Estimated Effort
+- **Week 1 (Critical)**: ~2-3 days of implementation
+- **Week 2 (Important)**: ~3-4 days
+- **Week 3-4 (Polish)**: ~5-7 days
+
+Shall I start with the critical security fixes first?
 
