@@ -70,6 +70,13 @@ serve(async (req) => {
       body = await req.json();
     }
 
+    const actionParsed = BaseBodySchema.safeParse(body);
+    if (!actionParsed.success) {
+      return new Response(JSON.stringify({ error: "Invalid request", details: actionParsed.error.flatten().fieldErrors }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const { action } = body;
 
     const supabaseAdmin = createClient(
