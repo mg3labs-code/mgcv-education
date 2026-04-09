@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Bell, ChevronDown } from "lucide-react";
 import MessageModal from "./student/MessageModal";
 
 interface TopNavbarProps {
@@ -17,6 +17,19 @@ const TopNavbar = ({ role, phase = 4, activeTab, onTabChange }: TopNavbarProps) 
   const { signOut, fullName } = useAuth();
   const [activeModal, setActiveModal] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const profileRef = useRef<HTMLDivElement>(null);
+
+  // Close profile dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setProfileOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
   const handleSignOut = async () => {
     await signOut();
@@ -29,15 +42,13 @@ const TopNavbar = ({ role, phase = 4, activeTab, onTabChange }: TopNavbarProps) 
 
   const closeModal = () => setActiveModal(null);
 
+  // Main navigation tabs (removed messages, notifications, personalisation)
   const studentTabs = [
     { id: "home", icon: "🏠", label: "Dashboard" },
     { id: "learn", icon: "📖", label: "Learn" },
     { id: "tasks", icon: "📝", label: "Tasks" },
     { id: "calendar", icon: "📅", label: "Calendar" },
     { id: "growth", icon: "📊", label: "My Growth" },
-    { id: "messages", icon: "💬", label: "Messages" },
-    { id: "notifications", icon: "🔔", label: "Notifications" },
-    { id: "personalisation", icon: "⚙️", label: "Settings" },
   ];
 
   const teacherItems = [
@@ -102,7 +113,7 @@ const TopNavbar = ({ role, phase = 4, activeTab, onTabChange }: TopNavbarProps) 
             ))}
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             {/* Mobile hamburger */}
             <button
               className="lg:hidden"
@@ -128,24 +139,119 @@ const TopNavbar = ({ role, phase = 4, activeTab, onTabChange }: TopNavbarProps) 
               </div>
             )}
 
-            {/* Avatar */}
-            <div style={{
-              width: 36, height: 36, borderRadius: "50%",
-              background: "linear-gradient(135deg, #0D9488, #14B8A6)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              color: "white", fontWeight: 700, fontSize: 14,
-            }}>
-              {initials}
-            </div>
-
-            <button onClick={handleSignOut} style={{
-              background: "#FEE2E2", color: "#DC2626", border: "none",
-              padding: "6px 14px", borderRadius: 8, cursor: "pointer",
-              fontWeight: 600, fontSize: 13, fontFamily: "'DM Sans', sans-serif",
-              transition: "all 0.15s",
-            }}>
-              Logout
+            {/* Notification bell */}
+            <button
+              onClick={() => onTabChange("notifications")}
+              style={{
+                background: activeTab === "notifications" ? "#F0FDFA" : "transparent",
+                border: "1px solid",
+                borderColor: activeTab === "notifications" ? "#0D9488" : "#E7E5E4",
+                borderRadius: "50%",
+                width: 36, height: 36,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                cursor: "pointer",
+                position: "relative",
+                transition: "all 0.15s",
+              }}
+              aria-label="Notifications"
+            >
+              <Bell className="h-4 w-4" style={{ color: activeTab === "notifications" ? "#0D9488" : "#78716C" }} />
+              {/* Notification dot */}
+              <span style={{
+                position: "absolute", top: 6, right: 6,
+                width: 7, height: 7, borderRadius: "50%",
+                background: "#EF4444", border: "1.5px solid #FFFBF5",
+              }} />
             </button>
+
+            {/* Profile dropdown */}
+            <div ref={profileRef} style={{ position: "relative" }}>
+              <button
+                onClick={() => setProfileOpen(!profileOpen)}
+                style={{
+                  display: "flex", alignItems: "center", gap: 6,
+                  background: profileOpen ? "#F5F5F4" : "transparent",
+                  border: "none", borderRadius: 12, padding: "4px 8px 4px 4px",
+                  cursor: "pointer", transition: "all 0.15s",
+                }}
+              >
+                <div style={{
+                  width: 36, height: 36, borderRadius: "50%",
+                  background: "linear-gradient(135deg, #0D9488, #14B8A6)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  color: "white", fontWeight: 700, fontSize: 14,
+                }}>
+                  {initials}
+                </div>
+                <ChevronDown className="h-3.5 w-3.5 hidden sm:block" style={{
+                  color: "#78716C",
+                  transform: profileOpen ? "rotate(180deg)" : "rotate(0)",
+                  transition: "transform 0.2s",
+                }} />
+              </button>
+
+              {/* Dropdown menu */}
+              {profileOpen && (
+                <div style={{
+                  position: "absolute", top: "calc(100% + 8px)", right: 0,
+                  background: "white", borderRadius: 14,
+                  border: "1px solid #E7E5E4",
+                  boxShadow: "0 8px 30px rgba(0,0,0,0.12)",
+                  minWidth: 200, padding: 6,
+                  zIndex: 1100,
+                  animation: "fadeIn 0.15s ease",
+                }}>
+                  {/* User info */}
+                  <div style={{
+                    padding: "10px 12px", borderBottom: "1px solid #F5F5F4",
+                    marginBottom: 4,
+                  }}>
+                    <div style={{ fontWeight: 600, fontSize: 14, color: "#1C1917" }}>{fullName || "Student"}</div>
+                    <div style={{ fontSize: 12, color: "#A8A29E", marginTop: 2 }}>Student</div>
+                  </div>
+
+                  {/* Menu items */}
+                  {[
+                    { icon: "💬", label: "Messages", tab: "messages" },
+                    { icon: "⚙️", label: "Settings", tab: "personalisation" },
+                  ].map((item) => (
+                    <button
+                      key={item.tab}
+                      onClick={() => { onTabChange(item.tab); setProfileOpen(false); }}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 10,
+                        width: "100%", padding: "10px 12px", borderRadius: 10,
+                        border: "none", background: activeTab === item.tab ? "#F0FDFA" : "transparent",
+                        cursor: "pointer", fontSize: 14,
+                        fontFamily: "'DM Sans', sans-serif",
+                        color: activeTab === item.tab ? "#0D9488" : "#57534E",
+                        fontWeight: activeTab === item.tab ? 600 : 400,
+                        transition: "all 0.1s",
+                      }}
+                    >
+                      <span>{item.icon}</span> {item.label}
+                    </button>
+                  ))}
+
+                  <div style={{ borderTop: "1px solid #F5F5F4", marginTop: 4, paddingTop: 4 }}>
+                    <button
+                      onClick={() => { setProfileOpen(false); handleSignOut(); }}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 10,
+                        width: "100%", padding: "10px 12px", borderRadius: 10,
+                        border: "none", background: "transparent",
+                        cursor: "pointer", fontSize: 14,
+                        fontFamily: "'DM Sans', sans-serif",
+                        color: "#DC2626", fontWeight: 500,
+                        transition: "all 0.1s",
+                      }}
+                    >
+                      🚪 Logout
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </nav>
 
@@ -171,6 +277,8 @@ const TopNavbar = ({ role, phase = 4, activeTab, onTabChange }: TopNavbarProps) 
             ))}
           </div>
         )}
+
+        <style>{`@keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }`}</style>
       </>
     );
   }

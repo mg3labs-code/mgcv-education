@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 import { BookOpen, Sparkles, ArrowRight } from 'lucide-react';
 
 const CLASS_OPTIONS = ['Class 8', 'Class 9', 'Class 10'];
@@ -26,6 +27,7 @@ const SUBJECT_OPTIONS = [
 const StudentOnboarding = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [step, setStep] = useState(0);
   const [name, setName] = useState('');
   const [selectedClass, setSelectedClass] = useState('');
@@ -113,6 +115,7 @@ const StudentOnboarding = () => {
 
       if (prefError) throw prefError;
 
+      queryClient.setQueryData(["onboarding-status", user.id], true);
       toast.success("You're all set! Let's start learning 🚀");
       navigate('/student');
     } catch (err: any) {
@@ -126,6 +129,7 @@ const StudentOnboarding = () => {
   const handleSkip = async () => {
     if (user) {
       await supabase.from('student_preferences').update({ onboarding_completed: true }).eq('user_id', user.id);
+      queryClient.setQueryData(["onboarding-status", user.id], true);
     }
     navigate('/student');
   };
