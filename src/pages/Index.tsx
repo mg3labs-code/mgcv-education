@@ -32,6 +32,7 @@ const Index = () => {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [className, setClassName] = useState("");
+  const [schoolName, setSchoolName] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [loginError, setLoginError] = useState<{ message: string; code?: string; suggestion: string } | null>(null);
