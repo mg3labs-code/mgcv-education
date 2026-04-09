@@ -70,6 +70,7 @@ const Index = () => {
     setPassword("");
     setFullName("");
     setClassName("");
+    setSchoolName("");
     setLoginError(null);
   }, []);
 
@@ -109,7 +110,7 @@ const Index = () => {
     try {
       if (authMode === "signup") {
         const selectedRole = loginType === "teacher" ? "teacher" : "student";
-        await signUp(email, password, fullName, selectedRole as any, className);
+        await signUp(email, password, fullName, selectedRole as any, className, schoolName);
         toast({ title: "Account created!", description: "Please check your email to verify your account." });
         closeModal();
       } else {
