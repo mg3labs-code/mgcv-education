@@ -27,6 +27,7 @@ const SUBJECT_OPTIONS = [
 const StudentOnboarding = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [step, setStep] = useState(0);
   const [name, setName] = useState('');
   const [selectedClass, setSelectedClass] = useState('');
