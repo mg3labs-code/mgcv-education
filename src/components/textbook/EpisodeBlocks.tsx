@@ -548,12 +548,12 @@ export const ExerciseBlock = ({ content, onComplete }: { content: ExerciseConten
           <div key={i} className="rounded-xl border bg-card shadow-sm overflow-hidden">
             {/* Problem header */}
             <div className="px-5 py-4 border-b border-border/50">
-              <p className="text-[0.95rem] text-foreground leading-[1.8] flex items-start gap-3">
-                <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 text-xs font-bold shrink-0 mt-0.5">
-                  {p.number || i + 1}
+              {p.number && (
+                <span className="inline-block px-2.5 py-1 rounded-lg bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 text-xs font-bold mb-2">
+                  {p.number}
                 </span>
-                <span className="flex-1">{p.text}</span>
-              </p>
+              )}
+              <p className="text-[0.95rem] text-foreground leading-[1.8]">{p.text}</p>
             </div>
 
             {/* True/False interactive */}
