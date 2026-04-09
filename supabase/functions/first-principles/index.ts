@@ -1,5 +1,14 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { z } from "https://esm.sh/zod@3.23.8";
 
+const BodySchema = z.object({
+  topic: z.string().min(1).max(500),
+  episodeTitle: z.string().max(500).optional(),
+  subject: z.string().max(100).optional(),
+  step: z.enum(["strip", "question", "rebuild"]),
+  studentAnswer: z.string().min(1).max(5000),
+  previousAnswers: z.array(z.string().max(5000)).max(10).optional(),
+});
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
@@ -11,7 +20,14 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { topic, episodeTitle, subject, step, studentAnswer, previousAnswers } = await req.json();
+    const raw = await req.json();
+    const parsed = BodySchema.safeParse(raw);
+    if (!parsed.success) {
+      return new Response(JSON.stringify({ error: "Invalid request", details: parsed.error.flatten().fieldErrors }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const { topic, episodeTitle, subject, step, studentAnswer, previousAnswers } = parsed.data;
 
     const encouragements: Record<string, string> = {
       strip: "You're thinking like a scientist now! 🔬",
