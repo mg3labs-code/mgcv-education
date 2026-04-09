@@ -389,49 +389,59 @@ export const RecallBlock = ({ content, onComplete }: { content: RecallContent; o
 
 export const ExplainBlock = ({ content, onComplete }: { content: ExplainContent; onComplete?: () => void }) => {
   const [text, setText] = useState("");
-  const [mode, setMode] = useState<"text" | "voice">("voice");
+  const [mode, setMode] = useState<"text" | "voice">("text");
   const wordCount = text.trim().split(/\s+/).filter(Boolean).length;
 
   return (
     <div className="space-y-4">
-      <div className="rounded-xl bg-primary/5 border border-primary/20 p-4">
-        <p className="text-base font-medium text-foreground leading-relaxed">{content.prompt}</p>
+      <div className="rounded-2xl overflow-hidden border-2 border-purple-200 dark:border-purple-800 shadow-sm">
+        <div className="bg-gradient-to-r from-purple-50 to-violet-50 dark:from-purple-950/40 dark:to-violet-950/30 px-5 py-3 border-b border-purple-200 dark:border-purple-800">
+          <h4 className="text-sm font-bold text-purple-700 dark:text-purple-400 flex items-center gap-2">🗣️ Teach Your Friend</h4>
+        </div>
+        <div className="px-5 py-4 bg-purple-50/20 dark:bg-purple-950/10">
+          <p className="text-[0.95rem] font-medium text-foreground leading-relaxed">{content.prompt}</p>
+        </div>
       </div>
       {content.guidePoints && (
         <div className="rounded-xl border bg-card p-4">
           <p className="text-xs font-semibold text-muted-foreground mb-2">💡 Think about:</p>
           <ul className="space-y-1">
             {content.guidePoints.map((p, i) => (
-              <li key={i} className="text-base text-muted-foreground flex items-start gap-2"><span className="text-primary mt-0.5">•</span> {p}</li>
+              <li key={i} className="text-[0.95rem] text-muted-foreground flex items-start gap-2"><span className="text-primary mt-0.5">•</span> {p}</li>
             ))}
           </ul>
         </div>
       )}
       <div className="flex gap-2 p-1 bg-muted rounded-lg w-fit">
-        <button onClick={() => setMode("voice")} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${mode === "voice" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
-          <Mic className="h-3.5 w-3.5" /> Speak It
-        </button>
         <button onClick={() => setMode("text")} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${mode === "text" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
           <PenLine className="h-3.5 w-3.5" /> Write It
+        </button>
+        <button onClick={() => setMode("voice")} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${mode === "voice" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
+          <Mic className="h-3.5 w-3.5" /> Speak It
         </button>
       </div>
       {mode === "voice" ? (
         <VoiceExplainWidget topic="Real Numbers — Chapter 1" prompt={content.prompt} guidePoints={content.guidePoints} onTranscript={(t) => setText(t)} />
       ) : (
         <div>
-          <textarea className="w-full rounded-xl border bg-background px-4 py-3 text-base resize-none focus:outline-none focus:ring-2 focus:ring-primary/30 min-h-[120px]" placeholder="Write your explanation here..." value={text} onChange={(e) => setText(e.target.value)} />
-          <div className="flex justify-between items-center mt-1">
-            <span className="text-xs text-muted-foreground">{wordCount} words</span>
+          <textarea
+            className="w-full rounded-xl border-2 border-border/50 bg-background px-4 py-3 text-[0.95rem] resize-none focus:outline-none focus:ring-2 focus:ring-primary/30 min-h-[120px] leading-relaxed"
+            placeholder="Explain this concept as if you're teaching a friend who missed class... ✍️"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+          />
+          <div className="flex justify-between items-center mt-2">
+            <span className="text-xs text-muted-foreground">{wordCount} words {wordCount < 5 && wordCount > 0 ? "(write at least 5 words to submit)" : ""}</span>
             {content.wordLimit && <span className={`text-xs ${wordCount > content.wordLimit ? "text-destructive" : "text-muted-foreground"}`}>Limit: {content.wordLimit}</span>}
           </div>
         </div>
       )}
-      {/* Submit for AI feedback */}
+      {/* Submit for AI feedback — always visible when enough words */}
       {wordCount >= 5 && (
         <SubmitEvaluate
           answer={text}
           prompt={content.prompt}
-          topic="Explain"
+          topic="Explain — Teach Your Friend"
           onComplete={onComplete}
           minWords={5}
         />
