@@ -354,25 +354,29 @@ const Index = () => {
                           placeholder="Class (e.g. Class 10)" className={inputClass} />
                       ) : (
                         <>
-                          <input type="text" value={className} onChange={(e) => setClassName(e.target.value)}
+                          <input type="text" value={schoolName} onChange={(e) => setSchoolName(e.target.value)}
                             placeholder="School name" className={inputClass} />
+                          <p className="text-xs text-muted-foreground text-left">Subjects you teach:</p>
                           <div className="flex gap-2 flex-wrap justify-center">
-                            {["Mathematics", "Science", "Social", "English", "Hindi", "Telugu"].map(sub => (
-                              <button key={sub} type="button"
-                                onClick={() => setClassName(prev => {
-                                  const subjects = prev ? prev.split(",").map(s => s.trim()).filter(Boolean) : [];
-                                  return subjects.includes(sub) 
-                                    ? subjects.filter(s => s !== sub).join(", ")
-                                    : [...subjects, sub].join(", ");
-                                })}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
-                                  className.includes(sub) 
-                                    ? "bg-primary/20 border-primary text-primary" 
-                                    : "bg-muted/40 border-border text-muted-foreground hover:border-primary/50"
-                                }`}>
-                                {sub}
-                              </button>
-                            ))}
+                            {["Mathematics", "Science", "Social", "English", "Hindi", "Telugu"].map(sub => {
+                              const selected = className.split(",").map(s => s.trim()).includes(sub);
+                              return (
+                                <button key={sub} type="button"
+                                  onClick={() => setClassName(prev => {
+                                    const subjects = prev ? prev.split(",").map(s => s.trim()).filter(Boolean) : [];
+                                    return subjects.includes(sub) 
+                                      ? subjects.filter(s => s !== sub).join(", ")
+                                      : [...subjects, sub].join(", ");
+                                  })}
+                                  className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+                                    selected 
+                                      ? "bg-primary/20 border-primary text-primary" 
+                                      : "bg-muted/40 border-border text-muted-foreground hover:border-primary/50"
+                                  }`}>
+                                  {sub}
+                                </button>
+                              );
+                            })}
                           </div>
                         </>
                       )}
