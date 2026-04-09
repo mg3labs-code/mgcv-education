@@ -1,104 +1,53 @@
 
 
-# Production Readiness Review & Launch Plan
+# Enhance Textbook Content Presentation
 
-## Current State Assessment
+## What We're Doing
+Adopting the rich visual content formatting from the reference HTML (definition boxes, formula cards, example boxes, step containers, important notes) across ALL textbook block types — not just ConceptBlock — using the app's existing teal/cream theme.
 
-Your app is a **fully functional MVP** with authentication, role-based access (student/teacher/admin), a 7-layer textbook system, AI companion, voice features, assignments, attendance, and analytics. However, it has **critical security gaps** and missing production infrastructure that must be fixed before real users touch it.
+## Current State
+- **ConceptBlock** already detects definitions, formulas, steps, notes — good foundation
+- **Other blocks** (Reasoning, Connections, Application, Implications, Recall, Exercise) use basic card layouts without the rich formatting
+- The reference HTML has 5 distinct visual patterns: `definition-box`, `formula-box`, `example-box`, `important-note`, `step-box` — all with gradient backgrounds, colored borders, and icons
 
----
+## Plan
 
-## 🔴 CRITICAL — Fix Before Launch (Week 1)
+### 1. Add Reusable Content Card Components
+Create a shared `ContentCards.tsx` with 5 themed card components matching the reference styles in the app's color palette:
+- **DefinitionCard** — teal gradient header, bordered, 📖 icon
+- **FormulaCard** — gradient teal-to-blue center-aligned, bold text, shadow
+- **ExampleCard** — light emerald bg, teal border, 💡 icon, expandable steps
+- **ImportantNote** — amber/warm bg, ⚠️ icon
+- **StepContainer** — numbered blue circles, clean left-border steps
 
-### 1. Security Vulnerabilities (3 found by scan)
+### 2. Enhance Block-Level Presentation
+Apply these cards inside existing blocks:
+- **ReasoningBlock** — wrap `deeperInsight` in ExampleCard, hints in ImportantNote
+- **ConnectionsBlock** — each connection as a visually distinct card with subject-colored badges
+- **ApplicationBlock** — real-world scenarios in ExampleCard style with DefinitionCard for context
+- **ImplicationsBlock** — wrap implications in themed gradient cards
+- **RecallBlock** — style revealed answers as ExampleCards instead of plain green divs
+- **ExerciseBlock** — wrap answer reveals in styled cards, problems in cleaner containers
 
-| Issue | Risk | Fix |
-|-------|------|-----|
-| **Privilege escalation** — any logged-in user can INSERT into `user_roles` and make themselves admin/teacher | **Critical** | Add RLS INSERT/UPDATE/DELETE policies restricting role changes to admins only using `has_role()` |
-| **API keys publicly readable** — `app_config` table (ElevenLabs agent ID etc.) has `USING: true` SELECT policy | **High** | Restrict to authenticated users or move secrets to environment variables |
-| **Missing INSERT policy on `student_inner_os`** — anyone can create score records for any user | **Medium** | Add `WITH CHECK (auth.uid() = user_id)` INSERT policy |
-| **Teacher alerts** — students can create fake teacher alerts | **Medium** | Add `has_role` check to INSERT policy |
-| **Answer file storage** — no DELETE/UPDATE policies | **Medium** | Add owner-scoped storage policies |
+### 3. Improve FullTextbookView Wrapper
+- Add subtle section background tints (like the reference's `h3` left-border style) to section headers
+- Improve section separators with gradient lines instead of plain borders
+- Better TOC pill styling with active state tracking on scroll
 
-### 2. Enable Leaked Password Protection
-Currently disabled. One toggle in Cloud → Users → Auth Settings.
+### 4. Add CSS Utility Classes
+Add to `index.css`:
+- `.definition-box`, `.formula-box`, `.example-box`, `.important-note`, `.step-box` utility classes matching the reference but in teal/cream theme
+- Dark mode variants for all
 
-### 3. Add Error Boundary
-No React Error Boundary exists. A crash in any component takes down the entire app with a white screen. Add a global `ErrorBoundary` component wrapping `<Routes>`.
+## Files Modified
+- `src/components/textbook/ContentCards.tsx` (new — shared visual cards)
+- `src/components/textbook/EpisodeBlocks.tsx` (ConceptBlock, RecallBlock, ExerciseBlock)
+- `src/components/textbook/ReasoningBlock.tsx`
+- `src/components/textbook/ConnectionsBlock.tsx`
+- `src/components/textbook/ApplicationBlock.tsx`
+- `src/components/textbook/ImplicationsBlock.tsx`
+- `src/components/textbook/FullTextbookView.tsx`
+- `src/index.css` (utility classes)
 
-### 4. Onboarding State in localStorage
-`ProtectedRoute` checks `localStorage` for onboarding completion — this resets if student clears browser data or switches devices. Move to database (profiles table).
-
----
-
-## 🟡 IMPORTANT — Fix Before Scaling (Week 2)
-
-### 5. Performance & Reliability
-- **No query error handling UI** — when Supabase queries fail, users see blank screens. Add error states to all data-fetching pages.
-- **No retry/offline handling** — configure React Query with sensible `retry`, `staleTime`, and `gcTime` defaults instead of bare `new QueryClient()`.
-- **Bundle size** — 30+ pages loaded eagerly. Add `React.lazy()` + `Suspense` for route-level code splitting.
-
-### 6. Edge Function Hardening
-- Add request validation (check required fields, sanitize inputs) on all 14 edge functions.
-- Add consistent error response format across all functions.
-- Add request size limits to prevent abuse.
-
-### 7. Monitoring & Logging
-- Add a frontend error tracking service (e.g., Sentry via a script tag — no backend needed).
-- Add basic analytics to track user engagement (page views, feature usage).
-
----
-
-## 🟢 RECOMMENDED — Polish for Market (Week 3-4)
-
-### 8. Content Completeness
-- Currently only Math Chapter 1 has rich hardcoded content. Other subjects rely on AI-generated content which may have gaps.
-- Audit all 8 subjects × Chapter 1 to ensure every episode has working blocks.
-
-### 9. Mobile Testing
-- Test all critical flows on actual mobile devices (textbook reading, assignments, voice features).
-- The textbook episode page has complex interactions (tap-to-place, swipe) that need real device testing.
-
-### 10. SEO & Meta Tags
-- Add proper `<title>`, `<meta description>`, Open Graph tags for the landing page.
-- Add `robots.txt` rules (already exists but verify).
-
-### 11. Legal & Compliance
-- Privacy Policy and Terms of Service pages (required for any education product handling student data).
-- Cookie consent if targeting EU users.
-- Data retention and deletion policies.
-
----
-
-## Launch Checklist Summary
-
-```text
-WEEK 1 (Must-have):
- □ Fix 5 RLS security vulnerabilities
- □ Enable leaked password protection
- □ Add React Error Boundary
- □ Move onboarding state to database
- □ Test auth flows end-to-end
-
-WEEK 2 (Should-have):
- □ Add error states to all pages
- □ Configure React Query defaults
- □ Route-level code splitting
- □ Edge function input validation
- □ Error tracking (Sentry or similar)
-
-WEEK 3-4 (Nice-to-have):
- □ Audit content for all subjects
- □ Mobile device testing
- □ SEO meta tags
- □ Privacy Policy / Terms pages
- □ Performance audit (Lighthouse)
-```
-
-## Estimated Effort
-- **Week 1 (Critical)**: ~2-3 days of implementation
-- **Week 2 (Important)**: ~3-4 days
-- **Week 3-4 (Polish)**: ~5-7 days
-
-Shall I start with the critical security fixes first?
+No changes to data structures, tools, sections, or navigation.
 
