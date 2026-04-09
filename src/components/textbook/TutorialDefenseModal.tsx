@@ -155,21 +155,39 @@ const TutorialDefenseModal = ({ open, onOpenChange, topic, episodeTitle, subject
             <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
               <Shield className="h-8 w-8 text-primary" />
             </div>
+            <div className="text-center space-y-2">
+              <p className="text-sm font-medium text-foreground">6 rounds, easy to challenging</p>
+              <div className="flex items-center gap-1 justify-center">
+                {[1,2,3,4,5].map(l => (
+                  <div key={l} className={`h-2 rounded-full ${l <= 2 ? "bg-emerald-400 w-6" : l <= 4 ? "bg-amber-400 w-5" : "bg-red-400 w-4"}`} />
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground">Easy → Medium → Challenge</p>
+            </div>
             <p className="text-sm text-muted-foreground text-center max-w-xs">
-              Your tutor will challenge your thinking in 6 rounds of brainstorming. Think of it as a friendly debate — not a test! 🧠
+              Your buddy will start with simple questions and gradually make them trickier. Think of it as a friendly chat — not a test! 🧠
             </p>
             <Button onClick={startDefense} disabled={loading}>
               {loading ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Shield className="h-4 w-4 mr-1" />}
-              Begin Defense
+              Let's Start! 💪
             </Button>
           </div>
         ) : (
           <>
-            {/* Round counter + Confidence meter */}
+            {/* Level indicator + Round counter */}
             <div className="flex items-center gap-3 px-1">
-              <span className="text-xs font-semibold text-muted-foreground whitespace-nowrap">
-                Round {Math.min(exchangeCount + 1, MAX_ROUNDS)}/{MAX_ROUNDS}
-              </span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-semibold text-muted-foreground whitespace-nowrap">
+                  Round {Math.min(exchangeCount + 1, MAX_ROUNDS)}/{MAX_ROUNDS}
+                </span>
+                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                  exchangeCount < 2 ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400" :
+                  exchangeCount < 4 ? "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400" :
+                  "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400"
+                }`}>
+                  {exchangeCount < 2 ? "Easy" : exchangeCount < 4 ? "Medium" : "Challenge"}
+                </span>
+              </div>
               <div className="flex-1 flex items-center gap-2">
                 <Star className="h-3.5 w-3.5 text-amber-500" />
                 <Progress value={confidence} className="h-2 flex-1" />
