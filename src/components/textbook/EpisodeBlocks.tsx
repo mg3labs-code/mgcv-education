@@ -1,52 +1,192 @@
 import React, { useState, useEffect } from "react";
 import { ConceptContent, RecallContent, ExplainContent, AssessmentContent, ExerciseContent } from "@/data/textbookData";
 import { Button } from "@/components/ui/button";
-import { GripHorizontal, Mic, PenLine, RotateCcw, ChevronDown, ChevronUp } from "lucide-react";
+import { GripHorizontal, Mic, PenLine, RotateCcw, ChevronDown, ChevronUp, Send, Loader2, CheckCircle2, Sparkles } from "lucide-react";
 import VoiceExplainWidget from "@/components/textbook/VoiceExplainWidget";
 import InlineMedia from "@/components/textbook/InlineMedia";
+import { supabase } from "@/integrations/supabase/client";
 
-// ─── Concept Block ──────────────────────────────────────────
+// ─── AI Evaluate Helper ─────────────────────────────────────
+
+const evaluateAnswer = async (prompt: string, answer: string, topic: string): Promise<string> => {
+  try {
+    const { data, error } = await supabase.functions.invoke("inline-evaluate", {
+      body: { topic, prompt, answer },
+    });
+    if (error) throw error;
+    return data?.feedback || "Good effort! Keep thinking deeper. 💪";
+  } catch {
+    return "Nice attempt! Try to add more detail next time. 💡";
+  }
+};
+
+// ─── Submit Button Component ────────────────────────────────
+
+const SubmitEvaluate = ({ answer, prompt, topic, onComplete, minWords = 3 }: {
+  answer: string; prompt: string; topic?: string; onComplete?: () => void; minWords?: number;
+}) => {
+  const [loading, setLoading] = useState(false);
+  const [feedback, setFeedback] = useState<string | null>(null);
+  const wordCount = answer.trim().split(/\s+/).filter(Boolean).length;
+  const canSubmit = wordCount >= minWords;
+
+  const handleSubmit = async () => {
+    if (!canSubmit) return;
+    setLoading(true);
+    const fb = await evaluateAnswer(prompt, answer, topic || "General");
+    setFeedback(fb);
+    setLoading(false);
+    onComplete?.();
+  };
+
+  if (feedback) {
+    return (
+      <div className="rounded-xl border-2 border-emerald-300 dark:border-emerald-700 bg-emerald-50/60 dark:bg-emerald-950/20 p-4 space-y-2">
+        <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400">
+          <CheckCircle2 className="h-4 w-4" />
+          <span className="text-sm font-bold">AI Feedback</span>
+        </div>
+        <p className="text-sm text-foreground leading-relaxed whitespace-pre-line">{feedback}</p>
+        <Button variant="ghost" size="sm" onClick={() => setFeedback(null)} className="mt-1">
+          <RotateCcw className="h-3 w-3 mr-1" /> Try again
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <Button
+      onClick={handleSubmit}
+      disabled={!canSubmit || loading}
+      size="sm"
+      className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
+    >
+      {loading ? (
+        <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Evaluating...</>
+      ) : (
+        <><Send className="h-3.5 w-3.5" /> Submit for Feedback</>
+      )}
+    </Button>
+  );
+};
+
+// ─── Concept Block (Rich Visual Presentation) ───────────────
 
 export const ConceptBlock = ({ content, onComplete }: { content: ConceptContent; onComplete?: () => void }) => {
-  // Content-only block: do NOT auto-complete. "Got it" triggers "Did you understand?" confirmation first.
-
   return (
     <div className="space-y-5">
       {content.sections.map((s, i) => {
         const hasQuestion = s.body?.includes("?");
+        const isDefinition = s.heading?.toLowerCase().includes("what is") || s.heading?.toLowerCase().includes("definition") || i === 0;
+        const isStep = s.heading?.toLowerCase().includes("step") || s.heading?.toLowerCase().includes("how to") || s.heading?.toLowerCase().includes("method") || s.heading?.toLowerCase().includes("algorithm");
+        const isImportant = s.heading?.toLowerCase().includes("important") || s.heading?.toLowerCase().includes("remember") || s.heading?.toLowerCase().includes("key point") || s.heading?.toLowerCase().includes("note");
+
+        // Definition-style box for the first section or explicit definitions
+        if (isDefinition && i === 0) {
+          return (
+            <div key={i} className="rounded-2xl overflow-hidden border-2 border-indigo-200 dark:border-indigo-800 shadow-sm">
+              <div className="bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-950/40 dark:to-blue-950/30 px-5 py-3 border-b border-indigo-200 dark:border-indigo-800">
+                <h4 className="font-bold text-indigo-700 dark:text-indigo-400 text-lg flex items-center gap-2">
+                  📖 {s.heading}
+                </h4>
+              </div>
+              <div className="px-5 py-4 bg-gradient-to-br from-indigo-50/50 to-blue-50/30 dark:from-indigo-950/20 dark:to-blue-950/10">
+                <p className="text-[0.95rem] text-foreground leading-[1.9] whitespace-pre-line">{s.body}</p>
+              </div>
+            </div>
+          );
+        }
+
+        // Important/Note box
+        if (isImportant) {
+          return (
+            <div key={i} className="rounded-xl border-2 border-amber-300 dark:border-amber-700 bg-gradient-to-br from-amber-50 to-yellow-50/50 dark:from-amber-950/30 dark:to-yellow-950/20 p-5 shadow-sm">
+              <h4 className="font-bold text-amber-700 dark:text-amber-400 text-base mb-2 flex items-center gap-2">
+                ⚠️ {s.heading}
+              </h4>
+              <p className="text-[0.95rem] text-foreground leading-[1.8] whitespace-pre-line">{s.body}</p>
+            </div>
+          );
+        }
+
+        // Step-by-step box
+        if (isStep) {
+          const steps = s.body?.split('\n').filter(line => line.trim()) || [];
+          return (
+            <div key={i} className="rounded-xl border border-blue-200 dark:border-blue-800 overflow-hidden shadow-sm">
+              <div className="bg-blue-50 dark:bg-blue-950/30 px-5 py-3 border-b border-blue-200 dark:border-blue-800">
+                <h4 className="font-bold text-blue-700 dark:text-blue-400 text-base flex items-center gap-2">
+                  🔢 {s.heading}
+                </h4>
+              </div>
+              <div className="p-4 space-y-2">
+                {steps.map((step, j) => (
+                  <div key={j} className="flex items-start gap-3 p-3 rounded-lg bg-blue-50/40 dark:bg-blue-950/10 border border-blue-100 dark:border-blue-900">
+                    <span className="h-7 w-7 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
+                      {j + 1}
+                    </span>
+                    <p className="text-[0.95rem] text-foreground leading-relaxed">{step}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        }
+
+        // Question/Think-about box
+        if (hasQuestion) {
+          return (
+            <div key={i} className="rounded-xl border-2 border-teal-200 dark:border-teal-800 bg-gradient-to-br from-teal-50/60 to-cyan-50/40 dark:from-teal-950/20 dark:to-cyan-950/10 p-5 shadow-sm">
+              <h4 className="font-semibold text-teal-700 dark:text-teal-400 text-base mb-2 flex items-center gap-2">
+                🤔 {s.heading}
+              </h4>
+              <p className="text-[0.95rem] text-foreground leading-[1.8] whitespace-pre-line border-l-4 border-teal-400 dark:border-teal-600 pl-4">{s.body}</p>
+            </div>
+          );
+        }
+
+        // Standard content section with visual lift
         return (
-          <div key={i} className="rounded-xl p-4" style={{ background: i % 2 === 0 ? "hsl(var(--muted) / 0.4)" : "transparent" }}>
-            <h4 className="font-semibold text-foreground text-[1.1rem] mb-2 flex items-center gap-2">
+          <div key={i} className="rounded-xl p-5 border border-border/50 bg-card/80 hover:shadow-sm transition-shadow">
+            <h4 className="font-semibold text-foreground text-[1.05rem] mb-3 flex items-center gap-2">
               <span className="w-1.5 h-6 rounded-full bg-primary inline-block" />
               {s.heading}
             </h4>
-            <div className={`text-[0.95rem] text-muted-foreground leading-[1.8] whitespace-pre-line ${hasQuestion ? "border-l-3 border-teal-400 pl-4 py-1 bg-teal-50/40 dark:bg-teal-950/10 rounded-r-lg" : ""}`}>
-              {s.body}
-            </div>
+            <p className="text-[0.95rem] text-muted-foreground leading-[1.9] whitespace-pre-line">{s.body}</p>
           </div>
         );
       })}
 
+      {/* Key Formulas — gradient highlight box */}
       {content.keyFormulas && content.keyFormulas.length > 0 && (
-        <div className="rounded-xl border-2 border-rose-300 dark:border-rose-700 bg-rose-50/50 dark:bg-rose-950/20 p-5 text-center">
-          <h4 className="text-sm font-bold text-rose-600 dark:text-rose-400 mb-3 flex items-center justify-center gap-2">
-            🎯 Key Formulas
-          </h4>
-          <div className="space-y-2">
+        <div className="rounded-2xl overflow-hidden shadow-md">
+          <div className="bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 px-5 py-3">
+            <h4 className="text-sm font-bold text-white flex items-center gap-2">🎯 Key Formulas</h4>
+          </div>
+          <div className="bg-gradient-to-br from-violet-50 to-indigo-50 dark:from-violet-950/30 dark:to-indigo-950/20 p-5 space-y-3">
             {content.keyFormulas.map((f, i) => (
-              <p key={i} className="text-lg font-mono text-foreground bg-white/70 dark:bg-card rounded-lg py-2 px-4 inline-block">{f}</p>
+              <div key={i} className="text-center">
+                <p className="text-lg font-mono font-semibold text-foreground bg-white/80 dark:bg-card/80 rounded-xl py-3 px-5 inline-block shadow-sm border border-violet-200 dark:border-violet-800">{f}</p>
+              </div>
             ))}
           </div>
         </div>
       )}
 
+      {/* Solved Examples — step-by-step visual */}
       {(content as any).solvedExamples && (content as any).solvedExamples.length > 0 && (
         <div className="space-y-3">
-          <h4 className="text-sm font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-2">✍️ Solved Examples</h4>
           {(content as any).solvedExamples.map((ex: any, i: number) => (
-            <div key={i} className="rounded-xl border-2 border-emerald-200 dark:border-emerald-800 bg-emerald-50/40 dark:bg-emerald-950/10 p-5">
-              <p className="text-sm font-semibold text-foreground mb-2">{ex.question}</p>
-              <p className="text-base text-muted-foreground leading-relaxed whitespace-pre-line">{ex.solution}</p>
+            <div key={i} className="rounded-2xl overflow-hidden border-2 border-emerald-200 dark:border-emerald-800 shadow-sm">
+              <div className="bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-950/40 dark:to-green-950/30 px-5 py-3 border-b border-emerald-200 dark:border-emerald-800">
+                <h4 className="text-sm font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-2">
+                  💡 Solved Example {i + 1}
+                </h4>
+              </div>
+              <div className="p-5 bg-emerald-50/30 dark:bg-emerald-950/10">
+                <p className="text-base font-semibold text-foreground mb-3">{ex.question}</p>
+                <p className="text-[0.95rem] text-muted-foreground leading-relaxed whitespace-pre-line">{ex.solution}</p>
+              </div>
             </div>
           ))}
         </div>
@@ -185,6 +325,15 @@ const FallbackActivityBlock = ({ content, onComplete }: { content: ActivityConte
           <textarea className="w-full mt-1 rounded-lg border bg-background px-3 py-2 text-base resize-none focus:outline-none focus:ring-2 focus:ring-primary/30" rows={2} placeholder="Work it out here..." value={answers[i] || ""} onChange={(e) => setAnswers({ ...answers, [i]: e.target.value })} />
         </div>
       ))}
+      {Object.values(answers).some(v => v.trim().length > 2) && (
+        <SubmitEvaluate
+          answer={Object.values(answers).join("; ")}
+          prompt={content.instruction}
+          topic="Activity"
+          onComplete={onComplete}
+          minWords={1}
+        />
+      )}
     </div>
   );
 };
@@ -219,15 +368,13 @@ export const RecallBlock = ({ content, onComplete }: { content: RecallContent; o
   );
 };
 
-// ─── Explain Block ──────────────────────────────────────────
+// ─── Explain Block (with Submit) ────────────────────────────
 
 export const ExplainBlock = ({ content, onComplete }: { content: ExplainContent; onComplete?: () => void }) => {
   const [text, setText] = useState("");
   const [mode, setMode] = useState<"text" | "voice">("voice");
   const wordCount = text.trim().split(/\s+/).filter(Boolean).length;
-  useEffect(() => {
-    if (wordCount >= 5) onComplete?.();
-  }, [wordCount]);
+
   return (
     <div className="space-y-4">
       <div className="rounded-xl bg-primary/5 border border-primary/20 p-4">
@@ -261,6 +408,16 @@ export const ExplainBlock = ({ content, onComplete }: { content: ExplainContent;
             {content.wordLimit && <span className={`text-xs ${wordCount > content.wordLimit ? "text-destructive" : "text-muted-foreground"}`}>Limit: {content.wordLimit}</span>}
           </div>
         </div>
+      )}
+      {/* Submit for AI feedback */}
+      {wordCount >= 5 && (
+        <SubmitEvaluate
+          answer={text}
+          prompt={content.prompt}
+          topic="Explain"
+          onComplete={onComplete}
+          minWords={5}
+        />
       )}
     </div>
   );
@@ -319,7 +476,6 @@ export const ExerciseBlock = ({ content, onComplete }: { content: ExerciseConten
   const [showAnswer, setShowAnswer] = useState<Record<number, boolean>>({});
   const [tfAnswers, setTfAnswers] = useState<Record<number, string>>({});
 
-  // Detect True/False problems
   const isTrueFalse = (text: string) => {
     const lower = text.toLowerCase();
     return lower.includes("true or false") || lower.includes("true/false") || lower.includes("(true/false)") || lower.includes("state whether");
@@ -335,7 +491,6 @@ export const ExerciseBlock = ({ content, onComplete }: { content: ExerciseConten
   const handleTfSelect = (i: number, val: string) => {
     const next = { ...tfAnswers, [i]: val };
     setTfAnswers(next);
-    // Auto-reveal after selection
     setTimeout(() => handleReveal(i), 600);
   };
 
