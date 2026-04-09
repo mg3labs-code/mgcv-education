@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
-import { X, ZoomIn, Play, Image, BookOpen } from "lucide-react";
+import { X, ZoomIn, Play, BookOpen, Loader2, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface VisualAidContent {
   type: "image" | "video";
@@ -19,8 +21,40 @@ interface VisualAidBlockProps {
 const VisualAidBlock = ({ content }: VisualAidBlockProps) => {
   const [zoomed, setZoomed] = useState(false);
   const [imgError, setImgError] = useState(false);
+  const [resolvedUrl, setResolvedUrl] = useState(content.url || "");
+  const [loading, setLoading] = useState(false);
+  const [tried, setTried] = useState(false);
 
-  if (!content?.url && !content?.explanation && !content?.caption) return null;
+  // Auto-resolve if no valid URL
+  useEffect(() => {
+    if (!resolvedUrl && !tried && (content.caption || content.searchTerms)) {
+      resolveVisual();
+    }
+  }, []);
+
+  const resolveVisual = async () => {
+    setLoading(true);
+    setImgError(false);
+    setTried(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("resolve-visual-aid", {
+        body: {
+          query: content.searchTerms || content.caption || content.alt || "",
+          topic: content.caption || "",
+          type: content.type || "image",
+        },
+      });
+      if (error) throw error;
+      if (data?.url && !data?.fallback) {
+        setResolvedUrl(data.url);
+      }
+    } catch (e) {
+      console.error("Visual resolve failed:", e);
+    }
+    setLoading(false);
+  };
+
+  if (!resolvedUrl && !content?.explanation && !content?.caption) return null;
 
   const isVideo = content.type === "video";
 
@@ -29,8 +63,8 @@ const VisualAidBlock = ({ content }: VisualAidBlockProps) => {
     return match?.[1] || url;
   };
 
-  if (isVideo) {
-    const videoId = getYouTubeId(content.url);
+  if (isVideo && resolvedUrl) {
+    const videoId = getYouTubeId(resolvedUrl);
     return (
       <div className="space-y-3">
         <div className="rounded-xl overflow-hidden border border-border shadow-sm">
@@ -51,28 +85,28 @@ const VisualAidBlock = ({ content }: VisualAidBlockProps) => {
             {content.caption}
           </p>
         )}
-        {content.explanation && (
-          <p className="text-sm text-muted-foreground leading-relaxed bg-muted/30 rounded-lg p-3">
-            {content.explanation}
-          </p>
-        )}
       </div>
     );
   }
 
-  // Image rendering — with smart fallback
-  const hasValidUrl = content.url && !imgError;
+  const hasValidUrl = resolvedUrl && !imgError;
 
   return (
     <>
       <div className="space-y-3">
-        {hasValidUrl ? (
+        {loading ? (
+          <div className="rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 p-8 text-center">
+            <Loader2 className="h-8 w-8 text-primary mx-auto mb-3 animate-spin" />
+            <p className="text-sm font-medium text-foreground">Generating visual...</p>
+            <p className="text-xs text-muted-foreground mt-1">{content.caption}</p>
+          </div>
+        ) : hasValidUrl ? (
           <div
             className="relative rounded-xl overflow-hidden border border-border shadow-sm cursor-pointer group"
             onClick={() => setZoomed(true)}
           >
             <img
-              src={content.url}
+              src={resolvedUrl}
               alt={content.alt || content.caption || "Visual aid"}
               loading="lazy"
               className="w-full h-auto max-h-[400px] object-contain bg-muted/20 transition-transform duration-300 group-hover:scale-[1.02]"
@@ -83,18 +117,22 @@ const VisualAidBlock = ({ content }: VisualAidBlockProps) => {
             </div>
           </div>
         ) : (
-          /* Fallback: show explanation prominently */
           <div className="rounded-xl border-2 border-dashed border-border bg-muted/10 p-5">
             <div className="flex items-center gap-3 mb-3">
               <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
                 <BookOpen className="h-5 w-5 text-primary" />
               </div>
-              <div>
+              <div className="flex-1">
                 <p className="text-sm font-semibold text-foreground">
                   {content.caption || "Diagram Description"}
                 </p>
                 <p className="text-xs text-muted-foreground">Visual reference</p>
               </div>
+              {!loading && (
+                <Button variant="outline" size="sm" onClick={resolveVisual} className="shrink-0">
+                  <RefreshCw className="h-3.5 w-3.5 mr-1" /> Load Visual
+                </Button>
+              )}
             </div>
             {content.explanation && (
               <p className="text-sm text-muted-foreground leading-relaxed bg-muted/30 rounded-lg p-3">
@@ -129,7 +167,7 @@ const VisualAidBlock = ({ content }: VisualAidBlockProps) => {
             <X className="h-5 w-5" />
           </button>
           <img
-            src={content.url}
+            src={resolvedUrl}
             alt={content.alt || content.caption || "Visual aid"}
             className="max-w-full max-h-[90vh] object-contain rounded-lg"
           />
