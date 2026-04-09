@@ -87,12 +87,27 @@ const TextbookEpisode = () => {
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
   const [exitConfirm, setExitConfirm] = useState(false);
   const [showCompletion, setShowCompletion] = useState(false);
+  const [alreadyCompleted, setAlreadyCompleted] = useState(false);
   const [blockCompleted, setBlockCompleted] = useState<Set<number>>(new Set());
   const [showUnderstandConfirm, setShowUnderstandConfirm] = useState(false);
   const [expandedTextbookRef, setExpandedTextbookRef] = useState<number | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const totalBlocksRef = useRef(0);
+
+  // Reset all state when episode changes
+  useEffect(() => {
+    setActiveBlock(0);
+    setShowCompletion(false);
+    setAlreadyCompleted(false);
+    setUnderstoodBlocks(new Set());
+    setBlockCompleted(new Set());
+    setShowUnderstandConfirm(false);
+    setShowSectionsSheet(false);
+    setShowToolsPopup(false);
+    setExitConfirm(false);
+    setSaveStatus("idle");
+  }, [episodeId]);
 
   const persistUnderstood = useCallback((understood: Set<number>) => {
     if (!user || !chapterId || !episodeId) return;
@@ -198,12 +213,17 @@ const TextbookEpisode = () => {
   // Load understood blocks from DB
   useEffect(() => {
     if (!user || !chapterId || !episodeId) return;
-    supabase.from("episode_progress").select("layer_scores")
+    supabase.from("episode_progress").select("layer_scores, completion_pct, completed_at")
       .eq("user_id", user.id).eq("chapter_id", chapterId).eq("episode_id", episodeId)
       .maybeSingle().then(({ data }) => {
         if (data?.layer_scores && typeof data.layer_scores === "object" && !Array.isArray(data.layer_scores)) {
           const scores = data.layer_scores as Record<string, unknown>;
           if (Array.isArray(scores.understood)) setUnderstoodBlocks(new Set(scores.understood as number[]));
+        }
+        // If episode was previously completed, show the already-completed state
+        if (data?.completed_at) {
+          setAlreadyCompleted(true);
+          setShowCompletion(true);
         }
       });
   }, [user, chapterId, episodeId]);
@@ -341,54 +361,85 @@ const TextbookEpisode = () => {
   if (showCompletion) {
     return (
       <div className="fixed inset-0 z-[100] flex items-center justify-center" style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)" }}>
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {Array.from({ length: 20 }).map((_, i) => (
-            <div key={i} className="absolute rounded-full animate-ping" style={{
-              width: Math.random() * 8 + 4, height: Math.random() * 8 + 4,
-              background: ["#0D9488", "#F59E0B", "#8B5CF6", "#EC4899", "#3B82F6"][i % 5],
-              left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 2}s`, animationDuration: `${Math.random() * 2 + 1}s`, opacity: 0.7,
-            }} />
-          ))}
-        </div>
+        {!alreadyCompleted && (
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            {Array.from({ length: 20 }).map((_, i) => (
+              <div key={i} className="absolute rounded-full animate-ping" style={{
+                width: Math.random() * 8 + 4, height: Math.random() * 8 + 4,
+                background: ["#0D9488", "#F59E0B", "#8B5CF6", "#EC4899", "#3B82F6"][i % 5],
+                left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%`,
+                animationDelay: `${Math.random() * 2}s`, animationDuration: `${Math.random() * 2 + 1}s`, opacity: 0.7,
+              }} />
+            ))}
+          </div>
+        )}
         <div style={{
           textAlign: "center", maxWidth: 420, width: "90%", padding: "48px 28px",
           background: "white", borderRadius: 28, position: "relative",
           boxShadow: "0 25px 60px rgba(0,0,0,0.2)",
         }} className="animate-scale-in">
-          <div style={{ fontSize: 72, marginBottom: 8, lineHeight: 1 }}>🎉</div>
-          <h1 style={{ fontSize: 32, fontWeight: 800, color: "#1C1917", marginBottom: 4 }}>Nailed it!</h1>
-          <p style={{ fontSize: 16, color: "#0D9488", fontWeight: 600, marginBottom: 4 }}>{episode.title}</p>
-          <p style={{ fontSize: 13, color: "#A8A29E", marginBottom: 28 }}>{navBlocks.length} sections completed ✨</p>
-          <div style={{ display: "flex", justifyContent: "center", gap: 20, marginBottom: 32 }}>
-            {[
-              { icon: "👁️", label: "Clarity", value: "+3%" },
-              { icon: "🧠", label: "Thinking", value: "+2%" },
-              { icon: "🎯", label: "Focus", value: "+4%" },
-            ].map(d => (
-              <div key={d.label} style={{ textAlign: "center", background: "#F0FDFA", borderRadius: 16, padding: "12px 16px" }}>
-                <div style={{ fontSize: 24, marginBottom: 2 }}>{d.icon}</div>
-                <div style={{ fontSize: 18, fontWeight: 700, color: "#0D9488" }}>{d.value}</div>
-                <div style={{ fontSize: 10, color: "#78716C" }}>{d.label}</div>
+          {alreadyCompleted ? (
+            <>
+              <div style={{ fontSize: 72, marginBottom: 8, lineHeight: 1 }}>✅</div>
+              <h1 style={{ fontSize: 28, fontWeight: 800, color: "#1C1917", marginBottom: 4 }}>Already Completed!</h1>
+              <p style={{ fontSize: 16, color: "#0D9488", fontWeight: 600, marginBottom: 4 }}>{episode.title}</p>
+              <p style={{ fontSize: 13, color: "#A8A29E", marginBottom: 28 }}>You've already mastered all {navBlocks.length} sections ✨</p>
+
+              {/* Revisit or continue */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
+                <button onClick={() => { setShowCompletion(false); setAlreadyCompleted(false); setActiveBlock(0); }} style={{
+                  background: "#F0FDFA", border: "2px solid #0D9488", borderRadius: 14, padding: 16, textAlign: "center", cursor: "pointer",
+                }}>
+                  <div style={{ fontSize: 22, marginBottom: 4 }}>🔄</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#0D9488" }}>Revisit Sections</div>
+                  <div style={{ fontSize: 10, color: "#78716C" }}>Review all {navBlocks.length} sections</div>
+                </button>
+                <button onClick={() => { setShowCompletion(false); setShowDefense(true); }} style={{
+                  background: "#F9FAFB", border: "2px solid #E7E5E4", borderRadius: 14, padding: 16, textAlign: "center", cursor: "pointer",
+                }}>
+                  <div style={{ fontSize: 22, marginBottom: 4 }}>🎓</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#1C1917" }}>Defend it</div>
+                  <div style={{ fontSize: 10, color: "#78716C" }}>Debate · 5 min</div>
+                </button>
               </div>
-            ))}
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
-            <button onClick={() => { setShowCompletion(false); setShowDefense(true); }} style={{
-              background: "#F9FAFB", border: "2px solid #E7E5E4", borderRadius: 14, padding: 16, textAlign: "center", cursor: "pointer",
-            }}>
-              <div style={{ fontSize: 22, marginBottom: 4 }}>🎓</div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: "#1C1917" }}>Defend it</div>
-              <div style={{ fontSize: 10, color: "#78716C" }}>Debate · 5 min</div>
-            </button>
-            <button onClick={() => { setShowCompletion(false); setShowFirstPrinciples(true); }} style={{
-              background: "#F9FAFB", border: "2px solid #E7E5E4", borderRadius: 14, padding: 16, textAlign: "center", cursor: "pointer",
-            }}>
-              <div style={{ fontSize: 22, marginBottom: 4 }}>💡</div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: "#1C1917" }}>Break it down</div>
-              <div style={{ fontSize: 10, color: "#78716C" }}>First principles · 10 min</div>
-            </button>
-          </div>
+            </>
+          ) : (
+            <>
+              <div style={{ fontSize: 72, marginBottom: 8, lineHeight: 1 }}>🎉</div>
+              <h1 style={{ fontSize: 32, fontWeight: 800, color: "#1C1917", marginBottom: 4 }}>Nailed it!</h1>
+              <p style={{ fontSize: 16, color: "#0D9488", fontWeight: 600, marginBottom: 4 }}>{episode.title}</p>
+              <p style={{ fontSize: 13, color: "#A8A29E", marginBottom: 28 }}>{navBlocks.length} sections completed ✨</p>
+              <div style={{ display: "flex", justifyContent: "center", gap: 20, marginBottom: 32 }}>
+                {[
+                  { icon: "👁️", label: "Clarity", value: "+3%" },
+                  { icon: "🧠", label: "Thinking", value: "+2%" },
+                  { icon: "🎯", label: "Focus", value: "+4%" },
+                ].map(d => (
+                  <div key={d.label} style={{ textAlign: "center", background: "#F0FDFA", borderRadius: 16, padding: "12px 16px" }}>
+                    <div style={{ fontSize: 24, marginBottom: 2 }}>{d.icon}</div>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: "#0D9488" }}>{d.value}</div>
+                    <div style={{ fontSize: 10, color: "#78716C" }}>{d.label}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
+                <button onClick={() => { setShowCompletion(false); setShowDefense(true); }} style={{
+                  background: "#F9FAFB", border: "2px solid #E7E5E4", borderRadius: 14, padding: 16, textAlign: "center", cursor: "pointer",
+                }}>
+                  <div style={{ fontSize: 22, marginBottom: 4 }}>🎓</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "#1C1917" }}>Defend it</div>
+                  <div style={{ fontSize: 10, color: "#78716C" }}>Debate · 5 min</div>
+                </button>
+                <button onClick={() => { setShowCompletion(false); setShowFirstPrinciples(true); }} style={{
+                  background: "#F9FAFB", border: "2px solid #E7E5E4", borderRadius: 14, padding: 16, textAlign: "center", cursor: "pointer",
+                }}>
+                  <div style={{ fontSize: 22, marginBottom: 4 }}>💡</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "#1C1917" }}>Break it down</div>
+                  <div style={{ fontSize: 10, color: "#78716C" }}>First principles · 10 min</div>
+                </button>
+              </div>
+            </>
+          )}
           {nextEpisode ? (
             <button onClick={() => navigate(`/student/textbook/${chapterId}/${nextEpisode.id}`)} style={{
               width: "100%", padding: "14px 32px", borderRadius: 14, border: "none",
