@@ -32,6 +32,7 @@ const Index = () => {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [className, setClassName] = useState("");
+  const [schoolName, setSchoolName] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [loginError, setLoginError] = useState<{ message: string; code?: string; suggestion: string } | null>(null);
@@ -69,6 +70,7 @@ const Index = () => {
     setPassword("");
     setFullName("");
     setClassName("");
+    setSchoolName("");
     setLoginError(null);
   }, []);
 
@@ -108,7 +110,7 @@ const Index = () => {
     try {
       if (authMode === "signup") {
         const selectedRole = loginType === "teacher" ? "teacher" : "student";
-        await signUp(email, password, fullName, selectedRole as any, className);
+        await signUp(email, password, fullName, selectedRole as any, className, schoolName);
         toast({ title: "Account created!", description: "Please check your email to verify your account." });
         closeModal();
       } else {
@@ -317,8 +319,14 @@ const Index = () => {
             <button onClick={closeModal} className="absolute top-4 right-5 text-2xl cursor-pointer text-muted-foreground hover:text-foreground bg-transparent border-none">
               ×
             </button>
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-info/10 flex items-center justify-center mx-auto mb-4">
-              <span className="text-xl font-bold text-primary">{loginType === "student" ? "S" : "T"}</span>
+            <div className={`w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4 ${
+              loginType === "teacher" 
+                ? "bg-gradient-to-br from-amber-500/20 to-orange-500/10" 
+                : "bg-gradient-to-br from-primary/20 to-info/10"
+            }`}>
+              <span className={`text-xl font-bold ${loginType === "teacher" ? "text-amber-600" : "text-primary"}`}>
+                {loginType === "student" ? "🎓" : "👩‍🏫"}
+              </span>
             </div>
             <h2 className="text-xl md:text-2xl font-bold text-foreground mb-1">
               {loginType === "student" ? "Student Portal" : "Teacher Portal"}
@@ -333,7 +341,7 @@ const Index = () => {
                 <p className="text-muted-foreground mb-6 text-sm">
                   {authMode === "login"
                     ? loginType === "student" ? "Access your learning dashboard" : "Manage your classroom"
-                    : "Create your account"}
+                    : loginType === "student" ? "Create your student account" : "Register as an educator"}
                 </p>
 
                 <form onSubmit={handleSubmit} className="space-y-3">
@@ -341,8 +349,37 @@ const Index = () => {
                     <>
                       <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} required
                         placeholder="Full name" className={inputClass} />
-                      <input type="text" value={className} onChange={(e) => setClassName(e.target.value)}
-                        placeholder="Class (e.g. 9th CBSE)" className={inputClass} />
+                      {loginType === "student" ? (
+                        <input type="text" value={className} onChange={(e) => setClassName(e.target.value)}
+                          placeholder="Class (e.g. Class 10)" className={inputClass} />
+                      ) : (
+                        <>
+                          <input type="text" value={schoolName} onChange={(e) => setSchoolName(e.target.value)}
+                            placeholder="School name" className={inputClass} />
+                          <p className="text-xs text-muted-foreground text-left">Subjects you teach:</p>
+                          <div className="flex gap-2 flex-wrap justify-center">
+                            {["Mathematics", "Science", "Social", "English", "Hindi", "Telugu"].map(sub => {
+                              const selected = className.split(",").map(s => s.trim()).includes(sub);
+                              return (
+                                <button key={sub} type="button"
+                                  onClick={() => setClassName(prev => {
+                                    const subjects = prev ? prev.split(",").map(s => s.trim()).filter(Boolean) : [];
+                                    return subjects.includes(sub) 
+                                      ? subjects.filter(s => s !== sub).join(", ")
+                                      : [...subjects, sub].join(", ");
+                                  })}
+                                  className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+                                    selected 
+                                      ? "bg-primary/20 border-primary text-primary" 
+                                      : "bg-muted/40 border-border text-muted-foreground hover:border-primary/50"
+                                  }`}>
+                                  {sub}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </>
+                      )}
                     </>
                   )}
                   <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required

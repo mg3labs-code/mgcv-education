@@ -13,7 +13,7 @@ interface AuthContextType {
   role: AppRole | null;
   fullName: string;
   loading: boolean;
-  signUp: (email: string, password: string, fullName: string, role: AppRole, className?: string) => Promise<void>;
+  signUp: (email: string, password: string, fullName: string, role: AppRole, className?: string, schoolName?: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -99,12 +99,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, name: string, selectedRole: AppRole, className?: string) => {
+  const signUp = async (email: string, password: string, name: string, selectedRole: AppRole, className?: string, schoolName?: string) => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { full_name: name, role: selectedRole, class_name: className || '' },
+        data: { 
+          full_name: name, 
+          role: selectedRole, 
+          class_name: selectedRole === 'teacher' ? '' : (className || ''),
+          school_name: schoolName || '',
+        },
         emailRedirectTo: window.location.origin,
       },
     });

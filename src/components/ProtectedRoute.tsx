@@ -35,6 +35,18 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
   if (!user) return <Navigate to="/" replace />;
 
+  // Role-based route protection
+  const path = location.pathname;
+  if (path.startsWith("/teacher") && role !== "teacher" && role !== "admin") {
+    return <Navigate to={`/${role || "student"}`} replace />;
+  }
+  if (path.startsWith("/admin") && role !== "admin") {
+    return <Navigate to={`/${role || "student"}`} replace />;
+  }
+  if (path.startsWith("/student") && role === "teacher") {
+    return <Navigate to="/teacher" replace />;
+  }
+
   const isOnboardingRoute = location.pathname === '/student/onboarding';
   if (role === 'student' && !isOnboardingRoute && !onboardingCompleted) {
     return <Navigate to="/student/onboarding" replace />;
