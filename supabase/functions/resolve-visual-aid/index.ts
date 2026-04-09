@@ -142,7 +142,7 @@ Return ONLY a JSON object with no markdown:
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "google/gemini-2.5-flash-image",
+          model: "google/gemini-3.1-flash-image-preview",
           messages: [
             {
               role: "user",
@@ -151,7 +151,6 @@ The image should be clean, labeled, colorful, and easy to understand. Use a whit
 Make it look like a professional textbook illustration.`,
             },
           ],
-          modalities: ["image", "text"],
         }),
       });
 
