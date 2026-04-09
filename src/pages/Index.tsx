@@ -341,8 +341,33 @@ const Index = () => {
                     <>
                       <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} required
                         placeholder="Full name" className={inputClass} />
-                      <input type="text" value={className} onChange={(e) => setClassName(e.target.value)}
-                        placeholder="Class (e.g. 9th CBSE)" className={inputClass} />
+                      {loginType === "student" ? (
+                        <input type="text" value={className} onChange={(e) => setClassName(e.target.value)}
+                          placeholder="Class (e.g. Class 10)" className={inputClass} />
+                      ) : (
+                        <>
+                          <input type="text" value={className} onChange={(e) => setClassName(e.target.value)}
+                            placeholder="School name" className={inputClass} />
+                          <div className="flex gap-2 flex-wrap justify-center">
+                            {["Mathematics", "Science", "Social", "English", "Hindi", "Telugu"].map(sub => (
+                              <button key={sub} type="button"
+                                onClick={() => setClassName(prev => {
+                                  const subjects = prev ? prev.split(",").map(s => s.trim()).filter(Boolean) : [];
+                                  return subjects.includes(sub) 
+                                    ? subjects.filter(s => s !== sub).join(", ")
+                                    : [...subjects, sub].join(", ");
+                                })}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+                                  className.includes(sub) 
+                                    ? "bg-primary/20 border-primary text-primary" 
+                                    : "bg-muted/40 border-border text-muted-foreground hover:border-primary/50"
+                                }`}>
+                                {sub}
+                              </button>
+                            ))}
+                          </div>
+                        </>
+                      )}
                     </>
                   )}
                   <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required
