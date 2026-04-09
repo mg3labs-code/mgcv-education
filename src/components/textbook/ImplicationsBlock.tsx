@@ -3,11 +3,12 @@ import { ImplicationsContent } from "@/data/textbookData";
 import { Compass, Mic, Send, Loader2, CheckCircle2, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { InsightCard, ExampleCard, ImportantNote } from "@/components/textbook/ContentCards";
 
-const colorMap: Record<string, { bg: string; border: string; text: string }> = {
-  amber: { bg: "bg-amber-50 dark:bg-amber-950/30", border: "border-amber-200 dark:border-amber-800", text: "text-amber-800 dark:text-amber-300" },
-  sky: { bg: "bg-sky-50 dark:bg-sky-950/30", border: "border-sky-200 dark:border-sky-800", text: "text-sky-800 dark:text-sky-300" },
-  purple: { bg: "bg-purple-50 dark:bg-purple-950/30", border: "border-purple-200 dark:border-purple-800", text: "text-purple-800 dark:text-purple-300" },
+const colorMap: Record<string, "teal" | "purple" | "amber" | "sky"> = {
+  amber: "amber",
+  sky: "sky",
+  purple: "purple",
 };
 
 const ImplicationsBlock = ({ content }: { content: ImplicationsContent }) => {
@@ -32,31 +33,27 @@ const ImplicationsBlock = ({ content }: { content: ImplicationsContent }) => {
 
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-gradient-to-br from-primary/10 to-accent/20 border border-primary/20 p-5">
-        <div className="flex items-start gap-3">
-          <Compass className="h-5 w-5 text-primary mt-0.5 shrink-0" />
-          <div>
-            <p className="text-xs font-semibold text-primary mb-1">🔮 Imagine this...</p>
-            <p className="text-base font-semibold font-serif text-foreground">{content.whatIfQuestion}</p>
-          </div>
+      <InsightCard title="🔮 Imagine this..." color="purple">
+        <div className="flex items-start gap-3 mt-1">
+          <Compass className="h-5 w-5 mt-0.5 shrink-0" />
+          <p className="text-base font-semibold font-serif text-foreground">{content.whatIfQuestion}</p>
         </div>
-      </div>
+      </InsightCard>
 
       {content.implications && content.implications.length > 0 ? (
         <div className="grid gap-4">
           {content.implications.map((imp, i) => {
-            const colors = colorMap[imp.color] || colorMap.amber;
+            const cardColor = colorMap[imp.color] || "teal";
             return (
-              <div key={i} className={`rounded-xl border p-5 ${colors.bg} ${colors.border}`}>
-                <p className={`text-sm font-bold mb-3 flex items-center gap-2 ${colors.text}`}>{imp.icon} {imp.category}</p>
-                <ul className="space-y-2">
+              <InsightCard key={i} title={`${imp.icon} ${imp.category}`} color={cardColor}>
+                <ul className="space-y-2 mt-1">
                   {imp.points.map((point, j) => (
-                    <li key={j} className="flex items-start gap-2 text-base text-foreground leading-relaxed">
-                      <span className={`mt-1.5 shrink-0 ${colors.text}`}>•</span>{point}
+                    <li key={j} className="flex items-start gap-2 text-[0.95rem] text-foreground leading-relaxed">
+                      <span className="mt-1.5 shrink-0">•</span>{point}
                     </li>
                   ))}
                 </ul>
-              </div>
+              </InsightCard>
             );
           })}
         </div>
@@ -65,7 +62,7 @@ const ImplicationsBlock = ({ content }: { content: ImplicationsContent }) => {
           <p className="text-xs font-semibold text-muted-foreground mb-3">🧠 Let these ideas bounce around your brain:</p>
           <div className="space-y-2">
             {content.reflectionPrompts.map((p, i) => (
-              <div key={i} className="flex items-start gap-2 text-base text-foreground">
+              <div key={i} className="flex items-start gap-2 text-[0.95rem] text-foreground">
                 <span className="text-primary mt-0.5 shrink-0">→</span>{p}
               </div>
             ))}
@@ -74,15 +71,14 @@ const ImplicationsBlock = ({ content }: { content: ImplicationsContent }) => {
       )}
 
       <div className="space-y-3">
-        <div className="rounded-xl bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 px-5 py-3">
-          <p className="text-sm font-bold text-red-700 dark:text-red-400 flex items-center gap-2">✏️ Your Turn to Think Big</p>
-        </div>
-        <p className="text-base font-medium text-foreground">{content.essayPrompt}</p>
+        <ImportantNote title="Your Turn to Think Big">
+          <p className="text-[0.95rem] font-medium text-foreground">{content.essayPrompt}</p>
+        </ImportantNote>
 
         {!voiceMode ? (
           <>
             <textarea
-              className="w-full rounded-xl border bg-background px-4 py-3 text-base resize-none focus:outline-none focus:ring-2 focus:ring-primary/30 min-h-[140px] leading-relaxed"
+              className="w-full rounded-xl border bg-background px-4 py-3 text-[0.95rem] resize-none focus:outline-none focus:ring-2 focus:ring-primary/30 min-h-[140px] leading-relaxed"
               placeholder="Share your thoughts — even wild ideas are welcome! 🚀"
               value={essay}
               onChange={(e) => setEssay(e.target.value)}
@@ -109,14 +105,14 @@ const ImplicationsBlock = ({ content }: { content: ImplicationsContent }) => {
 
         {/* Submit / Feedback */}
         {feedback ? (
-          <div className="rounded-xl border-2 border-emerald-300 dark:border-emerald-700 bg-emerald-50/60 dark:bg-emerald-950/20 p-4 space-y-2">
-            <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400">
+          <ExampleCard title="AI Feedback" defaultOpen={true}>
+            <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 mb-2">
               <CheckCircle2 className="h-4 w-4" />
-              <span className="text-sm font-bold">AI Feedback</span>
+              <span className="text-sm font-bold">Well done!</span>
             </div>
             <p className="text-sm text-foreground leading-relaxed whitespace-pre-line">{feedback}</p>
-            <Button variant="ghost" size="sm" onClick={() => setFeedback(null)}><RotateCcw className="h-3 w-3 mr-1" /> Try again</Button>
-          </div>
+            <Button variant="ghost" size="sm" onClick={() => setFeedback(null)} className="mt-2"><RotateCcw className="h-3 w-3 mr-1" /> Try again</Button>
+          </ExampleCard>
         ) : wordCount >= 5 ? (
           <Button onClick={handleSubmit} disabled={loading} size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2">
             {loading ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Evaluating...</> : <><Send className="h-3.5 w-3.5" /> Submit for Feedback</>}
