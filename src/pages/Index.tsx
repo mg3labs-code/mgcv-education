@@ -317,8 +317,14 @@ const Index = () => {
             <button onClick={closeModal} className="absolute top-4 right-5 text-2xl cursor-pointer text-muted-foreground hover:text-foreground bg-transparent border-none">
               ×
             </button>
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-info/10 flex items-center justify-center mx-auto mb-4">
-              <span className="text-xl font-bold text-primary">{loginType === "student" ? "S" : "T"}</span>
+            <div className={`w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4 ${
+              loginType === "teacher" 
+                ? "bg-gradient-to-br from-amber-500/20 to-orange-500/10" 
+                : "bg-gradient-to-br from-primary/20 to-info/10"
+            }`}>
+              <span className={`text-xl font-bold ${loginType === "teacher" ? "text-amber-600" : "text-primary"}`}>
+                {loginType === "student" ? "🎓" : "👩‍🏫"}
+              </span>
             </div>
             <h2 className="text-xl md:text-2xl font-bold text-foreground mb-1">
               {loginType === "student" ? "Student Portal" : "Teacher Portal"}
