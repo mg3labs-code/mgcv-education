@@ -87,12 +87,27 @@ const TextbookEpisode = () => {
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
   const [exitConfirm, setExitConfirm] = useState(false);
   const [showCompletion, setShowCompletion] = useState(false);
+  const [alreadyCompleted, setAlreadyCompleted] = useState(false);
   const [blockCompleted, setBlockCompleted] = useState<Set<number>>(new Set());
   const [showUnderstandConfirm, setShowUnderstandConfirm] = useState(false);
   const [expandedTextbookRef, setExpandedTextbookRef] = useState<number | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const totalBlocksRef = useRef(0);
+
+  // Reset all state when episode changes
+  useEffect(() => {
+    setActiveBlock(0);
+    setShowCompletion(false);
+    setAlreadyCompleted(false);
+    setUnderstoodBlocks(new Set());
+    setBlockCompleted(new Set());
+    setShowUnderstandConfirm(false);
+    setShowSectionsSheet(false);
+    setShowToolsPopup(false);
+    setExitConfirm(false);
+    setSaveStatus("idle");
+  }, [episodeId]);
 
   const persistUnderstood = useCallback((understood: Set<number>) => {
     if (!user || !chapterId || !episodeId) return;
