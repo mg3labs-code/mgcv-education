@@ -1,5 +1,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { z } from "https://esm.sh/zod@3.23.8";
+
+const BodySchema = z.object({
+  isTeluguSession: z.boolean().optional(),
+  language: z.string().max(50).optional(),
+}).optional().default({});
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -187,10 +193,14 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const { isTeluguSession: requestedTeluguSession, language } = await req.json().catch(() => ({
-      isTeluguSession: false,
-      language: null,
-    }));
+    const raw = await req.json().catch(() => ({}));
+    const parsed = BodySchema.safeParse(raw);
+    if (!parsed.success) {
+      return new Response(JSON.stringify({ error: "Invalid request", details: parsed.error.flatten().fieldErrors }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const { isTeluguSession: requestedTeluguSession, language } = parsed.data;
 
     const isTeluguSession =
       requestedTeluguSession === true ||
