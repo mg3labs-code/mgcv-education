@@ -1,5 +1,16 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { z } from "https://esm.sh/zod@3.23.8";
+
+const ActionSchema = z.enum([
+  "create_assignment", "get_assignments", "get_assignment_detail",
+  "submit_answer", "get_submissions", "get_submission_detail",
+  "grade_answer", "retry_evaluation", "finalize_submission",
+  "publish_assignment", "delete_assignment",
+]);
+const BaseBodySchema = z.object({
+  action: ActionSchema,
+}).passthrough();
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -57,6 +68,13 @@ serve(async (req) => {
       }
     } else {
       body = await req.json();
+    }
+
+    const actionParsed = BaseBodySchema.safeParse(body);
+    if (!actionParsed.success) {
+      return new Response(JSON.stringify({ error: "Invalid request", details: actionParsed.error.flatten().fieldErrors }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const { action } = body;

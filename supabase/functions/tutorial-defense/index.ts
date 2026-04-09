@@ -1,5 +1,14 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { z } from "https://esm.sh/zod@3.23.8";
 
+const BodySchema = z.object({
+  topic: z.string().min(1).max(500),
+  episodeTitle: z.string().max(500).optional(),
+  subject: z.string().max(100).optional(),
+  action: z.enum(["start", "respond", "hint"]).optional(),
+  history: z.array(z.object({ role: z.string(), content: z.string().max(10000) })).max(50).optional(),
+  exchangeCount: z.number().int().min(0).max(20).optional(),
+});
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
@@ -11,7 +20,14 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { topic, episodeTitle, subject, action, history, exchangeCount } = await req.json();
+    const raw = await req.json();
+    const parsed = BodySchema.safeParse(raw);
+    if (!parsed.success) {
+      return new Response(JSON.stringify({ error: "Invalid request", details: parsed.error.flatten().fieldErrors }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const { topic, episodeTitle, subject, action, history, exchangeCount } = parsed.data;
 
     const roundInfo = exchangeCount !== undefined ? `This is round ${exchangeCount + 1} of 6.` : "";
     const isNearEnd = exchangeCount >= 4;

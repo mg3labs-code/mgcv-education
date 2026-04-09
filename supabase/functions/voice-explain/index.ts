@@ -1,5 +1,12 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { z } from "https://esm.sh/zod@3.23.8";
 
+const BodySchema = z.object({
+  transcript: z.string().min(1).max(10000),
+  topic: z.string().min(1).max(500),
+  prompt: z.string().max(2000).optional(),
+  guidePoints: z.array(z.string().max(500)).max(20).optional(),
+});
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -17,14 +24,15 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const { transcript, topic, prompt, guidePoints } = await req.json();
-
-    if (!transcript || !topic) {
+    const raw = await req.json();
+    const parsed = BodySchema.safeParse(raw);
+    if (!parsed.success) {
       return new Response(
-        JSON.stringify({ error: "transcript and topic are required" }),
+        JSON.stringify({ error: "Invalid request", details: parsed.error.flatten().fieldErrors }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+    const { transcript, topic, prompt, guidePoints } = parsed.data;
 
     const systemPrompt = `You are a warm, encouraging math tutor for 10th grade students studying Real Numbers (Telangana State Board). 
 Your job is to analyze what a student said about a concept and give them constructive, positive feedback.

@@ -1,5 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { z } from "https://esm.sh/zod@3.23.8";
 
+const BodySchema = z.object({
+  audioBase64: z.string().min(1).max(10_000_000),
+  mimeType: z.string().max(100).optional(),
+});
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -17,14 +22,15 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const { audioBase64, mimeType } = await req.json();
-
-    if (!audioBase64) {
+    const raw = await req.json();
+    const parsed = BodySchema.safeParse(raw);
+    if (!parsed.success) {
       return new Response(
-        JSON.stringify({ error: "audioBase64 is required" }),
+        JSON.stringify({ error: "Invalid request", details: parsed.error.flatten().fieldErrors }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+    const { audioBase64, mimeType } = parsed.data;
 
     // Use Gemini's multimodal capability to transcribe audio
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {

@@ -1,5 +1,22 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { z } from "https://esm.sh/zod@3.23.8";
+
+const EpisodeSchema = z.object({
+  id: z.string().min(1).max(200),
+  number: z.number().int().min(1).max(50),
+  title: z.string().min(1).max(500),
+  subtitle: z.string().max(500).optional(),
+  type: z.string().max(100).optional(),
+});
+const BodySchema = z.object({
+  chapterId: z.string().min(1).max(200),
+  chapterTitle: z.string().min(1).max(500),
+  subject: z.string().min(1).max(200),
+  episodes: z.array(EpisodeSchema).min(1).max(20),
+  board: z.string().max(100).default("Telangana"),
+  grade: z.number().int().min(1).max(12).default(10),
+});
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -10,7 +27,14 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { chapterId, chapterTitle, subject, episodes, board = "Telangana", grade = 10 } = await req.json();
+    const raw = await req.json();
+    const parsed = BodySchema.safeParse(raw);
+    if (!parsed.success) {
+      return new Response(JSON.stringify({ error: "Invalid request", details: parsed.error.flatten().fieldErrors }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const { chapterId, chapterTitle, subject, episodes, board, grade } = parsed.data;
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");

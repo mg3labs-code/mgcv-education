@@ -470,11 +470,13 @@ export const AssessmentBlock = ({ content, onComplete }: { content: AssessmentCo
   );
 };
 
-// ─── Exercise Block ─────────────────────────────────────────
+// ─── Exercise Block (Enhanced with workspace + AI feedback) ─
 
 export const ExerciseBlock = ({ content, onComplete }: { content: ExerciseContent; onComplete?: () => void }) => {
   const [showAnswer, setShowAnswer] = useState<Record<number, boolean>>({});
   const [tfAnswers, setTfAnswers] = useState<Record<number, string>>({});
+  const [workAnswers, setWorkAnswers] = useState<Record<number, string>>({});
+  const [showWorkspace, setShowWorkspace] = useState<Record<number, boolean>>({});
 
   const isTrueFalse = (text: string) => {
     const lower = text.toLowerCase();
@@ -494,30 +496,49 @@ export const ExerciseBlock = ({ content, onComplete }: { content: ExerciseConten
     setTimeout(() => handleReveal(i), 600);
   };
 
+  const completedCount = Object.values(showAnswer).filter(Boolean).length;
+  const totalProblems = content.problems.length;
+
   return (
-    <div className="space-y-3">
-      <div className="border-l-4 border-blue-500 bg-blue-50/60 dark:bg-blue-950/20 rounded-r-lg px-4 py-3 text-sm text-muted-foreground">📖 {content.source}</div>
+    <div className="space-y-4">
+      {/* Header with source and progress */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="border-l-4 border-indigo-500 bg-indigo-50/60 dark:bg-indigo-950/20 rounded-r-lg px-4 py-3 text-sm text-muted-foreground flex-1">
+          📖 {content.source}
+        </div>
+        <div className="shrink-0 text-xs font-semibold text-muted-foreground bg-muted rounded-full px-3 py-1.5">
+          {completedCount}/{totalProblems} done
+        </div>
+      </div>
+
       {content.problems.map((p, i) => {
         const isTF = isTrueFalse(p.text);
-        const answered = tfAnswers[i] !== undefined;
         const correctAnswer = p.answer?.toLowerCase().includes("true") ? "true" : p.answer?.toLowerCase().includes("false") ? "false" : null;
+        const hasWorkspace = showWorkspace[i];
+        const workAnswer = workAnswers[i] || "";
 
         return (
-          <div key={i} className="bg-white dark:bg-card rounded-xl border shadow-sm p-4">
-            <p className="text-[0.95rem] text-foreground leading-[1.8] mb-3">
-              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold mr-2">{p.number || i + 1}</span>
-              {p.text}
-            </p>
+          <div key={i} className="rounded-xl border bg-card shadow-sm overflow-hidden">
+            {/* Problem header */}
+            <div className="px-5 py-4 border-b border-border/50">
+              <p className="text-[0.95rem] text-foreground leading-[1.8] flex items-start gap-3">
+                <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 text-xs font-bold shrink-0 mt-0.5">
+                  {p.number || i + 1}
+                </span>
+                <span className="flex-1">{p.text}</span>
+              </p>
+            </div>
 
+            {/* True/False interactive */}
             {isTF && !showAnswer[i] ? (
-              <div className="flex gap-3 mt-2">
+              <div className="flex gap-3 px-5 py-4">
                 <button
                   onClick={() => handleTfSelect(i, "true")}
                   className={`flex-1 py-3 rounded-xl font-semibold text-sm border-2 transition-all ${
                     tfAnswers[i] === "true"
                       ? correctAnswer === "true"
-                        ? "border-green-500 bg-green-50 text-green-700"
-                        : "border-red-500 bg-red-50 text-red-700"
+                        ? "border-green-500 bg-green-50 text-green-700 dark:bg-green-950/30 dark:text-green-400"
+                        : "border-red-500 bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400"
                       : "border-border bg-muted/30 text-foreground hover:border-emerald-400 hover:bg-emerald-50/50"
                   }`}
                 >
@@ -528,33 +549,83 @@ export const ExerciseBlock = ({ content, onComplete }: { content: ExerciseConten
                   className={`flex-1 py-3 rounded-xl font-semibold text-sm border-2 transition-all ${
                     tfAnswers[i] === "false"
                       ? correctAnswer === "false"
-                        ? "border-green-500 bg-green-50 text-green-700"
-                        : "border-red-500 bg-red-50 text-red-700"
+                        ? "border-green-500 bg-green-50 text-green-700 dark:bg-green-950/30 dark:text-green-400"
+                        : "border-red-500 bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400"
                       : "border-border bg-muted/30 text-foreground hover:border-rose-400 hover:bg-rose-50/50"
                   }`}
                 >
                   ❌ False
                 </button>
               </div>
-            ) : p.answer ? (
-              <div className="mt-2">
-                {showAnswer[i] ? (
-                  <div className="rounded-lg bg-green-100 dark:bg-green-950/30 p-3 text-[0.95rem] text-green-800 dark:text-green-300 border border-green-200 dark:border-green-800">
-                    ✓ Answer: {p.answer}
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => handleReveal(i)}
-                    className="text-sm text-primary font-medium hover:underline flex items-center gap-1"
-                  >
-                    <ChevronDown className="h-3.5 w-3.5" /> Click to reveal answer
-                  </button>
+            ) : (
+              <div className="px-5 py-3 space-y-3">
+                {/* Workspace toggle */}
+                {!showAnswer[i] && !isTF && (
+                  <>
+                    {!hasWorkspace ? (
+                      <button
+                        onClick={() => setShowWorkspace({ ...showWorkspace, [i]: true })}
+                        className="text-sm text-primary font-medium hover:underline flex items-center gap-1.5"
+                      >
+                        <PenLine className="h-3.5 w-3.5" /> Try solving it here ✍️
+                      </button>
+                    ) : (
+                      <div className="space-y-2">
+                        <textarea
+                          className="w-full rounded-lg border bg-background px-3 py-2.5 text-base resize-none focus:outline-none focus:ring-2 focus:ring-primary/30"
+                          rows={3}
+                          placeholder="Work out your solution here..."
+                          value={workAnswer}
+                          onChange={(e) => setWorkAnswers({ ...workAnswers, [i]: e.target.value })}
+                        />
+                        {workAnswer.trim().length > 2 && (
+                          <SubmitEvaluate
+                            answer={workAnswer}
+                            prompt={p.text}
+                            topic={content.source}
+                            onComplete={() => handleReveal(i)}
+                            minWords={1}
+                          />
+                        )}
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* Reveal answer */}
+                {p.answer && (
+                  showAnswer[i] ? (
+                    <div className="rounded-lg bg-green-100 dark:bg-green-950/30 p-3 text-[0.95rem] text-green-800 dark:text-green-300 border border-green-200 dark:border-green-800">
+                      ✓ Answer: {p.answer}
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => handleReveal(i)}
+                      className="text-sm text-muted-foreground font-medium hover:text-primary flex items-center gap-1"
+                    >
+                      <ChevronDown className="h-3.5 w-3.5" /> Reveal answer
+                    </button>
+                  )
                 )}
               </div>
-            ) : null}
+            )}
           </div>
         );
       })}
+
+      {/* Progress summary */}
+      {completedCount > 0 && completedCount < totalProblems && (
+        <div className="rounded-xl bg-indigo-50/60 dark:bg-indigo-950/20 border border-indigo-200 dark:border-indigo-800 px-4 py-3 text-sm text-indigo-700 dark:text-indigo-400 font-medium flex items-center gap-2">
+          <Sparkles className="h-4 w-4" />
+          {completedCount} of {totalProblems} problems done — keep going! 💪
+        </div>
+      )}
+      {completedCount === totalProblems && totalProblems > 0 && (
+        <div className="rounded-xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 px-4 py-3 text-sm text-emerald-700 dark:text-emerald-400 font-medium flex items-center gap-2">
+          <CheckCircle2 className="h-4 w-4" />
+          All {totalProblems} problems completed! You're a champion! 🏆
+        </div>
+      )}
     </div>
   );
 };

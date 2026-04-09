@@ -1,5 +1,21 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { z } from "https://esm.sh/zod@3.23.8";
 
+const MessageSchema = z.object({
+  role: z.enum(["user", "assistant", "system"]),
+  content: z.string().min(1).max(10000),
+});
+const BodySchema = z.object({
+  messages: z.array(MessageSchema).min(1).max(100),
+  context: z.object({
+    page: z.string().max(200).optional(),
+    chapter: z.string().max(200).optional(),
+    episode: z.string().max(200).optional(),
+    subject: z.string().max(200).optional(),
+    topic: z.string().max(200).optional(),
+  }).optional(),
+  role: z.enum(["student", "teacher"]).optional(),
+});
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -114,14 +130,15 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const { messages, context, role } = await req.json();
-
-    if (!messages || !Array.isArray(messages)) {
+    const raw = await req.json();
+    const parsed = BodySchema.safeParse(raw);
+    if (!parsed.success) {
       return new Response(
-        JSON.stringify({ error: "messages array is required" }),
+        JSON.stringify({ error: "Invalid request", details: parsed.error.flatten().fieldErrors }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+    const { messages, context, role } = parsed.data;
 
     // Select system prompt based on role
     const systemPrompt = role === "teacher" ? TEACHER_SYSTEM_PROMPT : STUDENT_SYSTEM_PROMPT;
