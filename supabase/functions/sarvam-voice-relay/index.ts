@@ -1,5 +1,14 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { z } from "https://esm.sh/zod@3.23.8";
 
+const BodySchema = z.object({
+  audioBase64: z.string().min(1).max(10_000_000),
+  mimeType: z.string().max(100).optional(),
+  conversationHistory: z.array(z.object({
+    role: z.string().max(20),
+    content: z.string().max(10000),
+  })).max(100).optional(),
+});
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -72,14 +81,15 @@ serve(async (req) => {
     if (!SARVAM_API_KEY) throw new Error("SARVAM_API_KEY is not configured");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const { audioBase64, mimeType, conversationHistory } = await req.json();
-
-    if (!audioBase64) {
+    const raw = await req.json();
+    const parsed = BodySchema.safeParse(raw);
+    if (!parsed.success) {
       return new Response(
-        JSON.stringify({ error: "audioBase64 is required" }),
+        JSON.stringify({ error: "Invalid request", details: parsed.error.flatten().fieldErrors }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+    const { audioBase64, mimeType, conversationHistory } = parsed.data;
 
     // ---- STEP 1: Sarvam STT (Speech-to-Text) ----
     const audioBytes = Uint8Array.from(atob(audioBase64), (c) => c.charCodeAt(0));

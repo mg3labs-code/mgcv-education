@@ -1,5 +1,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { z } from "https://esm.sh/zod@3.23.8";
 
+const BodySchema = z.object({
+  text: z.string().min(1).max(10000),
+  voiceId: z.string().max(100).optional(),
+  language: z.string().max(50).optional(),
+});
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -22,7 +28,15 @@ serve(async (req) => {
   }
 
   try {
-    const { text, voiceId, language } = await req.json();
+    const raw = await req.json();
+    const parsed = BodySchema.safeParse(raw);
+    if (!parsed.success) {
+      return new Response(
+        JSON.stringify({ error: "Invalid request", details: parsed.error.flatten().fieldErrors }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    const { text, voiceId, language } = parsed.data;
 
     // Aggressive sanitization: strip emojis, surrogates, control chars, non-BMP
     const sanitized = (text || "")
