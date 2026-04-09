@@ -1,4 +1,11 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { z } from "https://esm.sh/zod@3.23.8";
+
+const BodySchema = z.object({
+  topic: z.string().max(500).default("General"),
+  prompt: z.string().max(2000).default(""),
+  answer: z.string().min(1).max(5000),
+});
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,9 +18,16 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { topic, prompt, answer } = await req.json();
+    const raw = await req.json();
+    const parsed = BodySchema.safeParse(raw);
+    if (!parsed.success) {
+      return new Response(JSON.stringify({ error: "Invalid request", details: parsed.error.flatten().fieldErrors }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const { topic, prompt, answer } = parsed.data;
 
-    if (!answer || answer.trim().length < 3) {
+    if (answer.trim().length < 3) {
       return new Response(JSON.stringify({ feedback: "Write a bit more so I can give you proper feedback! ✍️" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
