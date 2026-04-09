@@ -1,6 +1,5 @@
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import { ContentBlock, ConceptContent, RecallContent, ExplainContent, AssessmentContent, ExerciseContent, ReasoningContent, AssumptionsContent, ConnectionsContent, ApplicationContent, ImplicationsContent, VisualAidContent } from "@/data/textbookData";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { BookOpen } from "lucide-react";
 
 import { ConceptBlock, ActivityBlock, RecallBlock, ExplainBlock, AssessmentBlock, ExerciseBlock, blockSubtitles, layerMeta, type ActivityContent } from "@/components/textbook/EpisodeBlocks";
@@ -25,6 +24,27 @@ const defaultMeta = { border: "border-l-primary", bg: "", dotColor: "bg-primary"
 
 const FullTextbookView = ({ blocks = [], chapterTitle, episodeTitle }: FullTextbookViewProps) => {
   const sectionRefs = useRef<Record<number, HTMLDivElement | null>>({});
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  // Track active section on scroll
+  useEffect(() => {
+    if (!blocks.length) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const idx = Number(entry.target.getAttribute("data-section-index"));
+            if (!isNaN(idx)) setActiveIndex(idx);
+          }
+        });
+      },
+      { rootMargin: "-20% 0px -60% 0px", threshold: 0.1 }
+    );
+    Object.entries(sectionRefs.current).forEach(([_, el]) => {
+      if (el) observer.observe(el);
+    });
+    return () => observer.disconnect();
+  }, [blocks.length]);
 
   const scrollTo = (index: number) => {
     sectionRefs.current[index]?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -73,38 +93,43 @@ const FullTextbookView = ({ blocks = [], chapterTitle, episodeTitle }: FullTextb
         </div>
       )}
 
-      {/* Floating TOC pills */}
-      <div className="flex flex-wrap gap-2 mb-8 sticky top-0 z-10 bg-[#F9FAFB] py-3 -mx-2 px-2">
+      {/* Floating TOC pills with active tracking */}
+      <div className="flex flex-wrap gap-2 mb-8 sticky top-0 z-10 bg-background/95 backdrop-blur-sm py-3 -mx-2 px-2 border-b border-border/30">
         {blocks.map((block, i) => {
           const meta = layerMeta[block.type] || defaultMeta;
+          const isActive = activeIndex === i;
           return (
             <button
               key={i}
               onClick={() => scrollTo(i)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all hover:shadow-sm"
-              style={{ borderColor: "hsl(var(--border))" }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all hover:shadow-sm ${
+                isActive
+                  ? "border-primary bg-primary/10 text-primary shadow-sm scale-105"
+                  : "border-border/60 text-muted-foreground hover:border-primary/40"
+              }`}
             >
-              <span className={`h-2 w-2 rounded-full ${meta.dotColor}`} />
-              <span className="text-muted-foreground">{block.icon || ""} {(block.title || block.type).slice(0, 20)}</span>
+              <span className={`h-2 w-2 rounded-full ${isActive ? "bg-primary" : meta.dotColor}`} />
+              <span>{block.icon || ""} {(block.title || block.type).slice(0, 20)}</span>
             </button>
           );
         })}
       </div>
 
       {/* Content sections — continuous scroll */}
-      <div className="space-y-8">
+      <div className="space-y-10">
         {blocks.map((block, i) => {
           const meta = layerMeta[block.type] || defaultMeta;
           return (
             <div
               key={i}
               ref={(el) => { sectionRefs.current[i] = el; }}
-              className="scroll-mt-16"
+              data-section-index={i}
+              className="scroll-mt-20"
             >
-              {/* Section header */}
-              <div className="flex items-center gap-3 mb-3">
+              {/* Section header with gradient accent */}
+              <div className="flex items-center gap-3 mb-4">
                 {meta.badge && (
-                  <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${meta.badgeColor || ""}`}>
+                  <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold shadow-sm ${meta.badgeColor || ""}`}>
                     {meta.badge}
                   </span>
                 )}
@@ -117,15 +142,15 @@ const FullTextbookView = ({ blocks = [], chapterTitle, episodeTitle }: FullTextb
               </div>
 
               {/* Block content with colored left border */}
-              <div className={`bg-card rounded-xl border-l-4 ${meta.border} shadow-sm`}>
-                <div className="p-5">
+              <div className={`bg-card rounded-2xl border-l-4 ${meta.border} shadow-sm border border-border/30`}>
+                <div className="p-6">
                   {renderBlock(block)}
                 </div>
               </div>
 
-              {/* Separator */}
+              {/* Gradient separator */}
               {i < blocks.length - 1 && (
-                <div className="mt-8 border-b border-border/40" />
+                <div className="mt-10 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
               )}
             </div>
           );
@@ -134,7 +159,9 @@ const FullTextbookView = ({ blocks = [], chapterTitle, episodeTitle }: FullTextb
 
       {/* End marker */}
       <div className="text-center py-12 text-muted-foreground">
-        <p className="text-sm">✅ End of episode content</p>
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 text-sm font-medium">
+          ✅ End of episode content
+        </div>
       </div>
     </div>
   );

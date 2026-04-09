@@ -352,15 +352,32 @@ export const RecallBlock = ({ content, onComplete }: { content: RecallContent; o
     if (revealedCount === content.questions.length) onComplete?.();
   }, [revealed]);
   return (
-    <div className="border-2 border-dashed border-amber-400 rounded-lg p-5 bg-amber-50/50 dark:bg-amber-950/10">
-      <h4 className="text-amber-600 dark:text-amber-400 font-semibold mb-4 flex items-center gap-2">🧠 Quick Check</h4>
+    <div className="space-y-4">
+      <div className="rounded-2xl overflow-hidden border-2 border-amber-300 dark:border-amber-700 shadow-sm">
+        <div className="bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-950/40 dark:to-yellow-950/30 px-5 py-3">
+          <h4 className="text-amber-700 dark:text-amber-400 font-bold text-sm flex items-center gap-2">🧠 Quick Check — Can you remember?</h4>
+        </div>
+      </div>
       <div className="space-y-3">
         {content.questions.map((q, i) => (
-          <div key={i} className="bg-white dark:bg-card rounded-lg p-4 cursor-pointer hover:bg-amber-50/60 dark:hover:bg-amber-950/20 transition-colors" onClick={() => !revealed[i] && setRevealed({ ...revealed, [i]: true })}>
-            <p className="text-[0.95rem] font-medium text-foreground"><strong>Q{i + 1}:</strong> {q.question}</p>
-            {q.hint && !revealed[i] && <p className="text-sm text-muted-foreground italic mt-1">💡 Hint: {q.hint}</p>}
-            {revealed[i] && <div className="mt-2 p-3 bg-green-100 dark:bg-green-950/30 rounded-md text-green-800 dark:text-green-300 text-[0.95rem]">✓ {q.answer}</div>}
-            {!revealed[i] && <p className="text-xs text-muted-foreground mt-2">Click to reveal answer</p>}
+          <div key={i} className="rounded-xl border-2 border-border/50 bg-card p-5 cursor-pointer hover:border-amber-300 hover:shadow-sm transition-all" onClick={() => !revealed[i] && setRevealed({ ...revealed, [i]: true })}>
+            <p className="text-[0.95rem] font-medium text-foreground flex items-start gap-3">
+              <span className="h-7 w-7 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">Q{i + 1}</span>
+              {q.question}
+            </p>
+            {q.hint && !revealed[i] && (
+              <div className="ml-10 mt-2 rounded-lg bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 px-3 py-2">
+                <p className="text-sm text-amber-700 dark:text-amber-400 italic">💡 Hint: {q.hint}</p>
+              </div>
+            )}
+            {revealed[i] && (
+              <div className="ml-10 mt-3 rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-950/30 dark:to-green-950/20 border-2 border-emerald-200 dark:border-emerald-800 p-4">
+                <p className="text-[0.95rem] text-emerald-800 dark:text-emerald-300 leading-relaxed flex items-start gap-2">
+                  <span className="text-emerald-600 shrink-0 mt-0.5">✓</span> {q.answer}
+                </p>
+              </div>
+            )}
+            {!revealed[i] && <p className="text-xs text-muted-foreground mt-2 ml-10">Tap to reveal answer →</p>}
           </div>
         ))}
       </div>
@@ -595,8 +612,10 @@ export const ExerciseBlock = ({ content, onComplete }: { content: ExerciseConten
                 {/* Reveal answer */}
                 {p.answer && (
                   showAnswer[i] ? (
-                    <div className="rounded-lg bg-green-100 dark:bg-green-950/30 p-3 text-[0.95rem] text-green-800 dark:text-green-300 border border-green-200 dark:border-green-800">
-                      ✓ Answer: {p.answer}
+                    <div className="rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-950/30 dark:to-green-950/20 border-2 border-emerald-200 dark:border-emerald-800 p-4">
+                      <p className="text-[0.95rem] text-emerald-800 dark:text-emerald-300 leading-relaxed flex items-start gap-2">
+                        <span className="text-emerald-600 shrink-0 mt-0.5">✓</span> {p.answer}
+                      </p>
                     </div>
                   ) : (
                     <button

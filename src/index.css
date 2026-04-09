@@ -473,3 +473,55 @@
 .animate-got-it {
   animation: gotItPulse 0.5s ease-out;
 }
+
+/* ── Textbook Content Card Utilities ── */
+
+.textbook-definition-box {
+  @apply rounded-2xl overflow-hidden border-2 shadow-sm;
+  border-color: hsl(var(--primary) / 0.3);
+}
+
+.textbook-definition-box > .box-header {
+  background: linear-gradient(135deg, hsl(var(--primary) / 0.12), hsl(var(--accent) / 0.08));
+  @apply px-5 py-3 border-b;
+  border-color: hsl(var(--primary) / 0.2);
+}
+
+.textbook-formula-box {
+  @apply rounded-2xl overflow-hidden shadow-md;
+}
+
+.textbook-example-box {
+  @apply rounded-2xl overflow-hidden border-2 shadow-sm;
+  border-color: hsl(152 45% 60%);
+}
+
+.dark .textbook-example-box {
+  border-color: hsl(152 35% 30%);
+}
+
+.textbook-important-note {
+  @apply rounded-xl border-2 p-5 shadow-sm;
+  border-color: hsl(38 70% 60%);
+  background: linear-gradient(135deg, hsl(38 70% 97%), hsl(40 60% 95%));
+}
+
+.dark .textbook-important-note {
+  border-color: hsl(38 50% 35%);
+  background: linear-gradient(135deg, hsl(38 30% 12%), hsl(40 25% 14%));
+}
+
+.textbook-step-box {
+  @apply rounded-xl overflow-hidden shadow-sm;
+  border: 1px solid hsl(210 60% 80%);
+}
+
+.dark .textbook-step-box {
+  border-color: hsl(210 40% 25%);
+}
+
+/* Gradient separators for textbook sections */
+.textbook-separator {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, hsl(var(--border)), transparent);
+}
