@@ -48,7 +48,9 @@ RULES:
 - Grade 5-6 language level
 - Be specific about what was good/wrong
 - Never be harsh or discouraging
-- Use 1-2 emojis`;
+- Use 1-2 emojis
+- **CRITICAL**: If the answer is gibberish, random letters, keyboard smashing, or completely unrelated nonsense (e.g. "asdf", "jaxbjbc", "zzz"), DO NOT praise it. Instead say something like: "Hmm, that doesn't look like a real answer! Try writing what you actually think. 😊"
+- Only praise answers that are genuinely relevant and show real effort.`;
 
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!apiKey) throw new Error("LOVABLE_API_KEY not configured");
