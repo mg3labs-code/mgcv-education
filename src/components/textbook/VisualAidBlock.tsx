@@ -18,6 +18,35 @@ interface VisualAidBlockProps {
   content: VisualAidContent;
 }
 
+// Simple cache key from content
+const getCacheKey = (content: VisualAidContent) => {
+  const seed = content.searchTerms || content.caption || content.alt || "";
+  return `va_cache_${seed.slice(0, 80).replace(/\s+/g, "_").toLowerCase()}`;
+};
+
+// Read from localStorage cache
+const getCached = (key: string): string | null => {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const { url, ts } = JSON.parse(raw);
+    // Cache for 7 days
+    if (Date.now() - ts > 7 * 24 * 60 * 60 * 1000) {
+      localStorage.removeItem(key);
+      return null;
+    }
+    return url;
+  } catch {
+    return null;
+  }
+};
+
+const setCache = (key: string, url: string) => {
+  try {
+    localStorage.setItem(key, JSON.stringify({ url, ts: Date.now() }));
+  } catch { /* storage full — ignore */ }
+};
+
 const VisualAidBlock = ({ content }: VisualAidBlockProps) => {
   const [zoomed, setZoomed] = useState(false);
   const [imgError, setImgError] = useState(false);
@@ -25,9 +54,20 @@ const VisualAidBlock = ({ content }: VisualAidBlockProps) => {
   const [loading, setLoading] = useState(false);
   const [tried, setTried] = useState(false);
 
-  // Auto-resolve if no valid URL
+  const cacheKey = getCacheKey(content);
+
+  // Check cache first, then auto-resolve if needed
   useEffect(() => {
-    if (!resolvedUrl && !tried && (content.caption || content.searchTerms)) {
+    if (resolvedUrl) return; // already have a URL from props
+
+    const cached = getCached(cacheKey);
+    if (cached) {
+      setResolvedUrl(cached);
+      setTried(true);
+      return;
+    }
+
+    if (!tried && (content.caption || content.searchTerms)) {
       resolveVisual();
     }
   }, []);
@@ -47,6 +87,7 @@ const VisualAidBlock = ({ content }: VisualAidBlockProps) => {
       if (error) throw error;
       if (data?.url && !data?.fallback) {
         setResolvedUrl(data.url);
+        setCache(cacheKey, data.url);
       }
     } catch (e) {
       console.error("Visual resolve failed:", e);
@@ -97,8 +138,8 @@ const VisualAidBlock = ({ content }: VisualAidBlockProps) => {
         {loading ? (
           <div className="rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 p-8 text-center">
             <Loader2 className="h-8 w-8 text-primary mx-auto mb-3 animate-spin" />
-            <p className="text-sm font-medium text-foreground">Generating visual...</p>
-            <p className="text-xs text-muted-foreground mt-1">{content.caption}</p>
+            <p className="text-sm font-medium text-foreground">Finding best visual...</p>
+            <p className="text-xs text-muted-foreground mt-1">Searching online first, then generating if needed</p>
           </div>
         ) : hasValidUrl ? (
           <div

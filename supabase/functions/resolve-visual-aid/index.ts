@@ -1,5 +1,6 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { z } from "https://esm.sh/zod@3.23.8";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const BodySchema = z.object({
   query: z.string().max(1000).optional(),
@@ -9,7 +10,7 @@ const BodySchema = z.object({
 });
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 // Verify a URL actually serves an image (HEAD check with timeout)
@@ -26,7 +27,6 @@ async function verifyImageUrl(url: string): Promise<boolean> {
     if (!resp.ok) return false;
     const ct = resp.headers.get("content-type") || "";
     if (ct.startsWith("image/")) return true;
-    // Also accept if URL ends with common image extension
     const ext = url.split("?")[0].split(".").pop()?.toLowerCase();
     return ["jpg", "jpeg", "png", "svg", "webp", "gif"].includes(ext || "");
   } catch {
@@ -34,7 +34,41 @@ async function verifyImageUrl(url: string): Promise<boolean> {
   }
 }
 
-serve(async (req) => {
+// Upload base64 image to Supabase storage and return public URL
+async function uploadToStorage(base64Data: string, query: string): Promise<string | null> {
+  try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!supabaseUrl || !serviceKey) return null;
+
+    const supabase = createClient(supabaseUrl, serviceKey);
+
+    // Extract base64 content
+    const base64Content = base64Data.replace(/^data:image\/\w+;base64,/, "");
+    const binaryData = Uint8Array.from(atob(base64Content), (c) => c.charCodeAt(0));
+
+    // Create a safe filename from query
+    const safeName = query.slice(0, 60).replace(/[^a-zA-Z0-9]/g, "_").toLowerCase();
+    const fileName = `${safeName}_${Date.now()}.png`;
+
+    const { error } = await supabase.storage
+      .from("visual-aids")
+      .upload(fileName, binaryData, { contentType: "image/png", upsert: false });
+
+    if (error) {
+      console.error("Storage upload error:", error);
+      return null;
+    }
+
+    const { data: urlData } = supabase.storage.from("visual-aids").getPublicUrl(fileName);
+    return urlData?.publicUrl || null;
+  } catch (e) {
+    console.error("Upload to storage failed:", e);
+    return null;
+  }
+}
+
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
@@ -101,23 +135,23 @@ Return ONLY a JSON object with no markdown:
 
         if (webSearchResp.ok) {
           const webData = await webSearchResp.json();
-          let raw = webData.choices?.[0]?.message?.content || "";
-          raw = raw.replace(/```json\s*/gi, "").replace(/```\s*/gi, "").trim();
+          let rawText = webData.choices?.[0]?.message?.content || "";
+          rawText = rawText.replace(/```json\s*/gi, "").replace(/```\s*/gi, "").trim();
 
           try {
-            const parsed = JSON.parse(raw);
-            if (parsed.url && typeof parsed.url === "string" && parsed.url.startsWith("http")) {
-              console.log(`[Tier 1] AI suggested URL: ${parsed.url}`);
-              const isValid = await verifyImageUrl(parsed.url);
+            const parsedUrl = JSON.parse(rawText);
+            if (parsedUrl.url && typeof parsedUrl.url === "string" && parsedUrl.url.startsWith("http")) {
+              console.log(`[Tier 1] AI suggested URL: ${parsedUrl.url}`);
+              const isValid = await verifyImageUrl(parsedUrl.url);
               if (isValid) {
                 console.log(`[Tier 1] ✅ URL verified as valid image`);
                 return new Response(
                   JSON.stringify({
-                    url: parsed.url,
+                    url: parsedUrl.url,
                     type: "image",
                     source: "web",
-                    sourceDetail: parsed.source || "web",
-                    description: parsed.description,
+                    sourceDetail: parsedUrl.source || "web",
+                    description: parsedUrl.description,
                   }),
                   { headers: { ...corsHeaders, "Content-Type": "application/json" } }
                 );
@@ -133,7 +167,7 @@ Return ONLY a JSON object with no markdown:
         console.error("[Tier 1] Web search error:", e);
       }
 
-      // ── TIER 2: AI image generation fallback ──
+      // ── TIER 2: AI image generation fallback → upload to storage ──
       console.log(`[Tier 2] Generating AI image for: ${searchQuery}`);
       const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
@@ -151,6 +185,7 @@ The image should be clean, labeled, colorful, and easy to understand. Use a whit
 Make it look like a professional textbook illustration.`,
             },
           ],
+          modalities: ["image", "text"],
         }),
       });
 
@@ -164,17 +199,24 @@ Make it look like a professional textbook illustration.`,
       }
 
       const data = await response.json();
-      const imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+      const base64Url = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
 
-      if (!imageUrl) {
+      if (!base64Url) {
         return new Response(
           JSON.stringify({ error: "No image generated", fallback: true }),
           { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
+      // Upload to storage for a permanent URL instead of returning huge base64
+      const permanentUrl = await uploadToStorage(base64Url, searchQuery);
+
       return new Response(
-        JSON.stringify({ url: imageUrl, type: "image", source: "generated" }),
+        JSON.stringify({
+          url: permanentUrl || base64Url,
+          type: "image",
+          source: "generated",
+        }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -211,13 +253,13 @@ Return ONLY a JSON object: {"videoId": "...", "title": "...", "channel": "..."}`
       }
 
       const data = await response.json();
-      let raw = data.choices?.[0]?.message?.content || "";
-      raw = raw.replace(/```json\s*/gi, "").replace(/```\s*/gi, "").trim();
+      let rawText = data.choices?.[0]?.message?.content || "";
+      rawText = rawText.replace(/```json\s*/gi, "").replace(/```\s*/gi, "").trim();
 
       try {
-        const parsed = JSON.parse(raw);
+        const parsedVideo = JSON.parse(rawText);
         return new Response(
-          JSON.stringify({ url: `https://youtube.com/watch?v=${parsed.videoId}`, type: "video", title: parsed.title }),
+          JSON.stringify({ url: `https://youtube.com/watch?v=${parsedVideo.videoId}`, type: "video", title: parsedVideo.title }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       } catch {
