@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 const evaluateAnswer = async (prompt: string, answer: string, topic: string): Promise<string> => {
   try {
-    const { data, error } = await supabase.functions.invoke("evaluate-answer", {
+    const { data, error } = await supabase.functions.invoke("inline-evaluate", {
       body: { topic, prompt, answer },
     });
     if (error) throw error;

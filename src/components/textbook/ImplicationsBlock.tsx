@@ -20,7 +20,7 @@ const ImplicationsBlock = ({ content }: { content: ImplicationsContent }) => {
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      const { data } = await supabase.functions.invoke("evaluate-answer", {
+      const { data } = await supabase.functions.invoke("inline-evaluate", {
         body: { topic: "Implications", prompt: content.essayPrompt, answer: essay },
       });
       setFeedback(data?.feedback || "Impressive thinking! You're connecting ideas beautifully. 🌟");

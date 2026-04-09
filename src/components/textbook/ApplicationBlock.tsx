@@ -17,7 +17,7 @@ const ApplicationBlock = ({ content }: { content: ApplicationContent }) => {
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("evaluate-answer", {
+      const { data, error } = await supabase.functions.invoke("inline-evaluate", {
         body: { topic: content.scenario, prompt: content.context, answer: Object.values(answers).join("\n") },
       });
       setFeedback(data?.feedback || "Good thinking! Keep exploring real-world applications. 🚀");
