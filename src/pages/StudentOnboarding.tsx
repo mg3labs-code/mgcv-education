@@ -129,6 +129,7 @@ const StudentOnboarding = () => {
   const handleSkip = async () => {
     if (user) {
       await supabase.from('student_preferences').update({ onboarding_completed: true }).eq('user_id', user.id);
+      queryClient.setQueryData(["onboarding-status", user.id], true);
     }
     navigate('/student');
   };
