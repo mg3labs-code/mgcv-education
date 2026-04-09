@@ -115,6 +115,7 @@ const StudentOnboarding = () => {
 
       if (prefError) throw prefError;
 
+      queryClient.setQueryData(["onboarding-status", user.id], true);
       toast.success("You're all set! Let's start learning 🚀");
       navigate('/student');
     } catch (err: any) {
