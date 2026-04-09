@@ -339,7 +339,7 @@ const Index = () => {
                 <p className="text-muted-foreground mb-6 text-sm">
                   {authMode === "login"
                     ? loginType === "student" ? "Access your learning dashboard" : "Manage your classroom"
-                    : "Create your account"}
+                    : loginType === "student" ? "Create your student account" : "Register as an educator"}
                 </p>
 
                 <form onSubmit={handleSubmit} className="space-y-3">
