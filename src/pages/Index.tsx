@@ -213,7 +213,7 @@ const Index = () => {
       </header>
 
       {/* Hero Section */}
-      <main className="relative min-h-screen flex items-center pt-20 md:pt-0">
+      <main className="relative min-h-screen flex items-center pt-20 md:pt-0 overflow-hidden">
         <GradientMeshBg />
 
         <div className="max-w-[1400px] mx-auto px-4 md:px-10 w-full relative z-10">
