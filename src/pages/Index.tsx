@@ -227,7 +227,7 @@ const Index = () => {
               transition={{ duration: 0.6, delay: 0.25, ease: "easeOut" as const }}
               className="text-base md:text-xl text-muted-foreground leading-relaxed mb-8 max-w-xl"
             >
-              We integrate proven methods from Oxford, Harvard, Cambridge &amp; MIT into your curriculum — building thinking capacity, not just knowledge.
+              We integrate proven methods from elite universities into your curriculum — building thinking capacity, not just knowledge.
             </motion.p>
 
             <motion.div
