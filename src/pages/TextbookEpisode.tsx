@@ -278,8 +278,47 @@ const TextbookEpisode = () => {
 
   const onBlockComplete = useCallback(() => markBlockInteracted(activeBlock), [markBlockInteracted, activeBlock]);
 
+  const onWrongAttempt = useCallback(() => {
+    setWrongAttempts(prev => ({ ...prev, [activeBlock]: (prev[activeBlock] || 0) + 1 }));
+  }, [activeBlock]);
+
+  const onComprehensionResult = useCallback((result: "pass" | "revise" | "skip", attempts: number) => {
+    setComprehensionResults(prev => ({ ...prev, [activeBlock]: { result, attempts } }));
+  }, [activeBlock]);
+
+  // Persist block interaction to DB
+  const persistInteraction = useCallback(async (blockIndex: number) => {
+    if (!user || !chapterId || !episodeId) return;
+    const block = navBlocks[blockIndex];
+    if (!block) return;
+    const timeSpent = sectionTimings[blockIndex] || 0;
+    const comp = comprehensionResults[blockIndex];
+    const wrong = wrongAttempts[blockIndex] || 0;
+    try {
+      await supabase.from("episode_interactions" as any).upsert({
+        user_id: user.id,
+        chapter_id: chapterId,
+        episode_id: episodeId,
+        block_index: blockIndex,
+        block_type: block.type,
+        time_spent_seconds: timeSpent,
+        wrong_attempts: wrong,
+        correct_on_first_try: wrong === 0,
+        comprehension_result: comp?.result || null,
+        comprehension_attempts: comp?.attempts || 0,
+        completed_at: new Date().toISOString(),
+      }, { onConflict: "user_id,chapter_id,episode_id,block_index" });
+    } catch (e) {
+      console.error("Failed to persist interaction:", e);
+    }
+  }, [user, chapterId, episodeId, navBlocks, sectionTimings, comprehensionResults, wrongAttempts]);
+
   // Helper: advance with celebration
   const advanceWithCelebration = useCallback((nextIndex: number) => {
+    // Record final time for current section
+    const timeSpent = Math.round((Date.now() - sectionStartTime) / 1000);
+    setSectionTimings(prev => ({ ...prev, [activeBlock]: (prev[activeBlock] || 0) + timeSpent }));
+
     // Auto-mark current as understood
     setUnderstoodBlocks(prev => {
       const next = new Set(prev);
@@ -288,9 +327,11 @@ const TextbookEpisode = () => {
       return next;
     });
     markBlockInteracted(activeBlock);
+    // Persist interaction data
+    persistInteraction(activeBlock);
     // Show celebration then move
     setShowCelebration(true);
-  }, [activeBlock, persistUnderstood, markBlockInteracted]);
+  }, [activeBlock, persistUnderstood, markBlockInteracted, persistInteraction, sectionStartTime]);
 
   const handleCelebrationDone = useCallback(() => {
     setShowCelebration(false);
