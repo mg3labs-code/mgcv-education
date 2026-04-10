@@ -132,8 +132,8 @@ Deno.serve(async (req) => {
     if (exactMatch) {
       // Check if cached entry has images — if not, skip cache and regenerate
       const cachedSteps = exactMatch.steps as any[];
-      const hasImages = cachedSteps.some((s: any) => s.image_url);
-      if (hasImages) {
+      const hasAllImages = cachedSteps.length > 0 && cachedSteps.every((s: any) => s.image_url);
+      if (hasAllImages) {
         console.log("Exact match found with images for:", slug);
         return new Response(
           JSON.stringify({ steps: exactMatch.steps, cached: true, match: "exact" }),
