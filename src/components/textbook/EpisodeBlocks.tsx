@@ -347,40 +347,106 @@ export const ActivityBlock = ({ content, onComplete }: { content: ActivityConten
 
 export const RecallBlock = ({ content, onComplete }: { content: RecallContent; onComplete?: () => void }) => {
   const [revealed, setRevealed] = useState<Record<number, boolean>>({});
+  const [selfAssessed, setSelfAssessed] = useState<Record<number, "got_it" | "not_yet">>({});
+  const [showHint, setShowHint] = useState<Record<number, boolean>>({});
+
   useEffect(() => {
-    const revealedCount = Object.values(revealed).filter(Boolean).length;
-    if (revealedCount === content.questions.length) onComplete?.();
-  }, [revealed]);
+    const assessedCount = Object.keys(selfAssessed).length;
+    if (assessedCount === content.questions.length) onComplete?.();
+  }, [selfAssessed]);
+
+  const handleAssess = (i: number, result: "got_it" | "not_yet") => {
+    setSelfAssessed(prev => ({ ...prev, [i]: result }));
+  };
+
   return (
     <div className="space-y-4">
       <div className="rounded-2xl overflow-hidden border-2 border-amber-300 dark:border-amber-700 shadow-sm">
         <div className="bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-950/40 dark:to-yellow-950/30 px-5 py-3">
           <h4 className="text-amber-700 dark:text-amber-400 font-bold text-sm flex items-center gap-2">🧠 Quick Check — Can you remember?</h4>
         </div>
+        <div className="px-5 py-2 bg-amber-50/30 dark:bg-amber-950/10 border-t border-amber-200/50 dark:border-amber-800/30">
+          <p className="text-xs text-muted-foreground italic">Try to recall BEFORE revealing. Be honest — it builds your Character dimension 💪</p>
+        </div>
       </div>
       <div className="space-y-3">
         {content.questions.map((q, i) => (
-          <div key={i} className="rounded-xl border-2 border-border/50 bg-card p-5 cursor-pointer hover:border-amber-300 hover:shadow-sm transition-all" onClick={() => !revealed[i] && setRevealed({ ...revealed, [i]: true })}>
+          <div key={i} className={`rounded-xl border-2 bg-card p-5 transition-all ${
+            selfAssessed[i] === "got_it" ? "border-emerald-300 dark:border-emerald-700 bg-emerald-50/20 dark:bg-emerald-950/10" :
+            selfAssessed[i] === "not_yet" ? "border-amber-300 dark:border-amber-700 bg-amber-50/20 dark:bg-amber-950/10" :
+            "border-border/50 hover:border-amber-300 hover:shadow-sm cursor-pointer"
+          }`} onClick={() => !revealed[i] && setRevealed({ ...revealed, [i]: true })}>
             <p className="text-[0.95rem] font-medium text-foreground flex items-start gap-3">
-              <span className="h-7 w-7 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">Q{i + 1}</span>
+              <span className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5 ${
+                selfAssessed[i] === "got_it" ? "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400" :
+                selfAssessed[i] === "not_yet" ? "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400" :
+                "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400"
+              }`}>Q{i + 1}</span>
               {q.question}
             </p>
+
+            {/* Hint hidden behind tap */}
             {q.hint && !revealed[i] && (
-              <div className="ml-10 mt-2 rounded-lg bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 px-3 py-2">
-                <p className="text-sm text-amber-700 dark:text-amber-400 italic">💡 Hint: {q.hint}</p>
-              </div>
+              !showHint[i] ? (
+                <button onClick={(e) => { e.stopPropagation(); setShowHint(prev => ({ ...prev, [i]: true })); }}
+                  className="ml-10 mt-2 text-xs text-amber-600 dark:text-amber-400 hover:text-amber-700 font-medium flex items-center gap-1">
+                  💡 Need a hint? Tap here
+                </button>
+              ) : (
+                <div className="ml-10 mt-2 rounded-lg bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 px-3 py-2 animate-fade-in">
+                  <p className="text-sm text-amber-700 dark:text-amber-400 italic">💡 {q.hint}</p>
+                </div>
+              )
             )}
+
             {revealed[i] && (
-              <div className="ml-10 mt-3 rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-950/30 dark:to-green-950/20 border-2 border-emerald-200 dark:border-emerald-800 p-4">
-                <p className="text-[0.95rem] text-emerald-800 dark:text-emerald-300 leading-relaxed flex items-start gap-2">
-                  <span className="text-emerald-600 shrink-0 mt-0.5">✓</span> {q.answer}
-                </p>
+              <div className="ml-10 mt-3 space-y-3">
+                <div className="rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-950/30 dark:to-green-950/20 border-2 border-emerald-200 dark:border-emerald-800 p-4">
+                  <p className="text-[0.95rem] text-emerald-800 dark:text-emerald-300 leading-relaxed flex items-start gap-2">
+                    <span className="text-emerald-600 shrink-0 mt-0.5">✓</span> {q.answer}
+                  </p>
+                </div>
+
+                {/* Self-assessment buttons */}
+                {!selfAssessed[i] && (
+                  <div className="flex gap-3 animate-fade-in">
+                    <button onClick={(e) => { e.stopPropagation(); handleAssess(i, "got_it"); }}
+                      className="flex-1 py-2.5 rounded-xl border-2 border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 font-semibold text-sm hover:bg-emerald-100 dark:hover:bg-emerald-950/30 transition-all flex items-center justify-center gap-2">
+                      <CheckCircle2 className="h-4 w-4" /> Got it ✓
+                    </button>
+                    <button onClick={(e) => { e.stopPropagation(); handleAssess(i, "not_yet"); }}
+                      className="flex-1 py-2.5 rounded-xl border-2 border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 font-semibold text-sm hover:bg-amber-100 dark:hover:bg-amber-950/30 transition-all flex items-center justify-center gap-2">
+                      <RotateCcw className="h-4 w-4" /> Not yet ✗
+                    </button>
+                  </div>
+                )}
+
+                {selfAssessed[i] === "got_it" && (
+                  <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
+                    <Sparkles className="h-3 w-3" /> Nice! Your recall is getting stronger 🎯
+                  </p>
+                )}
+                {selfAssessed[i] === "not_yet" && (
+                  <p className="text-xs text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1">
+                    <Sparkles className="h-3 w-3" /> Honest answer = Character growing! You'll review this later 📌
+                  </p>
+                )}
               </div>
             )}
-            {!revealed[i] && <p className="text-xs text-muted-foreground mt-2 ml-10">Tap to reveal answer →</p>}
+            {!revealed[i] && <p className="text-xs text-muted-foreground mt-2 ml-10">Think first, then tap to reveal →</p>}
           </div>
         ))}
       </div>
+
+      {/* Summary of "Not yet" items */}
+      {Object.values(selfAssessed).some(v => v === "not_yet") && Object.keys(selfAssessed).length === content.questions.length && (
+        <div className="rounded-xl border-2 border-dashed border-amber-300 dark:border-amber-700 bg-amber-50/30 dark:bg-amber-950/10 p-4">
+          <p className="text-sm font-semibold text-amber-700 dark:text-amber-400 mb-2">📌 Review these before moving on:</p>
+          {content.questions.map((q, i) => selfAssessed[i] === "not_yet" && (
+            <p key={i} className="text-sm text-foreground ml-4 mb-1">• Q{i + 1}: {q.question}</p>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

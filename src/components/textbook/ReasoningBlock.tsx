@@ -263,7 +263,7 @@ const ReasoningBlock = ({ content }: { content: ReasoningContent }) => {
                         </div>
                       )}
 
-                      {/* Reveal deeper insight */}
+                      {/* Think-first gate + Reveal deeper insight */}
                       {revealedInsights[qIdx] ? (
                         <div className="rounded-xl bg-emerald-50/60 dark:bg-emerald-950/20 border-2 border-emerald-300 dark:border-emerald-700 p-4 animate-fade-in">
                           <div className="flex items-start gap-2">
@@ -281,16 +281,7 @@ const ReasoningBlock = ({ content }: { content: ReasoningContent }) => {
                           </button>
                         </div>
                       ) : (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => toggleInsight(qIdx)}
-                          className="w-full border-dashed"
-                        >
-                          <Eye className="h-3.5 w-3.5 mr-2" />
-                          I've thought about it — reveal the insight! 👀
-                          <ChevronDown className="h-3.5 w-3.5 ml-2" />
-                        </Button>
+                        <ThinkFirstGate onReveal={() => toggleInsight(qIdx)} />
                       )}
                     </div>
                   );
