@@ -289,14 +289,14 @@ const Index = () => {
         </div>
 
         {/* Hero Image - desktop only */}
-        <div className="absolute top-0 right-0 w-[50%] h-full z-[1] hidden lg:flex items-center justify-end pr-10 pointer-events-none">
+        <div className="absolute top-0 right-0 w-[45%] h-full z-[1] hidden xl:flex items-center justify-center pointer-events-none overflow-hidden">
           <motion.div
             initial={{ opacity: 0, x: 40, scale: 0.95 }}
             animate={{ opacity: 1, x: 0, scale: 1 }}
             transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" as const }}
-            className="relative"
+            className="relative w-full max-w-[480px]"
           >
-            <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-border/30" style={{ maxWidth: 520, aspectRatio: "4/3" }}>
+            <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-border/30 w-full" style={{ aspectRatio: "4/3" }}>
               <AnimatePresence mode="wait">
                 <motion.img
                   key={heroIndex}
