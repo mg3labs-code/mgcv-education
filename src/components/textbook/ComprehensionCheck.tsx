@@ -8,9 +8,10 @@ interface ComprehensionCheckProps {
   onPass: () => void;
   onSkip: () => void;
   isFirstVisit: boolean;
+  onResult?: (result: "pass" | "revise" | "skip", attempts: number) => void;
 }
 
-const ComprehensionCheck = ({ sectionTitle, onPass, onSkip, isFirstVisit }: ComprehensionCheckProps) => {
+const ComprehensionCheck = ({ sectionTitle, onPass, onSkip, isFirstVisit, onResult }: ComprehensionCheckProps) => {
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<"pass" | "revise" | null>(null);
@@ -24,6 +25,7 @@ const ComprehensionCheck = ({ sectionTitle, onPass, onSkip, isFirstVisit }: Comp
   const handleSubmit = async () => {
     if (wordCount < 3) return;
     setLoading(true);
+    const newAttempts = attempts + 1;
     try {
       const { data } = await supabase.functions.invoke("inline-evaluate", {
         body: {
@@ -33,27 +35,34 @@ const ComprehensionCheck = ({ sectionTitle, onPass, onSkip, isFirstVisit }: Comp
         },
       });
       const fb = data?.feedback || "";
-      // Try to parse JSON from response
       try {
         const parsed = JSON.parse(fb);
         if (parsed.understood === false) {
           setResult("revise");
           setFeedback(parsed.feedback || "Try reading through once more and then explain again!");
+          onResult?.("revise", newAttempts);
         } else {
           setResult("pass");
           setFeedback(parsed.feedback || "Great understanding! 🎉");
+          onResult?.("pass", newAttempts);
         }
       } catch {
-        // If not JSON, treat as pass
         setResult("pass");
         setFeedback(fb || "Good understanding! Keep it up! 🎉");
+        onResult?.("pass", newAttempts);
       }
     } catch {
       setResult("pass");
       setFeedback("Nice effort! Moving on. 💪");
+      onResult?.("pass", newAttempts);
     }
-    setAttempts(a => a + 1);
+    setAttempts(newAttempts);
     setLoading(false);
+  };
+
+  const handleSkip = () => {
+    onResult?.("skip", attempts);
+    onSkip();
   };
 
   if (result === "pass") {
@@ -92,7 +101,7 @@ const ComprehensionCheck = ({ sectionTitle, onPass, onSkip, isFirstVisit }: Comp
             <RotateCcw className="h-3 w-3 mr-1" /> Try again
           </Button>
           {attempts >= 1 && (
-            <Button size="sm" variant="ghost" onClick={onSkip} className="text-muted-foreground">
+            <Button size="sm" variant="ghost" onClick={handleSkip} className="text-muted-foreground">
               Skip for now →
             </Button>
           )}
@@ -127,7 +136,7 @@ const ComprehensionCheck = ({ sectionTitle, onPass, onSkip, isFirstVisit }: Comp
       <div className="flex items-center justify-between mt-2">
         <span style={{ fontSize: 11, color: "#A8A29E" }}>{wordCount} words</span>
         <div className="flex gap-2">
-          <Button size="sm" variant="ghost" onClick={onSkip} className="text-muted-foreground text-xs">
+          <Button size="sm" variant="ghost" onClick={handleSkip} className="text-muted-foreground text-xs">
             Skip
           </Button>
           <Button
