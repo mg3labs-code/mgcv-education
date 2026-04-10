@@ -15,11 +15,29 @@ export interface TextbookRefSnippet {
   source: string;
 }
 
+export interface JeeProblemsContent {
+  questions: { question: string; options: string[]; correctIndex: number; explanation: string; trap?: string; previousYear?: string; negativeMarking?: number }[];
+  timePerQuestion?: number;
+}
+
+export interface JeeExtensionContent {
+  title: string;
+  sections: { heading: string; body: string; formula?: string }[];
+  advancedFormulas?: string[];
+  proofSketch?: string;
+}
+
+export interface JeeSpeedDrillContent {
+  questions: { question: string; answer: string; hint?: string }[];
+  totalTimeSeconds: number;
+}
+
 export interface ContentBlock {
-  type: "concept" | "activity" | "recall" | "explain" | "assessment" | "exercise" | "reasoning" | "assumptions" | "connections" | "application" | "implications" | "bilingual_concept" | "vocabulary" | "grammar_pattern" | "story_reading" | "visual_aid";
+  type: "concept" | "activity" | "recall" | "explain" | "assessment" | "exercise" | "reasoning" | "assumptions" | "connections" | "application" | "implications" | "bilingual_concept" | "vocabulary" | "grammar_pattern" | "story_reading" | "visual_aid" | "jee_problems" | "jee_extension" | "jee_speed_drill";
   title: string;
   icon: string;
-  content: ConceptContent | ActivityContent | RecallContent | ExplainContent | AssessmentContent | ExerciseContent | ReasoningContent | AssumptionsContent | ConnectionsContent | ApplicationContent | ImplicationsContent | VisualAidContent | Record<string, any>;
+  depth?: "board" | "jee";
+  content: ConceptContent | ActivityContent | RecallContent | ExplainContent | AssessmentContent | ExerciseContent | ReasoningContent | AssumptionsContent | ConnectionsContent | ApplicationContent | ImplicationsContent | VisualAidContent | JeeProblemsContent | JeeExtensionContent | JeeSpeedDrillContent | Record<string, any>;
   textbookRef?: {
     snippets?: TextbookRefSnippet[];  // per-section for concept blocks
     text?: string;                     // single snippet for other block types

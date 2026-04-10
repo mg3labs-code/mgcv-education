@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { ContentBlock, ConceptContent, ActivityContent as ActivityContentType, RecallContent, ExplainContent, AssessmentContent, ExerciseContent, ReasoningContent, AssumptionsContent, ConnectionsContent, ApplicationContent, ImplicationsContent, VisualAidContent } from "@/data/textbookData";
+import { ContentBlock, ConceptContent, ActivityContent as ActivityContentType, RecallContent, ExplainContent, AssessmentContent, ExerciseContent, ReasoningContent, AssumptionsContent, ConnectionsContent, ApplicationContent, ImplicationsContent, VisualAidContent, JeeProblemsContent, JeeExtensionContent, JeeSpeedDrillContent } from "@/data/textbookData";
 import { useChapterEpisodes, useEpisodeBlocks } from "@/hooks/useTextbookData";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -24,6 +24,10 @@ import LanguageProgressWidget from "@/components/textbook/LanguageProgressWidget
 import VisualAidBlock from "@/components/textbook/VisualAidBlock";
 import InlineMedia from "@/components/textbook/InlineMedia";
 import { ConceptBlock, ActivityBlock, RecallBlock, ExplainBlock, AssessmentBlock, ExerciseBlock, blockSubtitles, layerMeta, type ActivityContent } from "@/components/textbook/EpisodeBlocks";
+import JeeProblemsBlock from "@/components/textbook/JeeProblemsBlock";
+import JeeExtensionBlock from "@/components/textbook/JeeExtensionBlock";
+import JeeSpeedDrillBlock from "@/components/textbook/JeeSpeedDrillBlock";
+import { Switch } from "@/components/ui/switch";
 import SectionCelebration from "@/components/textbook/SectionCelebration";
 import ComprehensionCheck from "@/components/textbook/ComprehensionCheck";
 import EpisodeLoadingTransition from "@/components/textbook/EpisodeLoadingTransition";
@@ -41,6 +45,7 @@ const blockIcons: Record<string, React.ElementType> = {
   concept: BookOpen, activity: PenLine, recall: Brain, explain: MessageSquare,
   assessment: CheckCircle2, exercise: Lightbulb, reasoning: Zap, assumptions: Shield,
   connections: Link, application: Briefcase, implications: Compass, visual_aid: Image,
+  jee_problems: Zap, jee_extension: Sparkles, jee_speed_drill: Zap,
 };
 
 const blockLabels: Record<string, string> = {
@@ -49,17 +54,20 @@ const blockLabels: Record<string, string> = {
   reasoning: "But WHY though?", assumptions: "What if we're wrong?",
   connections: "Where else does this hide?", application: "Use it in real life",
   implications: "What does this change?", visual_aid: "See it in action",
+  jee_problems: "⚡ JEE Problem Bank", jee_extension: "🔬 Beyond Board", jee_speed_drill: "⏱️ Speed Drill",
 };
 
 // 3-Phase system: UNDERSTAND → PROVE → MASTER
 const UNDERSTAND_BLOCKS = new Set(["concept", "activity", "exercise"]);
 const PROVE_BLOCKS = new Set(["recall", "explain", "assessment"]);
 const MASTER_BLOCKS = new Set(["reasoning", "assumptions", "connections", "application", "implications"]);
+const JEE_BLOCKS = new Set(["jee_problems", "jee_extension", "jee_speed_drill"]);
 
 const phases = [
   { id: "understand", label: "🔍 Discover & Explore", shortLabel: "UNDERSTAND", color: "#0D9488", subtitle: "Core concept + interactive activity + practice", blockSet: UNDERSTAND_BLOCKS },
   { id: "prove", label: "🎯 Test Yourself", shortLabel: "PROVE", color: "#3B82F6", subtitle: "Quick recall + explain in own words + quiz", blockSet: PROVE_BLOCKS },
   { id: "master", label: "🚀 Challenge Yourself", shortLabel: "MASTER", color: "#8B5CF6", subtitle: "Deep reasoning + myth-busting + real life", blockSet: MASTER_BLOCKS },
+  { id: "jee", label: "⚡ JEE Boost", shortLabel: "JEE", color: "#D97706", subtitle: "Competitive problems + speed drills + extensions", blockSet: JEE_BLOCKS },
 ];
 
 // Language overrides
@@ -100,6 +108,7 @@ const TextbookEpisode = () => {
   const [sectionTimings, setSectionTimings] = useState<Record<number, number>>({});
   const [wrongAttempts, setWrongAttempts] = useState<Record<number, number>>({});
   const [comprehensionResults, setComprehensionResults] = useState<Record<number, { result: string; attempts: number }>>({});
+  const [jeeMode, setJeeMode] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const totalBlocksRef = useRef(0);
@@ -151,7 +160,7 @@ const TextbookEpisode = () => {
   }, []);
 
   const { data: chapter, isLoading: chapterLoading } = useChapterEpisodes(chapterId);
-  const { data: dbBlocks, isLoading: blocksLoading } = useEpisodeBlocks(chapterId, episodeId);
+  const { data: dbBlocks, isLoading: blocksLoading } = useEpisodeBlocks(chapterId, episodeId, jeeMode ? "all" : "board");
 
   const episode = chapter?.episodes.find((e) => e.id === episodeId);
   const allBlocks = dbBlocks && dbBlocks.length > 0 ? dbBlocks : (episode?.blocks || []);
@@ -438,6 +447,9 @@ const TextbookEpisode = () => {
       case "connections": return <ConnectionsBlock content={block.content as ConnectionsContent} />;
       case "application": return <ApplicationBlock content={block.content as ApplicationContent} />;
       case "implications": return <ImplicationsBlock content={block.content as ImplicationsContent} />;
+      case "jee_problems": return <JeeProblemsBlock content={block.content as JeeProblemsContent} onComplete={onBlockComplete} />;
+      case "jee_extension": return <JeeExtensionBlock content={block.content as JeeExtensionContent} onComplete={onBlockComplete} />;
+      case "jee_speed_drill": return <JeeSpeedDrillBlock content={block.content as JeeSpeedDrillContent} onComplete={onBlockComplete} />;
       default: return null;
     }
   };
@@ -639,7 +651,7 @@ const TextbookEpisode = () => {
       <div style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
         padding: "6px 16px", fontSize: 12, flexShrink: 0,
-        background: currentPhase.color === "#0D9488" ? "#F0FDFA" : currentPhase.color === "#3B82F6" ? "#EFF6FF" : "#F5F3FF",
+        background: currentPhase.color === "#D97706" ? "#FFFBEB" : currentPhase.color === "#0D9488" ? "#F0FDFA" : currentPhase.color === "#3B82F6" ? "#EFF6FF" : "#F5F3FF",
         borderBottom: "1px solid #F5F5F4",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -649,9 +661,21 @@ const TextbookEpisode = () => {
           <span style={{ color: "#D6D3D1" }}>•</span>
           <span style={{ color: "#78716C" }}>{blockLabels[block?.type || "concept"] || block?.type}</span>
         </div>
-        <span style={{ fontWeight: 600, color: "#78716C", fontSize: 11 }}>
-          {understoodBlocks.size}/{navBlocks.length} done
-        </span>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontWeight: 600, color: "#78716C", fontSize: 11 }}>
+            {understoodBlocks.size}/{navBlocks.length} done
+          </span>
+          {!isLanguage && (
+            <div style={{ display: "flex", alignItems: "center", gap: 4, borderLeft: "1px solid #E7E5E4", paddingLeft: 8 }}>
+              <span style={{ fontSize: 10, fontWeight: 700, color: jeeMode ? "#D97706" : "#A8A29E" }}>JEE</span>
+              <Switch
+                checked={jeeMode}
+                onCheckedChange={(checked) => { setJeeMode(checked); setActiveBlock(0); }}
+                className="h-4 w-8 data-[state=checked]:bg-amber-500"
+              />
+            </div>
+          )}
+        </div>
       </div>
 
       {/* ═══ CONTENT AREA ═══ */}
@@ -662,8 +686,16 @@ const TextbookEpisode = () => {
 
           {block && (
             <>
+              {/* JEE badge for JEE blocks */}
+              {JEE_BLOCKS.has(block.type) && (
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-700">
+                    ⚡ JEE BOOST
+                  </span>
+                </div>
+              )}
               {/* Section title */}
-              <h1 style={{ fontSize: 22, fontWeight: 700, color: "#1C1917", marginBottom: 4, fontFamily: "'Source Serif 4', serif" }}>
+              <h1 style={{ fontSize: 22, fontWeight: 700, color: JEE_BLOCKS.has(block.type) ? "#D97706" : "#1C1917", marginBottom: 4, fontFamily: "'Source Serif 4', serif" }}>
                 {block.icon} {block.title}
               </h1>
               <p style={{ fontSize: 13, color: "#A8A29E", marginBottom: 20, fontStyle: "italic" }}>
@@ -671,7 +703,7 @@ const TextbookEpisode = () => {
               </p>
 
               {/* Block content with colored border */}
-              <div className={`bg-card rounded-xl border-l-4 ${(meta as any).border || "border-l-primary"} shadow-sm`}>
+              <div className={`bg-card rounded-xl border-l-4 ${JEE_BLOCKS.has(block.type) ? "border-l-amber-500" : ((meta as any).border || "border-l-primary")} shadow-sm`}>
                 <div className="p-5">
                   {renderBlock(block)}
                 </div>
