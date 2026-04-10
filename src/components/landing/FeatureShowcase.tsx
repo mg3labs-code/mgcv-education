@@ -46,21 +46,27 @@ const container = {
 };
 
 const item = {
-  hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: "easeOut" as const } },
+  hidden: { opacity: 0, y: 40, scale: 0.95 },
+  show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } },
 };
 
 const FeatureShowcase = () => (
   <section className="relative z-10 py-16 md:py-28">
     <div className="max-w-[1200px] mx-auto px-4 md:px-10">
-      <div className="text-center mb-12 md:mb-16">
+    <motion.div
+        initial={{ opacity: 0, y: 40, scale: 0.97 }}
+        whileInView={{ opacity: 1, y: 0, scale: 1 }}
+        viewport={{ once: true, amount: 0.3 }}
+        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+        className="text-center mb-12 md:mb-16"
+      >
         <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-4">
           Built for <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-info">Deep Learning</span>
         </h2>
         <p className="text-muted-foreground text-base md:text-lg max-w-2xl mx-auto">
           Not just another LMS. A thinking platform that builds cognitive muscle.
         </p>
-      </div>
+      </motion.div>
 
       <motion.div
         variants={container}

@@ -112,7 +112,7 @@ serve(async (req) => {
         throw new Error("ELEVENLABS_API_KEY is not configured");
       }
 
-      const teluguVoice = voiceId || "cgSgspJ2msm6clMCkdW9"; // Jessica
+      const teluguVoice = voiceId || "EXAVITQu4vr4xnSDxMaL"; // Sarah
       console.log("Routing Telugu TTS through ElevenLabs Jessica (expressive)...");
 
       const response = await fetch(
@@ -161,7 +161,7 @@ serve(async (req) => {
       throw new Error("ELEVENLABS_API_KEY is not configured");
     }
 
-    const voice = voiceId || "cgSgspJ2msm6clMCkdW9"; // Jessica
+    const voice = voiceId || "EXAVITQu4vr4xnSDxMaL"; // Sarah
 
     const response = await fetch(
       `https://api.elevenlabs.io/v1/text-to-speech/${voice}/stream?output_format=mp3_44100_128`,

@@ -152,7 +152,7 @@ async function getOrCreateAgent(supabaseAdmin: any, elevenlabsKey: string): Prom
           language: "en",
         },
         tts: {
-          voice_id: "cgSgspJ2msm6clMCkdW9",
+          voice_id: "EXAVITQu4vr4xnSDxMaL", // Sarah - warm, conversational
           model_id: "eleven_v3_conversational",
         },
       },
