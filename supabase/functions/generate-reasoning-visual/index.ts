@@ -17,6 +17,83 @@ interface ReasoningStep {
   image_url?: string;
 }
 
+/* ─── Subject-specific visual vocabulary for decomposition ─── */
+function getSubjectGuidance(subject: string): string {
+  const s = subject.toLowerCase();
+  if (s.includes("chem"))
+    return `You are creating visuals for CHEMISTRY. For each step's visual_prompt you MUST include:
+- Exact chemical formulas & equations (e.g. 2H₂ + O₂ → 2H₂O)
+- Color-coded atoms: O=red, H=white, C=black/grey, N=blue, Cl=green, S=yellow
+- Molecular structure diagrams with bond angles
+- Curly arrows for electron movement in mechanisms
+- Reaction flask/beaker apparatus when relevant
+- Before→After molecular comparison
+- Numbered callout boxes pointing to each molecule/bond`;
+
+  if (s.includes("phys"))
+    return `You are creating visuals for PHYSICS. For each step's visual_prompt you MUST include:
+- Free-body diagrams with force vectors showing direction AND magnitude (e.g. F=10N ↑)
+- Circuit diagrams with labeled components (battery, resistor Ω, ammeter A, voltmeter V)
+- Ray diagrams with angles of incidence/reflection/refraction labeled
+- Energy bar charts showing before→after transformation
+- Numbered measurement labels with SI units
+- Color-coded arrows: red=force, blue=velocity, green=acceleration, yellow=energy`;
+
+  if (s.includes("bio"))
+    return `You are creating visuals for BIOLOGY. For each step's visual_prompt you MUST include:
+- Anatomical cross-section/cutaway views (e.g. leaf cross-section showing mesophyll, stomata)
+- Organelle diagrams with numbered callouts (①②③)
+- Process flow arrows showing input→process→output
+- Color-coded systems: green=chloroplast/plant, red=blood/oxygen, blue=water, yellow=energy/ATP
+- Cute mascot character (cartoon cell/plant/animal) explaining a key point
+- Size/scale indicators where relevant`;
+
+  if (s.includes("math"))
+    return `You are creating visuals for MATHEMATICS. For each step's visual_prompt you MUST include:
+- Geometric constructions with compass arcs visible, labeled angles and sides
+- Coordinate planes with plotted points, labeled axes, intercepts marked
+- Step-by-step algebraic working shown as connected boxes
+- Number lines with intervals and key values marked
+- Color-coded terms: red=given, blue=to find, green=solution
+- Visual proof elements (shaded areas, congruent marks)`;
+
+  return `You are creating educational visuals. For each step's visual_prompt include specific labeled elements, numbered callouts, color-coded arrows, and exact terminology.`;
+}
+
+/* ─── Elite image generation prompt builder ─── */
+function buildImagePrompt(step: ReasoningStep, subject: string, grade: string): string {
+  const s = subject.toLowerCase();
+  let styleHints = "";
+  
+  if (s.includes("chem"))
+    styleHints = "Show molecular structures with ball-and-stick models, chemical equations with proper subscripts, reaction arrows, color-coded atoms (O=red, H=white, C=grey, N=blue). Include laboratory apparatus if relevant.";
+  else if (s.includes("phys"))
+    styleHints = "Show force vectors with arrowheads and magnitude labels, circuit symbols, ray paths with angle markers, energy diagrams. Use red for forces, blue for velocity, yellow for energy.";
+  else if (s.includes("bio"))
+    styleHints = "Show anatomical cross-sections, organelle cutaways, process flow with colored arrows. Use green for plant systems, red for animal/blood, blue for water, yellow for energy/ATP.";
+  else if (s.includes("math"))
+    styleHints = "Show geometric figures with labeled angles/sides, coordinate grids with plotted points, algebraic steps in connected boxes, compass construction arcs.";
+
+  return `NCERT/CBSE textbook-quality educational diagram for ${grade} ${subject}:
+
+${step.visual_prompt}
+
+${styleHints}
+
+MANDATORY visual elements:
+1. All text labels and formulas written clearly and prominently in English
+2. Color-coded arrows with a consistent color legend
+3. Numbered callout boxes (①②③) with connecting lines to diagram parts
+4. A cute cartoon mascot character (young scientist/student) pointing at the key element
+5. Color legend box in bottom-right corner
+6. Clean cross-section or cutaway view where applicable
+7. Before → After comparison panels if showing a process or transformation
+
+Include these labels prominently: ${step.key_labels.join(", ")}
+
+Style: Indian NCERT educational textbook illustration, flat vector design, bright pastel palette on clean white background, large clear text annotations, hand-drawn but professional feel, infographic poster layout. NOT photorealistic.`;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -61,7 +138,7 @@ serve(async (req) => {
       );
     }
 
-    // 2. Check full-text search for related topics
+    // 2. Full-text search for related topics
     const searchTerms = topic
       .toLowerCase()
       .replace(/[^a-z0-9\s]/g, "")
@@ -78,7 +155,6 @@ serve(async (req) => {
         .limit(3);
 
       if (relatedMatches && relatedMatches.length > 0) {
-        // Return the best match
         console.log("Related match found:", relatedMatches[0].topic);
         return new Response(
           JSON.stringify({
@@ -92,10 +168,10 @@ serve(async (req) => {
       }
     }
 
-    // 3. No match — generate new content
+    // 3. No match — generate new content with elite prompts
     console.log("No cache hit, generating for:", topic);
+    const subjectGuidance = getSubjectGuidance(subj);
 
-    // Step 1: Decompose topic into 4 reasoning steps
     const decomposeResp = await fetch(
       "https://ai.gateway.lovable.dev/v1/chat/completions",
       {
@@ -109,7 +185,20 @@ serve(async (req) => {
           messages: [
             {
               role: "system",
-              content: `You are an expert educational content designer. Break down any topic into exactly 4 active reasoning steps for ${gr} ${subj} students. Return ONLY valid JSON.`,
+              content: `You are an elite educational content designer who creates NCERT/CBSE textbook-quality visual breakdowns. You specialize in creating hyper-specific visual prompts that produce professional educational infographics with maximum student retention.
+
+${subjectGuidance}
+
+Break down any topic into exactly 4 active reasoning steps for ${gr} ${subj} students. Return ONLY valid JSON.
+
+CRITICAL RULES for visual_prompt:
+- Be EXTREMELY specific — name exact molecules, forces, structures, equations
+- Specify exact colors for each element (e.g. "red arrow for force F₁=10N pointing right")
+- Describe the LAYOUT: "left panel shows X, right panel shows Y, arrow connecting them"
+- Include a cartoon mascot character in at least 2 of the 4 steps
+- Specify numbered callouts: "callout ① points to electrode, callout ② points to electrolyte"
+- Include specific scientific notation, formulas, and units
+- Describe cross-sections, cutaways, or exploded views when applicable`,
             },
             {
               role: "user",
@@ -121,16 +210,14 @@ Return JSON array with exactly 4 objects:
     "step_number": 1,
     "title": "Understand the Problem",
     "subtitle": "short catchy subtitle",
-    "explanation": "2-3 sentence explanation for students",
-    "visual_prompt": "detailed prompt for generating an educational illustration for this step - include specific visual elements, labels, arrows, colors. Style: flat design, educational infographic, labeled diagram, school poster style, clean white background",
-    "key_labels": ["label1", "label2", "label3"]
+    "explanation": "2-3 sentence explanation for students using simple Grade 4-5 English",
+    "visual_prompt": "EXTREMELY detailed and specific prompt for generating a labeled educational diagram — include exact chemical formulas OR force magnitudes OR anatomical structures OR geometric measurements. Specify colors for each element. Describe layout (left/right panels, top/bottom flow). Include numbered callouts ①②③. Mention a cute cartoon mascot character. Describe arrows with colors and labels.",
+    "key_labels": ["label1", "label2", "label3", "label4"]
   },
   { "step_number": 2, "title": "Break It Into Parts", ... },
   { "step_number": 3, "title": "Explore Possibilities", ... },
   { "step_number": 4, "title": "Logical Conclusion", ... }
-]
-
-Make visual_prompt very specific with labeled elements, arrows, colors. Think like a textbook illustrator.`,
+]`,
             },
           ],
           tools: [
@@ -138,7 +225,7 @@ Make visual_prompt very specific with labeled elements, arrows, colors. Think li
               type: "function",
               function: {
                 name: "reasoning_steps",
-                description: "Return 4 reasoning steps for the topic",
+                description: "Return 4 reasoning steps with elite-level visual prompts",
                 parameters: {
                   type: "object",
                   properties: {
@@ -213,12 +300,14 @@ Make visual_prompt very specific with labeled elements, arrows, colors. Think li
       steps = JSON.parse(jsonMatch[0]);
     }
 
-    // Step 2: Generate images for each step
+    // Step 2: Generate elite-quality images for each step
     for (let i = 0; i < steps.length; i++) {
       const step = steps[i];
-      console.log(`Generating image for step ${i + 1}: ${step.title}`);
+      console.log(`Generating elite image for step ${i + 1}: ${step.title}`);
 
       try {
+        const elitePrompt = buildImagePrompt(step, subj, gr);
+
         const imgResp = await fetch(
           "https://ai.gateway.lovable.dev/v1/chat/completions",
           {
@@ -232,16 +321,7 @@ Make visual_prompt very specific with labeled elements, arrows, colors. Think li
               messages: [
                 {
                   role: "user",
-                  content: `Create an educational infographic illustration: ${step.visual_prompt}. 
-                  
-Style requirements:
-- Flat design, clean, modern educational poster style
-- Bright colors on clean white background  
-- Large clear labels and text annotations
-- Numbered elements with arrows showing flow/process
-- Suitable for Grade 10 students
-- NO photorealistic style, use illustrated/diagram style
-- Include these labels prominently: ${step.key_labels.join(", ")}`,
+                  content: elitePrompt,
                 },
               ],
               modalities: ["image", "text"],
@@ -286,7 +366,7 @@ Style requirements:
       }
     }
 
-    // Step 3: Persist to DB for future searches
+    // Step 3: Persist to DB
     const { error: insertErr } = await supabase
       .from("reasoning_visuals")
       .insert({
