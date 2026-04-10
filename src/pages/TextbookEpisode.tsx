@@ -769,38 +769,25 @@ const TextbookEpisode = () => {
           )}
         </div>
 
-        {/* Right: Got it + Continue/Finish */}
+        {/* Right: Continue/Finish */}
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <button onClick={() => toggleUnderstood(activeBlock)} style={{
-            padding: "8px 14px", borderRadius: 10,
-            border: isUnderstood ? "2px solid #0D9488" : "1px solid #E7E5E4",
-            background: isUnderstood ? "#F0FDFA" : "white",
-            fontSize: 13, fontWeight: 600,
-            color: isUnderstood ? "#0D9488" : "#78716C",
-            cursor: "pointer", display: "flex", alignItems: "center", gap: 4,
-            transition: "all 0.2s",
-          }}>
-            <CheckCircle2 className="h-4 w-4" style={{ fill: isUnderstood ? "#0D9488" : "none" }} />
-            {isUnderstood ? "Nailed it ✓" : "Got it!"}
-          </button>
-
           {!isLastBlock ? (
-            <button disabled={!isUnderstood} onClick={() => goToBlock(activeBlock + 1)} style={{
+            <button onClick={() => advanceWithCelebration(activeBlock)} style={{
               padding: "8px 18px", borderRadius: 10, border: "none",
-              background: isUnderstood ? "linear-gradient(135deg, #0D9488, #14B8A6)" : "#D6D3D1",
-              fontSize: 13, fontWeight: 700, color: isUnderstood ? "white" : "#A8A29E",
-              cursor: isUnderstood ? "pointer" : "not-allowed",
+              background: "linear-gradient(135deg, #0D9488, #14B8A6)",
+              fontSize: 13, fontWeight: 700, color: "white",
+              cursor: "pointer",
               transition: "all 0.2s",
-              boxShadow: isUnderstood ? "0 2px 8px rgba(13,148,136,0.3)" : "none",
+              boxShadow: "0 2px 8px rgba(13,148,136,0.3)",
             }}>Continue →</button>
           ) : (
-            <button disabled={!isUnderstood} onClick={handleFinish} style={{
+            <button onClick={() => advanceWithCelebration(activeBlock)} style={{
               padding: "8px 18px", borderRadius: 10, border: "none",
-              background: isUnderstood ? "linear-gradient(135deg, #059669, #10B981)" : "#D6D3D1",
-              fontSize: 13, fontWeight: 700, color: isUnderstood ? "white" : "#A8A29E",
-              cursor: isUnderstood ? "pointer" : "not-allowed",
+              background: "linear-gradient(135deg, #059669, #10B981)",
+              fontSize: 13, fontWeight: 700, color: "white",
+              cursor: "pointer",
               transition: "all 0.2s",
-              boxShadow: isUnderstood ? "0 2px 8px rgba(5,150,105,0.3)" : "none",
+              boxShadow: "0 2px 8px rgba(5,150,105,0.3)",
             }}>Finish ✓</button>
           )}
         </div>
