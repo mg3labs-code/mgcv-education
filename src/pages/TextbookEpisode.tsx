@@ -661,9 +661,21 @@ const TextbookEpisode = () => {
           <span style={{ color: "#D6D3D1" }}>•</span>
           <span style={{ color: "#78716C" }}>{blockLabels[block?.type || "concept"] || block?.type}</span>
         </div>
-        <span style={{ fontWeight: 600, color: "#78716C", fontSize: 11 }}>
-          {understoodBlocks.size}/{navBlocks.length} done
-        </span>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontWeight: 600, color: "#78716C", fontSize: 11 }}>
+            {understoodBlocks.size}/{navBlocks.length} done
+          </span>
+          {!isLanguage && (
+            <div style={{ display: "flex", alignItems: "center", gap: 4, borderLeft: "1px solid #E7E5E4", paddingLeft: 8 }}>
+              <span style={{ fontSize: 10, fontWeight: 700, color: jeeMode ? "#D97706" : "#A8A29E" }}>JEE</span>
+              <Switch
+                checked={jeeMode}
+                onCheckedChange={(checked) => { setJeeMode(checked); setActiveBlock(0); }}
+                className="h-4 w-8 data-[state=checked]:bg-amber-500"
+              />
+            </div>
+          )}
+        </div>
       </div>
 
       {/* ═══ CONTENT AREA ═══ */}
