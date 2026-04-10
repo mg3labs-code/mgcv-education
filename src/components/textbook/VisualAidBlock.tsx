@@ -31,7 +31,7 @@ const getCached = (key: string): string | null => {
     if (!raw) return null;
     const { url, ts } = JSON.parse(raw);
     // Cache for 7 days
-    if (Date.now() - ts > 7 * 24 * 60 * 60 * 1000) {
+    if (Date.now() - ts > 30 * 24 * 60 * 60 * 1000) {
       localStorage.removeItem(key);
       return null;
     }
