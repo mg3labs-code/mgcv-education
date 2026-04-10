@@ -400,7 +400,7 @@ const TextbookEpisode = () => {
         case "activity": return <VocabularyCardBlock content={block.content as any} subjectName={langSubject} />;
         case "recall": return <RecallBlock content={block.content as RecallContent} onComplete={onBlockComplete} />;
         case "explain": return <ExplainBlock content={block.content as ExplainContent} onComplete={onBlockComplete} />;
-        case "assessment": return <AssessmentBlock content={block.content as AssessmentContent} onComplete={onBlockComplete} />;
+      case "assessment": return <AssessmentBlock content={block.content as AssessmentContent} onComplete={onBlockComplete} onWrongAttempt={onWrongAttempt} />;
         case "exercise": return <GrammarPatternBlock content={block.content as any} />;
         case "reasoning": return <StoryReadingBlock content={block.content as any} subjectName={langSubject} />;
         case "assumptions": return <AssumptionsBlock content={block.content as AssumptionsContent} onStartDefense={() => setShowDefense(true)} />;
@@ -415,7 +415,7 @@ const TextbookEpisode = () => {
       case "activity": return <ActivityBlock content={block.content as ActivityContent} onComplete={onBlockComplete} />;
       case "recall": return <RecallBlock content={block.content as RecallContent} onComplete={onBlockComplete} />;
       case "explain": return <ExplainBlock content={block.content as ExplainContent} onComplete={onBlockComplete} />;
-      case "assessment": return <AssessmentBlock content={block.content as AssessmentContent} onComplete={onBlockComplete} />;
+      case "assessment": return <AssessmentBlock content={block.content as AssessmentContent} onComplete={onBlockComplete} onWrongAttempt={onWrongAttempt} />;
       case "exercise": return <ExerciseBlock content={block.content as ExerciseContent} onComplete={onBlockComplete} />;
       case "reasoning": return <ReasoningBlock content={block.content as ReasoningContent} />;
       case "assumptions": return <AssumptionsBlock content={block.content as AssumptionsContent} onStartDefense={() => setShowDefense(true)} />;
