@@ -1,91 +1,92 @@
 
 
-## Consolidated Plan: Everything Remaining + New Additions
+## Expert Analysis: Board vs JEE Content Integration
 
-### Status Check — What's DONE vs NOT DONE
+### The Core Confusion — Clarified
 
-**DONE (from previous steps):**
-- RecallBlock "Got it ✓ / Not yet ✗" self-assessment buttons
-- ReasoningBlock 10-second think-first countdown gate
-- AssumptionsBlock believe/doubt toggle + reflection prompt
-- WhyThisWorks landing section (School/Coaching/EduTech + 4 university cards)
-- Micro-connection toasts after block completion in TextbookEpisode
+Your 7-layer framework already covers **deep understanding** (reasoning, assumptions, connections, implications). The question is: **Does JEE need something DIFFERENT from what the 7 layers provide?**
 
-**NOT DONE (from previous steps):**
-- Growth Path Visualization in student dashboard
-- Dedicated Board vs JEE comparison page
-- "What Comes After" career timelines (JEE/NEET/Olympiad)
-- Full university methods detailed mapping (IIT/Oxford/Harvard/Stanford)
-- Stanford card missing from WhyThisWorks
-- No navigation links to vision content from dashboards
+**Answer: Yes, but NOT a completely separate textbook. JEE needs 3 things your layers DON'T currently provide:**
 
----
+```text
+┌─────────────────────────────────────────────────────────────┐
+│  WHAT YOUR 7 LAYERS ALREADY DO (Board + Deep Understanding) │
+│  ✓ Concept explanation (Layer 1)                             │
+│  ✓ Step-by-step mechanism (Layer 2)                          │
+│  ✓ "Why" reasoning (Layer 3 - Cambridge)                     │
+│  ✓ Hidden assumptions (Layer 4 - Oxford)                     │
+│  ✓ Cross-domain connections (Layer 5 - MIT)                  │
+│  ✓ Real-world application (Layer 6 - Harvard)                │
+│  ✓ Big-picture implications (Layer 7 - Oxford Essay)         │
+├─────────────────────────────────────────────────────────────┤
+│  WHAT JEE ADDITIONALLY NEEDS (Gap)                           │
+│  ✗ Competitive problem-solving patterns & shortcuts          │
+│  ✗ Previous year JEE/NEET questions with trap analysis       │
+│  ✗ Timed practice with negative marking simulation           │
+│  ✗ Extended syllabus topics beyond state board               │
+│  ✗ Multi-concept integration problems                        │
+└─────────────────────────────────────────────────────────────┘
+```
 
-### What We're Building Now — Full List
+### Expert Recommendation: "JEE Boost" Blocks (Not a Separate Textbook)
 
-#### 1. Board vs JEE Adaptive Comparison Page
-**New page:** `src/pages/AdaptiveComparison.tsx` (route: `/board-vs-jee`)
-- Interactive tab selector across 4 block types (Concept, Recall, Assumptions, Debate)
-- Side-by-side columns: Board Mode (calm, self-paced) vs JEE Mode (timed, trap alerts, previous year questions)
-- Shows parents and students that the SAME content adapts to different needs
-- Clean, content-heavy but well-spaced — not cluttered
+For Class 10, JEE prep is about **strengthening foundations + exam awareness**. The best approach is to ADD 2-3 specialized JEE blocks PER EPISODE that appear when a student toggles "JEE Mode" — not a parallel textbook.
 
-#### 2. Homepage Section: "India's Only Research-Proven Learning Methods"
-**Enhanced section on landing page** (before login, in `Index.tsx`)
-Combines the "What Comes After" career content + University Methods into ONE clean section with two sub-parts:
+### What Gets Added Per Episode (When JEE Mode is ON)
 
-**Part A — "What Qualifying Unlocks"**
-- 3 expandable cards: JEE (IIT journey), NEET (Medical journey), Olympiad (MIT/Stanford path)
-- Each expands to show: year-by-year timeline, salary ranges, top recruiters
-- Shows HOW university learning connects back to what students practice on EduTech
+1. **JEE Problem Bank** (block_type: `jee_problems`) — 3-5 competitive-level MCQs with negative marking, traps, and previous year references
+2. **JEE Concept Extension** (block_type: `jee_extension`) — Any extra depth/topics JEE expects beyond board syllabus for that concept
+3. **Speed Drill** (block_type: `jee_speed_drill`) — 5 rapid-fire questions with a countdown timer, testing the same episode concept under pressure
 
-**Part B — "Elite University Methods, Built In"**
-- Tabbed selector: IIT, Oxford, Harvard/MIT, Stanford
-- Each tab shows: the university's teaching method, a mapping table (EduTech feature → University equivalent), and a quote
-- Add Stanford (Design Thinking) as the 4th university — currently missing
+### Implementation Plan
 
-**Section naming:** "India's Only Research-Proven Learning Methods" or "Backed by the World's Best Teaching Methods"
-- Not cluttered — clean cards, expandable details, tabs to avoid overwhelm
+**Step 1: Database — Add `depth` column to `content_blocks`**
+- Add `depth TEXT NOT NULL DEFAULT 'board'` column to `content_blocks` table
+- Values: `'board'` (existing blocks) or `'jee'` (new JEE blocks)
+- No migration of existing data needed — all current blocks default to `'board'`
 
-#### 3. Growth Path Visualization in Student Dashboard
-**New component:** `src/components/student/GrowthPathVisualization.tsx`
-- Added to `GrowthTab.tsx`
-- Vertical timeline mapping 5 Inner OS dimensions to real career outcomes:
-  - Clarity → Research, Medicine, Law
-  - Thinking → JEE Advanced, PhDs, Innovation
-  - Attention → Deep Work, Engineering
-  - Momentum → Sports discipline, Entrepreneurship
-  - Character → IIM interviews, Leadership
-- Each node shows current score from existing `student_inner_os` data
-- No new database queries needed
+**Step 2: Extend AI generation pipeline**
+- Update `generate-chapter-content` edge function to accept an optional `depth: "jee"` parameter
+- When `depth: "jee"`, generate only the 3 JEE-specific block types (jee_problems, jee_extension, jee_speed_drill)
+- These get inserted with `depth = 'jee'` into the same `content_blocks` table
 
-#### 4. Update WhyThisWorks with Stanford + CTA
-- Add Stanford (Design Thinking) as 5th university method card
-- Add CTA: "See Board vs JEE Mode →" linking to `/board-vs-jee`
+**Step 3: Frontend — Episode reader toggle**
+- Add a "Board ↔ JEE" toggle switch at the top of the episode reader (`TextbookEpisode` page)
+- When Board mode: show only blocks where `depth = 'board'` (current behavior)
+- When JEE mode: show ALL blocks (board + jee), with JEE blocks visually distinguished (orange/amber accent, ⚡ icon)
 
-#### 5. Navigation Links
-- Student SideNav: link to `/board-vs-jee`
-- Landing page: smooth scroll to the new research-methods section
+**Step 4: New block renderers**
+- `JeeProblemsBlock.tsx` — MCQ with negative marking (-1), timer per question, trap alerts, previous year tags
+- `JeeExtensionBlock.tsx` — Collapsible "Beyond Board" content with advanced formulas/proofs
+- `JeeSpeedDrillBlock.tsx` — Countdown timer + rapid-fire questions with score tracker
 
----
+**Step 5: Update `useEpisodeBlocks` hook**
+- Accept a `depth` filter parameter
+- When `depth = 'all'` (JEE mode), fetch all blocks
+- When `depth = 'board'` (default), fetch only board blocks
 
-### Files
+**Step 6: Update the existing `/board-vs-jee` comparison page**
+- Link it from the textbook as a "See how JEE Mode works" preview
+- Add a CTA to enable JEE mode on actual episodes
 
-**Created:**
-- `src/pages/AdaptiveComparison.tsx` — Board vs JEE interactive comparison
-- `src/components/student/GrowthPathVisualization.tsx` — Inner OS career mapping
-- `src/components/landing/ResearchProvenMethods.tsx` — combined career timelines + university methods section
+### Files to Create/Modify
 
-**Modified:**
-- `src/components/landing/WhyThisWorks.tsx` — add Stanford card + CTA
-- `src/pages/Index.tsx` — add ResearchProvenMethods section
-- `src/components/student/GrowthTab.tsx` — add GrowthPathVisualization
-- `src/App.tsx` — add `/board-vs-jee` route
-- `src/components/SideNav.tsx` — add navigation link
+| File | Action |
+|------|--------|
+| Migration: add `depth` column to `content_blocks` | Create |
+| `supabase/functions/generate-chapter-content/index.ts` | Modify — add JEE prompt path |
+| `src/components/textbook/JeeProblemsBlock.tsx` | Create |
+| `src/components/textbook/JeeExtensionBlock.tsx` | Create |
+| `src/components/textbook/JeeSpeedDrillBlock.tsx` | Create |
+| `src/components/textbook/EpisodeBlocks.tsx` | Modify — render new block types |
+| `src/hooks/useTextbookData.ts` | Modify — depth filter |
+| `src/pages/TextbookEpisode.tsx` | Modify — add toggle |
+| `src/data/textbookData.ts` | Modify — add new ContentBlock types |
 
-### Design Principles
-- Content-heavy but NOT clumsy: expandable cards, tabs, progressive disclosure
-- Mobile-first (390px viewport), matching existing glassmorphism/teal design system
-- framer-motion scroll-reveal animations consistent with landing page
-- No inline styles — all Tailwind + shadcn components
+### Why This Is the Right Approach
+
+- **No content duplication** — Board content stays, JEE adds on top
+- **Same episode structure** — Student reads Episode 1.1 in Board mode, toggles JEE to see competitive extensions
+- **AI-generatable** — The JEE blocks can be auto-generated per episode using the existing pipeline
+- **Class 10 appropriate** — Focuses on foundation strengthening + exam awareness, not full JEE syllabus (that's for Class 11-12)
 
