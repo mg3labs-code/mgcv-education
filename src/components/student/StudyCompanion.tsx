@@ -13,7 +13,8 @@ import { toast } from "sonner";
 import { useConversation } from "@elevenlabs/react";
 import CompanionVoiceInput from "./CompanionVoiceInput";
 import PopQuizModal from "./PopQuizModal";
-import { chapters } from "@/data/textbookData";
+import { useChapters } from "@/hooks/useTextbookData";
+import type { Chapter } from "@/data/textbookData";
 
 // ─── Text chat helpers (unchanged) ───
 

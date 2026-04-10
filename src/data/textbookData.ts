@@ -141,9 +141,9 @@ export interface Chapter {
   episodes: Episode[];
 }
 
-export const chapters: Chapter[] = [
-  {
-    id: "ch1",
+// Hardcoded chapters data has been removed.
+// All chapter/episode/block content is now served from the database.
+// Use hooks from useTextbookData.ts to fetch content.
     number: 1,
     title: "Real Numbers",
     subtitle: "Euclid's Division Algorithm, Fundamental Theorem of Arithmetic, Irrational & Rational Numbers",
