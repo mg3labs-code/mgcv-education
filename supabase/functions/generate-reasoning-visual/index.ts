@@ -1,4 +1,3 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -94,7 +93,7 @@ Include these labels prominently: ${step.key_labels.join(", ")}
 Style: Indian NCERT educational textbook illustration, flat vector design, bright pastel palette on clean white background, large clear text annotations, hand-drawn but professional feel, infographic poster layout. NOT photorealistic.`;
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -131,11 +130,19 @@ serve(async (req) => {
       .maybeSingle();
 
     if (exactMatch) {
-      console.log("Exact match found for:", slug);
-      return new Response(
-        JSON.stringify({ steps: exactMatch.steps, cached: true, match: "exact" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      // Check if cached entry has images — if not, skip cache and regenerate
+      const cachedSteps = exactMatch.steps as any[];
+      const hasAllImages = cachedSteps.length > 0 && cachedSteps.every((s: any) => s.image_url);
+      if (hasAllImages) {
+        console.log("Exact match found with images for:", slug);
+        return new Response(
+          JSON.stringify({ steps: exactMatch.steps, cached: true, match: "exact" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      console.log("Exact match found but NO images, regenerating:", slug);
+      // Delete the broken cache entry so we can re-insert
+      await supabase.from("reasoning_visuals").delete().eq("id", exactMatch.id);
     }
 
     // 2. Full-text search for related topics
@@ -300,89 +307,92 @@ Return JSON array with exactly 4 objects:
       steps = JSON.parse(jsonMatch[0]);
     }
 
-    // Step 2: Generate elite-quality images in parallel (2 at a time to avoid rate limits)
-    const generateImage = async (step: ReasoningStep, index: number) => {
-      console.log(`Generating elite image for step ${index + 1}: ${step.title}`);
-      try {
-        const elitePrompt = buildImagePrompt(step, subj, gr);
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 90000); // 90s per image
-
-        const imgResp = await fetch(
-          "https://ai.gateway.lovable.dev/v1/chat/completions",
-          {
-            method: "POST",
-            signal: controller.signal,
-            headers: {
-              Authorization: `Bearer ${LOVABLE_API_KEY}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              model: "google/gemini-3.1-flash-image-preview",
-              messages: [{ role: "user", content: elitePrompt }],
-              modalities: ["image", "text"],
-            }),
-          }
-        );
-        clearTimeout(timeout);
-
-        if (!imgResp.ok) {
-          console.error(`Image gen failed for step ${index + 1}:`, imgResp.status);
-          await imgResp.text();
-          return;
-        }
-
-        let imgData;
+    // Background image generation function
+    const generateImagesInBackground = async () => {
+      const generateImage = async (step: ReasoningStep, index: number) => {
+        console.log(`Generating elite image for step ${index + 1}: ${step.title}`);
         try {
-          imgData = await imgResp.json();
-        } catch (parseErr) {
-          console.error(`Image JSON parse failed for step ${index + 1}:`, parseErr);
-          return;
-        }
+          const elitePrompt = buildImagePrompt(step, subj, gr);
 
-        const imageB64 = imgData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
-        if (imageB64) {
-          const b64Data = imageB64.replace(/^data:image\/\w+;base64,/, "");
-          const bytes = Uint8Array.from(atob(b64Data), (c) => c.charCodeAt(0));
-          const filePath = `${slug}/step-${index + 1}.png`;
-          const { error: uploadErr } = await supabase.storage
-            .from("reasoning-visuals")
-            .upload(filePath, bytes, { contentType: "image/png", upsert: true });
+          const imgResp = await fetch(
+            "https://ai.gateway.lovable.dev/v1/chat/completions",
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${LOVABLE_API_KEY}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                model: "google/gemini-3.1-flash-image-preview",
+                messages: [{ role: "user", content: elitePrompt }],
+                modalities: ["image", "text"],
+              }),
+            }
+          );
 
-          if (uploadErr) {
-            console.error(`Upload failed for step ${index + 1}:`, uploadErr);
-          } else {
-            step.image_url = `${supabaseUrl}/storage/v1/object/public/reasoning-visuals/${filePath}`;
+          if (!imgResp.ok) {
+            console.error(`Image gen failed for step ${index + 1}:`, imgResp.status);
+            await imgResp.text();
+            return;
           }
+
+          let imgData;
+          try {
+            imgData = await imgResp.json();
+          } catch (parseErr) {
+            console.error(`Image JSON parse failed for step ${index + 1}:`, parseErr);
+            return;
+          }
+
+          const imageB64 = imgData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+          if (imageB64) {
+            const b64Data = imageB64.replace(/^data:image\/\w+;base64,/, "");
+            const bytes = Uint8Array.from(atob(b64Data), (c) => c.charCodeAt(0));
+            const filePath = `${slug}/step-${index + 1}.png`;
+            const { error: uploadErr } = await supabase.storage
+              .from("reasoning-visuals")
+              .upload(filePath, bytes, { contentType: "image/png", upsert: true });
+
+            if (uploadErr) {
+              console.error(`Upload failed for step ${index + 1}:`, uploadErr);
+            } else {
+              step.image_url = `${supabaseUrl}/storage/v1/object/public/reasoning-visuals/${filePath}`;
+              console.log(`Image saved for step ${index + 1}`);
+            }
+          }
+        } catch (imgErr) {
+          console.error(`Image generation error step ${index + 1}:`, imgErr);
         }
-      } catch (imgErr) {
-        console.error(`Image generation error step ${index + 1}:`, imgErr);
+      };
+
+      // Generate all 4 images in parallel batches of 2
+      await Promise.allSettled([generateImage(steps[0], 0), generateImage(steps[1], 1)]);
+      await Promise.allSettled([generateImage(steps[2], 2), generateImage(steps[3], 3)]);
+
+      // Persist to DB with images
+      const { error: insertErr } = await supabase
+        .from("reasoning_visuals")
+        .insert({ topic, subject: subj, grade: gr, slug, steps });
+
+      if (insertErr) {
+        console.error("Failed to persist visual:", insertErr);
+      } else {
+        console.log("Persisted reasoning visual with images for:", topic);
       }
     };
 
-    // Generate images in two parallel batches of 2
-    await Promise.allSettled([generateImage(steps[0], 0), generateImage(steps[1], 1)]);
-    await Promise.allSettled([generateImage(steps[2], 2), generateImage(steps[3], 3)]);
-
-    // Step 3: Persist to DB
-    const { error: insertErr } = await supabase
-      .from("reasoning_visuals")
-      .insert({
-        topic,
-        subject: subj,
-        grade: gr,
-        slug,
-        steps,
-      });
-
-    if (insertErr) {
-      console.error("Failed to persist visual:", insertErr);
+    // Return steps immediately, generate images in the background
+    // @ts-ignore - EdgeRuntime is available in Deno edge runtime
+    if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) {
+      // @ts-ignore
+      EdgeRuntime.waitUntil(generateImagesInBackground());
     } else {
-      console.log("Persisted reasoning visual for:", topic);
+      // Fallback: just run in background without waiting
+      generateImagesInBackground().catch(console.error);
     }
 
     return new Response(
-      JSON.stringify({ steps, cached: false, match: "new" }),
+      JSON.stringify({ steps, cached: false, match: "new", images_generating: true }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
