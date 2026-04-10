@@ -131,11 +131,19 @@ serve(async (req) => {
       .maybeSingle();
 
     if (exactMatch) {
-      console.log("Exact match found for:", slug);
-      return new Response(
-        JSON.stringify({ steps: exactMatch.steps, cached: true, match: "exact" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      // Check if cached entry has images — if not, skip cache and regenerate
+      const cachedSteps = exactMatch.steps as any[];
+      const hasImages = cachedSteps.some((s: any) => s.image_url);
+      if (hasImages) {
+        console.log("Exact match found with images for:", slug);
+        return new Response(
+          JSON.stringify({ steps: exactMatch.steps, cached: true, match: "exact" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      console.log("Exact match found but NO images, regenerating:", slug);
+      // Delete the broken cache entry so we can re-insert
+      await supabase.from("reasoning_visuals").delete().eq("id", exactMatch.id);
     }
 
     // 2. Full-text search for related topics
