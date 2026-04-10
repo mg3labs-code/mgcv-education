@@ -16,6 +16,7 @@ const BodySchema = z.object({
   episodes: z.array(EpisodeSchema).min(1).max(20),
   board: z.string().max(100).default("Telangana"),
   grade: z.number().int().min(1).max(12).default(10),
+  depth: z.enum(["board", "jee"]).default("board"),
 });
 
 const corsHeaders = {
@@ -34,7 +35,7 @@ serve(async (req) => {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const { chapterId, chapterTitle, subject, episodes, board, grade } = parsed.data;
+    const { chapterId, chapterTitle, subject, episodes, board, grade, depth } = parsed.data;
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
