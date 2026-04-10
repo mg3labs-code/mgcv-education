@@ -9,6 +9,9 @@ import FeatureShowcase from "@/components/landing/FeatureShowcase";
 import LoadingScreen from "@/components/LoadingScreen";
 import { Menu, X, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
+import heroStudents from "@/assets/hero-students.webp";
+import heroFutureLearning from "@/assets/hero-future-learning.jpg";
+import heroAiStudent from "@/assets/hero-ai-student.png";
 
 type LoginType = "student" | "teacher" | "";
 type ModalType = "login" | "about" | "contact" | "";
@@ -246,25 +249,41 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Abstract SVG decoration - desktop only */}
-        <div className="absolute top-0 right-0 w-[50%] h-full z-[1] hidden lg:block pointer-events-none">
-          <svg className="absolute top-1/2 right-0 w-[700px] h-[500px] -translate-y-1/2 opacity-20" viewBox="0 0 800 600">
-            <defs>
-              <linearGradient id="hero-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="hsl(162 65% 38%)" />
-                <stop offset="50%" stopColor="hsl(210 65% 52%)" />
-                <stop offset="100%" stopColor="hsl(280 60% 55%)" />
-              </linearGradient>
-            </defs>
-            {[
-              "M 100 100 Q 300 50 500 150 T 700 200 Q 650 300 500 350 T 200 400 Q 150 500 300 550",
-              "M 150 80 Q 350 30 550 130 T 750 180 Q 700 280 550 330 T 250 380 Q 200 480 350 530",
-              "M 200 120 Q 400 70 600 170 T 800 220 Q 750 320 600 370 T 300 420 Q 250 520 400 570",
-            ].map((d, i) => (
-              <path key={i} d={d} strokeWidth={1.5} fill="none" stroke="url(#hero-grad)" opacity={0.6}
-                style={{ animation: `drawLine 10s ease-in-out infinite`, animationDelay: `${-i * 3}s` }} />
-            ))}
-          </svg>
+        {/* Hero Image - desktop only */}
+        <div className="absolute top-0 right-0 w-[50%] h-full z-[1] hidden lg:flex items-center justify-end pr-10 pointer-events-none">
+          <motion.div
+            initial={{ opacity: 0, x: 40, scale: 0.95 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" as const }}
+            className="relative"
+          >
+            <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-border/30" style={{ maxWidth: 520 }}>
+              <img
+                src={heroStudents}
+                alt="Students collaborating with technology"
+                className="w-full h-auto object-cover"
+                loading="eager"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-background/30 via-transparent to-transparent" />
+            </div>
+            {/* Floating badge */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.8, duration: 0.5 }}
+              className="absolute -bottom-4 -left-6 bg-card border border-border/50 rounded-xl px-4 py-3 shadow-lg backdrop-blur-sm"
+            >
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                  <span className="text-sm">🎯</span>
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-foreground">5 Inner OS Dimensions</p>
+                  <p className="text-[10px] text-muted-foreground">Clarity · Thinking · Focus · Momentum · Character</p>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
         </div>
       </main>
 
@@ -274,9 +293,65 @@ const Index = () => {
       {/* Feature Showcase */}
       <FeatureShowcase />
 
+      {/* Visual Showcase Section */}
+      <section className="relative z-10 py-16 md:py-24">
+        <div className="max-w-[1200px] mx-auto px-4 md:px-10">
+          <div className="grid md:grid-cols-2 gap-8 items-center">
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <div className="rounded-2xl overflow-hidden shadow-xl border border-border/30">
+                <img src={heroAiStudent} alt="Student learning with AI technology" className="w-full h-auto object-cover" loading="lazy" />
+              </div>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.15 }}
+              className="space-y-5"
+            >
+              <h2 className="text-3xl md:text-4xl font-bold text-foreground">
+                Learning that <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-info">thinks with you</span>
+              </h2>
+              <p className="text-muted-foreground text-base leading-relaxed">
+                Our AI doesn't just deliver content — it tracks 47 micro-patterns in how you learn, adapts in real-time, and builds your cognitive muscle across 5 dimensions.
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { emoji: "👁️", label: "Clarity", desc: "See concepts clearly" },
+                  { emoji: "🧠", label: "Thinking", desc: "Reason deeper" },
+                  { emoji: "🎯", label: "Attention", desc: "Stay focused" },
+                  { emoji: "🚀", label: "Momentum", desc: "Keep growing" },
+                ].map(d => (
+                  <div key={d.label} className="bg-card border border-border/50 rounded-xl p-3">
+                    <span className="text-lg">{d.emoji}</span>
+                    <p className="text-sm font-semibold text-foreground mt-1">{d.label}</p>
+                    <p className="text-xs text-muted-foreground">{d.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="relative z-10 py-20 md:py-28">
         <div className="max-w-[800px] mx-auto px-4 md:px-10 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <div className="rounded-2xl overflow-hidden mb-10 mx-auto max-w-md shadow-lg border border-border/30">
+              <img src={heroFutureLearning} alt="Future of education with immersive technology" className="w-full h-auto object-cover" loading="lazy" />
+            </div>
+          </motion.div>
           <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-4">
             Ready to transform education?
           </h2>
