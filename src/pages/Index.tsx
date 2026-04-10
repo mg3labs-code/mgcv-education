@@ -8,11 +8,17 @@ import TrustBadges from "@/components/landing/TrustBadges";
 import FeatureShowcase from "@/components/landing/FeatureShowcase";
 import LoadingScreen from "@/components/LoadingScreen";
 import { Menu, X, ArrowRight } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import heroStudents from "@/assets/hero-students.webp";
 import heroFutureLearning from "@/assets/hero-future-learning.jpg";
 import heroAiStudent from "@/assets/hero-ai-student.png";
 import ImageTextEffect from "@/components/landing/ImageTextEffect";
+
+const heroImages = [
+  { src: heroStudents, alt: "Students collaborating with technology" },
+  { src: heroFutureLearning, alt: "Future of learning with AI" },
+  { src: heroAiStudent, alt: "Student learning with AI technology" },
+];
 
 type LoginType = "student" | "teacher" | "";
 type ModalType = "login" | "about" | "contact" | "";
@@ -40,6 +46,15 @@ const Index = () => {
   const [submitting, setSubmitting] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [loginError, setLoginError] = useState<{ message: string; code?: string; suggestion: string } | null>(null);
+  const [heroIndex, setHeroIndex] = useState(0);
+
+  // Auto-rotate hero images
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setHeroIndex((prev) => (prev + 1) % heroImages.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     if (!loading && user && role) {
@@ -220,8 +235,16 @@ const Index = () => {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.5, delay: 0.05 }}
-                className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-black tracking-tight text-foreground mb-1"
-                style={{ lineHeight: 1.1 }}
+                className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-black tracking-tight mb-1"
+                style={{
+                  lineHeight: 1.1,
+                  backgroundImage: "linear-gradient(135deg, hsl(var(--foreground)) 0%, hsl(var(--primary)) 50%, hsl(var(--accent)) 100%)",
+                  backgroundSize: "300% 100%",
+                  WebkitBackgroundClip: "text",
+                  backgroundClip: "text",
+                  color: "transparent",
+                  animation: "text-shimmer 6s ease-in-out infinite",
+                }}
               >
                 World-Class
               </motion.p>
@@ -273,14 +296,27 @@ const Index = () => {
             transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" as const }}
             className="relative"
           >
-            <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-border/30" style={{ maxWidth: 520 }}>
-              <img
-                src={heroStudents}
-                alt="Students collaborating with technology"
-                className="w-full h-auto object-cover"
-                loading="eager"
-              />
+            <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-border/30" style={{ maxWidth: 520, aspectRatio: "4/3" }}>
+              <AnimatePresence mode="wait">
+                <motion.img
+                  key={heroIndex}
+                  src={heroImages[heroIndex].src}
+                  alt={heroImages[heroIndex].alt}
+                  className="w-full h-full object-cover absolute inset-0"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 1, ease: "easeInOut" }}
+                  loading="eager"
+                />
+              </AnimatePresence>
               <div className="absolute inset-0 bg-gradient-to-t from-background/30 via-transparent to-transparent" />
+            </div>
+            {/* Carousel dots */}
+            <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 flex gap-2">
+              {heroImages.map((_, i) => (
+                <span key={i} className={`w-2 h-2 rounded-full transition-all duration-500 ${i === heroIndex ? "bg-primary w-6" : "bg-muted-foreground/30"}`} />
+              ))}
             </div>
             {/* Floating badge */}
             <motion.div
