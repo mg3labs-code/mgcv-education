@@ -24,6 +24,9 @@ import LanguageProgressWidget from "@/components/textbook/LanguageProgressWidget
 import VisualAidBlock from "@/components/textbook/VisualAidBlock";
 import InlineMedia from "@/components/textbook/InlineMedia";
 import { ConceptBlock, ActivityBlock, RecallBlock, ExplainBlock, AssessmentBlock, ExerciseBlock, blockSubtitles, layerMeta, type ActivityContent } from "@/components/textbook/EpisodeBlocks";
+import SectionCelebration from "@/components/textbook/SectionCelebration";
+import ComprehensionCheck from "@/components/textbook/ComprehensionCheck";
+import EpisodeLoadingTransition from "@/components/textbook/EpisodeLoadingTransition";
 
 const LANGUAGE_SUBJECTS = new Set(["Telugu", "Hindi"]);
 
