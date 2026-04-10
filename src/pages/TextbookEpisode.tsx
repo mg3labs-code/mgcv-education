@@ -94,6 +94,10 @@ const TextbookEpisode = () => {
   const [blockCompleted, setBlockCompleted] = useState<Set<number>>(new Set());
   const [showUnderstandConfirm, setShowUnderstandConfirm] = useState(false);
   const [expandedTextbookRef, setExpandedTextbookRef] = useState<number | null>(null);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [visitedBlocks, setVisitedBlocks] = useState<Set<string>>(new Set());
+  const [sectionStartTime, setSectionStartTime] = useState<number>(Date.now());
+  const [sectionTimings, setSectionTimings] = useState<Record<number, number>>({});
   const contentRef = useRef<HTMLDivElement>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const totalBlocksRef = useRef(0);
