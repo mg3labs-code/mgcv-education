@@ -114,11 +114,18 @@ const ReasoningVisualDemo = () => {
         setCurrentStep((prev) => Math.min(prev + 1, 4));
       }, 8000);
 
+      // Add AbortController with 3-minute timeout for new generations
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 180000);
+
       const { data, error } = await supabase.functions.invoke(
         "generate-reasoning-visual",
-        { body: { topic, subject: subject || selectedSubject, grade: "Grade 10" } }
+        {
+          body: { topic, subject: subject || selectedSubject, grade: "Grade 10" },
+        }
       );
 
+      clearTimeout(timeoutId);
       clearInterval(progressInterval);
 
       if (error) throw error;

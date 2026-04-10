@@ -300,71 +300,69 @@ Return JSON array with exactly 4 objects:
       steps = JSON.parse(jsonMatch[0]);
     }
 
-    // Step 2: Generate elite-quality images for each step
-    for (let i = 0; i < steps.length; i++) {
-      const step = steps[i];
-      console.log(`Generating elite image for step ${i + 1}: ${step.title}`);
-
+    // Step 2: Generate elite-quality images in parallel (2 at a time to avoid rate limits)
+    const generateImage = async (step: ReasoningStep, index: number) => {
+      console.log(`Generating elite image for step ${index + 1}: ${step.title}`);
       try {
         const elitePrompt = buildImagePrompt(step, subj, gr);
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 90000); // 90s per image
 
         const imgResp = await fetch(
           "https://ai.gateway.lovable.dev/v1/chat/completions",
           {
             method: "POST",
+            signal: controller.signal,
             headers: {
               Authorization: `Bearer ${LOVABLE_API_KEY}`,
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
               model: "google/gemini-3.1-flash-image-preview",
-              messages: [
-                {
-                  role: "user",
-                  content: elitePrompt,
-                },
-              ],
+              messages: [{ role: "user", content: elitePrompt }],
               modalities: ["image", "text"],
             }),
           }
         );
+        clearTimeout(timeout);
 
         if (!imgResp.ok) {
-          console.error(`Image gen failed for step ${i + 1}:`, imgResp.status);
+          console.error(`Image gen failed for step ${index + 1}:`, imgResp.status);
           await imgResp.text();
-          continue;
+          return;
         }
 
-        const imgData = await imgResp.json();
-        const imageB64 =
-          imgData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+        let imgData;
+        try {
+          imgData = await imgResp.json();
+        } catch (parseErr) {
+          console.error(`Image JSON parse failed for step ${index + 1}:`, parseErr);
+          return;
+        }
 
+        const imageB64 = imgData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
         if (imageB64) {
           const b64Data = imageB64.replace(/^data:image\/\w+;base64,/, "");
           const bytes = Uint8Array.from(atob(b64Data), (c) => c.charCodeAt(0));
-
-          const filePath = `${slug}/step-${i + 1}.png`;
+          const filePath = `${slug}/step-${index + 1}.png`;
           const { error: uploadErr } = await supabase.storage
             .from("reasoning-visuals")
-            .upload(filePath, bytes, {
-              contentType: "image/png",
-              upsert: true,
-            });
+            .upload(filePath, bytes, { contentType: "image/png", upsert: true });
 
           if (uploadErr) {
-            console.error(`Upload failed for step ${i + 1}:`, uploadErr);
+            console.error(`Upload failed for step ${index + 1}:`, uploadErr);
           } else {
             step.image_url = `${supabaseUrl}/storage/v1/object/public/reasoning-visuals/${filePath}`;
           }
         }
-
-        if (i < steps.length - 1) {
-          await new Promise((r) => setTimeout(r, 1500));
-        }
       } catch (imgErr) {
-        console.error(`Image generation error step ${i + 1}:`, imgErr);
+        console.error(`Image generation error step ${index + 1}:`, imgErr);
       }
-    }
+    };
+
+    // Generate images in two parallel batches of 2
+    await Promise.allSettled([generateImage(steps[0], 0), generateImage(steps[1], 1)]);
+    await Promise.allSettled([generateImage(steps[2], 2), generateImage(steps[3], 3)]);
 
     // Step 3: Persist to DB
     const { error: insertErr } = await supabase
