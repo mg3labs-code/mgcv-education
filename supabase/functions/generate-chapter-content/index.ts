@@ -228,15 +228,16 @@ Return ONLY the JSON array, no markdown wrapping.`;
         continue;
       }
 
-      // Check if blocks already exist for this episode (prevent duplicates)
+      // Check if blocks already exist for this episode at this depth (prevent duplicates)
       const { count: existingCount } = await supabase
         .from("content_blocks")
         .select("id", { count: "exact", head: true })
-        .eq("episode_id", ep.id);
+        .eq("episode_id", ep.id)
+        .eq("depth", depth);
 
       if (existingCount && existingCount > 0) {
-        console.log(`Episode ${ep.number} already has ${existingCount} blocks, skipping`);
-        results.push({ episode: ep.number, blocks: existingCount, status: "already_exists" });
+        console.log(`Episode ${ep.number} already has ${existingCount} ${depth} blocks, skipping`);
+        results.push({ episode: ep.number, blocks: existingCount, status: "already_exists", depth });
         continue;
       }
 
