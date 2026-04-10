@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { ReasoningContent } from "@/data/textbookData";
 import { Eye, Lightbulb, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { motion, AnimatePresence } from "framer-motion";
 
 /* ───── Step-level AI illustration (cached) ───── */
 const ILLUSTRATION_CACHE: Record<string, string> = {};
@@ -117,6 +118,14 @@ const STEP_META = [
 const ReasoningBlock = ({ content }: { content: ReasoningContent }) => {
   const [activeStep, setActiveStep] = useState(0);
   const [revealedInsights, setRevealedInsights] = useState<Record<number, boolean>>({});
+  const prevStep = useRef(0);
+  const direction = useRef(1);
+
+  const goToStep = useCallback((next: number) => {
+    direction.current = next > activeStep ? 1 : -1;
+    prevStep.current = activeStep;
+    setActiveStep(next);
+  }, [activeStep]);
 
   // Map whyQuestions to 4 steps:
   // Step 0 = central question, Steps 1-3 = whyQuestions (or fewer)
