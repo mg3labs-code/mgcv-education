@@ -293,9 +293,65 @@ const Index = () => {
       {/* Feature Showcase */}
       <FeatureShowcase />
 
+      {/* Visual Showcase Section */}
+      <section className="relative z-10 py-16 md:py-24">
+        <div className="max-w-[1200px] mx-auto px-4 md:px-10">
+          <div className="grid md:grid-cols-2 gap-8 items-center">
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <div className="rounded-2xl overflow-hidden shadow-xl border border-border/30">
+                <img src={heroAiStudent} alt="Student learning with AI technology" className="w-full h-auto object-cover" loading="lazy" />
+              </div>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.15 }}
+              className="space-y-5"
+            >
+              <h2 className="text-3xl md:text-4xl font-bold text-foreground">
+                Learning that <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-info">thinks with you</span>
+              </h2>
+              <p className="text-muted-foreground text-base leading-relaxed">
+                Our AI doesn't just deliver content — it tracks 47 micro-patterns in how you learn, adapts in real-time, and builds your cognitive muscle across 5 dimensions.
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { emoji: "👁️", label: "Clarity", desc: "See concepts clearly" },
+                  { emoji: "🧠", label: "Thinking", desc: "Reason deeper" },
+                  { emoji: "🎯", label: "Attention", desc: "Stay focused" },
+                  { emoji: "🚀", label: "Momentum", desc: "Keep growing" },
+                ].map(d => (
+                  <div key={d.label} className="bg-card border border-border/50 rounded-xl p-3">
+                    <span className="text-lg">{d.emoji}</span>
+                    <p className="text-sm font-semibold text-foreground mt-1">{d.label}</p>
+                    <p className="text-xs text-muted-foreground">{d.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="relative z-10 py-20 md:py-28">
         <div className="max-w-[800px] mx-auto px-4 md:px-10 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <div className="rounded-2xl overflow-hidden mb-10 mx-auto max-w-md shadow-lg border border-border/30">
+              <img src={heroFutureLearning} alt="Future of education with immersive technology" className="w-full h-auto object-cover" loading="lazy" />
+            </div>
+          </motion.div>
           <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-4">
             Ready to transform education?
           </h2>
