@@ -12,6 +12,7 @@ import { motion } from "framer-motion";
 import heroStudents from "@/assets/hero-students.webp";
 import heroFutureLearning from "@/assets/hero-future-learning.jpg";
 import heroAiStudent from "@/assets/hero-ai-student.png";
+import ImageTextEffect from "@/components/landing/ImageTextEffect";
 
 type LoginType = "student" | "teacher" | "";
 type ModalType = "login" | "about" | "contact" | "";
@@ -209,17 +210,18 @@ const Index = () => {
               </div>
             </motion.div>
 
-            <motion.h1
+            <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.1, ease: "easeOut" as const }}
-              className="text-4xl sm:text-5xl md:text-7xl font-bold leading-[1.08] mb-6 text-foreground"
+              className="mb-2"
             >
-              World-Class Thinking.{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent to-info">
+              <p className="text-sm md:text-base font-medium text-muted-foreground tracking-wide mb-1">World-Class</p>
+              <ImageTextEffect />
+              <p className="text-lg md:text-2xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent to-info mt-1">
                 Every Student.
-              </span>
-            </motion.h1>
+              </p>
+            </motion.div>
 
             <motion.p
               initial={{ opacity: 0, y: 20 }}
