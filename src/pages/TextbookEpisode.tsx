@@ -243,9 +243,18 @@ const TextbookEpisode = () => {
       toast.error("Complete all Core sections first 🔒");
       return;
     }
+    // Track time spent on current section
+    const timeSpent = Math.round((Date.now() - sectionStartTime) / 1000);
+    setSectionTimings(prev => ({ ...prev, [activeBlock]: (prev[activeBlock] || 0) + timeSpent }));
+    setSectionStartTime(Date.now());
+    
+    // Mark visited
+    const blockKey = `${chapterId}_${episodeId}_${activeBlock}`;
+    setVisitedBlocks(prev => { const n = new Set(prev); n.add(blockKey); return n; });
+    
     setActiveBlock(index);
     contentRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-  }, [isBlockLocked]);
+  }, [isBlockLocked, sectionStartTime, activeBlock, chapterId, episodeId]);
 
   const scrollToActivity = useCallback(() => {
     const actIdx = navBlocks.findIndex(b => b.type === "activity");
