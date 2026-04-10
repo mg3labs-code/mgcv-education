@@ -216,11 +216,25 @@ const Index = () => {
               transition={{ duration: 0.7, delay: 0.1, ease: "easeOut" as const }}
               className="mb-2"
             >
-              <p className="text-sm md:text-base font-medium text-muted-foreground tracking-wide mb-1">World-Class</p>
+              <motion.p
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5, delay: 0.05 }}
+                className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-black tracking-tight text-foreground mb-1"
+                style={{ lineHeight: 1.1 }}
+              >
+                World-Class
+              </motion.p>
               <ImageTextEffect />
-              <p className="text-lg md:text-2xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent to-info mt-1">
-                Every Student.
-              </p>
+              <motion.p
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5, delay: 0.7 }}
+                className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent to-info mt-1"
+                style={{ lineHeight: 1.1 }}
+              >
+                For Every Student.
+              </motion.p>
             </motion.div>
 
             <motion.p
