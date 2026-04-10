@@ -233,6 +233,7 @@ export type Database = {
           block_type: string
           content: Json
           created_at: string
+          depth: string
           episode_id: string
           icon: string | null
           id: string
@@ -243,6 +244,7 @@ export type Database = {
           block_type: string
           content?: Json
           created_at?: string
+          depth?: string
           episode_id: string
           icon?: string | null
           id?: string
@@ -253,6 +255,7 @@ export type Database = {
           block_type?: string
           content?: Json
           created_at?: string
+          depth?: string
           episode_id?: string
           icon?: string | null
           id?: string
