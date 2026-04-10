@@ -524,6 +524,39 @@ export type Database = {
         }
         Relationships: []
       }
+      reasoning_visuals: {
+        Row: {
+          created_at: string
+          grade: string
+          id: string
+          search_tokens: unknown
+          slug: string
+          steps: Json
+          subject: string
+          topic: string
+        }
+        Insert: {
+          created_at?: string
+          grade?: string
+          id?: string
+          search_tokens?: unknown
+          slug: string
+          steps?: Json
+          subject?: string
+          topic: string
+        }
+        Update: {
+          created_at?: string
+          grade?: string
+          id?: string
+          search_tokens?: unknown
+          slug?: string
+          steps?: Json
+          subject?: string
+          topic?: string
+        }
+        Relationships: []
+      }
       student_answers: {
         Row: {
           ai_confidence: number | null
