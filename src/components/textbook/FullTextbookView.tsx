@@ -94,7 +94,7 @@ const FullTextbookView = ({ blocks = [], chapterTitle, episodeTitle }: FullTextb
       )}
 
       {/* Floating TOC pills with active tracking */}
-      <div className="flex flex-wrap gap-2 mb-8 sticky top-0 z-10 bg-background/95 backdrop-blur-sm py-3 -mx-2 px-2 border-b border-border/30">
+      <div className="flex gap-2 mb-8 sticky top-0 z-10 bg-background/95 backdrop-blur-sm py-3 -mx-2 px-2 border-b border-border/30 overflow-x-auto scrollbar-hide">
         {blocks.map((block, i) => {
           const meta = layerMeta[block.type] || defaultMeta;
           const isActive = activeIndex === i;
@@ -143,7 +143,7 @@ const FullTextbookView = ({ blocks = [], chapterTitle, episodeTitle }: FullTextb
 
               {/* Block content with colored left border */}
               <div className={`bg-card rounded-2xl border-l-4 ${meta.border} shadow-sm border border-border/30`}>
-                <div className="p-6">
+                <div className="p-4 md:p-6">
                   {renderBlock(block)}
                 </div>
               </div>
