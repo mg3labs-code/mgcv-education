@@ -1,65 +1,91 @@
 
 
-## Plan: Implement Friction Architecture + "Why This Works" Vision (All 3 Phases)
+## Consolidated Plan: Everything Remaining + New Additions
 
-### What's NOT built yet (confirming)
-- No "Why This Works" landing section exists
-- No IIT/JEE/Oxford/Harvard university method mapping UI
-- No micro-connection toasts after block completion
-- No RecallBlock self-assessment ("Got it / Not yet")
-- No ReasoningBlock think-first delay gate
-- No AssumptionsBlock believe/doubt toggle
+### Status Check — What's DONE vs NOT DONE
 
-### Phase 1: Friction Polish on Existing Textbook Blocks
+**DONE (from previous steps):**
+- RecallBlock "Got it ✓ / Not yet ✗" self-assessment buttons
+- ReasoningBlock 10-second think-first countdown gate
+- AssumptionsBlock believe/doubt toggle + reflection prompt
+- WhyThisWorks landing section (School/Coaching/EduTech + 4 university cards)
+- Micro-connection toasts after block completion in TextbookEpisode
 
-**RecallBlock** (in `EpisodeBlocks.tsx`)
-- After revealing answer, show "Got it ✓" / "Not yet ✗" self-assessment buttons
-- "Not yet" items visually marked for end-of-episode review
-- Hints hidden behind tap by default
+**NOT DONE (from previous steps):**
+- Growth Path Visualization in student dashboard
+- Dedicated Board vs JEE comparison page
+- "What Comes After" career timelines (JEE/NEET/Olympiad)
+- Full university methods detailed mapping (IIT/Oxford/Harvard/Stanford)
+- Stanford card missing from WhyThisWorks
+- No navigation links to vision content from dashboards
 
-**ReasoningBlock** (`ReasoningBlock.tsx`)
-- "Reveal Answer" button appears only after 10-second think-first delay with a gentle countdown
-- Larger text, more breathing room for productive struggle
+---
 
-**AssumptionsBlock** (`AssumptionsBlock.tsx`)
-- Add "I believe this / I doubt this" toggle before revealing the myth-bust
-- Post-reveal reflection prompt: "Why did you think that?"
+### What We're Building Now — Full List
 
-### Phase 2: "Why This Works" Landing Section
+#### 1. Board vs JEE Adaptive Comparison Page
+**New page:** `src/pages/AdaptiveComparison.tsx` (route: `/board-vs-jee`)
+- Interactive tab selector across 4 block types (Concept, Recall, Assumptions, Debate)
+- Side-by-side columns: Board Mode (calm, self-paced) vs JEE Mode (timed, trap alerts, previous year questions)
+- Shows parents and students that the SAME content adapts to different needs
+- Clean, content-heavy but well-spaced — not cluttered
 
-**New component**: `src/components/landing/WhyThisWorks.tsx`
-- Section title: "Why This Actually Works"
-- 3-column comparison: School (teaches WHAT) → Coaching (teaches HOW TO SCORE) → EduTech (teaches HOW TO THINK)
-- University method mapping cards with scroll-reveal animations:
-  - Oxford Tutorial → "Debate Challenge" (Assumptions block)
-  - Harvard Case Method → "Use it in real life" (Application block)
-  - IIT Problem-Based → "Break it down" (Reasoning block)
-  - Feynman Technique → "Teach your friend" (Explain block)
-- Placed in `Index.tsx` between FeatureShowcase and footer
-- Parent-friendly language, mobile-responsive grid
+#### 2. Homepage Section: "India's Only Research-Proven Learning Methods"
+**Enhanced section on landing page** (before login, in `Index.tsx`)
+Combines the "What Comes After" career content + University Methods into ONE clean section with two sub-parts:
 
-### Phase 3: Micro-Connection Toasts
+**Part A — "What Qualifying Unlocks"**
+- 3 expandable cards: JEE (IIT journey), NEET (Medical journey), Olympiad (MIT/Stanford path)
+- Each expands to show: year-by-year timeline, salary ranges, top recruiters
+- Shows HOW university learning connects back to what students practice on EduTech
 
-**In `TextbookEpisode.tsx`** — after completing specific block types:
-- Assumptions block → "You just practiced the same skill IIT interviewers test 🏛️"
-- Application block → "Harvard calls this the Case Method — you're already doing it 🎓"
-- Reasoning block → "This is how JEE Advanced separates toppers from memorizers 🧠"
-- Explain block → "Feynman won a Nobel Prize using this exact technique 🔬"
-- Subtle toast, 4-second auto-dismiss, non-intrusive
+**Part B — "Elite University Methods, Built In"**
+- Tabbed selector: IIT, Oxford, Harvard/MIT, Stanford
+- Each tab shows: the university's teaching method, a mapping table (EduTech feature → University equivalent), and a quote
+- Add Stanford (Design Thinking) as the 4th university — currently missing
 
-### Files modified
-- `src/components/textbook/EpisodeBlocks.tsx` — RecallBlock self-assessment
-- `src/components/textbook/ReasoningBlock.tsx` — think-first gate
-- `src/components/textbook/AssumptionsBlock.tsx` — believe/doubt toggle
-- `src/components/landing/WhyThisWorks.tsx` — new component
-- `src/pages/Index.tsx` — add WhyThisWorks section
-- `src/pages/TextbookEpisode.tsx` — micro-connection toasts
+**Section naming:** "India's Only Research-Proven Learning Methods" or "Backed by the World's Best Teaching Methods"
+- Not cluttered — clean cards, expandable details, tabs to avoid overwhelm
 
-### What stays the same
-- All existing block rendering, navigation, progress tracking
-- Voice explain, TutorialDefense, FirstPrinciples modals
-- Mobile layout, auth, onboarding, dashboards
+#### 3. Growth Path Visualization in Student Dashboard
+**New component:** `src/components/student/GrowthPathVisualization.tsx`
+- Added to `GrowthTab.tsx`
+- Vertical timeline mapping 5 Inner OS dimensions to real career outcomes:
+  - Clarity → Research, Medicine, Law
+  - Thinking → JEE Advanced, PhDs, Innovation
+  - Attention → Deep Work, Engineering
+  - Momentum → Sports discipline, Entrepreneurship
+  - Character → IIM interviews, Leadership
+- Each node shows current score from existing `student_inner_os` data
+- No new database queries needed
 
-### Priority order
-Phase 1 (friction polish) → Phase 2 (landing section) → Phase 3 (toasts)
+#### 4. Update WhyThisWorks with Stanford + CTA
+- Add Stanford (Design Thinking) as 5th university method card
+- Add CTA: "See Board vs JEE Mode →" linking to `/board-vs-jee`
+
+#### 5. Navigation Links
+- Student SideNav: link to `/board-vs-jee`
+- Landing page: smooth scroll to the new research-methods section
+
+---
+
+### Files
+
+**Created:**
+- `src/pages/AdaptiveComparison.tsx` — Board vs JEE interactive comparison
+- `src/components/student/GrowthPathVisualization.tsx` — Inner OS career mapping
+- `src/components/landing/ResearchProvenMethods.tsx` — combined career timelines + university methods section
+
+**Modified:**
+- `src/components/landing/WhyThisWorks.tsx` — add Stanford card + CTA
+- `src/pages/Index.tsx` — add ResearchProvenMethods section
+- `src/components/student/GrowthTab.tsx` — add GrowthPathVisualization
+- `src/App.tsx` — add `/board-vs-jee` route
+- `src/components/SideNav.tsx` — add navigation link
+
+### Design Principles
+- Content-heavy but NOT clumsy: expandable cards, tabs, progressive disclosure
+- Mobile-first (390px viewport), matching existing glassmorphism/teal design system
+- framer-motion scroll-reveal animations consistent with landing page
+- No inline styles — all Tailwind + shadcn components
 
