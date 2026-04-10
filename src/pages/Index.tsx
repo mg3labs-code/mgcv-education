@@ -312,6 +312,40 @@ const Index = () => {
                 Teacher Portal
               </button>
             </motion.div>
+
+            {/* Mobile Hero Carousel */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.5 }}
+              className="xl:hidden mt-8"
+            >
+              <div className="relative rounded-2xl overflow-hidden shadow-xl border border-border/30" style={{ aspectRatio: "16/9" }}>
+                <AnimatePresence mode="wait">
+                  <motion.img
+                    key={heroIndex}
+                    src={heroImages[heroIndex].src}
+                    alt={heroImages[heroIndex].alt}
+                    className="w-full h-full object-cover absolute inset-0"
+                    initial={{ opacity: 0, scale: 1.05 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.8, ease: "easeInOut" }}
+                    loading="eager"
+                  />
+                </AnimatePresence>
+                <div className="absolute inset-0 bg-gradient-to-t from-background/40 via-transparent to-transparent" />
+              </div>
+              <div className="flex justify-center gap-2 mt-3">
+                {heroImages.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setHeroIndex(i)}
+                    className={`h-2 rounded-full transition-all duration-500 ${i === heroIndex ? "bg-primary w-6" : "bg-muted-foreground/30 w-2"}`}
+                  />
+                ))}
+              </div>
+            </motion.div>
           </div>
         </div>
 
@@ -508,36 +542,9 @@ const Index = () => {
                     <>
                       <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} required
                         placeholder="Full name" className={inputClass} />
-                      {loginType === "student" ? (
-                        <input type="text" value={className} onChange={(e) => setClassName(e.target.value)}
-                          placeholder="Class (e.g. Class 10)" className={inputClass} />
-                      ) : (
-                        <>
-                          <input type="text" value={schoolName} onChange={(e) => setSchoolName(e.target.value)}
-                            placeholder="School name" className={inputClass} />
-                          <p className="text-xs text-muted-foreground text-left">Subjects you teach:</p>
-                          <div className="flex gap-2 flex-wrap justify-center">
-                            {["Mathematics", "Science", "Social", "English", "Hindi", "Telugu"].map(sub => {
-                              const selected = className.split(",").map(s => s.trim()).includes(sub);
-                              return (
-                                <button key={sub} type="button"
-                                  onClick={() => setClassName(prev => {
-                                    const subjects = prev ? prev.split(",").map(s => s.trim()).filter(Boolean) : [];
-                                    return subjects.includes(sub) 
-                                      ? subjects.filter(s => s !== sub).join(", ")
-                                      : [...subjects, sub].join(", ");
-                                  })}
-                                  className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
-                                    selected 
-                                      ? "bg-primary/20 border-primary text-primary" 
-                                      : "bg-muted/40 border-border text-muted-foreground hover:border-primary/50"
-                                  }`}>
-                                  {sub}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </>
+                      {loginType === "teacher" && (
+                        <input type="text" value={schoolName} onChange={(e) => setSchoolName(e.target.value)}
+                          placeholder="School name" className={inputClass} />
                       )}
                     </>
                   )}

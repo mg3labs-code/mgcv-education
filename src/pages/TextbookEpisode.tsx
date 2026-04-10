@@ -639,7 +639,7 @@ const TextbookEpisode = () => {
       </div>
 
       {/* ═══ CONTENT AREA ═══ */}
-      <div ref={contentRef} style={{ flex: 1, overflowY: "auto", padding: "0 16px 140px", WebkitOverflowScrolling: "touch" }}>
+      <div ref={contentRef} style={{ flex: 1, overflowY: "auto", padding: "0 12px 120px", WebkitOverflowScrolling: "touch" }}>
         <div style={{ maxWidth: 720, margin: "0 auto", paddingTop: 16 }}>
 
           {isLanguage && langSubject && <LanguageProgressWidget subjectName={langSubject} />}
@@ -761,39 +761,66 @@ const TextbookEpisode = () => {
       {/* ═══ BOTTOM BAR (right padding to avoid chatbot FAB) ═══ */}
       <div style={{
         position: "absolute", bottom: 0, left: 0, right: 0,
-        padding: "12px 16px", paddingRight: 80, background: "white", borderTop: "1px solid #E7E5E4",
+        padding: "10px 12px", paddingRight: 72, background: "white", borderTop: "1px solid #E7E5E4",
         display: "flex", alignItems: "center", justifyContent: "space-between",
-        boxShadow: "0 -2px 10px rgba(0,0,0,0.04)",
+        boxShadow: "0 -4px 20px rgba(0,0,0,0.06)", gap: 8,
       }}>
-        {/* Left: Sections + Prev */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        {/* Left: Sections */}
+        <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
           <button onClick={() => setShowSectionsSheet(true)} style={{
-            width: 36, height: 36, borderRadius: 8, border: "1px solid #E7E5E4",
+            width: 36, height: 36, borderRadius: 10, border: "1px solid #E7E5E4",
             background: "white", cursor: "pointer", display: "flex",
             alignItems: "center", justifyContent: "center", color: "#78716C",
           }}><Menu className="h-4 w-4" /></button>
           {activeBlock > 0 && (
             <button onClick={() => goToBlock(activeBlock - 1)} style={{
-              padding: "8px 14px", borderRadius: 8, border: "1px solid #E7E5E4",
-              background: "white", fontSize: 13, fontWeight: 600, color: "#57534E", cursor: "pointer",
-            }}>← Prev</button>
+              width: 36, height: 36, borderRadius: 10, border: "1px solid #E7E5E4",
+              background: "white", fontSize: 16, fontWeight: 600, color: "#57534E", cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>←</button>
           )}
         </div>
 
-        {/* Center: Tools */}
-        <div style={{ position: "relative" }}>
+        {/* Center: Continue/Finish — PROMINENT & CENTERED */}
+        <div style={{ flex: 1, display: "flex", justifyContent: "center" }}>
+          {!isLastBlock ? (
+            <button onClick={() => advanceWithCelebration(activeBlock)} style={{
+              padding: "10px 28px", borderRadius: 14, border: "none",
+              background: "linear-gradient(135deg, #0D9488, #14B8A6)",
+              fontSize: 15, fontWeight: 700, color: "white",
+              cursor: "pointer",
+              transition: "all 0.2s",
+              boxShadow: "0 4px 14px rgba(13,148,136,0.35)",
+              minWidth: 140,
+            }}>Continue →</button>
+          ) : (
+            <button onClick={() => advanceWithCelebration(activeBlock)} style={{
+              padding: "10px 28px", borderRadius: 14, border: "none",
+              background: "linear-gradient(135deg, #059669, #10B981)",
+              fontSize: 15, fontWeight: 700, color: "white",
+              cursor: "pointer",
+              transition: "all 0.2s",
+              boxShadow: "0 4px 14px rgba(5,150,105,0.35)",
+              minWidth: 140,
+            }}>Finish ✓</button>
+          )}
+        </div>
+
+        {/* Right: Tools */}
+        <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
           <button onClick={() => setShowToolsPopup(!showToolsPopup)} style={{
-            width: 36, height: 36, borderRadius: 8, border: "1px solid #E7E5E4",
+            width: 36, height: 36, borderRadius: 10, border: "1px solid #E7E5E4",
             background: showToolsPopup ? "#F0FDFA" : "white", cursor: "pointer",
             display: "flex", alignItems: "center", justifyContent: "center", color: "#78716C",
+            position: "relative",
           }}><MoreHorizontal className="h-4 w-4" /></button>
 
           {showToolsPopup && (
             <div style={{
-              position: "absolute", bottom: 44, left: "50%", transform: "translateX(-50%)",
-              background: "white", borderRadius: 12, border: "1px solid #E7E5E4",
-              boxShadow: "0 8px 30px rgba(0,0,0,0.1)", padding: 8, display: "flex", gap: 4,
-              whiteSpace: "nowrap",
+              position: "absolute", bottom: 56, right: 16,
+              background: "white", borderRadius: 14, border: "1px solid #E7E5E4",
+              boxShadow: "0 8px 30px rgba(0,0,0,0.12)", padding: 8, display: "flex", gap: 4,
+              whiteSpace: "nowrap", zIndex: 70,
             }}>
               {[
                 { icon: "🗺️", label: "Mindmap" },
@@ -812,29 +839,6 @@ const TextbookEpisode = () => {
                 </button>
               ))}
             </div>
-          )}
-        </div>
-
-        {/* Right: Continue/Finish */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          {!isLastBlock ? (
-            <button onClick={() => advanceWithCelebration(activeBlock)} style={{
-              padding: "8px 18px", borderRadius: 10, border: "none",
-              background: "linear-gradient(135deg, #0D9488, #14B8A6)",
-              fontSize: 13, fontWeight: 700, color: "white",
-              cursor: "pointer",
-              transition: "all 0.2s",
-              boxShadow: "0 2px 8px rgba(13,148,136,0.3)",
-            }}>Continue →</button>
-          ) : (
-            <button onClick={() => advanceWithCelebration(activeBlock)} style={{
-              padding: "8px 18px", borderRadius: 10, border: "none",
-              background: "linear-gradient(135deg, #059669, #10B981)",
-              fontSize: 13, fontWeight: 700, color: "white",
-              cursor: "pointer",
-              transition: "all 0.2s",
-              boxShadow: "0 2px 8px rgba(5,150,105,0.3)",
-            }}>Finish ✓</button>
           )}
         </div>
       </div>
