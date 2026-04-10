@@ -452,11 +452,13 @@ export const ExplainBlock = ({ content, onComplete }: { content: ExplainContent;
 
 // ─── Assessment Block ───────────────────────────────────────
 
-export const AssessmentBlock = ({ content, onComplete }: { content: AssessmentContent; onComplete?: () => void }) => {
+export const AssessmentBlock = ({ content, onComplete, onWrongAttempt }: { content: AssessmentContent; onComplete?: () => void; onWrongAttempt?: () => void }) => {
   const [selected, setSelected] = useState<Record<number, number>>({});
   const [submitted, setSubmitted] = useState<Record<number, boolean>>({});
   const handleSelect = (qi: number, oi: number) => { if (submitted[qi]) return; setSelected({ ...selected, [qi]: oi }); };
   const handleSubmit = (qi: number) => {
+    const isCorrect = selected[qi] === content.questions[qi].correctIndex;
+    if (!isCorrect) onWrongAttempt?.();
     const newSubmitted = { ...submitted, [qi]: true };
     setSubmitted(newSubmitted);
     if (Object.keys(newSubmitted).length === content.questions.length) onComplete?.();

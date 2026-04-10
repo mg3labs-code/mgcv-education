@@ -293,6 +293,54 @@ export type Database = {
         }
         Relationships: []
       }
+      episode_interactions: {
+        Row: {
+          block_index: number
+          block_type: string
+          chapter_id: string
+          completed_at: string | null
+          comprehension_attempts: number
+          comprehension_result: string | null
+          correct_on_first_try: boolean | null
+          created_at: string
+          episode_id: string
+          id: string
+          time_spent_seconds: number
+          user_id: string
+          wrong_attempts: number
+        }
+        Insert: {
+          block_index: number
+          block_type: string
+          chapter_id: string
+          completed_at?: string | null
+          comprehension_attempts?: number
+          comprehension_result?: string | null
+          correct_on_first_try?: boolean | null
+          created_at?: string
+          episode_id: string
+          id?: string
+          time_spent_seconds?: number
+          user_id: string
+          wrong_attempts?: number
+        }
+        Update: {
+          block_index?: number
+          block_type?: string
+          chapter_id?: string
+          completed_at?: string | null
+          comprehension_attempts?: number
+          comprehension_result?: string | null
+          correct_on_first_try?: boolean | null
+          created_at?: string
+          episode_id?: string
+          id?: string
+          time_spent_seconds?: number
+          user_id?: string
+          wrong_attempts?: number
+        }
+        Relationships: []
+      }
       episode_progress: {
         Row: {
           chapter_id: string

@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
 const TIPS = [
@@ -10,15 +9,13 @@ const TIPS = [
   "🌟 You're about to unlock new knowledge!",
 ];
 
-const EMOJIS = ["📚", "🎓", "✨", "🔬", "🧪", "📐", "🎨", "💻"];
-
 const EpisodeLoadingTransition = () => {
   const [tip] = useState(() => TIPS[Math.floor(Math.random() * TIPS.length)]);
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setProgress(p => Math.min(p + Math.random() * 15 + 5, 95));
+      setProgress(p => Math.min(p + Math.random() * 18 + 8, 95));
     }, 200);
     return () => clearInterval(interval);
   }, []);
@@ -27,42 +24,28 @@ const EpisodeLoadingTransition = () => {
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center overflow-hidden"
       style={{ background: "linear-gradient(135deg, #F0FDFA 0%, #ECFDF5 30%, #EFF6FF 60%, #F5F3FF 100%)" }}>
 
-      {/* Floating emoji runner */}
+      {/* Simple CSS-animated floating icons */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {EMOJIS.map((emoji, i) => (
-          <motion.div
+        {["📚", "🎓", "✨", "🔬"].map((emoji, i) => (
+          <div
             key={i}
-            className="absolute"
-            style={{ fontSize: 20 + Math.random() * 12, opacity: 0.15 }}
-            initial={{ x: -60, y: 80 + i * 70 }}
-            animate={{ x: typeof window !== "undefined" ? window.innerWidth + 60 : 1200 }}
-            transition={{
-              duration: 3 + Math.random() * 2,
-              repeat: Infinity,
-              delay: i * 0.4,
-              ease: "linear",
+            className="absolute animate-float-across"
+            style={{
+              fontSize: 22, opacity: 0.12,
+              top: `${20 + i * 18}%`,
+              animationDelay: `${i * 0.6}s`,
+              animationDuration: `${4 + i * 0.5}s`,
             }}
           >
             {emoji}
-          </motion.div>
+          </div>
         ))}
       </div>
 
       {/* Center content */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="flex flex-col items-center gap-6 z-10 px-8 max-w-sm text-center"
-      >
-        {/* Running character */}
-        <motion.div
-          animate={{ y: [0, -8, 0] }}
-          transition={{ duration: 0.5, repeat: Infinity, ease: "easeInOut" }}
-          style={{ fontSize: 48, lineHeight: 1 }}
-        >
-          🏃‍♂️
-        </motion.div>
+      <div className="flex flex-col items-center gap-5 z-10 px-8 max-w-sm text-center animate-fade-in">
+        {/* Bouncing runner */}
+        <div className="animate-bounce" style={{ fontSize: 44, lineHeight: 1 }}>🏃‍♂️</div>
 
         <div>
           <h2 style={{
@@ -84,29 +67,47 @@ const EpisodeLoadingTransition = () => {
           width: "100%", maxWidth: 240, height: 6, borderRadius: 3,
           background: "#E7E5E4", overflow: "hidden",
         }}>
-          <motion.div
+          <div
             style={{
               height: "100%", borderRadius: 3,
               background: "linear-gradient(90deg, #0D9488, #14B8A6, #3B82F6)",
+              width: `${progress}%`,
+              transition: "width 0.3s ease",
             }}
-            animate={{ width: `${progress}%` }}
-            transition={{ duration: 0.3 }}
           />
         </div>
 
-        {/* Bouncing dots */}
+        {/* Bouncing dots via CSS */}
         <div className="flex gap-1.5">
           {[0, 1, 2].map(i => (
-            <motion.div
+            <div
               key={i}
-              className="w-2 h-2 rounded-full"
-              style={{ background: "#0D9488" }}
-              animate={{ y: [0, -6, 0], opacity: [0.4, 1, 0.4] }}
-              transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15 }}
+              className="w-2 h-2 rounded-full animate-pulse"
+              style={{
+                background: "#0D9488",
+                animationDelay: `${i * 0.15}s`,
+              }}
             />
           ))}
         </div>
-      </motion.div>
+      </div>
+
+      <style>{`
+        @keyframes float-across {
+          0% { transform: translateX(-60px); }
+          100% { transform: translateX(calc(100vw + 60px)); }
+        }
+        .animate-float-across {
+          animation: float-across 5s linear infinite;
+        }
+        .animate-fade-in {
+          animation: fadeIn 0.4s ease-out;
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(16px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   );
 };
