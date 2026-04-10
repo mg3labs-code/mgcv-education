@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { AssumptionsContent } from "@/data/textbookData";
-import { AlertTriangle, ChevronDown, ChevronUp, Shield, Timer, Send, Loader2, CheckCircle2, RotateCcw } from "lucide-react";
+import { AlertTriangle, ChevronDown, ChevronUp, Shield, Timer, Send, Loader2, CheckCircle2, RotateCcw, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { ExampleCard, ImportantNote } from "@/components/textbook/ContentCards";
@@ -16,6 +16,12 @@ const AssumptionsBlock = ({ content, onStartDefense }: AssumptionsBlockProps) =>
   const [defenseText, setDefenseText] = useState("");
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [beliefs, setBeliefs] = useState<Record<number, "believe" | "doubt">>({});
+  const [reflections, setReflections] = useState<Record<number, string>>({});
+
+  const handleBelief = (i: number, value: "believe" | "doubt") => {
+    setBeliefs(prev => ({ ...prev, [i]: value }));
+  };
 
   const wordCount = defenseText.trim().split(/\s+/).filter(Boolean).length;
 
@@ -54,41 +60,89 @@ const AssumptionsBlock = ({ content, onStartDefense }: AssumptionsBlockProps) =>
         </div>
       </div>
 
-      {content.hiddenAssumptions.map((a, i) => (
-        <div key={i} className="rounded-xl border-2 border-border/50 bg-card overflow-hidden shadow-sm">
-          <button
-            onClick={() => setExpanded({ ...expanded, [i]: !expanded[i] })}
-            className="w-full flex items-center justify-between p-4 text-left hover:bg-muted/30 transition-colors"
-          >
-            <div className="flex items-start gap-3">
-              <span className="h-7 w-7 rounded-full bg-gradient-to-br from-red-200 to-orange-200 dark:from-red-800 dark:to-orange-800 text-red-800 dark:text-red-200 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
-                {i + 1}
-              </span>
-              <div>
-                <p className="text-[0.95rem] font-medium text-foreground">"{a.assumption}"</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Tap to bust this myth! 🔍</p>
-              </div>
-            </div>
-            {expanded[i] ? (
-              <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0" />
-            ) : (
-              <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
-            )}
-          </button>
+      {content.hiddenAssumptions.map((a, i) => {
+        const belief = beliefs[i];
+        const isRevealed = expanded[i];
 
-          {expanded[i] && (
-            <div className="px-4 pb-4 space-y-3 border-t pt-3">
-              <ImportantNote title="Mind-blowing part">
-                <p className="text-[0.95rem] text-foreground">{a.whyItMatters}</p>
-              </ImportantNote>
-              <div className="rounded-lg bg-primary/5 border border-primary/20 p-3">
-                <p className="text-xs font-semibold text-primary mb-1">🎯 Your mission:</p>
-                <p className="text-[0.95rem] text-foreground">{a.challenge}</p>
+        return (
+          <div key={i} className="rounded-xl border-2 border-border/50 bg-card overflow-hidden shadow-sm">
+            {/* Statement */}
+            <div className="p-4">
+              <div className="flex items-start gap-3">
+                <span className="h-7 w-7 rounded-full bg-gradient-to-br from-red-200 to-orange-200 dark:from-red-800 dark:to-orange-800 text-red-800 dark:text-red-200 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
+                  {i + 1}
+                </span>
+                <div className="flex-1">
+                  <p className="text-[0.95rem] font-medium text-foreground">"{a.assumption}"</p>
+
+                  {/* Believe / Doubt toggle — shown before reveal */}
+                  {!belief && (
+                    <div className="flex gap-3 mt-3 animate-fade-in">
+                      <button onClick={() => handleBelief(i, "believe")}
+                        className="flex-1 py-2 rounded-lg border-2 border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-400 font-semibold text-sm hover:bg-blue-100 transition-all flex items-center justify-center gap-1.5">
+                        👍 I believe this
+                      </button>
+                      <button onClick={() => handleBelief(i, "doubt")}
+                        className="flex-1 py-2 rounded-lg border-2 border-orange-300 dark:border-orange-700 bg-orange-50 dark:bg-orange-950/20 text-orange-700 dark:text-orange-400 font-semibold text-sm hover:bg-orange-100 transition-all flex items-center justify-center gap-1.5">
+                        🤔 I doubt this
+                      </button>
+                    </div>
+                  )}
+
+                  {/* After choosing, show reveal button */}
+                  {belief && !isRevealed && (
+                    <button onClick={() => setExpanded({ ...expanded, [i]: true })}
+                      className="mt-3 w-full py-2 rounded-lg border-2 border-dashed border-red-300 dark:border-red-700 bg-red-50/50 dark:bg-red-950/10 text-red-700 dark:text-red-400 font-semibold text-sm hover:bg-red-100/50 transition-all flex items-center justify-center gap-2">
+                      🔍 Now let's bust this myth!
+                      <ChevronDown className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
-          )}
-        </div>
-      ))}
+
+            {isRevealed && (
+              <div className="px-4 pb-4 space-y-3 border-t pt-3">
+                {/* Show what they believed */}
+                <div className={`rounded-lg px-3 py-2 text-xs font-medium ${
+                  belief === "believe" ? "bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400" : "bg-orange-50 dark:bg-orange-950/20 text-orange-600 dark:text-orange-400"
+                }`}>
+                  You said: {belief === "believe" ? "\"I believe this\" 👍" : "\"I doubt this\" 🤔"}
+                </div>
+
+                <ImportantNote title="Mind-blowing part">
+                  <p className="text-[0.95rem] text-foreground">{a.whyItMatters}</p>
+                </ImportantNote>
+
+                {/* Reflection prompt */}
+                {!reflections[i] ? (
+                  <div className="rounded-lg bg-purple-50/60 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800 p-3">
+                    <p className="text-xs font-semibold text-purple-700 dark:text-purple-400 mb-2">💭 Why did you think that?</p>
+                    <textarea
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/30 min-h-[60px]"
+                      placeholder="Reflect on why you believed or doubted this..."
+                      onBlur={(e) => {
+                        if (e.target.value.trim()) setReflections(prev => ({ ...prev, [i]: e.target.value }));
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <div className="rounded-lg bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 p-3">
+                    <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
+                      <Sparkles className="h-3 w-3" /> Great reflection! This builds your Thinking dimension 🧠
+                    </p>
+                  </div>
+                )}
+
+                <div className="rounded-lg bg-primary/5 border border-primary/20 p-3">
+                  <p className="text-xs font-semibold text-primary mb-1">🎯 Your mission:</p>
+                  <p className="text-[0.95rem] text-foreground">{a.challenge}</p>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })}
 
       {/* Defense prompt with evaluation */}
       <div className="rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 p-5">
