@@ -89,8 +89,10 @@ const ReasoningVisualDemo = () => {
       if (data?.steps) {
         setSteps(data.steps);
         setCurrentStep(4);
-        if (data.cached) {
-          toast({ title: "Loaded from cache ⚡" });
+        if (data.cached && data.match === "exact") {
+          toast({ title: "Loaded from cache ⚡", description: "This exact visual was generated before" });
+        } else if (data.cached && data.match === "related") {
+          toast({ title: "Found a related visual 🔍", description: `Matched: "${data.original_topic}"` });
         }
       }
     } catch (err) {
