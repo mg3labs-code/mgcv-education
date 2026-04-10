@@ -356,7 +356,7 @@ const Index = () => {
             Ready to transform education?
           </h2>
           <p className="text-muted-foreground text-base md:text-lg mb-8 max-w-lg mx-auto">
-            Join thousands of students and teachers already building a better future with EduTech.
+            Start building a better future with EduTech — cognitive learning powered by AI.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button onClick={() => openModal("student")}
