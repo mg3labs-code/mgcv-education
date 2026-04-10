@@ -1,92 +1,41 @@
 
 
-## Expert Analysis: Board vs JEE Content Integration
+## Why Hardcoded Data Exists (And Why You're Right to Remove It)
 
-### The Core Confusion — Clarified
+### The Problem
 
-Your 7-layer framework already covers **deep understanding** (reasoning, assumptions, connections, implications). The question is: **Does JEE need something DIFFERENT from what the 7 layers provide?**
+`src/data/textbookData.ts` is **1,637 lines** containing two things mixed together:
 
-**Answer: Yes, but NOT a completely separate textbook. JEE needs 3 things your layers DON'T currently provide:**
+1. **Type definitions** (interfaces like `ContentBlock`, `ConceptContent`, `ReasoningContent`, etc.) — used by 14 files across the project
+2. **Hardcoded chapter/episode/block data** (the actual `chapters` array with Math Ch1 content) — used as a **fallback** in only 3 files
 
-```text
-┌─────────────────────────────────────────────────────────────┐
-│  WHAT YOUR 7 LAYERS ALREADY DO (Board + Deep Understanding) │
-│  ✓ Concept explanation (Layer 1)                             │
-│  ✓ Step-by-step mechanism (Layer 2)                          │
-│  ✓ "Why" reasoning (Layer 3 - Cambridge)                     │
-│  ✓ Hidden assumptions (Layer 4 - Oxford)                     │
-│  ✓ Cross-domain connections (Layer 5 - MIT)                  │
-│  ✓ Real-world application (Layer 6 - Harvard)                │
-│  ✓ Big-picture implications (Layer 7 - Oxford Essay)         │
-├─────────────────────────────────────────────────────────────┤
-│  WHAT JEE ADDITIONALLY NEEDS (Gap)                           │
-│  ✗ Competitive problem-solving patterns & shortcuts          │
-│  ✗ Previous year JEE/NEET questions with trap analysis       │
-│  ✗ Timed practice with negative marking simulation           │
-│  ✗ Extended syllabus topics beyond state board               │
-│  ✗ Multi-concept integration problems                        │
-└─────────────────────────────────────────────────────────────┘
-```
+The hardcoded data was originally added **before the database existed**. When the DB-driven system (`tb_chapters`, `tb_episodes`, `content_blocks`) was built, the hardcoded data was kept as a "safety net" fallback. But now that the AI pipeline generates real content into the database, this fallback is unnecessary and causes confusion — like the JEE toggle showing no difference because the fallback ignores the `depth` filter.
 
-### Expert Recommendation: "JEE Boost" Blocks (Not a Separate Textbook)
+### What We Should Do
 
-For Class 10, JEE prep is about **strengthening foundations + exam awareness**. The best approach is to ADD 2-3 specialized JEE blocks PER EPISODE that appear when a student toggles "JEE Mode" — not a parallel textbook.
+**Keep:** All type/interface definitions (`ContentBlock`, `Chapter`, `Episode`, `ConceptContent`, etc.) — these are used everywhere as TypeScript types.
 
-### What Gets Added Per Episode (When JEE Mode is ON)
+**Remove:** The hardcoded `chapters` array (the actual content data ~1,200 lines of Math Ch1 episodes and blocks).
 
-1. **JEE Problem Bank** (block_type: `jee_problems`) — 3-5 competitive-level MCQs with negative marking, traps, and previous year references
-2. **JEE Concept Extension** (block_type: `jee_extension`) — Any extra depth/topics JEE expects beyond board syllabus for that concept
-3. **Speed Drill** (block_type: `jee_speed_drill`) — 5 rapid-fire questions with a countdown timer, testing the same episode concept under pressure
+**Update:** The 3 files that import `chapters`:
+- `src/hooks/useTextbookData.ts` — Remove all fallback/merge logic. If DB returns nothing, return empty arrays.
+- `src/components/student/StudyCompanion.tsx` — Replace hardcoded chapter lookup with a DB query.
+- `src/pages/StudentDeepDive.tsx` — Replace hardcoded chapter lookup with a DB query.
 
-### Implementation Plan
+### Files Changed
 
-**Step 1: Database — Add `depth` column to `content_blocks`**
-- Add `depth TEXT NOT NULL DEFAULT 'board'` column to `content_blocks` table
-- Values: `'board'` (existing blocks) or `'jee'` (new JEE blocks)
-- No migration of existing data needed — all current blocks default to `'board'`
-
-**Step 2: Extend AI generation pipeline**
-- Update `generate-chapter-content` edge function to accept an optional `depth: "jee"` parameter
-- When `depth: "jee"`, generate only the 3 JEE-specific block types (jee_problems, jee_extension, jee_speed_drill)
-- These get inserted with `depth = 'jee'` into the same `content_blocks` table
-
-**Step 3: Frontend — Episode reader toggle**
-- Add a "Board ↔ JEE" toggle switch at the top of the episode reader (`TextbookEpisode` page)
-- When Board mode: show only blocks where `depth = 'board'` (current behavior)
-- When JEE mode: show ALL blocks (board + jee), with JEE blocks visually distinguished (orange/amber accent, ⚡ icon)
-
-**Step 4: New block renderers**
-- `JeeProblemsBlock.tsx` — MCQ with negative marking (-1), timer per question, trap alerts, previous year tags
-- `JeeExtensionBlock.tsx` — Collapsible "Beyond Board" content with advanced formulas/proofs
-- `JeeSpeedDrillBlock.tsx` — Countdown timer + rapid-fire questions with score tracker
-
-**Step 5: Update `useEpisodeBlocks` hook**
-- Accept a `depth` filter parameter
-- When `depth = 'all'` (JEE mode), fetch all blocks
-- When `depth = 'board'` (default), fetch only board blocks
-
-**Step 6: Update the existing `/board-vs-jee` comparison page**
-- Link it from the textbook as a "See how JEE Mode works" preview
-- Add a CTA to enable JEE mode on actual episodes
-
-### Files to Create/Modify
-
-| File | Action |
+| File | Change |
 |------|--------|
-| Migration: add `depth` column to `content_blocks` | Create |
-| `supabase/functions/generate-chapter-content/index.ts` | Modify — add JEE prompt path |
-| `src/components/textbook/JeeProblemsBlock.tsx` | Create |
-| `src/components/textbook/JeeExtensionBlock.tsx` | Create |
-| `src/components/textbook/JeeSpeedDrillBlock.tsx` | Create |
-| `src/components/textbook/EpisodeBlocks.tsx` | Modify — render new block types |
-| `src/hooks/useTextbookData.ts` | Modify — depth filter |
-| `src/pages/TextbookEpisode.tsx` | Modify — add toggle |
-| `src/data/textbookData.ts` | Modify — add new ContentBlock types |
+| `src/data/textbookData.ts` | Remove the `chapters` array (~1,200 lines). Keep all interfaces/types. |
+| `src/hooks/useTextbookData.ts` | Remove `hardcodedChapters` import and all fallback/merge logic. Pure DB queries only. |
+| `src/components/student/StudyCompanion.tsx` | Replace `chapters` import with DB query via hook. |
+| `src/pages/StudentDeepDive.tsx` | Replace `chapters` import with DB query via hook. |
 
-### Why This Is the Right Approach
+### Why This Fixes JEE Toggle Too
 
-- **No content duplication** — Board content stays, JEE adds on top
-- **Same episode structure** — Student reads Episode 1.1 in Board mode, toggles JEE to see competitive extensions
-- **AI-generatable** — The JEE blocks can be auto-generated per episode using the existing pipeline
-- **Class 10 appropriate** — Focuses on foundation strengthening + exam awareness, not full JEE syllabus (that's for Class 11-12)
+The current fallback logic returns hardcoded blocks **without checking `depth`**, so toggling JEE mode has no effect when using fallback data. Removing the fallback means the `depth` filter in `useEpisodeBlocks` always works correctly against the database.
+
+### Risk
+
+If a chapter has no content in the DB yet, it will show as empty instead of showing hardcoded content. This is actually **correct behavior** — it tells you which chapters still need AI-generated content, rather than silently masking the gap.
 
