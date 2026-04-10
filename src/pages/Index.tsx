@@ -154,8 +154,8 @@ const Index = () => {
       <header className="fixed top-0 left-0 right-0 z-[1000] bg-background/80 backdrop-blur-xl py-4 border-b border-border/50" style={{ top: inIframe ? '100px' : 0 }}>
         <div className="max-w-[1400px] mx-auto flex justify-between items-center px-4 md:px-10">
           <div className="text-2xl md:text-[28px] font-bold tracking-tight">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-info">Edu</span>
-            <span className="text-foreground">Tech</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-info">Student</span>
+            <span className="text-foreground"> Inner OS</span>
           </div>
 
           <button className="md:hidden text-muted-foreground" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} aria-label="Toggle menu">
@@ -215,9 +215,9 @@ const Index = () => {
               transition={{ duration: 0.7, delay: 0.1, ease: "easeOut" as const }}
               className="text-4xl sm:text-5xl md:text-7xl font-bold leading-[1.08] mb-6 text-foreground"
             >
-              The Right Learning.{" "}
+              World-Class Thinking.{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent to-info">
-                The Right Future.
+                Every Student.
               </span>
             </motion.h1>
 
@@ -227,7 +227,7 @@ const Index = () => {
               transition={{ duration: 0.6, delay: 0.25, ease: "easeOut" as const }}
               className="text-base md:text-xl text-muted-foreground leading-relaxed mb-8 max-w-xl"
             >
-              An AI-powered educational platform that builds cognitive muscle — not just grades. Designed for students who think deeply and teachers who lead boldly.
+              We integrate proven methods from Oxford, Harvard, Cambridge &amp; MIT into your curriculum — building thinking capacity, not just knowledge.
             </motion.p>
 
             <motion.div
@@ -353,10 +353,10 @@ const Index = () => {
             </div>
           </motion.div>
           <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-4">
-            Ready to transform education?
+            Ready to transform your school?
           </h2>
           <p className="text-muted-foreground text-base md:text-lg mb-8 max-w-lg mx-auto">
-            Start building a better future with EduTech — cognitive learning powered by AI.
+            Building cognitive muscle, one layer at a time. Zero infrastructure needed — students start the same day.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button onClick={() => openModal("student")}
