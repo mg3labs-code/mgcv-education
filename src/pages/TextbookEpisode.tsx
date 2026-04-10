@@ -274,15 +274,60 @@ const TextbookEpisode = () => {
 
   const onBlockComplete = useCallback(() => markBlockInteracted(activeBlock), [markBlockInteracted, activeBlock]);
 
+  // Helper: advance with celebration
+  const advanceWithCelebration = useCallback((nextIndex: number) => {
+    // Auto-mark current as understood
+    setUnderstoodBlocks(prev => {
+      const next = new Set(prev);
+      next.add(activeBlock);
+      persistUnderstood(next);
+      return next;
+    });
+    markBlockInteracted(activeBlock);
+    // Show celebration then move
+    setShowCelebration(true);
+  }, [activeBlock, persistUnderstood, markBlockInteracted]);
+
+  const handleCelebrationDone = useCallback(() => {
+    setShowCelebration(false);
+    if (activeBlock < navBlocks.length - 1) {
+      goToBlock(activeBlock + 1);
+    } else {
+      handleFinish();
+    }
+  }, [activeBlock, navBlocks.length, goToBlock]);
+
+  // Check if this is the first visit to current block
+  const isFirstVisitToBlock = useMemo(() => {
+    const blockKey = `${chapterId}_${episodeId}_${activeBlock}`;
+    // Check localStorage for persistent visited state
+    const visited = localStorage.getItem(`visited_blocks_${chapterId}_${episodeId}`);
+    if (visited) {
+      try {
+        const arr = JSON.parse(visited) as number[];
+        return !arr.includes(activeBlock);
+      } catch { return true; }
+    }
+    return !visitedBlocks.has(blockKey);
+  }, [chapterId, episodeId, activeBlock, visitedBlocks]);
+
+  // Persist visited blocks
+  const markBlockVisited = useCallback((index: number) => {
+    const key = `visited_blocks_${chapterId}_${episodeId}`;
+    const existing = localStorage.getItem(key);
+    let arr: number[] = [];
+    try { arr = existing ? JSON.parse(existing) : []; } catch {}
+    if (!arr.includes(index)) {
+      arr.push(index);
+      localStorage.setItem(key, JSON.stringify(arr));
+    }
+  }, [chapterId, episodeId]);
+
+  // Content blocks (non-interactive) that need comprehension check
+  const CONTENT_TYPES = useMemo(() => new Set(["concept", "reasoning", "connections", "implications"]), []);
+
   if (isLoading) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "#F9FAFB" }}>
-        <div className="space-y-4 w-full max-w-md px-6">
-          <Skeleton className="h-8 w-48" /><Skeleton className="h-6 w-64" />
-          {[1, 2, 3].map((i) => <Skeleton key={i} className="h-32 w-full rounded-2xl" />)}
-        </div>
-      </div>
-    );
+    return <EpisodeLoadingTransition />;
   }
 
   if (!chapter || !episode) {
