@@ -47,7 +47,49 @@ serve(async (req) => {
     const results: any[] = [];
 
     for (const ep of episodes) {
-      const systemPrompt = `You are an expert curriculum designer creating world-class educational content for ${grade}th class ${subject} (${board} State Board).
+      let systemPrompt: string;
+      let userPrompt: string;
+
+      if (depth === "jee") {
+        systemPrompt = `You are an expert JEE/NEET competitive exam content creator for ${grade}th class ${subject} (${board} State Board).
+You create JEE-level competitive content that builds on board-level concepts. Focus on:
+- Competitive problem-solving patterns & shortcuts
+- Previous year JEE/NEET question patterns with trap analysis
+- Speed and accuracy under time pressure
+- Extended syllabus topics beyond state board
+Content must be culturally relevant to Indian students.`;
+
+        userPrompt = `Generate JEE Boost content blocks for:
+Subject: ${subject}
+Chapter: ${chapterTitle}
+Episode ${ep.number}: "${ep.title}" - ${ep.subtitle}
+
+Return a JSON array with exactly 3 blocks in this order:
+1. jee_extension (type: "jee_extension") — Advanced concepts beyond board syllabus
+2. jee_problems (type: "jee_problems") — 4-5 competitive MCQs with traps
+3. jee_speed_drill (type: "jee_speed_drill") — 5 rapid-fire questions
+
+Each block must have: { "block_type": string, "title": string, "icon": string, "content": object }
+
+Content structures:
+- jee_extension: { title: string, sections: [{heading, body, formula?}], advancedFormulas?: string[], proofSketch?: string }
+- jee_problems: { questions: [{question, options: string[], correctIndex: number, explanation, trap?: string, previousYear?: string, negativeMarking?: number}], timePerQuestion?: number }
+- jee_speed_drill: { questions: [{question, answer, hint?}], totalTimeSeconds: number }
+
+For jee_problems:
+- Each question should test competitive-level thinking, not just recall
+- Include "trap" field explaining common mistakes students make
+- Include "previousYear" field like "JEE Main 2023" or "Similar to JEE Advanced 2022" where applicable
+- Set negativeMarking to 1 (default JEE scheme: +4/-1)
+
+For jee_speed_drill:
+- Questions should be answerable in 10-15 seconds each
+- Answers should be short (a number, formula, or 1-2 words)
+- Set totalTimeSeconds to 90
+
+Return ONLY the JSON array, no markdown wrapping.`;
+      } else {
+        systemPrompt = `You are an expert curriculum designer creating world-class educational content for ${grade}th class ${subject} (${board} State Board).
 
 You follow the 7-Layer Elite Learning Framework:
 - Layer 1 (Definition/Concept): Simple, non-academic explanation. Like explaining to a bright child. Use analogies.
@@ -64,7 +106,7 @@ Additionally, include 2-3 visual_aid blocks placed after concept, reasoning, and
 
 Content must be culturally relevant to Indian students. Use Indian examples, ₹ currency, cricket/Bollywood references where appropriate.`;
 
-      const userPrompt = `Generate complete 7-layer content blocks for:
+        userPrompt = `Generate complete 7-layer content blocks for:
 Subject: ${subject}
 Chapter: ${chapterTitle}
 Episode ${ep.number}: "${ep.title}" - ${ep.subtitle}
@@ -110,6 +152,7 @@ The content object structure for each type:
 - implications: { whatIfQuestion: string, reflectionPrompts: string[], essayPrompt: string, wordLimit?: number, implications?: [{category, icon, color, points: string[]}] }
 
 Return ONLY the JSON array, no markdown wrapping.`;
+      }
 
       const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
