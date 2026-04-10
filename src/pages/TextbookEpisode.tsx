@@ -686,8 +686,16 @@ const TextbookEpisode = () => {
 
           {block && (
             <>
+              {/* JEE badge for JEE blocks */}
+              {JEE_BLOCKS.has(block.type) && (
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-700">
+                    ⚡ JEE BOOST
+                  </span>
+                </div>
+              )}
               {/* Section title */}
-              <h1 style={{ fontSize: 22, fontWeight: 700, color: "#1C1917", marginBottom: 4, fontFamily: "'Source Serif 4', serif" }}>
+              <h1 style={{ fontSize: 22, fontWeight: 700, color: JEE_BLOCKS.has(block.type) ? "#D97706" : "#1C1917", marginBottom: 4, fontFamily: "'Source Serif 4', serif" }}>
                 {block.icon} {block.title}
               </h1>
               <p style={{ fontSize: 13, color: "#A8A29E", marginBottom: 20, fontStyle: "italic" }}>
@@ -695,7 +703,7 @@ const TextbookEpisode = () => {
               </p>
 
               {/* Block content with colored border */}
-              <div className={`bg-card rounded-xl border-l-4 ${(meta as any).border || "border-l-primary"} shadow-sm`}>
+              <div className={`bg-card rounded-xl border-l-4 ${JEE_BLOCKS.has(block.type) ? "border-l-amber-500" : ((meta as any).border || "border-l-primary")} shadow-sm`}>
                 <div className="p-5">
                   {renderBlock(block)}
                 </div>
