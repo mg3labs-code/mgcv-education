@@ -228,7 +228,7 @@ const StudyCompanion = ({ role = "student" }: StudyCompanionProps) => {
   // Input mode tracking: voice transcription vs text typing
   const inputModeRef = useRef<"text" | "voice">("text");
   const { user, fullName } = useAuth();
-  const location = useLocation();
+  const { data: chapters = [] } = useChapters();
   const navigate = useNavigate();
 
   // ─── ElevenLabs Conversational AI Agent with 6 Client Tools ───
