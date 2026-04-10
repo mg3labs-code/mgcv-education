@@ -98,6 +98,8 @@ const TextbookEpisode = () => {
   const [visitedBlocks, setVisitedBlocks] = useState<Set<string>>(new Set());
   const [sectionStartTime, setSectionStartTime] = useState<number>(Date.now());
   const [sectionTimings, setSectionTimings] = useState<Record<number, number>>({});
+  const [wrongAttempts, setWrongAttempts] = useState<Record<number, number>>({});
+  const [comprehensionResults, setComprehensionResults] = useState<Record<number, { result: string; attempts: number }>>({});
   const contentRef = useRef<HTMLDivElement>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const totalBlocksRef = useRef(0);
@@ -117,6 +119,8 @@ const TextbookEpisode = () => {
     setShowCelebration(false);
     setSectionStartTime(Date.now());
     setSectionTimings({});
+    setWrongAttempts({});
+    setComprehensionResults({});
   }, [episodeId]);
 
   const persistUnderstood = useCallback((understood: Set<number>) => {
