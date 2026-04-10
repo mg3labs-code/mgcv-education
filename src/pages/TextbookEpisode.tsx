@@ -447,6 +447,9 @@ const TextbookEpisode = () => {
       case "connections": return <ConnectionsBlock content={block.content as ConnectionsContent} />;
       case "application": return <ApplicationBlock content={block.content as ApplicationContent} />;
       case "implications": return <ImplicationsBlock content={block.content as ImplicationsContent} />;
+      case "jee_problems": return <JeeProblemsBlock content={block.content as JeeProblemsContent} onComplete={onBlockComplete} />;
+      case "jee_extension": return <JeeExtensionBlock content={block.content as JeeExtensionContent} onComplete={onBlockComplete} />;
+      case "jee_speed_drill": return <JeeSpeedDrillBlock content={block.content as JeeSpeedDrillContent} onComplete={onBlockComplete} />;
       default: return null;
     }
   };
