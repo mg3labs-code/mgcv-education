@@ -70,6 +70,16 @@ const universityMethods = [
     color: "from-purple-500/10 to-violet-500/10 dark:from-purple-950/30 dark:to-violet-950/20",
     borderColor: "border-purple-200 dark:border-purple-800",
   },
+  {
+    university: "Stanford Design Thinking",
+    flag: "🇺🇸",
+    method: "Empathize, prototype, test, iterate",
+    feature: "Try it yourself!",
+    featureDesc: "Application Block",
+    icon: Lightbulb,
+    color: "from-teal-500/10 to-emerald-500/10 dark:from-teal-950/30 dark:to-emerald-950/20",
+    borderColor: "border-teal-200 dark:border-teal-800",
+  },
 ];
 
 const WhyThisWorks = () => {

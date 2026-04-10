@@ -7,6 +7,7 @@ import GradientMeshBg from "@/components/landing/GradientMeshBg";
 import TrustBadges from "@/components/landing/TrustBadges";
 import FeatureShowcase from "@/components/landing/FeatureShowcase";
 import WhyThisWorks from "@/components/landing/WhyThisWorks";
+import ResearchProvenMethods from "@/components/landing/ResearchProvenMethods";
 import LoadingScreen from "@/components/LoadingScreen";
 import { Menu, X, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -414,6 +415,9 @@ const Index = () => {
 
       {/* Why This Works — University Method Mapping */}
       <WhyThisWorks />
+
+      {/* Research-Proven Methods — Career Timelines + University Mapping */}
+      <ResearchProvenMethods />
 
       {/* Visual Showcase Section */}
       <section className="relative z-10 py-16 md:py-24">

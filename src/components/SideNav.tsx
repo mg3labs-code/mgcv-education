@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { LucideIcon, LayoutDashboard, BookOpen, BarChart3, Users, Settings, LogOut, GraduationCap, CalendarDays, ClipboardList, School, Brain, ListTodo, FlaskConical, Menu } from "lucide-react";
+import { LucideIcon, LayoutDashboard, BookOpen, BarChart3, Users, Settings, LogOut, GraduationCap, CalendarDays, ClipboardList, School, Brain, ListTodo, FlaskConical, Menu, Sparkles } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
@@ -19,6 +19,7 @@ const studentNav: NavItem[] = [
   { label: "Assignments", icon: ClipboardList, path: "/student/assignments" },
   { label: "Progress", icon: BarChart3, path: "/student/progress" },
   { label: "Textbook Lab", icon: FlaskConical, path: "/student/textbook-lab" },
+  { label: "Board vs JEE", icon: Sparkles, path: "/board-vs-jee" },
 ];
 
 const teacherNav: NavItem[] = [

@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useChapters } from "@/hooks/useTextbookData";
+import GrowthPathVisualization from "./GrowthPathVisualization";
 
 interface DimensionScore {
   name: string;
@@ -827,6 +828,7 @@ export default function GrowthTab({ dimensionScores, streakDays, episodeCount, m
       <WeeklyAssignmentsProgress userId={user.id} />
       <ChapterProgressSection userId={user.id} />
       <ScholarMethodsStats methodCounts={methodCounts} userId={user.id} />
+      <GrowthPathVisualization dimensionScores={dimensionScores} />
     </div>
   );
 }

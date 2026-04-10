@@ -34,6 +34,7 @@ const TextbookLab = lazy(() => import("./pages/TextbookLab"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const AttractionDemo = lazy(() => import("./pages/AttractionDemo"));
 const TextbookReference = lazy(() => import("./pages/TextbookReference"));
+const AdaptiveComparison = lazy(() => import("./pages/AdaptiveComparison"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
@@ -83,6 +84,7 @@ const App = () => (
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/attraction-demo" element={<AttractionDemo />} />
                 <Route path="/textbook-reference/:chapterId/:episodeId" element={<TextbookReference />} />
+                <Route path="/board-vs-jee" element={<AdaptiveComparison />} />
                 <Route path="/student" element={<ProtectedRoute><StudentDashboard /></ProtectedRoute>} />
                 <Route path="/student/episode/:id" element={<ProtectedRoute><LearningEpisode /></ProtectedRoute>} />
                 <Route path="/student/onboarding" element={<ProtectedRoute><StudentOnboarding /></ProtectedRoute>} />
