@@ -44,13 +44,13 @@ const TasksTab = ({ onOpenQuiz }: TasksTabProps) => {
     enabled: !!user,
   });
 
-  // Assignments
+  // All assignments (both manual and auto)
   const { data: assignments } = useQuery({
     queryKey: ["tasks-assignments", profile?.class_name],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("assignments")
-        .select("*, assignment_questions(id)")
+        .select("*, assignment_questions(id, question_text)")
         .eq("class_name", profile!.class_name!)
         .eq("is_published", true)
         .order("created_at", { ascending: false });
@@ -91,8 +91,17 @@ const TasksTab = ({ onOpenQuiz }: TasksTabProps) => {
     enabled: !!user,
   });
 
-  // Compute assignment details
-  const assignmentItems = (assignments ?? []).map((a: any) => {
+  // Separate auto homework from manual assignments
+  const today = new Date().toISOString().split("T")[0];
+  const autoHomework = (assignments ?? []).filter((a: any) => 
+    a.source === "auto_homework" && a.schedule_date === today
+  );
+  const manualAssignments = (assignments ?? []).filter((a: any) => 
+    a.source !== "auto_homework"
+  );
+
+  // Compute assignment details helper
+  const computeItem = (a: any) => {
     const sub = submissions?.find((s: any) => s.assignment_id === a.id);
     const totalQuestions = a.assignment_questions?.length ?? 0;
     const answeredCount = sub?.student_answers?.length ?? 0;
@@ -105,20 +114,23 @@ const TasksTab = ({ onOpenQuiz }: TasksTabProps) => {
       id: a.id, title: a.title, subject: a.subject,
       icon: meta.icon, color: meta.color,
       questions: totalQuestions, answered: answeredCount,
+      questionTexts: a.assignment_questions?.map((q: any) => q.question_text) || [],
       due: dueDate ? dueDate.toLocaleDateString("en-US", { month: "short", day: "numeric" }) : null,
       status: isSubmitted ? "submitted" : answeredCount > 0 ? "in_progress" : "pending",
       urgent: isUrgent,
     };
-  });
+  };
+
+  const assignmentItems = manualAssignments.map(computeItem);
+  const homeworkItems = autoHomework.map(computeItem);
 
   const urgentCount = assignmentItems.filter((a) => a.urgent).length;
   const pendingCount = assignmentItems.filter((a) => a.status !== "submitted").length;
   const submittedCount = assignmentItems.filter((a) => a.status === "submitted").length;
-  const totalTodo = pendingCount + (incompleteEpisodes?.length ?? 0);
+  const totalTodo = pendingCount + homeworkItems.filter(h => h.status !== "submitted").length + (incompleteEpisodes?.length ?? 0);
 
   const dailyChallenges = [
     { title: "Daily Quiz", desc: "5 questions from today's classes — Math & Science", icon: "⚡", reward: "10 gems" },
-    { title: "Pop Quiz: Real Numbers", desc: "Quick recall check from today's Math class", icon: "🧠", reward: "5 gems" },
   ];
 
   return (
@@ -142,9 +154,10 @@ const TasksTab = ({ onOpenQuiz }: TasksTabProps) => {
       </div>
 
       {/* Filter pills */}
-      <div style={{ display: "flex", gap: 8 }}>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
         {[
           { id: "all", label: "All" },
+          { id: "homework", label: "📝 Homework" },
           { id: "assignments", label: "Assignments" },
           { id: "incomplete", label: "Unfinished" },
           { id: "challenges", label: "Challenges" },
@@ -157,6 +170,95 @@ const TasksTab = ({ onOpenQuiz }: TasksTabProps) => {
           }}>{f.label}</button>
         ))}
       </div>
+
+      {/* Today's Homework (AI-generated from schedule) */}
+      {(filter === "all" || filter === "homework") && (
+        <Card>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+            <h3 style={{ fontFamily: "'Source Serif 4', serif", fontSize: 18, fontWeight: 700, color: "#1C1917", margin: 0 }}>
+              📚 Today's Homework
+            </h3>
+            {homeworkItems.length > 0 && (
+              <span style={{
+                fontSize: 10, fontWeight: 600, color: "#0D9488", background: "#F0FDF4",
+                padding: "3px 10px", borderRadius: 10, fontFamily: "'DM Sans', sans-serif",
+              }}>
+                {homeworkItems.filter(h => h.status === "submitted").length}/{homeworkItems.length} done
+              </span>
+            )}
+          </div>
+
+          {homeworkItems.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "24px 16px", color: "#78716C" }}>
+              <div style={{ fontSize: 32, marginBottom: 8 }}>✨</div>
+              <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13 }}>
+                No homework today — check back after your teacher publishes the schedule!
+              </div>
+            </div>
+          ) : (
+            homeworkItems.map((hw) => (
+              <div
+                key={hw.id}
+                style={{
+                  borderRadius: 14, border: "1px solid #E7E5E4", marginBottom: 10,
+                  background: hw.status === "submitted" ? "#F0FDF4" : "#FAFAF9",
+                  overflow: "hidden",
+                }}
+              >
+                {/* Header */}
+                <div style={{
+                  display: "flex", alignItems: "center", gap: 12, padding: "12px 16px",
+                  borderBottom: "1px solid #F5F5F4",
+                }}>
+                  <span style={{ fontSize: 22 }}>{hw.icon}</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 600, fontSize: 14, color: "#1C1917" }}>
+                      {hw.title}
+                    </div>
+                    <div style={{ fontSize: 11, color: "#78716C", fontFamily: "'DM Sans', sans-serif" }}>
+                      {hw.subject} · {hw.questions} questions · Due {hw.due}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => navigate("/student/assignments")}
+                    style={{
+                      background: hw.status === "submitted" ? "#10B981" : "#0D9488",
+                      color: "white", border: "none", padding: "7px 14px", borderRadius: 8,
+                      fontSize: 12, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap",
+                      fontFamily: "'DM Sans', sans-serif",
+                    }}
+                  >
+                    {hw.status === "submitted" ? "Done ✓" : hw.answered > 0 ? "Continue" : "Start"}
+                  </button>
+                </div>
+
+                {/* Inline question preview */}
+                {hw.status !== "submitted" && hw.questionTexts.length > 0 && (
+                  <div style={{ padding: "10px 16px 12px" }}>
+                    {hw.questionTexts.slice(0, 2).map((qt: string, qi: number) => (
+                      <div key={qi} style={{
+                        display: "flex", gap: 8, alignItems: "flex-start", marginBottom: 6,
+                        fontSize: 12, color: "#44403C", fontFamily: "'DM Sans', sans-serif",
+                        lineHeight: 1.5,
+                      }}>
+                        <span style={{
+                          background: "#E7E5E4", color: "#78716C", borderRadius: 6,
+                          width: 20, height: 20, display: "flex", alignItems: "center",
+                          justifyContent: "center", fontSize: 10, fontWeight: 700, flexShrink: 0,
+                          marginTop: 1,
+                        }}>
+                          {qi + 1}
+                        </span>
+                        <span>{qt.length > 120 ? qt.slice(0, 120) + "…" : qt}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))
+          )}
+        </Card>
+      )}
 
       {/* Daily Challenges */}
       {(filter === "all" || filter === "challenges") && (

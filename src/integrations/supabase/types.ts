@@ -86,6 +86,9 @@ export type Database = {
           instructions: string | null
           is_published: boolean
           max_total_score: number | null
+          schedule_date: string | null
+          schedule_topic_key: string | null
+          source: string
           subject: string
           teacher_id: string
           title: string
@@ -101,6 +104,9 @@ export type Database = {
           instructions?: string | null
           is_published?: boolean
           max_total_score?: number | null
+          schedule_date?: string | null
+          schedule_topic_key?: string | null
+          source?: string
           subject?: string
           teacher_id: string
           title: string
@@ -116,6 +122,9 @@ export type Database = {
           instructions?: string | null
           is_published?: boolean
           max_total_score?: number | null
+          schedule_date?: string | null
+          schedule_topic_key?: string | null
+          source?: string
           subject?: string
           teacher_id?: string
           title?: string
