@@ -114,6 +114,9 @@ const TextbookEpisode = () => {
     setShowToolsPopup(false);
     setExitConfirm(false);
     setSaveStatus("idle");
+    setShowCelebration(false);
+    setSectionStartTime(Date.now());
+    setSectionTimings({});
   }, [episodeId]);
 
   const persistUnderstood = useCallback((understood: Set<number>) => {
