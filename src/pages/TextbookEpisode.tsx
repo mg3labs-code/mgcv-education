@@ -651,7 +651,7 @@ const TextbookEpisode = () => {
       <div style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
         padding: "6px 16px", fontSize: 12, flexShrink: 0,
-        background: currentPhase.color === "#0D9488" ? "#F0FDFA" : currentPhase.color === "#3B82F6" ? "#EFF6FF" : "#F5F3FF",
+        background: currentPhase.color === "#D97706" ? "#FFFBEB" : currentPhase.color === "#0D9488" ? "#F0FDFA" : currentPhase.color === "#3B82F6" ? "#EFF6FF" : "#F5F3FF",
         borderBottom: "1px solid #F5F5F4",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
