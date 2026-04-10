@@ -67,7 +67,7 @@ const StepIllustration = ({ prompt, stepLabel }: { prompt: string; stepLabel: st
     <img
       src={url}
       alt={`${stepLabel} illustration`}
-      className="w-full h-32 object-cover rounded-xl border border-border/50"
+      className="w-full h-auto max-h-[400px] object-contain rounded-xl border border-border/50"
       loading="lazy"
       onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
     />
