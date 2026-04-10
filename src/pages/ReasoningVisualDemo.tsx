@@ -133,15 +133,40 @@ const ReasoningVisualDemo = () => {
         setSteps(data.steps);
         setCurrentStep(4);
         if (data.cached && data.match === "exact") {
-          toast({ title: "Loaded from cache ⚡", description: "This exact visual was generated before" });
+          toast({ title: "Loaded from cache ⚡", description: "This exact visual was generated before — with images!" });
         } else if (data.cached && data.match === "related") {
           toast({ title: "Found a related visual 🔍", description: `Matched: "${data.original_topic}"` });
         } else {
-          // New generation — add to gallery
-          setGallery((prev) => [
-            { id: crypto.randomUUID(), topic, subject: subject || selectedSubject, grade: "Grade 10", steps: data.steps, created_at: new Date().toISOString() },
-            ...prev,
-          ]);
+          // New generation — images are generating in background
+          toast({ title: "Steps ready! 🎓", description: "Images are generating in the background. They'll appear in the gallery in ~2 minutes." });
+          // Poll for images every 30s for up to 3 minutes
+          const pollSlug = `${(subject || selectedSubject).toLowerCase()}_${topic.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 60)}`;
+          let pollCount = 0;
+          const pollInterval = setInterval(async () => {
+            pollCount++;
+            const { data: updated } = await supabase
+              .from("reasoning_visuals")
+              .select("id, topic, subject, grade, steps, created_at")
+              .eq("slug", pollSlug)
+              .maybeSingle();
+            if (updated) {
+              const updatedSteps = updated.steps as any[];
+              const hasImages = updatedSteps.some((s: any) => s.image_url);
+              if (hasImages) {
+                setSteps(updatedSteps as ReasoningStep[]);
+                toast({ title: "Images ready! 🖼️", description: "Visual diagrams have been generated" });
+                clearInterval(pollInterval);
+                // Refresh gallery
+                const { data: refreshed } = await supabase
+                  .from("reasoning_visuals")
+                  .select("id, topic, subject, grade, steps, created_at")
+                  .order("created_at", { ascending: false })
+                  .limit(20);
+                if (refreshed) setGallery(refreshed as unknown as StoredVisual[]);
+              }
+            }
+            if (pollCount >= 6) clearInterval(pollInterval); // Stop after 3 min
+          }, 30000);
         }
       }
     } catch (err: any) {
