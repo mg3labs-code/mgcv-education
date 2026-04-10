@@ -242,14 +242,15 @@ Return ONLY the JSON array, no markdown wrapping.`;
 
       // Insert blocks into DB — filter out blocks with null/missing content
       const blockInserts = generatedBlocks
-        .filter((block: any) => block.content != null && block.block_type || block.type)
+        .filter((block: any) => block.content != null && (block.block_type || block.type))
         .map((block: any, idx: number) => ({
           episode_id: ep.id,
           block_type: block.block_type || block.type,
           title: block.title || "",
           icon: block.icon || "📝",
           content: block.content || {},
-          sort_order: idx + 1,
+          sort_order: depth === "jee" ? 100 + idx + 1 : idx + 1,
+          depth: depth,
         }));
 
       const { error: insertErr } = await supabase
