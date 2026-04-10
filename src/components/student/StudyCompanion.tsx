@@ -83,7 +83,7 @@ function getPageContext(pathname: string) {
   return { page: pathname };
 }
 
-function getReadablePageContext(pathname: string, role?: string): string {
+function getReadablePageContext(pathname: string, role?: string, chapters: Chapter[] = []): string {
   // Teacher pages
   if (pathname === "/teacher") return "Teacher Dashboard - class overview and quick actions";
   if (pathname === "/teacher/assignments") return "Assignments page - managing and grading student assignments";
