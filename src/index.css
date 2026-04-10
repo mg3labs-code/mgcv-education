@@ -525,3 +525,24 @@
   height: 1px;
   background: linear-gradient(90deg, transparent, hsl(var(--border)), transparent);
 }
+
+/* Shimmer sweep for THINKING letters */
+@keyframes shimmer-sweep {
+  0%, 100% { mask-position: 200% 0; -webkit-mask-position: 200% 0; }
+  50% { mask-position: -100% 0; -webkit-mask-position: -100% 0; }
+}
+
+/* Hero carousel crossfade */
+@keyframes hero-crossfade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.hero-img-enter {
+  animation: hero-crossfade-in 1s ease-in-out forwards;
+}
+
+/* World-Class text shimmer */
+@keyframes text-shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}

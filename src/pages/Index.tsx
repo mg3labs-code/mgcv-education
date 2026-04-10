@@ -8,11 +8,17 @@ import TrustBadges from "@/components/landing/TrustBadges";
 import FeatureShowcase from "@/components/landing/FeatureShowcase";
 import LoadingScreen from "@/components/LoadingScreen";
 import { Menu, X, ArrowRight } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import heroStudents from "@/assets/hero-students.webp";
 import heroFutureLearning from "@/assets/hero-future-learning.jpg";
 import heroAiStudent from "@/assets/hero-ai-student.png";
 import ImageTextEffect from "@/components/landing/ImageTextEffect";
+
+const heroImages = [
+  { src: heroStudents, alt: "Students collaborating with technology" },
+  { src: heroFutureLearning, alt: "Future of learning with AI" },
+  { src: heroAiStudent, alt: "Student learning with AI technology" },
+];
 
 type LoginType = "student" | "teacher" | "";
 type ModalType = "login" | "about" | "contact" | "";
