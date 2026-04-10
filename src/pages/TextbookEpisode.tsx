@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { ContentBlock, ConceptContent, ActivityContent as ActivityContentType, RecallContent, ExplainContent, AssessmentContent, ExerciseContent, ReasoningContent, AssumptionsContent, ConnectionsContent, ApplicationContent, ImplicationsContent, VisualAidContent } from "@/data/textbookData";
+import { ContentBlock, ConceptContent, ActivityContent as ActivityContentType, RecallContent, ExplainContent, AssessmentContent, ExerciseContent, ReasoningContent, AssumptionsContent, ConnectionsContent, ApplicationContent, ImplicationsContent, VisualAidContent, JeeProblemsContent, JeeExtensionContent, JeeSpeedDrillContent } from "@/data/textbookData";
 import { useChapterEpisodes, useEpisodeBlocks } from "@/hooks/useTextbookData";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -24,6 +24,10 @@ import LanguageProgressWidget from "@/components/textbook/LanguageProgressWidget
 import VisualAidBlock from "@/components/textbook/VisualAidBlock";
 import InlineMedia from "@/components/textbook/InlineMedia";
 import { ConceptBlock, ActivityBlock, RecallBlock, ExplainBlock, AssessmentBlock, ExerciseBlock, blockSubtitles, layerMeta, type ActivityContent } from "@/components/textbook/EpisodeBlocks";
+import JeeProblemsBlock from "@/components/textbook/JeeProblemsBlock";
+import JeeExtensionBlock from "@/components/textbook/JeeExtensionBlock";
+import JeeSpeedDrillBlock from "@/components/textbook/JeeSpeedDrillBlock";
+import { Switch } from "@/components/ui/switch";
 import SectionCelebration from "@/components/textbook/SectionCelebration";
 import ComprehensionCheck from "@/components/textbook/ComprehensionCheck";
 import EpisodeLoadingTransition from "@/components/textbook/EpisodeLoadingTransition";
@@ -41,6 +45,7 @@ const blockIcons: Record<string, React.ElementType> = {
   concept: BookOpen, activity: PenLine, recall: Brain, explain: MessageSquare,
   assessment: CheckCircle2, exercise: Lightbulb, reasoning: Zap, assumptions: Shield,
   connections: Link, application: Briefcase, implications: Compass, visual_aid: Image,
+  jee_problems: Zap, jee_extension: Sparkles, jee_speed_drill: Zap,
 };
 
 const blockLabels: Record<string, string> = {
@@ -49,17 +54,20 @@ const blockLabels: Record<string, string> = {
   reasoning: "But WHY though?", assumptions: "What if we're wrong?",
   connections: "Where else does this hide?", application: "Use it in real life",
   implications: "What does this change?", visual_aid: "See it in action",
+  jee_problems: "⚡ JEE Problem Bank", jee_extension: "🔬 Beyond Board", jee_speed_drill: "⏱️ Speed Drill",
 };
 
 // 3-Phase system: UNDERSTAND → PROVE → MASTER
 const UNDERSTAND_BLOCKS = new Set(["concept", "activity", "exercise"]);
 const PROVE_BLOCKS = new Set(["recall", "explain", "assessment"]);
 const MASTER_BLOCKS = new Set(["reasoning", "assumptions", "connections", "application", "implications"]);
+const JEE_BLOCKS = new Set(["jee_problems", "jee_extension", "jee_speed_drill"]);
 
 const phases = [
   { id: "understand", label: "🔍 Discover & Explore", shortLabel: "UNDERSTAND", color: "#0D9488", subtitle: "Core concept + interactive activity + practice", blockSet: UNDERSTAND_BLOCKS },
   { id: "prove", label: "🎯 Test Yourself", shortLabel: "PROVE", color: "#3B82F6", subtitle: "Quick recall + explain in own words + quiz", blockSet: PROVE_BLOCKS },
   { id: "master", label: "🚀 Challenge Yourself", shortLabel: "MASTER", color: "#8B5CF6", subtitle: "Deep reasoning + myth-busting + real life", blockSet: MASTER_BLOCKS },
+  { id: "jee", label: "⚡ JEE Boost", shortLabel: "JEE", color: "#D97706", subtitle: "Competitive problems + speed drills + extensions", blockSet: JEE_BLOCKS },
 ];
 
 // Language overrides
