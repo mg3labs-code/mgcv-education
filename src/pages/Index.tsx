@@ -47,6 +47,23 @@ const Index = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [loginError, setLoginError] = useState<{ message: string; code?: string; suggestion: string } | null>(null);
   const [heroIndex, setHeroIndex] = useState(0);
+  const [scrollY, setScrollY] = useState(0);
+
+  // Parallax scroll tracking
+  useEffect(() => {
+    let ticking = false;
+    const handleScroll = () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          setScrollY(window.scrollY);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   // Auto-rotate hero images
   useEffect(() => {
@@ -214,11 +231,21 @@ const Index = () => {
 
       {/* Hero Section */}
       <main className="relative min-h-screen flex items-center pt-20 md:pt-0 overflow-hidden">
-        <GradientMeshBg />
+        <div style={{ transform: `translateY(${scrollY * 0.1}px)` }}>
+          <GradientMeshBg />
+        </div>
 
-        <div className="max-w-[1400px] mx-auto px-4 md:px-10 w-full relative z-10">
+        <div
+          className="max-w-[1400px] mx-auto px-4 md:px-10 w-full relative z-10"
+          style={{
+            transform: `translateY(${scrollY * 0.3}px)`,
+            opacity: Math.max(0, 1 - scrollY / 700),
+          }}
+        >
           <div className="max-w-3xl">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: "easeOut" as const }}>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: "easeOut" as const }}
+              style={{ transform: `translateY(${scrollY * -0.05}px)` }}
+            >
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-6">
                 <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                 <span className="text-xs font-semibold text-primary uppercase tracking-wider">Now with AI-Powered Learning</span>
@@ -288,8 +315,13 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Hero Image - desktop only */}
-        <div className="absolute top-0 right-0 w-[45%] h-full z-[1] hidden xl:flex items-center justify-center pointer-events-none overflow-hidden">
+        <div
+          className="absolute top-0 right-0 w-[45%] h-full z-[1] hidden xl:flex items-center justify-center pointer-events-none overflow-hidden"
+          style={{
+            transform: `translateY(${scrollY * 0.5}px)`,
+            opacity: Math.max(0, 1 - scrollY / 600),
+          }}
+        >
           <motion.div
             initial={{ opacity: 0, x: 40, scale: 0.95 }}
             animate={{ opacity: 1, x: 0, scale: 1 }}
