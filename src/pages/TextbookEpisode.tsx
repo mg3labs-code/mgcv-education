@@ -108,6 +108,7 @@ const TextbookEpisode = () => {
   const [sectionTimings, setSectionTimings] = useState<Record<number, number>>({});
   const [wrongAttempts, setWrongAttempts] = useState<Record<number, number>>({});
   const [comprehensionResults, setComprehensionResults] = useState<Record<number, { result: string; attempts: number }>>({});
+  const [jeeMode, setJeeMode] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const totalBlocksRef = useRef(0);
@@ -159,7 +160,7 @@ const TextbookEpisode = () => {
   }, []);
 
   const { data: chapter, isLoading: chapterLoading } = useChapterEpisodes(chapterId);
-  const { data: dbBlocks, isLoading: blocksLoading } = useEpisodeBlocks(chapterId, episodeId);
+  const { data: dbBlocks, isLoading: blocksLoading } = useEpisodeBlocks(chapterId, episodeId, jeeMode ? "all" : "board");
 
   const episode = chapter?.episodes.find((e) => e.id === episodeId);
   const allBlocks = dbBlocks && dbBlocks.length > 0 ? dbBlocks : (episode?.blocks || []);
