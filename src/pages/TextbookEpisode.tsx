@@ -24,6 +24,9 @@ import LanguageProgressWidget from "@/components/textbook/LanguageProgressWidget
 import VisualAidBlock from "@/components/textbook/VisualAidBlock";
 import InlineMedia from "@/components/textbook/InlineMedia";
 import { ConceptBlock, ActivityBlock, RecallBlock, ExplainBlock, AssessmentBlock, ExerciseBlock, blockSubtitles, layerMeta, type ActivityContent } from "@/components/textbook/EpisodeBlocks";
+import SectionCelebration from "@/components/textbook/SectionCelebration";
+import ComprehensionCheck from "@/components/textbook/ComprehensionCheck";
+import EpisodeLoadingTransition from "@/components/textbook/EpisodeLoadingTransition";
 
 const LANGUAGE_SUBJECTS = new Set(["Telugu", "Hindi"]);
 
@@ -91,6 +94,10 @@ const TextbookEpisode = () => {
   const [blockCompleted, setBlockCompleted] = useState<Set<number>>(new Set());
   const [showUnderstandConfirm, setShowUnderstandConfirm] = useState(false);
   const [expandedTextbookRef, setExpandedTextbookRef] = useState<number | null>(null);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [visitedBlocks, setVisitedBlocks] = useState<Set<string>>(new Set());
+  const [sectionStartTime, setSectionStartTime] = useState<number>(Date.now());
+  const [sectionTimings, setSectionTimings] = useState<Record<number, number>>({});
   const contentRef = useRef<HTMLDivElement>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const totalBlocksRef = useRef(0);
@@ -107,6 +114,9 @@ const TextbookEpisode = () => {
     setShowToolsPopup(false);
     setExitConfirm(false);
     setSaveStatus("idle");
+    setShowCelebration(false);
+    setSectionStartTime(Date.now());
+    setSectionTimings({});
   }, [episodeId]);
 
   const persistUnderstood = useCallback((understood: Set<number>) => {
@@ -233,9 +243,18 @@ const TextbookEpisode = () => {
       toast.error("Complete all Core sections first 🔒");
       return;
     }
+    // Track time spent on current section
+    const timeSpent = Math.round((Date.now() - sectionStartTime) / 1000);
+    setSectionTimings(prev => ({ ...prev, [activeBlock]: (prev[activeBlock] || 0) + timeSpent }));
+    setSectionStartTime(Date.now());
+    
+    // Mark visited
+    const blockKey = `${chapterId}_${episodeId}_${activeBlock}`;
+    setVisitedBlocks(prev => { const n = new Set(prev); n.add(blockKey); return n; });
+    
     setActiveBlock(index);
     contentRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-  }, [isBlockLocked]);
+  }, [isBlockLocked, sectionStartTime, activeBlock, chapterId, episodeId]);
 
   const scrollToActivity = useCallback(() => {
     const actIdx = navBlocks.findIndex(b => b.type === "activity");
@@ -255,15 +274,60 @@ const TextbookEpisode = () => {
 
   const onBlockComplete = useCallback(() => markBlockInteracted(activeBlock), [markBlockInteracted, activeBlock]);
 
+  // Helper: advance with celebration
+  const advanceWithCelebration = useCallback((nextIndex: number) => {
+    // Auto-mark current as understood
+    setUnderstoodBlocks(prev => {
+      const next = new Set(prev);
+      next.add(activeBlock);
+      persistUnderstood(next);
+      return next;
+    });
+    markBlockInteracted(activeBlock);
+    // Show celebration then move
+    setShowCelebration(true);
+  }, [activeBlock, persistUnderstood, markBlockInteracted]);
+
+  const handleCelebrationDone = useCallback(() => {
+    setShowCelebration(false);
+    if (activeBlock < navBlocks.length - 1) {
+      goToBlock(activeBlock + 1);
+    } else {
+      handleFinish();
+    }
+  }, [activeBlock, navBlocks.length, goToBlock]);
+
+  // Check if this is the first visit to current block
+  const isFirstVisitToBlock = useMemo(() => {
+    const blockKey = `${chapterId}_${episodeId}_${activeBlock}`;
+    // Check localStorage for persistent visited state
+    const visited = localStorage.getItem(`visited_blocks_${chapterId}_${episodeId}`);
+    if (visited) {
+      try {
+        const arr = JSON.parse(visited) as number[];
+        return !arr.includes(activeBlock);
+      } catch { return true; }
+    }
+    return !visitedBlocks.has(blockKey);
+  }, [chapterId, episodeId, activeBlock, visitedBlocks]);
+
+  // Persist visited blocks
+  const markBlockVisited = useCallback((index: number) => {
+    const key = `visited_blocks_${chapterId}_${episodeId}`;
+    const existing = localStorage.getItem(key);
+    let arr: number[] = [];
+    try { arr = existing ? JSON.parse(existing) : []; } catch {}
+    if (!arr.includes(index)) {
+      arr.push(index);
+      localStorage.setItem(key, JSON.stringify(arr));
+    }
+  }, [chapterId, episodeId]);
+
+  // Content blocks (non-interactive) that need comprehension check
+  const CONTENT_TYPES = useMemo(() => new Set(["concept", "reasoning", "connections", "implications"]), []);
+
   if (isLoading) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "#F9FAFB" }}>
-        <div className="space-y-4 w-full max-w-md px-6">
-          <Skeleton className="h-8 w-48" /><Skeleton className="h-6 w-64" />
-          {[1, 2, 3].map((i) => <Skeleton key={i} className="h-32 w-full rounded-2xl" />)}
-        </div>
-      </div>
-    );
+    return <EpisodeLoadingTransition />;
   }
 
   if (!chapter || !episode) {
@@ -552,38 +616,21 @@ const TextbookEpisode = () => {
                 </div>
               </div>
 
-              {/* ═══ INLINE "Did you understand?" for content-only blocks ═══ */}
-              {showUnderstandConfirm && !INTERACTIVE_TYPES.has(block.type) && (
-                <div style={{
-                  marginTop: 16, padding: "16px 20px",
-                  background: "linear-gradient(135deg, #F0FDFA, #ECFDF5)",
-                  borderRadius: 14, border: "1.5px solid #99F6E4",
-                  textAlign: "center",
-                }}>
-                  <p style={{ fontSize: 15, fontWeight: 700, color: "#1C1917", marginBottom: 4 }}>
-                    Did you understand this section? 🤔
-                  </p>
-                  <p style={{ fontSize: 12, color: "#78716C", marginBottom: 14 }}>
-                    Make sure you've read through everything above
-                  </p>
-                  <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
-                    <button
-                      onClick={() => { setShowUnderstandConfirm(false); markBlockInteracted(activeBlock); toggleUnderstood(activeBlock); }}
-                      style={{
-                        padding: "10px 28px", borderRadius: 10, border: "none",
-                        background: "#0D9488", color: "white", fontSize: 14, fontWeight: 700, cursor: "pointer",
-                        boxShadow: "0 2px 8px rgba(13,148,136,0.3)",
-                      }}
-                    >Yes, got it! ✓</button>
-                    <button
-                      onClick={() => setShowUnderstandConfirm(false)}
-                      style={{
-                        padding: "10px 28px", borderRadius: 10, border: "1.5px solid #E7E5E4",
-                        background: "white", color: "#78716C", fontSize: 14, fontWeight: 600, cursor: "pointer",
-                      }}
-                    >Not yet</button>
-                  </div>
-                </div>
+              {/* ═══ Comprehension Check for content blocks (first visit) ═══ */}
+              {CONTENT_TYPES.has(block.type) && (
+                <ComprehensionCheck
+                  sectionTitle={block.title || blockLabels[block.type] || "this section"}
+                  isFirstVisit={isFirstVisitToBlock}
+                  onPass={() => {
+                    markBlockVisited(activeBlock);
+                    markBlockInteracted(activeBlock);
+                    advanceWithCelebration(activeBlock);
+                  }}
+                  onSkip={() => {
+                    markBlockVisited(activeBlock);
+                    markBlockInteracted(activeBlock);
+                  }}
+                />
               )}
               {/* Inline visual aids */}
               {attachedVisuals[activeBlock]?.map((vb, vi) => (
@@ -722,38 +769,25 @@ const TextbookEpisode = () => {
           )}
         </div>
 
-        {/* Right: Got it + Continue/Finish */}
+        {/* Right: Continue/Finish */}
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <button onClick={() => toggleUnderstood(activeBlock)} style={{
-            padding: "8px 14px", borderRadius: 10,
-            border: isUnderstood ? "2px solid #0D9488" : "1px solid #E7E5E4",
-            background: isUnderstood ? "#F0FDFA" : "white",
-            fontSize: 13, fontWeight: 600,
-            color: isUnderstood ? "#0D9488" : "#78716C",
-            cursor: "pointer", display: "flex", alignItems: "center", gap: 4,
-            transition: "all 0.2s",
-          }}>
-            <CheckCircle2 className="h-4 w-4" style={{ fill: isUnderstood ? "#0D9488" : "none" }} />
-            {isUnderstood ? "Nailed it ✓" : "Got it!"}
-          </button>
-
           {!isLastBlock ? (
-            <button disabled={!isUnderstood} onClick={() => goToBlock(activeBlock + 1)} style={{
+            <button onClick={() => advanceWithCelebration(activeBlock)} style={{
               padding: "8px 18px", borderRadius: 10, border: "none",
-              background: isUnderstood ? "linear-gradient(135deg, #0D9488, #14B8A6)" : "#D6D3D1",
-              fontSize: 13, fontWeight: 700, color: isUnderstood ? "white" : "#A8A29E",
-              cursor: isUnderstood ? "pointer" : "not-allowed",
+              background: "linear-gradient(135deg, #0D9488, #14B8A6)",
+              fontSize: 13, fontWeight: 700, color: "white",
+              cursor: "pointer",
               transition: "all 0.2s",
-              boxShadow: isUnderstood ? "0 2px 8px rgba(13,148,136,0.3)" : "none",
+              boxShadow: "0 2px 8px rgba(13,148,136,0.3)",
             }}>Continue →</button>
           ) : (
-            <button disabled={!isUnderstood} onClick={handleFinish} style={{
+            <button onClick={() => advanceWithCelebration(activeBlock)} style={{
               padding: "8px 18px", borderRadius: 10, border: "none",
-              background: isUnderstood ? "linear-gradient(135deg, #059669, #10B981)" : "#D6D3D1",
-              fontSize: 13, fontWeight: 700, color: isUnderstood ? "white" : "#A8A29E",
-              cursor: isUnderstood ? "pointer" : "not-allowed",
+              background: "linear-gradient(135deg, #059669, #10B981)",
+              fontSize: 13, fontWeight: 700, color: "white",
+              cursor: "pointer",
               transition: "all 0.2s",
-              boxShadow: isUnderstood ? "0 2px 8px rgba(5,150,105,0.3)" : "none",
+              boxShadow: "0 2px 8px rgba(5,150,105,0.3)",
             }}>Finish ✓</button>
           )}
         </div>
@@ -854,6 +888,9 @@ const TextbookEpisode = () => {
       )}
 
       </>
+
+      {/* Celebration overlay */}
+      <SectionCelebration show={showCelebration} onDone={handleCelebrationDone} />
 
       {/* Modals */}
       <TutorialDefenseModal open={showDefense} onOpenChange={setShowDefense} topic={episode.title} episodeTitle={`${chapter.title} — ${episode.title}`} subject={chapter.title} chapterId={chapterId} episodeId={episodeId} />
