@@ -82,7 +82,7 @@ async function getOrCreateAgent(supabaseAdmin: any, elevenlabsKey: string): Prom
           language: "en",
         },
         tts: {
-          voice_id: "cgSgspJ2msm6clMCkdW9", // Jessica - Playful, Bright, Warm
+          voice_id: "EXAVITQu4vr4xnSDxMaL", // Sarah - warm, conversational
           model_id: "eleven_multilingual_v2",
           stability: 0.45,
           similarity_boost: 0.75,
