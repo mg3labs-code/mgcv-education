@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { ReasoningContent } from "@/data/textbookData";
 import { Eye, Lightbulb, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { motion, AnimatePresence } from "framer-motion";
 
 /* ───── Step-level AI illustration (cached) ───── */
 const ILLUSTRATION_CACHE: Record<string, string> = {};
@@ -117,6 +118,14 @@ const STEP_META = [
 const ReasoningBlock = ({ content }: { content: ReasoningContent }) => {
   const [activeStep, setActiveStep] = useState(0);
   const [revealedInsights, setRevealedInsights] = useState<Record<number, boolean>>({});
+  const prevStep = useRef(0);
+  const direction = useRef(1);
+
+  const goToStep = useCallback((next: number) => {
+    direction.current = next > activeStep ? 1 : -1;
+    prevStep.current = activeStep;
+    setActiveStep(next);
+  }, [activeStep]);
 
   // Map whyQuestions to 4 steps:
   // Step 0 = central question, Steps 1-3 = whyQuestions (or fewer)
@@ -150,7 +159,7 @@ const ReasoningBlock = ({ content }: { content: ReasoningContent }) => {
         {STEP_META.map((step, i) => (
           <button
             key={i}
-            onClick={() => setActiveStep(i)}
+            onClick={() => goToStep(i)}
             className="flex-1 flex flex-col items-center gap-0.5 group"
           >
             <div
@@ -170,14 +179,20 @@ const ReasoningBlock = ({ content }: { content: ReasoningContent }) => {
       </div>
 
       {/* Active Step Card */}
-      {STEP_META.map((step, stepIdx) => {
-        if (stepIdx !== activeStep) return null;
+      <AnimatePresence mode="wait" custom={direction.current}>
+        {STEP_META.map((step, stepIdx) => {
+          if (stepIdx !== activeStep) return null;
 
-        return (
-          <div
-            key={stepIdx}
-            className={`rounded-2xl border-2 ${step.borderColor} overflow-hidden shadow-md animate-fade-in`}
-          >
+          return (
+            <motion.div
+              key={stepIdx}
+              custom={direction.current}
+              initial={{ opacity: 0, x: direction.current * 80 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: direction.current * -80 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className={`rounded-2xl border-2 ${step.borderColor} overflow-hidden shadow-md`}
+            >
             {/* Step header */}
             <div className={`bg-gradient-to-r ${step.color} px-5 py-4 flex items-center gap-3`}>
               <span className={`${step.badgeColor} h-9 w-9 rounded-full flex items-center justify-center text-lg font-bold shadow-sm`}>
@@ -289,14 +304,14 @@ const ReasoningBlock = ({ content }: { content: ReasoningContent }) => {
                 variant="ghost"
                 size="sm"
                 disabled={stepIdx === 0}
-                onClick={() => setActiveStep(stepIdx - 1)}
+                onClick={() => goToStep(stepIdx - 1)}
               >
                 ← Previous
               </Button>
               {stepIdx < 3 ? (
                 <Button
                   size="sm"
-                  onClick={() => setActiveStep(stepIdx + 1)}
+                  onClick={() => goToStep(stepIdx + 1)}
                 >
                   Next Step →
                 </Button>
@@ -306,9 +321,10 @@ const ReasoningBlock = ({ content }: { content: ReasoningContent }) => {
                 </span>
               )}
             </div>
-          </div>
-        );
-      })}
+            </motion.div>
+          );
+        })}
+      </AnimatePresence>
     </div>
   );
 };
