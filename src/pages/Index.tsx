@@ -12,6 +12,7 @@ import { motion } from "framer-motion";
 import heroStudents from "@/assets/hero-students.webp";
 import heroFutureLearning from "@/assets/hero-future-learning.jpg";
 import heroAiStudent from "@/assets/hero-ai-student.png";
+import ImageTextEffect from "@/components/landing/ImageTextEffect";
 
 type LoginType = "student" | "teacher" | "";
 type ModalType = "login" | "about" | "contact" | "";
