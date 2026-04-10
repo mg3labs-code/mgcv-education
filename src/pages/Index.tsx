@@ -313,8 +313,13 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Hero Image - desktop only */}
-        <div className="absolute top-0 right-0 w-[45%] h-full z-[1] hidden xl:flex items-center justify-center pointer-events-none overflow-hidden">
+        <div
+          className="absolute top-0 right-0 w-[45%] h-full z-[1] hidden xl:flex items-center justify-center pointer-events-none overflow-hidden"
+          style={{
+            transform: `translateY(${scrollY * 0.5}px)`,
+            opacity: Math.max(0, 1 - scrollY / 600),
+          }}
+        >
           <motion.div
             initial={{ opacity: 0, x: 40, scale: 0.95 }}
             animate={{ opacity: 1, x: 0, scale: 1 }}
