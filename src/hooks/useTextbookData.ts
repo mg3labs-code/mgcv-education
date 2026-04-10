@@ -209,9 +209,9 @@ export function useChapterEpisodes(chapterSlug: string | undefined) {
 }
 
 // Fetch content blocks for an episode by slug
-export function useEpisodeBlocks(chapterSlug: string | undefined, episodeSlug: string | undefined) {
+export function useEpisodeBlocks(chapterSlug: string | undefined, episodeSlug: string | undefined, depth: "board" | "all" = "board") {
   return useQuery({
-    queryKey: ["content_blocks", chapterSlug, episodeSlug],
+    queryKey: ["content_blocks", chapterSlug, episodeSlug, depth],
     enabled: !!chapterSlug && !!episodeSlug,
     queryFn: async () => {
       if (!chapterSlug || !episodeSlug) return null;
@@ -225,11 +225,18 @@ export function useEpisodeBlocks(chapterSlug: string | undefined, episodeSlug: s
 
       if (episode) {
         // Get content blocks from DB
-        const { data: blocks, error } = await supabase
+        let query = supabase
           .from("content_blocks")
           .select("*")
           .eq("episode_id", episode.id)
           .order("sort_order");
+
+        // Filter by depth: 'board' shows only board blocks, 'all' shows everything
+        if (depth === "board") {
+          query = query.eq("depth", "board");
+        }
+
+        const { data: blocks, error } = await query;
 
         if (!error && blocks && blocks.length > 0) {
           // Map DB blocks to ContentBlock interface
@@ -237,6 +244,7 @@ export function useEpisodeBlocks(chapterSlug: string | undefined, episodeSlug: s
             type: b.block_type as ContentBlock["type"],
             title: b.title || "",
             icon: b.icon || "📖",
+            depth: b.depth || "board",
             content: b.content,
           }));
           return contentBlocks;
