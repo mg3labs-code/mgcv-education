@@ -754,6 +754,9 @@ export const blockSubtitles: Record<string, string> = {
   vocabulary: "New words to master today",
   grammar_pattern: "Spot the pattern in the language",
   visual_aid: "A picture is worth a thousand words",
+  jee_problems: "Competitive MCQs with traps & negative marking",
+  jee_extension: "Advanced concepts beyond board syllabus",
+  jee_speed_drill: "Answer fast under time pressure",
 };
 
 export const layerMeta: Record<string, { border: string; bg: string; badge?: string; badgeColor?: string; dotColor: string }> = {
@@ -773,4 +776,7 @@ export const layerMeta: Record<string, { border: string; bg: string; badge?: str
   story_reading: { border: "border-l-amber-600", bg: "", badge: "📚 Story", badgeColor: "bg-amber-600 text-white", dotColor: "bg-amber-600" },
   vocabulary:  { border: "border-l-sky-500",     bg: "",  badge: "📝 Words",        badgeColor: "bg-sky-500 text-white", dotColor: "bg-sky-500" },
   grammar_pattern: { border: "border-l-fuchsia-500", bg: "", badge: "🔤 Grammar", badgeColor: "bg-fuchsia-500 text-white", dotColor: "bg-fuchsia-500" },
+  jee_problems:  { border: "border-l-amber-500",    bg: "",  badge: "⚡ JEE",        badgeColor: "bg-amber-500 text-white", dotColor: "bg-amber-500" },
+  jee_extension: { border: "border-l-amber-600",    bg: "",  badge: "🔬 Extension",  badgeColor: "bg-amber-600 text-white", dotColor: "bg-amber-600" },
+  jee_speed_drill:{ border: "border-l-orange-500",  bg: "",  badge: "⏱️ Speed",      badgeColor: "bg-orange-500 text-white", dotColor: "bg-orange-500" },
 };
