@@ -144,9 +144,14 @@ const ReasoningVisualDemo = () => {
           ]);
         }
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      toast({ title: "Generation failed", description: "Please try again", variant: "destructive" });
+      const isTimeout = err?.name === "AbortError" || err?.message?.includes("Failed to send");
+      toast({
+        title: isTimeout ? "Generation timed out ⏱️" : "Generation failed",
+        description: isTimeout ? "The visual is being generated in the background. Check the library below in a minute." : "Please try again",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
