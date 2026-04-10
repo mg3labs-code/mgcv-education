@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { AssumptionsContent } from "@/data/textbookData";
-import { AlertTriangle, ChevronDown, ChevronUp, Shield, Timer, Send, Loader2, CheckCircle2, RotateCcw } from "lucide-react";
+import { AlertTriangle, ChevronDown, ChevronUp, Shield, Timer, Send, Loader2, CheckCircle2, RotateCcw, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { ExampleCard, ImportantNote } from "@/components/textbook/ContentCards";
@@ -16,6 +16,12 @@ const AssumptionsBlock = ({ content, onStartDefense }: AssumptionsBlockProps) =>
   const [defenseText, setDefenseText] = useState("");
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [beliefs, setBeliefs] = useState<Record<number, "believe" | "doubt">>({});
+  const [reflections, setReflections] = useState<Record<number, string>>({});
+
+  const handleBelief = (i: number, value: "believe" | "doubt") => {
+    setBeliefs(prev => ({ ...prev, [i]: value }));
+  };
 
   const wordCount = defenseText.trim().split(/\s+/).filter(Boolean).length;
 
