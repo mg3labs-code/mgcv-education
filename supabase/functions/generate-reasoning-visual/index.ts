@@ -94,7 +94,7 @@ Include these labels prominently: ${step.key_labels.join(", ")}
 Style: Indian NCERT educational textbook illustration, flat vector design, bright pastel palette on clean white background, large clear text annotations, hand-drawn but professional feel, infographic poster layout. NOT photorealistic.`;
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
