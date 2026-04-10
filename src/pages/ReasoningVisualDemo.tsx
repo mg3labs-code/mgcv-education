@@ -1,13 +1,13 @@
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ActiveReasoningVisual, ReasoningStep } from "@/components/textbook/ActiveReasoningVisual";
+import { ReasoningStep } from "@/components/textbook/ActiveReasoningVisual";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import {
   Brain, Beaker, Atom, Calculator, Leaf, Zap, Loader2, ArrowLeft,
-  Lightbulb, Puzzle, GitBranch, CheckCircle2
+  Lightbulb, Puzzle, GitBranch, CheckCircle2, Clock, BookOpen
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -58,12 +58,48 @@ const stepColors = [
   "from-emerald-500 to-teal-500",
 ];
 
+interface StoredVisual {
+  id: string;
+  topic: string;
+  subject: string;
+  grade: string;
+  steps: ReasoningStep[];
+  created_at: string;
+}
+
+const subjectIcons: Record<string, any> = {
+  Chemistry: Beaker,
+  Physics: Atom,
+  Mathematics: Calculator,
+  Biology: Leaf,
+  Science: Brain,
+};
+
 const ReasoningVisualDemo = () => {
   const [inputTopic, setInputTopic] = useState("");
   const [selectedSubject, setSelectedSubject] = useState("Chemistry");
   const [steps, setSteps] = useState<ReasoningStep[]>([]);
   const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
+  const [gallery, setGallery] = useState<StoredVisual[]>([]);
+  const [galleryLoading, setGalleryLoading] = useState(true);
+
+  // Fetch gallery on mount
+  useEffect(() => {
+    const fetchGallery = async () => {
+      const { data, error } = await supabase
+        .from("reasoning_visuals")
+        .select("id, topic, subject, grade, steps, created_at")
+        .order("created_at", { ascending: false })
+        .limit(20);
+
+      if (!error && data) {
+        setGallery(data as unknown as StoredVisual[]);
+      }
+      setGalleryLoading(false);
+    };
+    fetchGallery();
+  }, []);
 
   const generate = async (topic: string, subject?: string) => {
     if (!topic.trim()) return;
@@ -93,6 +129,12 @@ const ReasoningVisualDemo = () => {
           toast({ title: "Loaded from cache ⚡", description: "This exact visual was generated before" });
         } else if (data.cached && data.match === "related") {
           toast({ title: "Found a related visual 🔍", description: `Matched: "${data.original_topic}"` });
+        } else {
+          // New generation — add to gallery
+          setGallery((prev) => [
+            { id: crypto.randomUUID(), topic, subject: subject || selectedSubject, grade: "Grade 10", steps: data.steps, created_at: new Date().toISOString() },
+            ...prev,
+          ]);
         }
       }
     } catch (err) {
@@ -101,6 +143,15 @@ const ReasoningVisualDemo = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadFromGallery = (visual: StoredVisual) => {
+    setInputTopic(visual.topic);
+    setSelectedSubject(visual.subject);
+    setSteps(visual.steps);
+    setCurrentStep(4);
+    toast({ title: "Loaded from library 📚", description: visual.topic });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
@@ -181,7 +232,7 @@ const ReasoningVisualDemo = () => {
               <div className="text-center space-y-6">
                 <Loader2 className="h-10 w-10 animate-spin mx-auto text-primary" />
                 <h3 className="text-lg font-semibold text-foreground">
-                  Building Active Reasoning Visual...
+                  Building Elite Reasoning Visual...
                 </h3>
                 <div className="flex justify-center gap-3 flex-wrap">
                   {[1, 2, 3, 4].map((s) => {
@@ -202,11 +253,11 @@ const ReasoningVisualDemo = () => {
                   })}
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  {currentStep === 0 && "Analyzing topic..."}
-                  {currentStep === 1 && "Understanding the problem..."}
-                  {currentStep === 2 && "Breaking into parts..."}
-                  {currentStep === 3 && "Exploring possibilities..."}
-                  {currentStep >= 4 && "Drawing conclusions..."}
+                  {currentStep === 0 && "Analyzing topic with subject-specific AI..."}
+                  {currentStep === 1 && "Understanding the problem — building visual map..."}
+                  {currentStep === 2 && "Breaking into parts — generating labeled diagrams..."}
+                  {currentStep === 3 && "Exploring possibilities — creating infographics..."}
+                  {currentStep >= 4 && "Drawing conclusions — finalizing visuals..."}
                 </p>
               </div>
             </CardContent>
@@ -271,12 +322,75 @@ const ReasoningVisualDemo = () => {
               })}
             </div>
 
-            {/* Reset */}
             <div className="text-center">
               <Button variant="outline" onClick={() => { setSteps([]); setInputTopic(""); }}>
                 Try Another Topic
               </Button>
             </div>
+          </div>
+        )}
+
+        {/* Previously Generated Gallery */}
+        {gallery.length > 0 && (
+          <div className="space-y-4 pt-4 border-t border-border">
+            <div className="flex items-center gap-2">
+              <BookOpen className="h-5 w-5 text-primary" />
+              <h2 className="text-lg font-bold text-foreground">Previously Generated</h2>
+              <span className="text-xs text-muted-foreground">({gallery.length} visuals)</span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+              {gallery.map((visual) => {
+                const SubjIcon = subjectIcons[visual.subject] || Brain;
+                const firstImage = (visual.steps as ReasoningStep[])?.[0]?.image_url;
+                return (
+                  <Card
+                    key={visual.id}
+                    className="cursor-pointer hover:border-primary/40 transition-all hover:shadow-md group"
+                    onClick={() => loadFromGallery(visual)}
+                  >
+                    <CardContent className="p-3 space-y-2">
+                      {firstImage ? (
+                        <div className="rounded-md overflow-hidden border border-border h-28">
+                          <img
+                            src={firstImage}
+                            alt={visual.topic}
+                            className="w-full h-full object-contain bg-background group-hover:scale-105 transition-transform"
+                            loading="lazy"
+                          />
+                        </div>
+                      ) : (
+                        <div className="rounded-md border border-dashed border-border h-28 flex items-center justify-center bg-muted/30">
+                          <SubjIcon className="h-8 w-8 text-muted-foreground/40" />
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-sm font-medium text-foreground line-clamp-2 leading-tight">
+                          {visual.topic}
+                        </p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <SubjIcon className="h-3 w-3" />
+                            {visual.subject}
+                          </span>
+                          <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <Clock className="h-3 w-3" />
+                            {new Date(visual.created_at).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {galleryLoading && (
+          <div className="text-center py-6">
+            <Loader2 className="h-5 w-5 animate-spin mx-auto text-muted-foreground" />
+            <p className="text-xs text-muted-foreground mt-2">Loading library...</p>
           </div>
         )}
       </div>
