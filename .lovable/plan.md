@@ -1,53 +1,39 @@
 
 
-# Enhance Textbook Content Presentation
+## Review: What's Built vs What's Missing
 
-## What We're Doing
-Adopting the rich visual content formatting from the reference HTML (definition boxes, formula cards, example boxes, step containers, important notes) across ALL textbook block types — not just ConceptBlock — using the app's existing teal/cream theme.
+### Already Built (Working)
+1. **Section Celebration** — Center-screen animated celebration (Nailed it!, On fire!, etc.) with confetti burst after each section. Auto-dismisses after 1.4s.
+2. **Comprehension Check** — "What did you understand?" prompt on first visit to content blocks (concept, reasoning, connections, implications). AI evaluates via `inline-evaluate`. If wrong, asks to revise. Skip available after 1 attempt. Subsequent visits skip it.
+3. **Fun Loading Transition** — Full-screen loading with bouncing runner emoji, floating subject icons, progress bar, and rotating tips. Replaces skeleton loader.
+4. **"Nailed it" button removed** — Bottom bar now has Continue/Finish buttons that trigger celebration before advancing.
+5. **Section time tracking** — `sectionTimings` state tracks seconds spent per block.
+6. **Visited blocks** — Persisted to `localStorage` per episode.
 
-## Current State
-- **ConceptBlock** already detects definitions, formulas, steps, notes — good foundation
-- **Other blocks** (Reasoning, Connections, Application, Implications, Recall, Exercise) use basic card layouts without the rich formatting
-- The reference HTML has 5 distinct visual patterns: `definition-box`, `formula-box`, `example-box`, `important-note`, `step-box` — all with gradient backgrounds, colored borders, and icons
+### What's Missing / Incomplete
 
-## Plan
+| # | Gap | Detail |
+|---|-----|--------|
+| 1 | **Timing data never saved to DB** | `sectionTimings` is in React state only — lost on page close. Never persisted to `episode_progress` or any table. |
+| 2 | **No micro-pattern tracking** | Wrong answer counts, retry behavior, hesitation time, comprehension check results — none tracked. You mentioned 47 micro-patterns; none are captured yet. |
+| 3 | **No database table for interaction analytics** | No `episode_interactions` or similar table exists to store per-block behavioral data (time, errors, retries, state-of-mind signals). |
+| 4 | **Activity blocks don't report wrong attempts** | Activity/Assessment/Recall blocks call `onComplete` but don't report *how many wrong*, *time to first correct*, or *retry count*. |
+| 5 | **Loading transition could be lighter** | Current one uses `framer-motion` with 8 floating emojis + infinite animations. Could be optimized if app feels slow. |
 
-### 1. Add Reusable Content Card Components
-Create a shared `ContentCards.tsx` with 5 themed card components matching the reference styles in the app's color palette:
-- **DefinitionCard** — teal gradient header, bordered, 📖 icon
-- **FormulaCard** — gradient teal-to-blue center-aligned, bold text, shadow
-- **ExampleCard** — light emerald bg, teal border, 💡 icon, expandable steps
-- **ImportantNote** — amber/warm bg, ⚠️ icon
-- **StepContainer** — numbered blue circles, clean left-border steps
+### Plan to Fix
 
-### 2. Enhance Block-Level Presentation
-Apply these cards inside existing blocks:
-- **ReasoningBlock** — wrap `deeperInsight` in ExampleCard, hints in ImportantNote
-- **ConnectionsBlock** — each connection as a visually distinct card with subject-colored badges
-- **ApplicationBlock** — real-world scenarios in ExampleCard style with DefinitionCard for context
-- **ImplicationsBlock** — wrap implications in themed gradient cards
-- **RecallBlock** — style revealed answers as ExampleCards instead of plain green divs
-- **ExerciseBlock** — wrap answer reveals in styled cards, problems in cleaner containers
+**Step 1 — Create `episode_interactions` table**
+Store per-block interaction data: `user_id`, `chapter_id`, `episode_id`, `block_index`, `block_type`, `time_spent_seconds`, `wrong_attempts`, `correct_on_first_try`, `comprehension_result` (pass/revise/skip), `comprehension_attempts`, `completed_at`. This enables Inner OS analysis.
 
-### 3. Improve FullTextbookView Wrapper
-- Add subtle section background tints (like the reference's `h3` left-border style) to section headers
-- Improve section separators with gradient lines instead of plain borders
-- Better TOC pill styling with active state tracking on scroll
+**Step 2 — Persist timing + behavior data on section advance**
+When `advanceWithCelebration` fires (or on page unload), upsert the current block's timing and interaction data to `episode_interactions`.
 
-### 4. Add CSS Utility Classes
-Add to `index.css`:
-- `.definition-box`, `.formula-box`, `.example-box`, `.important-note`, `.step-box` utility classes matching the reference but in teal/cream theme
-- Dark mode variants for all
+**Step 3 — Add wrong-attempt tracking to activity blocks**
+Update `EpisodeBlocks.tsx` — `ActivityBlock`, `AssessmentBlock`, `RecallBlock` to accept and call an `onWrongAttempt` callback. Track wrong count in `TextbookEpisode.tsx` state, persist alongside timing.
 
-## Files Modified
-- `src/components/textbook/ContentCards.tsx` (new — shared visual cards)
-- `src/components/textbook/EpisodeBlocks.tsx` (ConceptBlock, RecallBlock, ExerciseBlock)
-- `src/components/textbook/ReasoningBlock.tsx`
-- `src/components/textbook/ConnectionsBlock.tsx`
-- `src/components/textbook/ApplicationBlock.tsx`
-- `src/components/textbook/ImplicationsBlock.tsx`
-- `src/components/textbook/FullTextbookView.tsx`
-- `src/index.css` (utility classes)
+**Step 4 — Save comprehension check results**
+Update `ComprehensionCheck` to report pass/revise/skip + attempt count back to parent. Parent persists to `episode_interactions`.
 
-No changes to data structures, tools, sections, or navigation.
+**Step 5 — Optimize loading transition**
+Reduce floating emojis from 8 to 4, use CSS animations instead of framer-motion for the simple bits, ensure transition completes when data arrives (not stuck at 95%).
 
