@@ -9,6 +9,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import StudyCompanion from "./components/student/StudyCompanion";
 import CommandPalette from "./components/CommandPalette";
+import VoiceGreeting from "./components/VoiceGreeting";
 import Index from "./pages/Index";
 
 const StudentDashboard = lazy(() => import("./pages/StudentDashboard"));
@@ -74,6 +75,7 @@ const App = () => (
           <ErrorBoundary>
             <CommandPalette />
             <CompanionWrapper />
+            <VoiceGreeting />
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 <Route path="/" element={<Index />} />

@@ -9,6 +9,7 @@ import PopQuizModal from "@/components/student/PopQuizModal";
 import LearnTab from "@/components/student/LearnTab";
 import TasksTab from "@/components/student/TasksTab";
 import GrowthTab from "@/components/student/GrowthTab";
+import ExamAlertBanner from "@/components/student/ExamAlertBanner";
 
 interface ScheduleItem {
   type: string;
@@ -629,6 +630,11 @@ const StudentDashboard = () => {
                   </FadeSlide>
                 </div>
               )}
+
+              {/* Exam Alert Banner */}
+              <FadeSlide delay={300}>
+                <ExamAlertBanner />
+              </FadeSlide>
             </>
           )}
 
