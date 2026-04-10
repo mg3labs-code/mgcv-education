@@ -666,6 +666,7 @@ const TextbookEpisode = () => {
                 <ComprehensionCheck
                   sectionTitle={block.title || blockLabels[block.type] || "this section"}
                   isFirstVisit={isFirstVisitToBlock}
+                  onResult={onComprehensionResult}
                   onPass={() => {
                     markBlockVisited(activeBlock);
                     markBlockInteracted(activeBlock);
