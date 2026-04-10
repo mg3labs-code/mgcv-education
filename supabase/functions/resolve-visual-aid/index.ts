@@ -7,11 +7,47 @@ const BodySchema = z.object({
   topic: z.string().max(1000).optional(),
   type: z.enum(["image", "video"]).default("image"),
   subject: z.string().max(100).optional(),
+  searchTerms: z.string().max(1000).optional(),
+  caption: z.string().max(1000).optional(),
+  alt: z.string().max(500).optional(),
 });
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
+
+/** Build a deterministic safe filename prefix from a query string */
+function safeName(query: string): string {
+  return query.slice(0, 60).replace(/[^a-zA-Z0-9]/g, "_").toLowerCase();
+}
+
+/** Check if an image already exists in storage for this query */
+async function findExistingImage(query: string): Promise<string | null> {
+  try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!supabaseUrl || !serviceKey) return null;
+
+    const supabase = createClient(supabaseUrl, serviceKey);
+    const prefix = safeName(query);
+
+    const { data: files, error } = await supabase.storage
+      .from("visual-aids")
+      .list("", { limit: 5, search: prefix });
+
+    if (error || !files?.length) return null;
+
+    // Return the first matching file's public URL
+    const match = files.find((f) => f.name.startsWith(prefix));
+    if (!match) return null;
+
+    const { data: urlData } = supabase.storage.from("visual-aids").getPublicUrl(match.name);
+    console.log(`[Cache HIT] Found existing image: ${match.name}`);
+    return urlData?.publicUrl || null;
+  } catch {
+    return null;
+  }
+}
 
 // Verify a URL actually serves an image (HEAD check with timeout)
 async function verifyImageUrl(url: string): Promise<boolean> {
@@ -47,9 +83,7 @@ async function uploadToStorage(base64Data: string, query: string): Promise<strin
     const base64Content = base64Data.replace(/^data:image\/\w+;base64,/, "");
     const binaryData = Uint8Array.from(atob(base64Content), (c) => c.charCodeAt(0));
 
-    // Create a safe filename from query
-    const safeName = query.slice(0, 60).replace(/[^a-zA-Z0-9]/g, "_").toLowerCase();
-    const fileName = `${safeName}_${Date.now()}.png`;
+    const fileName = `${safeName(query)}_${Date.now()}.png`;
 
     const { error } = await supabase.storage
       .from("visual-aids")
@@ -79,8 +113,8 @@ Deno.serve(async (req) => {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const { query, topic, type, subject } = parsed.data;
-    const searchQuery = query || topic;
+    const { query, topic, type, subject, searchTerms, caption, alt } = parsed.data;
+    const searchQuery = query || searchTerms || topic || caption || alt || "";
     if (!searchQuery) {
       return new Response(JSON.stringify({ error: "Either query or topic is required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -91,9 +125,18 @@ Deno.serve(async (req) => {
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
     // ═══════════════════════════════════════════
-    // IMAGE RESOLUTION — TWO-TIER STRATEGY
+    // IMAGE RESOLUTION — THREE-TIER STRATEGY
     // ═══════════════════════════════════════════
     if (type === "image") {
+      // ── TIER 0: Check storage for previously generated image ──
+      const existing = await findExistingImage(searchQuery);
+      if (existing) {
+        return new Response(
+          JSON.stringify({ url: existing, type: "image", source: "cached" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
       // ── TIER 1: Web image lookup ──
       console.log(`[Tier 1] Searching web for: ${searchQuery}`);
       try {

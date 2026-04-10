@@ -23,7 +23,7 @@ const StepIllustration = ({ prompt, stepLabel }: { prompt: string; stepLabel: st
       const raw = localStorage.getItem(cacheKey);
       if (raw) {
         const { u, ts } = JSON.parse(raw);
-        if (Date.now() - ts < 7 * 24 * 60 * 60 * 1000) {
+        if (Date.now() - ts < 30 * 24 * 60 * 60 * 1000) {
           ILLUSTRATION_CACHE[cacheKey] = u;
           setUrl(u);
           return;
