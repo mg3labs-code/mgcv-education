@@ -313,6 +313,15 @@ const TextbookEpisode = () => {
     }
   }, [user, chapterId, episodeId, navBlocks, sectionTimings, comprehensionResults, wrongAttempts]);
 
+  // Skill-mapping toasts for micro-connections
+  const SKILL_TOASTS: Record<string, string> = useMemo(() => ({
+    assumptions: "You just practiced the same skill IIT interviewers test 🏛️",
+    application: "Harvard calls this the Case Method — you're already doing it 🎓",
+    reasoning: "This is how JEE Advanced separates toppers from memorizers 🧠",
+    explain: "Feynman won a Nobel Prize using this exact technique 🔬",
+    connections: "Oxford tutorials work exactly like this — connecting ideas across fields 🇬🇧",
+  }), []);
+
   // Helper: advance with celebration
   const advanceWithCelebration = useCallback((nextIndex: number) => {
     // Record final time for current section
@@ -329,9 +338,16 @@ const TextbookEpisode = () => {
     markBlockInteracted(activeBlock);
     // Persist interaction data
     persistInteraction(activeBlock);
+
+    // Show skill-mapping toast if applicable
+    const block = navBlocks[activeBlock];
+    if (block && SKILL_TOASTS[block.type]) {
+      toast(SKILL_TOASTS[block.type], { duration: 4000 });
+    }
+
     // Show celebration then move
     setShowCelebration(true);
-  }, [activeBlock, persistUnderstood, markBlockInteracted, persistInteraction, sectionStartTime]);
+  }, [activeBlock, persistUnderstood, markBlockInteracted, persistInteraction, sectionStartTime, navBlocks, SKILL_TOASTS]);
 
   const handleCelebrationDone = useCallback(() => {
     setShowCelebration(false);
