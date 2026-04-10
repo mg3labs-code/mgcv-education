@@ -46,6 +46,15 @@ const Index = () => {
   const [submitting, setSubmitting] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [loginError, setLoginError] = useState<{ message: string; code?: string; suggestion: string } | null>(null);
+  const [heroIndex, setHeroIndex] = useState(0);
+
+  // Auto-rotate hero images
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setHeroIndex((prev) => (prev + 1) % heroImages.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     if (!loading && user && role) {
