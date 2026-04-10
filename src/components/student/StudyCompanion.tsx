@@ -333,7 +333,7 @@ const StudyCompanion = ({ role = "student" }: StudyCompanionProps) => {
         return `Starting a ${subject} quiz now! The quiz is on screen.`;
       },
       getCurrentPage: () => {
-        return getReadablePageContext(location.pathname);
+        return getReadablePageContext(location.pathname, role, chapters);
       },
       getChapterList: () => {
         const list = chapters.map(c => {
@@ -382,7 +382,7 @@ const StudyCompanion = ({ role = "student" }: StudyCompanionProps) => {
   // ─── Send contextual update when page changes ───
   useEffect(() => {
     if (conversation.status === "connected") {
-      const context = getReadablePageContext(location.pathname, role);
+      const context = getReadablePageContext(location.pathname, role, chapters);
       try {
         const userLabel = role === "teacher" ? "teacher" : "student";
         conversation.sendContextualUpdate(`The ${userLabel} just navigated to: ${context}`);
