@@ -9,6 +9,9 @@ import FeatureShowcase from "@/components/landing/FeatureShowcase";
 import LoadingScreen from "@/components/LoadingScreen";
 import { Menu, X, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
+import heroStudents from "@/assets/hero-students.webp";
+import heroFutureLearning from "@/assets/hero-future-learning.jpg";
+import heroAiStudent from "@/assets/hero-ai-student.png";
 
 type LoginType = "student" | "teacher" | "";
 type ModalType = "login" | "about" | "contact" | "";
