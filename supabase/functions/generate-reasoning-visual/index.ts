@@ -38,27 +38,62 @@ serve(async (req) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceKey);
 
-    // Check cache
-    const slug = `${(subject || "general").toLowerCase()}_${topic
+    const subj = subject || "Science";
+    const gr = grade || "Grade 10";
+    const slug = `${subj.toLowerCase()}_${topic
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .slice(0, 60)}`;
 
-    const { data: cached } = await supabase.storage
-      .from("reasoning-visuals")
-      .list(slug);
+    // 1. Check exact slug match in DB
+    const { data: exactMatch } = await supabase
+      .from("reasoning_visuals")
+      .select("*")
+      .eq("slug", slug)
+      .limit(1)
+      .maybeSingle();
 
-    if (cached && cached.length >= 5) {
-      // 4 images + 1 metadata json
-      const metaUrl = `${supabaseUrl}/storage/v1/object/public/reasoning-visuals/${slug}/meta.json`;
-      const metaResp = await fetch(metaUrl);
-      if (metaResp.ok) {
-        const steps = await metaResp.json();
-        return new Response(JSON.stringify({ steps, cached: true }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+    if (exactMatch) {
+      console.log("Exact match found for:", slug);
+      return new Response(
+        JSON.stringify({ steps: exactMatch.steps, cached: true, match: "exact" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // 2. Check full-text search for related topics
+    const searchTerms = topic
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, "")
+      .split(/\s+/)
+      .filter((w: string) => w.length > 2)
+      .join(" & ");
+
+    if (searchTerms) {
+      const { data: relatedMatches } = await supabase
+        .from("reasoning_visuals")
+        .select("*")
+        .eq("subject", subj)
+        .textSearch("search_tokens", searchTerms, { type: "plain" })
+        .limit(3);
+
+      if (relatedMatches && relatedMatches.length > 0) {
+        // Return the best match
+        console.log("Related match found:", relatedMatches[0].topic);
+        return new Response(
+          JSON.stringify({
+            steps: relatedMatches[0].steps,
+            cached: true,
+            match: "related",
+            original_topic: relatedMatches[0].topic,
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
       }
     }
+
+    // 3. No match — generate new content
+    console.log("No cache hit, generating for:", topic);
 
     // Step 1: Decompose topic into 4 reasoning steps
     const decomposeResp = await fetch(
@@ -74,7 +109,7 @@ serve(async (req) => {
           messages: [
             {
               role: "system",
-              content: `You are an expert educational content designer. Break down any topic into exactly 4 active reasoning steps for ${grade || "Grade 10"} ${subject || "Science"} students. Return ONLY valid JSON.`,
+              content: `You are an expert educational content designer. Break down any topic into exactly 4 active reasoning steps for ${gr} ${subj} students. Return ONLY valid JSON.`,
             },
             {
               role: "user",
@@ -149,13 +184,19 @@ Make visual_prompt very specific with labeled elements, arrows, colors. Think li
     if (!decomposeResp.ok) {
       const errText = await decomposeResp.text();
       console.error("Decompose error:", decomposeResp.status, errText);
-      return new Response(
-        JSON.stringify({ error: "Failed to decompose topic" }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
+      if (decomposeResp.status === 429) {
+        return new Response(JSON.stringify({ error: "Rate limited, please try again later" }), {
+          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (decomposeResp.status === 402) {
+        return new Response(JSON.stringify({ error: "Credits exhausted" }), {
+          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      return new Response(JSON.stringify({ error: "Failed to decompose topic" }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const decomposeData = await decomposeResp.json();
@@ -166,14 +207,13 @@ Make visual_prompt very specific with labeled elements, arrows, colors. Think li
       const parsed = JSON.parse(toolCall.function.arguments);
       steps = parsed.steps;
     } else {
-      // Fallback: try to parse from content
       const content = decomposeData.choices?.[0]?.message?.content || "";
       const jsonMatch = content.match(/\[[\s\S]*\]/);
       if (!jsonMatch) throw new Error("Could not parse reasoning steps");
       steps = JSON.parse(jsonMatch[0]);
     }
 
-    // Step 2: Generate images for each step (sequentially to avoid rate limits)
+    // Step 2: Generate images for each step
     for (let i = 0; i < steps.length; i++) {
       const step = steps[i];
       console.log(`Generating image for step ${i + 1}: ${step.title}`);
@@ -211,6 +251,7 @@ Style requirements:
 
         if (!imgResp.ok) {
           console.error(`Image gen failed for step ${i + 1}:`, imgResp.status);
+          await imgResp.text();
           continue;
         }
 
@@ -219,11 +260,9 @@ Style requirements:
           imgData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
 
         if (imageB64) {
-          // Extract base64 data
           const b64Data = imageB64.replace(/^data:image\/\w+;base64,/, "");
           const bytes = Uint8Array.from(atob(b64Data), (c) => c.charCodeAt(0));
 
-          // Upload to storage
           const filePath = `${slug}/step-${i + 1}.png`;
           const { error: uploadErr } = await supabase.storage
             .from("reasoning-visuals")
@@ -239,7 +278,6 @@ Style requirements:
           }
         }
 
-        // Small delay between image generations
         if (i < steps.length - 1) {
           await new Promise((r) => setTimeout(r, 1500));
         }
@@ -248,18 +286,27 @@ Style requirements:
       }
     }
 
-    // Save metadata
-    const metaBytes = new TextEncoder().encode(JSON.stringify(steps));
-    await supabase.storage
-      .from("reasoning-visuals")
-      .upload(`${slug}/meta.json`, metaBytes, {
-        contentType: "application/json",
-        upsert: true,
+    // Step 3: Persist to DB for future searches
+    const { error: insertErr } = await supabase
+      .from("reasoning_visuals")
+      .insert({
+        topic,
+        subject: subj,
+        grade: gr,
+        slug,
+        steps,
       });
 
-    return new Response(JSON.stringify({ steps, cached: false }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    if (insertErr) {
+      console.error("Failed to persist visual:", insertErr);
+    } else {
+      console.log("Persisted reasoning visual for:", topic);
+    }
+
+    return new Response(
+      JSON.stringify({ steps, cached: false, match: "new" }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   } catch (err) {
     console.error("generate-reasoning-visual error:", err);
     return new Response(
