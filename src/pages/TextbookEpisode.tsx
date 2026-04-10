@@ -639,7 +639,7 @@ const TextbookEpisode = () => {
       </div>
 
       {/* ═══ CONTENT AREA ═══ */}
-      <div ref={contentRef} style={{ flex: 1, overflowY: "auto", padding: "0 16px 140px", WebkitOverflowScrolling: "touch" }}>
+      <div ref={contentRef} style={{ flex: 1, overflowY: "auto", padding: "0 12px 120px", WebkitOverflowScrolling: "touch" }}>
         <div style={{ maxWidth: 720, margin: "0 auto", paddingTop: 16 }}>
 
           {isLanguage && langSubject && <LanguageProgressWidget subjectName={langSubject} />}
