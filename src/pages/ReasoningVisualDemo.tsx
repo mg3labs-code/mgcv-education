@@ -114,11 +114,18 @@ const ReasoningVisualDemo = () => {
         setCurrentStep((prev) => Math.min(prev + 1, 4));
       }, 8000);
 
+      // Add AbortController with 3-minute timeout for new generations
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 180000);
+
       const { data, error } = await supabase.functions.invoke(
         "generate-reasoning-visual",
-        { body: { topic, subject: subject || selectedSubject, grade: "Grade 10" } }
+        {
+          body: { topic, subject: subject || selectedSubject, grade: "Grade 10" },
+        }
       );
 
+      clearTimeout(timeoutId);
       clearInterval(progressInterval);
 
       if (error) throw error;
@@ -137,11 +144,23 @@ const ReasoningVisualDemo = () => {
           ]);
         }
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      toast({ title: "Generation failed", description: "Please try again", variant: "destructive" });
+      const isTimeout = err?.name === "AbortError" || err?.message?.includes("Failed to send");
+      toast({
+        title: isTimeout ? "Generation timed out ⏱️" : "Generation failed",
+        description: isTimeout ? "The visual is being generated in the background. Check the library below in a minute." : "Please try again",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
+      // Refresh gallery in case background generation completed
+      const { data: refreshed } = await supabase
+        .from("reasoning_visuals")
+        .select("id, topic, subject, grade, steps, created_at")
+        .order("created_at", { ascending: false })
+        .limit(20);
+      if (refreshed) setGallery(refreshed as unknown as StoredVisual[]);
     }
   };
 
