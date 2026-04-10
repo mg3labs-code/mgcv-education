@@ -154,6 +154,13 @@ const ReasoningVisualDemo = () => {
       });
     } finally {
       setLoading(false);
+      // Refresh gallery in case background generation completed
+      const { data: refreshed } = await supabase
+        .from("reasoning_visuals")
+        .select("id, topic, subject, grade, steps, created_at")
+        .order("created_at", { ascending: false })
+        .limit(20);
+      if (refreshed) setGallery(refreshed as unknown as StoredVisual[]);
     }
   };
 
