@@ -249,25 +249,41 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Abstract SVG decoration - desktop only */}
-        <div className="absolute top-0 right-0 w-[50%] h-full z-[1] hidden lg:block pointer-events-none">
-          <svg className="absolute top-1/2 right-0 w-[700px] h-[500px] -translate-y-1/2 opacity-20" viewBox="0 0 800 600">
-            <defs>
-              <linearGradient id="hero-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="hsl(162 65% 38%)" />
-                <stop offset="50%" stopColor="hsl(210 65% 52%)" />
-                <stop offset="100%" stopColor="hsl(280 60% 55%)" />
-              </linearGradient>
-            </defs>
-            {[
-              "M 100 100 Q 300 50 500 150 T 700 200 Q 650 300 500 350 T 200 400 Q 150 500 300 550",
-              "M 150 80 Q 350 30 550 130 T 750 180 Q 700 280 550 330 T 250 380 Q 200 480 350 530",
-              "M 200 120 Q 400 70 600 170 T 800 220 Q 750 320 600 370 T 300 420 Q 250 520 400 570",
-            ].map((d, i) => (
-              <path key={i} d={d} strokeWidth={1.5} fill="none" stroke="url(#hero-grad)" opacity={0.6}
-                style={{ animation: `drawLine 10s ease-in-out infinite`, animationDelay: `${-i * 3}s` }} />
-            ))}
-          </svg>
+        {/* Hero Image - desktop only */}
+        <div className="absolute top-0 right-0 w-[50%] h-full z-[1] hidden lg:flex items-center justify-end pr-10 pointer-events-none">
+          <motion.div
+            initial={{ opacity: 0, x: 40, scale: 0.95 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" as const }}
+            className="relative"
+          >
+            <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-border/30" style={{ maxWidth: 520 }}>
+              <img
+                src={heroStudents}
+                alt="Students collaborating with technology"
+                className="w-full h-auto object-cover"
+                loading="eager"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-background/30 via-transparent to-transparent" />
+            </div>
+            {/* Floating badge */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.8, duration: 0.5 }}
+              className="absolute -bottom-4 -left-6 bg-card border border-border/50 rounded-xl px-4 py-3 shadow-lg backdrop-blur-sm"
+            >
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                  <span className="text-sm">🎯</span>
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-foreground">5 Inner OS Dimensions</p>
+                  <p className="text-[10px] text-muted-foreground">Clarity · Thinking · Focus · Momentum · Character</p>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
         </div>
       </main>
 
