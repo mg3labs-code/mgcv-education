@@ -1,15 +1,19 @@
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useChapterEpisodes, useEpisodeBlocks } from "@/hooks/useTextbookData";
 import FullTextbookView from "@/components/textbook/FullTextbookView";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { ArrowLeft, Zap } from "lucide-react";
 
 const TextbookReference = () => {
   const { chapterId, episodeId } = useParams();
   const navigate = useNavigate();
+  const [jeeMode, setJeeMode] = useState(false);
+
   const { data: chapter, isLoading: chapterLoading } = useChapterEpisodes(chapterId);
-  const { data: dbBlocks, isLoading: blocksLoading } = useEpisodeBlocks(chapterId, episodeId);
+  const { data: dbBlocks, isLoading: blocksLoading } = useEpisodeBlocks(chapterId, episodeId, jeeMode ? "all" : "board");
 
   const episode = chapter?.episodes.find((e) => e.id === episodeId);
   const blocks = dbBlocks && dbBlocks.length > 0 ? dbBlocks : (episode?.blocks || []);
@@ -45,9 +49,22 @@ const TextbookReference = () => {
         <button onClick={() => navigate(-1)} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
           <ArrowLeft className="h-4 w-4 text-muted-foreground" />
         </button>
-        <div>
+        <div className="flex-1">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{chapter.title}</p>
           <h1 className="text-sm font-bold text-foreground">{episode.title} — Textbook Reference</h1>
+        </div>
+
+        {/* JEE Toggle */}
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-medium text-muted-foreground">Board</span>
+          <Switch
+            checked={jeeMode}
+            onCheckedChange={setJeeMode}
+            className="data-[state=checked]:bg-amber-500"
+          />
+          <span className={`text-xs font-medium flex items-center gap-1 ${jeeMode ? "text-amber-600" : "text-muted-foreground"}`}>
+            <Zap className="h-3 w-3" /> JEE
+          </span>
         </div>
       </div>
 

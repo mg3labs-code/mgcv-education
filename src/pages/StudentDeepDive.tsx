@@ -1,7 +1,7 @@
 import { useSearchParams, useNavigate } from "react-router-dom";
 import PageLayout from "@/components/PageLayout";
 import { findTextbookMatch } from "@/data/topicTextbookMap";
-import { chapters } from "@/data/textbookData";
+import { useChapterEpisodes } from "@/hooks/useTextbookData";
 import { Button } from "@/components/ui/button";
 import { BookOpen, ArrowLeft, ExternalLink } from "lucide-react";
 
@@ -15,8 +15,8 @@ const StudentDeepDive = () => {
 
   const match = findTextbookMatch(topic);
 
-  // Find the chapter and episode details
-  const chapter = match ? chapters.find((c) => c.id === match.chapterId) : null;
+  // Fetch chapter and episode details from DB
+  const { data: chapter } = useChapterEpisodes(match?.chapterId);
   const episode = chapter && match?.episodeId
     ? chapter.episodes.find((ep) => ep.id === match.episodeId)
     : null;

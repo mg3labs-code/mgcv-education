@@ -13,7 +13,8 @@ import { toast } from "sonner";
 import { useConversation } from "@elevenlabs/react";
 import CompanionVoiceInput from "./CompanionVoiceInput";
 import PopQuizModal from "./PopQuizModal";
-import { chapters } from "@/data/textbookData";
+import { useChapters } from "@/hooks/useTextbookData";
+import type { Chapter } from "@/data/textbookData";
 
 // ─── Text chat helpers (unchanged) ───
 
@@ -82,7 +83,7 @@ function getPageContext(pathname: string) {
   return { page: pathname };
 }
 
-function getReadablePageContext(pathname: string, role?: string): string {
+function getReadablePageContext(pathname: string, role?: string, chapters: Chapter[] = []): string {
   // Teacher pages
   if (pathname === "/teacher") return "Teacher Dashboard - class overview and quick actions";
   if (pathname === "/teacher/assignments") return "Assignments page - managing and grading student assignments";
@@ -227,7 +228,7 @@ const StudyCompanion = ({ role = "student" }: StudyCompanionProps) => {
   // Input mode tracking: voice transcription vs text typing
   const inputModeRef = useRef<"text" | "voice">("text");
   const { user, fullName } = useAuth();
-  const location = useLocation();
+  const { data: chapters = [] } = useChapters();
   const navigate = useNavigate();
 
   // ─── ElevenLabs Conversational AI Agent with 6 Client Tools ───
@@ -332,7 +333,7 @@ const StudyCompanion = ({ role = "student" }: StudyCompanionProps) => {
         return `Starting a ${subject} quiz now! The quiz is on screen.`;
       },
       getCurrentPage: () => {
-        return getReadablePageContext(location.pathname);
+        return getReadablePageContext(location.pathname, role, chapters);
       },
       getChapterList: () => {
         const list = chapters.map(c => {
@@ -381,7 +382,7 @@ const StudyCompanion = ({ role = "student" }: StudyCompanionProps) => {
   // ─── Send contextual update when page changes ───
   useEffect(() => {
     if (conversation.status === "connected") {
-      const context = getReadablePageContext(location.pathname, role);
+      const context = getReadablePageContext(location.pathname, role, chapters);
       try {
         const userLabel = role === "teacher" ? "teacher" : "student";
         conversation.sendContextualUpdate(`The ${userLabel} just navigated to: ${context}`);
