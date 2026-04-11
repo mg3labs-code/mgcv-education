@@ -273,19 +273,45 @@ const Index = () => {
               </div>
             </motion.div>
 
-            {/* Clean Two-Line Headline */}
+            {/* Hero Headline — Designer-Grade */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.1, ease: "easeOut" as const }}
               className="mb-4"
             >
-              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight leading-[1.08]">
-                <span className="text-foreground">World-Class </span>
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent to-info">Thinking</span>
-                <br />
-                <span className="text-foreground">For Every Student.</span>
-              </h1>
+              {/* Line 1: World-Class — shimmer glow */}
+              <motion.p
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5, delay: 0.05 }}
+                className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight hero-glow-text"
+                style={{ lineHeight: 1.08 }}
+              >
+                World-Class
+              </motion.p>
+
+              {/* Line 2: THINKING — vivid animated gradient, larger */}
+              <motion.p
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 0.15 }}
+                className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tighter hero-thinking-text"
+                style={{ lineHeight: 1.0 }}
+              >
+                THINKING
+              </motion.p>
+
+              {/* Line 3: For Every Student — clean, grounded */}
+              <motion.p
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+                className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground/90 mt-1"
+                style={{ lineHeight: 1.1 }}
+              >
+                For Every Student.
+              </motion.p>
             </motion.div>
 
             <motion.p
