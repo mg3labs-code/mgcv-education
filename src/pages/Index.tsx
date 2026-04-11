@@ -9,12 +9,11 @@ import FeatureShowcase from "@/components/landing/FeatureShowcase";
 import WhyThisWorks from "@/components/landing/WhyThisWorks";
 import ResearchProvenMethods from "@/components/landing/ResearchProvenMethods";
 import LoadingScreen from "@/components/LoadingScreen";
-import { Menu, X, ArrowRight } from "lucide-react";
+import { Menu, X, ArrowRight, GraduationCap, BookOpen } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import heroStudents from "@/assets/hero-students.webp";
 import heroFutureLearning from "@/assets/hero-future-learning.jpg";
 import heroAiStudent from "@/assets/hero-ai-student.png";
-import ImageTextEffect from "@/components/landing/ImageTextEffect";
 
 const heroImages = [
   { src: heroStudents, alt: "Students collaborating with technology" },
@@ -97,6 +96,16 @@ const Index = () => {
     } else {
       setModalType(type);
     }
+  };
+
+  const openUnifiedLogin = () => {
+    setMobileMenuOpen(false);
+    if (inIframe) {
+      openStandalonePreview();
+      return;
+    }
+    setLoginType("");
+    setModalType("login");
   };
 
   const closeModal = useCallback(() => {
@@ -185,7 +194,7 @@ const Index = () => {
         </div>
       )}
 
-      {/* Header */}
+      {/* Header — Clean Nav */}
       <header className="fixed top-0 left-0 right-0 z-[1000] bg-background/80 backdrop-blur-xl py-4 border-b border-border/50" style={{ top: inIframe ? '100px' : 0 }}>
         <div className="max-w-[1400px] mx-auto flex justify-between items-center px-4 md:px-10">
           <div className="text-2xl md:text-[28px] font-bold tracking-tight">
@@ -198,8 +207,8 @@ const Index = () => {
           </button>
 
           <nav className="hidden md:flex gap-8 items-center">
-            {["Student Login", "Teacher Login", "About"].map((label) => {
-              const key = label === "Student Login" ? "student" : label === "Teacher Login" ? "teacher" : "about";
+            {["About", "For Schools"].map((label) => {
+              const key = label === "For Schools" ? "contact" : "about";
               return (
                 <button key={key} onClick={() => openModal(key as any)}
                   className="text-muted-foreground text-sm font-medium transition-colors hover:text-foreground cursor-pointer bg-transparent border-none relative group">
@@ -208,24 +217,34 @@ const Index = () => {
                 </button>
               );
             })}
-            <button onClick={() => openModal("contact")}
-              className="bg-primary text-primary-foreground px-6 py-2.5 rounded-full font-semibold text-sm transition-all hover:shadow-[0_8px_25px_hsl(162_65%_38%/0.3)] hover:-translate-y-0.5">
-              Contact Us
+            <button onClick={openUnifiedLogin}
+              className="text-muted-foreground text-sm font-medium transition-colors hover:text-foreground cursor-pointer bg-transparent border-none relative group">
+              Login
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full" />
+            </button>
+            <button onClick={() => { setLoginType("student"); setAuthMode("signup"); openModal("student"); }}
+              className="bg-primary text-primary-foreground px-6 py-2.5 rounded-full font-semibold text-sm transition-all hover:shadow-[0_8px_25px_hsl(162_65%_38%/0.3)] hover:-translate-y-0.5 flex items-center gap-2">
+              Start Learning
+              <ArrowRight className="h-4 w-4" />
             </button>
           </nav>
         </div>
 
         {mobileMenuOpen && (
           <div className="md:hidden border-t border-border/50 px-4 py-4 flex flex-col gap-2 bg-background/95 backdrop-blur-xl animate-slide-down">
-            {(["student", "teacher", "about"] as const).map((key) => (
+            {(["about", "contact"] as const).map((key) => (
               <button key={key} onClick={() => openModal(key)}
                 className="text-muted-foreground text-sm py-2.5 text-left bg-transparent border-none hover:text-foreground">
-                {key === "student" ? "Student Login" : key === "teacher" ? "Teacher Login" : "About"}
+                {key === "about" ? "About" : "For Schools"}
               </button>
             ))}
-            <button onClick={() => openModal("contact")}
+            <button onClick={openUnifiedLogin}
+              className="text-muted-foreground text-sm py-2.5 text-left bg-transparent border-none hover:text-foreground">
+              Login
+            </button>
+            <button onClick={() => { setLoginType("student"); setAuthMode("signup"); openModal("student"); }}
               className="bg-primary text-primary-foreground px-6 py-3 rounded-full font-semibold text-sm text-center mt-1">
-              Contact Us
+              Start Learning
             </button>
           </div>
         )}
@@ -254,48 +273,28 @@ const Index = () => {
               </div>
             </motion.div>
 
+            {/* Clean Two-Line Headline */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.1, ease: "easeOut" as const }}
-              className="mb-2"
+              className="mb-4"
             >
-              <motion.p
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: 0.05 }}
-                className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-black tracking-tight mb-1"
-                style={{
-                  lineHeight: 1.1,
-                  backgroundImage: "linear-gradient(135deg, hsl(var(--foreground)) 0%, hsl(var(--primary)) 50%, hsl(var(--accent)) 100%)",
-                  backgroundSize: "300% 100%",
-                  WebkitBackgroundClip: "text",
-                  backgroundClip: "text",
-                  color: "transparent",
-                  animation: "text-shimmer 6s ease-in-out infinite",
-                }}
-              >
-                World-Class
-              </motion.p>
-              <ImageTextEffect />
-              <motion.p
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: 0.7 }}
-                className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent to-info mt-1"
-                style={{ lineHeight: 1.1 }}
-              >
-                For Every Student.
-              </motion.p>
+              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight leading-[1.08]">
+                <span className="text-foreground">World-Class </span>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent to-info">Thinking</span>
+                <br />
+                <span className="text-foreground">For Every Student.</span>
+              </h1>
             </motion.div>
 
             <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.25, ease: "easeOut" as const }}
-              className="text-base md:text-xl text-muted-foreground leading-relaxed mb-8 max-w-xl"
+              className="text-lg md:text-xl text-muted-foreground leading-relaxed mb-8 max-w-xl"
             >
-              We integrate proven methods from elite universities into your curriculum — building thinking capacity, not just knowledge.
+              We bring proven methods from <strong className="text-foreground">Stanford, MIT & Oxford</strong> into your curriculum — building thinking capacity, not just knowledge.
             </motion.p>
 
             <motion.div
@@ -304,15 +303,34 @@ const Index = () => {
               transition={{ duration: 0.5, delay: 0.4, ease: "easeOut" as const }}
               className="flex flex-col sm:flex-row gap-3"
             >
-              <button onClick={() => openModal("student")}
+              <button onClick={() => { setLoginType("student"); setAuthMode("signup"); openModal("student"); }}
                 className="group bg-primary text-primary-foreground px-8 py-4 rounded-full font-semibold text-base transition-all hover:shadow-[0_12px_30px_hsl(162_65%_38%/0.35)] hover:-translate-y-0.5 flex items-center justify-center gap-2">
                 Start Learning
                 <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
               </button>
-              <button onClick={() => openModal("teacher")}
+              <button onClick={() => openModal("contact")}
                 className="bg-secondary text-secondary-foreground px-8 py-4 rounded-full font-semibold text-base border border-border transition-all hover:bg-accent/10 hover:-translate-y-0.5">
-                Teacher Portal
+                For Schools
               </button>
+            </motion.div>
+
+            {/* Trust Signal */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.6 }}
+              className="mt-6 flex items-center gap-3"
+            >
+              <div className="flex -space-x-2">
+                {["🏫", "🎓", "📚"].map((emoji, i) => (
+                  <div key={i} className="w-8 h-8 rounded-full bg-muted border-2 border-background flex items-center justify-center text-sm">
+                    {emoji}
+                  </div>
+                ))}
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Trusted by <strong className="text-foreground">200+ schools</strong> across India
+              </p>
             </motion.div>
 
             {/* Mobile Hero Carousel */}
@@ -351,6 +369,7 @@ const Index = () => {
           </div>
         </div>
 
+        {/* Desktop Hero Image */}
         <div
           className="absolute top-0 right-0 w-[45%] h-full z-[1] hidden xl:flex items-center justify-center pointer-events-none overflow-hidden"
           style={{
@@ -380,35 +399,62 @@ const Index = () => {
               </AnimatePresence>
               <div className="absolute inset-0 bg-gradient-to-t from-background/30 via-transparent to-transparent" />
             </div>
-            {/* Carousel dots */}
             <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 flex gap-2">
               {heroImages.map((_, i) => (
                 <span key={i} className={`w-2 h-2 rounded-full transition-all duration-500 ${i === heroIndex ? "bg-primary w-6" : "bg-muted-foreground/30"}`} />
               ))}
             </div>
-            {/* Floating badge */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.8, duration: 0.5 }}
-              className="absolute -bottom-4 -left-6 bg-card border border-border/50 rounded-xl px-4 py-3 shadow-lg backdrop-blur-sm"
-            >
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                  <span className="text-sm">🎯</span>
-                </div>
-                <div>
-                  <p className="text-xs font-bold text-foreground">5 Inner OS Dimensions</p>
-                  <p className="text-[10px] text-muted-foreground">Clarity · Thinking · Focus · Momentum · Character</p>
-                </div>
-              </div>
-            </motion.div>
           </motion.div>
         </div>
       </main>
 
       {/* Trust Badges / Stats */}
       <TrustBadges />
+
+      {/* 5 Inner OS Dimensions — Elevated Section */}
+      <section className="relative z-10 py-16 md:py-24">
+        <div className="max-w-[1200px] mx-auto px-4 md:px-10">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
+              The 5 Dimensions of <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-info">Inner OS</span>
+            </h2>
+            <p className="text-muted-foreground text-base max-w-2xl mx-auto">
+              Our AI tracks and builds cognitive muscle across five core dimensions — this is what separates surface learning from deep understanding.
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            {[
+              { emoji: "👁️", label: "Clarity", desc: "See concepts with crystal clear understanding", color: "from-blue-500/20 to-cyan-500/10" },
+              { emoji: "🧠", label: "Thinking", desc: "Reason deeper through first principles", color: "from-purple-500/20 to-violet-500/10" },
+              { emoji: "🎯", label: "Attention", desc: "Stay focused on what matters most", color: "from-amber-500/20 to-orange-500/10" },
+              { emoji: "🚀", label: "Momentum", desc: "Build unstoppable learning streaks", color: "from-emerald-500/20 to-green-500/10" },
+              { emoji: "💎", label: "Character", desc: "Develop grit, discipline & resilience", color: "from-rose-500/20 to-pink-500/10" },
+            ].map((d, i) => (
+              <motion.div
+                key={d.label}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: i * 0.08 }}
+                className="bg-card border border-border/50 rounded-2xl p-5 text-center hover:shadow-lg hover:-translate-y-1 transition-all"
+              >
+                <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${d.color} flex items-center justify-center mx-auto mb-3`}>
+                  <span className="text-2xl">{d.emoji}</span>
+                </div>
+                <p className="text-base font-bold text-foreground mb-1">{d.label}</p>
+                <p className="text-xs text-muted-foreground leading-relaxed">{d.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* Feature Showcase */}
       <FeatureShowcase />
@@ -446,20 +492,6 @@ const Index = () => {
               <p className="text-muted-foreground text-base leading-relaxed">
                 Our AI doesn't just deliver content — it tracks 47 micro-patterns in how you learn, adapts in real-time, and builds your cognitive muscle across 5 dimensions.
               </p>
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { emoji: "👁️", label: "Clarity", desc: "See concepts clearly" },
-                  { emoji: "🧠", label: "Thinking", desc: "Reason deeper" },
-                  { emoji: "🎯", label: "Attention", desc: "Stay focused" },
-                  { emoji: "🚀", label: "Momentum", desc: "Keep growing" },
-                ].map(d => (
-                  <div key={d.label} className="bg-card border border-border/50 rounded-xl p-3">
-                    <span className="text-lg">{d.emoji}</span>
-                    <p className="text-sm font-semibold text-foreground mt-1">{d.label}</p>
-                    <p className="text-xs text-muted-foreground">{d.desc}</p>
-                  </div>
-                ))}
-              </div>
             </motion.div>
           </div>
         </div>
@@ -485,7 +517,7 @@ const Index = () => {
             Building cognitive muscle, one layer at a time. Zero infrastructure needed — students start the same day.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <button onClick={() => openModal("student")}
+            <button onClick={() => { setLoginType("student"); setAuthMode("signup"); openModal("student"); }}
               className="bg-primary text-primary-foreground px-8 py-4 rounded-full font-semibold text-base transition-all hover:shadow-[0_12px_30px_hsl(162_65%_38%/0.35)] hover:-translate-y-0.5">
               Get Started — Free
             </button>
@@ -508,7 +540,7 @@ const Index = () => {
         </div>
       </footer>
 
-      {/* Login Modal */}
+      {/* Login Modal — Unified with Role Picker */}
       {modalType === "login" && (
         <div className="fixed inset-0 bg-background/80 backdrop-blur-xl z-[2000] flex justify-center items-center p-4" onClick={(e) => e.target === e.currentTarget && closeModal()}>
           <motion.div
@@ -520,69 +552,107 @@ const Index = () => {
             <button onClick={closeModal} className="absolute top-4 right-5 text-2xl cursor-pointer text-muted-foreground hover:text-foreground bg-transparent border-none">
               ×
             </button>
-            <div className={`w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4 ${
-              loginType === "teacher" 
-                ? "bg-gradient-to-br from-amber-500/20 to-orange-500/10" 
-                : "bg-gradient-to-br from-primary/20 to-info/10"
-            }`}>
-              <span className={`text-xl font-bold ${loginType === "teacher" ? "text-amber-600" : "text-primary"}`}>
-                {loginType === "student" ? "🎓" : "👩‍🏫"}
-              </span>
-            </div>
-            <h2 className="text-xl md:text-2xl font-bold text-foreground mb-1">
-              {loginType === "student" ? "Student Portal" : "Teacher Portal"}
-            </h2>
 
-            {showForgot ? (
-              <div className="mt-6">
-                <ForgotPasswordModal onBack={() => setShowForgot(false)} variant="glass" />
-              </div>
-            ) : (
+            {/* Role not yet selected — show picker */}
+            {!loginType ? (
               <>
-                <p className="text-muted-foreground mb-6 text-sm">
-                  {authMode === "login"
-                    ? loginType === "student" ? "Access your learning dashboard" : "Manage your classroom"
-                    : loginType === "student" ? "Create your student account" : "Register as an educator"}
-                </p>
-
-                <form onSubmit={handleSubmit} className="space-y-3">
-                  {authMode === "signup" && (
-                    <>
-                      <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} required
-                        placeholder="Full name" className={inputClass} />
-                      {loginType === "teacher" && (
-                        <input type="text" value={schoolName} onChange={(e) => setSchoolName(e.target.value)}
-                          placeholder="School name" className={inputClass} />
-                      )}
-                    </>
-                  )}
-                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required
-                    placeholder="Email address" className={inputClass} />
-                  <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6}
-                    placeholder="Password" className={inputClass} />
-                  <button type="submit" disabled={submitting}
-                    className="w-full py-4 rounded-xl bg-primary text-primary-foreground text-sm font-semibold transition-all mt-2 hover:shadow-[0_10px_30px_hsl(162_65%_38%/0.3)] disabled:opacity-50">
-                    {submitting ? "Authenticating..." : authMode === "login" ? "Sign In" : "Create Account"}
-                  </button>
-
-                  {loginError && (
-                    <div className="mt-3 bg-destructive/10 border border-destructive/20 rounded-xl p-4 text-left">
-                      <p className="text-destructive text-sm font-medium">{loginError.message}</p>
-                      <p className="text-muted-foreground text-xs mt-1">{loginError.suggestion}</p>
+                <h2 className="text-xl md:text-2xl font-bold text-foreground mb-2">Welcome Back</h2>
+                <p className="text-muted-foreground text-sm mb-6">Choose how you'd like to sign in</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <button onClick={() => setLoginType("student")}
+                    className="flex flex-col items-center gap-3 p-6 rounded-xl border border-border/50 bg-card hover:border-primary hover:shadow-lg transition-all group">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-info/10 flex items-center justify-center">
+                      <GraduationCap className="h-6 w-6 text-primary" />
                     </div>
-                  )}
-                </form>
-
-                <div className="flex justify-between mt-5">
-                  <button onClick={() => setShowForgot(true)}
-                    className="text-muted-foreground text-xs hover:text-primary bg-transparent border-none cursor-pointer transition-colors">
-                    Forgot Password?
+                    <div>
+                      <p className="font-semibold text-foreground text-sm">Student</p>
+                      <p className="text-xs text-muted-foreground">Access your dashboard</p>
+                    </div>
                   </button>
-                  <button onClick={() => setAuthMode(authMode === "login" ? "signup" : "login")}
-                    className="text-muted-foreground text-xs hover:text-primary bg-transparent border-none cursor-pointer transition-colors">
-                    {authMode === "login" ? "Create Account" : "Sign In Instead"}
+                  <button onClick={() => setLoginType("teacher")}
+                    className="flex flex-col items-center gap-3 p-6 rounded-xl border border-border/50 bg-card hover:border-amber-500 hover:shadow-lg transition-all group">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/10 flex items-center justify-center">
+                      <BookOpen className="h-6 w-6 text-amber-600" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-foreground text-sm">Teacher</p>
+                      <p className="text-xs text-muted-foreground">Manage your classroom</p>
+                    </div>
                   </button>
                 </div>
+              </>
+            ) : (
+              <>
+                {/* Role selected — show form */}
+                <button onClick={() => setLoginType("")}
+                  className="absolute top-4 left-5 text-sm cursor-pointer text-muted-foreground hover:text-foreground bg-transparent border-none">
+                  ← Back
+                </button>
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4 ${
+                  loginType === "teacher" 
+                    ? "bg-gradient-to-br from-amber-500/20 to-orange-500/10" 
+                    : "bg-gradient-to-br from-primary/20 to-info/10"
+                }`}>
+                  <span className={`text-xl font-bold ${loginType === "teacher" ? "text-amber-600" : "text-primary"}`}>
+                    {loginType === "student" ? "🎓" : "👩‍🏫"}
+                  </span>
+                </div>
+                <h2 className="text-xl md:text-2xl font-bold text-foreground mb-1">
+                  {loginType === "student" ? "Student Portal" : "Teacher Portal"}
+                </h2>
+
+                {showForgot ? (
+                  <div className="mt-6">
+                    <ForgotPasswordModal onBack={() => setShowForgot(false)} variant="glass" />
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-muted-foreground mb-6 text-sm">
+                      {authMode === "login"
+                        ? loginType === "student" ? "Access your learning dashboard" : "Manage your classroom"
+                        : loginType === "student" ? "Create your student account" : "Register as an educator"}
+                    </p>
+
+                    <form onSubmit={handleSubmit} className="space-y-3">
+                      {authMode === "signup" && (
+                        <>
+                          <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} required
+                            placeholder="Full name" className={inputClass} />
+                          {loginType === "teacher" && (
+                            <input type="text" value={schoolName} onChange={(e) => setSchoolName(e.target.value)}
+                              placeholder="School name" className={inputClass} />
+                          )}
+                        </>
+                      )}
+                      <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required
+                        placeholder="Email address" className={inputClass} />
+                      <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6}
+                        placeholder="Password" className={inputClass} />
+                      <button type="submit" disabled={submitting}
+                        className="w-full py-4 rounded-xl bg-primary text-primary-foreground text-sm font-semibold transition-all mt-2 hover:shadow-[0_10px_30px_hsl(162_65%_38%/0.3)] disabled:opacity-50">
+                        {submitting ? "Authenticating..." : authMode === "login" ? "Sign In" : "Create Account"}
+                      </button>
+
+                      {loginError && (
+                        <div className="mt-3 bg-destructive/10 border border-destructive/20 rounded-xl p-4 text-left">
+                          <p className="text-destructive text-sm font-medium">{loginError.message}</p>
+                          <p className="text-muted-foreground text-xs mt-1">{loginError.suggestion}</p>
+                        </div>
+                      )}
+                    </form>
+
+                    <div className="flex justify-between mt-5">
+                      <button onClick={() => setShowForgot(true)}
+                        className="text-muted-foreground text-xs hover:text-primary bg-transparent border-none cursor-pointer transition-colors">
+                        Forgot Password?
+                      </button>
+                      <button onClick={() => setAuthMode(authMode === "login" ? "signup" : "login")}
+                        className="text-muted-foreground text-xs hover:text-primary bg-transparent border-none cursor-pointer transition-colors">
+                        {authMode === "login" ? "Create Account" : "Sign In Instead"}
+                      </button>
+                    </div>
+                  </>
+                )}
               </>
             )}
           </motion.div>
