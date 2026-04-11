@@ -27,7 +27,7 @@ const letters = [
 const ImageTextEffect = () => {
   return (
     <TooltipProvider delayDuration={100}>
-      <div className="relative flex flex-wrap items-baseline justify-start select-none" aria-label="World-Class THINKING">
+      <div className="relative flex flex-wrap md:flex-nowrap items-baseline justify-start select-none" aria-label="World-Class THINKING">
         {/* World-Class — bold shimmer text, same baseline */}
         <motion.span
           initial={{ opacity: 0, y: 24 }}
@@ -35,7 +35,7 @@ const ImageTextEffect = () => {
           transition={{ duration: 0.5, delay: 0.05, ease: "easeOut" }}
           className="inline-block font-black leading-none hero-glow-text mr-[0.15em]"
           style={{
-            fontSize: "clamp(2rem, 5.2vw, 5.5rem)",
+            fontSize: "clamp(2rem, 4.2vw, 4.5rem)",
             letterSpacing: "-0.02em",
           }}
         >
@@ -53,7 +53,7 @@ const ImageTextEffect = () => {
                 whileHover={{ scale: 1.1, y: -5 }}
                 className="inline-block font-black leading-none cursor-default relative"
                 style={{
-                  fontSize: "clamp(2rem, 5.2vw, 5.5rem)",
+                  fontSize: "clamp(2rem, 4.2vw, 4.5rem)",
                   backgroundImage: `url(${l.img})`,
                   backgroundSize: "cover",
                   backgroundPosition: "center",
