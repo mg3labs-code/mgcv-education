@@ -301,7 +301,7 @@ const Index = () => {
               transition={{ duration: 0.6, delay: 0.25, ease: "easeOut" as const }}
               className="text-lg md:text-xl text-muted-foreground leading-relaxed mb-8 max-w-xl"
             >
-              We bring proven methods from <strong className="text-foreground">Stanford, MIT & Oxford</strong> into your curriculum — building thinking capacity, not just knowledge.
+              Built on <strong className="text-foreground">cognitive science & metacognitive research</strong> — the foundations behind the world's highest-performing education systems.
             </motion.p>
 
             <motion.div

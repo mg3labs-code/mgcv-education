@@ -16,10 +16,10 @@ const exams = [
     accentColor: "text-violet-600",
     stats: "12 lakh compete → 10,000 IIT seats → top 0.8%",
     timeline: [
-      { year: "Year 1-2", icon: "🗣️", text: "Every IIT class is a discussion, not a lecture. Professors ASK, students ARGUE. That's your Debate Challenge." },
+      { year: "Year 1-2", icon: "🗣️", text: "Every class is a discussion, not a lecture. Professors ASK, students ARGUE. That's your Debate Challenge." },
       { year: "Year 2-3", icon: "🔧", text: "You don't just study thermodynamics — you DESIGN a heat exchanger. Every assignment is 'Use it in real life'." },
       { year: "Year 3-4", icon: "🔬", text: "Research projects where panels question every assumption — exactly like 'What if we're wrong?'" },
-      { year: "Career", icon: "🚀", text: "₹15-50 LPA starting. Google, Microsoft, Goldman Sachs recruit on campus. The REAL advantage: they THINK differently." },
+      { year: "Career", icon: "🚀", text: "₹15-50 LPA starting. Top tech companies recruit on campus. The REAL advantage: they THINK differently." },
     ],
   },
   {
@@ -38,7 +38,7 @@ const exams = [
     ],
   },
   {
-    name: "Olympiad → MIT / Stanford",
+    name: "Olympiad → Global Top Universities",
     icon: "🏅",
     lucideIcon: Trophy,
     color: "from-amber-500/10 to-yellow-500/10",
@@ -47,71 +47,71 @@ const exams = [
     stats: "5 lakh start → 6 represent India → top 0.001%",
     timeline: [
       { year: "The Journey", icon: "🧠", text: "No standard method. You INVENT approaches. Every problem combines 'But WHY?' + 'What if we're wrong?' + 'Break It Down'." },
-      { year: "University", icon: "🎓", text: "Direct admission to MIT, Stanford, Cambridge. These universities value THINKING over marks — exactly what Inner OS measures." },
-      { year: "Career", icon: "🏆", text: "Alumni include Fields Medal winners, Nobel laureates, founders of Dropbox, Quora, Two Sigma." },
+      { year: "University", icon: "🎓", text: "Direct admission to top global universities. These institutions value THINKING over marks — exactly what Inner OS measures." },
+      { year: "Career", icon: "🏆", text: "Alumni include Fields Medal winners, Nobel laureates, founders of world-changing companies." },
       { year: "The Real Prize", icon: "♾️", text: "The HABIT of first-principles thinking. That habit compounds for life." },
     ],
   },
 ];
 
-/* ============ PART B: University Methods ============ */
+/* ============ PART B: Research-Proven Methods ============ */
 
-const universities = [
+const methods = [
   {
-    id: "iit",
-    name: "IIT",
-    flag: "🇮🇳",
+    id: "first-principles",
+    name: "First Principles",
+    icon: "🧬",
     method: "Problem-Based Learning",
-    how: "IIT professors present a PROBLEM, students work to solve it, then defend their approach. The professor asks 'Why?' until shallow answers run out.",
+    how: "Present a PROBLEM, work to solve it, then defend your approach. The question 'Why?' is asked until shallow answers run out.",
     mapping: [
-      { edutech: "Debate Challenge", university: "Viva voce / oral examination" },
-      { edutech: "Break It Down", university: "First-principles derivation" },
-      { edutech: "Use it in real life", university: "Design projects every semester" },
-      { edutech: "What if we're wrong?", university: "Engineering failure analysis" },
+      { edutech: "Debate Challenge", institution: "Oral examination & viva voce" },
+      { edutech: "Break It Down", institution: "First-principles derivation" },
+      { edutech: "Use it in real life", institution: "Design projects every semester" },
+      { edutech: "What if we're wrong?", institution: "Engineering failure analysis" },
     ],
-    quote: "\"IIT didn't teach me answers. It taught me how to find answers to questions nobody has asked yet.\"",
+    quote: "\"The best education doesn't teach answers. It teaches how to find answers to questions nobody has asked yet.\"",
   },
   {
-    id: "oxford",
-    name: "Oxford",
-    flag: "🇬🇧",
+    id: "socratic",
+    name: "Socratic Method",
+    icon: "🔍",
     method: "Tutorial System",
-    how: "One student, one professor, one hour, every week. The student writes an essay defending a position, then the professor ATTACKS every argument.",
+    how: "One student, one mentor, one hour, every week. The student writes an essay defending a position, then the mentor ATTACKS every argument.",
     mapping: [
-      { edutech: "Debate Challenge", university: "Weekly 1-on-1 tutorials" },
-      { edutech: "Teach your friend", university: "Essay defence" },
-      { edutech: "But WHY though?", university: "The tutorial question" },
-      { edutech: "What does this mean?", university: "Philosophical reflection" },
+      { edutech: "Debate Challenge", institution: "Weekly 1-on-1 tutorials" },
+      { edutech: "Teach your friend", institution: "Essay defence" },
+      { edutech: "But WHY though?", institution: "The probing question" },
+      { edutech: "What does this mean?", institution: "Philosophical reflection" },
     ],
     quote: "\"The tutorial is where you discover what you DON'T understand. That discomfort is where learning happens.\"",
   },
   {
-    id: "harvard",
-    name: "Harvard / MIT",
-    flag: "🇺🇸",
-    method: "Case Method + Research",
-    how: "Harvard teaches ENTIRELY through real company cases. MIT emphasizes building things that work. Both prioritize APPLICATION over memorization.",
+    id: "case-method",
+    name: "Case Method",
+    icon: "📋",
+    method: "Case-Based Learning + Research",
+    how: "Teaching ENTIRELY through real-world cases. Emphasizes building things that work. Prioritizes APPLICATION over memorization.",
     mapping: [
-      { edutech: "Use it in real life", university: "Case study method" },
-      { edutech: "Where else does this appear?", university: "Cross-disciplinary thinking" },
-      { edutech: "What if we're wrong?", university: "Hypothesis testing" },
-      { edutech: "Try it yourself!", university: "Maker culture / Labs" },
+      { edutech: "Use it in real life", institution: "Case study method" },
+      { edutech: "Where else does this appear?", institution: "Cross-disciplinary thinking" },
+      { edutech: "What if we're wrong?", institution: "Hypothesis testing" },
+      { edutech: "Try it yourself!", institution: "Maker culture / Labs" },
     ],
     quote: "\"The goal of education is not to fill a bucket but to light a fire.\"",
   },
   {
-    id: "stanford",
-    name: "Stanford",
-    flag: "🇺🇸",
-    method: "Design Thinking",
-    how: "Empathize → Define → Ideate → Prototype → Test. Every problem starts with understanding PEOPLE. This is why Stanford graduates built Google, Instagram, Netflix.",
+    id: "design-thinking",
+    name: "Design Thinking",
+    icon: "🎨",
+    method: "Empathy-Driven Innovation",
+    how: "Empathize → Define → Ideate → Prototype → Test. Every problem starts with understanding PEOPLE. This method produced the world's most innovative thinkers.",
     mapping: [
-      { edutech: "What's the big idea?", university: "Empathize + Define" },
-      { edutech: "Try it yourself!", university: "Prototype & Test" },
-      { edutech: "What if we're wrong?", university: "Test + Iterate" },
-      { edutech: "Where else does this appear?", university: "Cross-pollination" },
+      { edutech: "What's the big idea?", institution: "Empathize + Define" },
+      { edutech: "Try it yourself!", institution: "Prototype & Test" },
+      { edutech: "What if we're wrong?", institution: "Test + Iterate" },
+      { edutech: "Where else does this appear?", institution: "Cross-pollination" },
     ],
-    quote: "\"Most people die at 25 and aren't buried until 75. Stanford wakes you up.\"",
+    quote: "\"Most people die at 25 and aren't buried until 75. Great education wakes you up.\"",
   },
 ];
 
@@ -141,7 +141,7 @@ const ResearchProvenMethods = () => {
             </span>
           </h2>
           <p className="text-muted-foreground text-base md:text-lg max-w-2xl mx-auto">
-            Not coaching tricks. Not rote learning. The exact pedagogical methods used by IIT, Oxford, Harvard, and Stanford — 
+            Not coaching tricks. Not rote learning. Evidence-based pedagogical methods backed by decades of cognitive science and metacognitive research — 
             adapted for Indian students from age 14.
           </p>
         </motion.div>
@@ -220,7 +220,7 @@ const ResearchProvenMethods = () => {
           </div>
         </motion.div>
 
-        {/* ========== PART B: University Methods Mapping ========== */}
+        {/* ========== PART B: Research-Proven Methods Mapping ========== */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -228,57 +228,57 @@ const ResearchProvenMethods = () => {
           transition={{ duration: 0.6, delay: 0.2 }}
         >
           <h3 className="text-xl md:text-2xl font-bold text-foreground text-center mb-2">
-            Elite University Methods, Built Into Every Lesson
+            Research-Proven Methods, Built Into Every Lesson
           </h3>
           <p className="text-sm text-muted-foreground text-center mb-8 max-w-lg mx-auto">
-            Your child practices the SAME techniques used at IIT, Oxford, Harvard, and Stanford — every single day.
+            Your child practices techniques rooted in proven learning science used by the world's top institutions — every single day.
           </p>
 
-          <Tabs defaultValue="iit" className="w-full">
+          <Tabs defaultValue="first-principles" className="w-full">
             <TabsList className="w-full flex h-auto flex-wrap gap-1 bg-muted/50 p-1.5 mb-6">
-              {universities.map(u => (
+              {methods.map(m => (
                 <TabsTrigger
-                  key={u.id}
-                  value={u.id}
+                  key={m.id}
+                  value={m.id}
                   className="flex-1 min-w-[80px] text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
                 >
-                  {u.flag} {u.name}
+                  {m.icon} {m.name}
                 </TabsTrigger>
               ))}
             </TabsList>
 
-            {universities.map(uni => (
-              <TabsContent key={uni.id} value={uni.id}>
+            {methods.map(m => (
+              <TabsContent key={m.id} value={m.id}>
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3 }}
                   className="rounded-2xl border border-border bg-card p-5 md:p-7"
                 >
-                  {/* University header */}
+                  {/* Method header */}
                   <div className="flex items-center gap-3 mb-3">
-                    <span className="text-2xl">{uni.flag}</span>
+                    <span className="text-2xl">{m.icon}</span>
                     <div>
-                      <h4 className="text-base font-bold text-foreground">{uni.name}</h4>
-                      <p className="text-xs text-primary font-semibold">{uni.method}</p>
+                      <h4 className="text-base font-bold text-foreground">{m.name}</h4>
+                      <p className="text-xs text-primary font-semibold">{m.method}</p>
                     </div>
                   </div>
-                  <p className="text-sm text-muted-foreground leading-relaxed mb-5">{uni.how}</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-5">{m.how}</p>
 
                   {/* Mapping table */}
                   <div className="rounded-xl border border-border overflow-hidden mb-5">
                     <div className="grid grid-cols-2 bg-muted/50 border-b border-border">
                       <div className="px-3 py-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">What you learn on EduTech</div>
-                      <div className="px-3 py-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">What {uni.name} calls it</div>
+                      <div className="px-3 py-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">The research method</div>
                     </div>
-                    {uni.mapping.map((m, i) => (
-                      <div key={i} className={`grid grid-cols-2 ${i < uni.mapping.length - 1 ? "border-b border-border/50" : ""}`}>
+                    {m.mapping.map((mp, i) => (
+                      <div key={i} className={`grid grid-cols-2 ${i < m.mapping.length - 1 ? "border-b border-border/50" : ""}`}>
                         <div className="px-3 py-2.5 flex items-center gap-2">
                           <BookOpen className="h-3 w-3 text-primary shrink-0" />
-                          <span className="text-xs font-semibold text-primary">{m.edutech}</span>
+                          <span className="text-xs font-semibold text-primary">{mp.edutech}</span>
                         </div>
                         <div className="px-3 py-2.5 flex items-center">
-                          <span className="text-xs text-foreground">{m.university}</span>
+                          <span className="text-xs text-foreground">{mp.institution}</span>
                         </div>
                       </div>
                     ))}
@@ -286,7 +286,7 @@ const ResearchProvenMethods = () => {
 
                   {/* Quote */}
                   <blockquote className="border-l-2 border-primary/30 pl-4 py-1">
-                    <p className="text-xs text-muted-foreground italic leading-relaxed">{uni.quote}</p>
+                    <p className="text-xs text-muted-foreground italic leading-relaxed">{m.quote}</p>
                   </blockquote>
                 </motion.div>
               </TabsContent>

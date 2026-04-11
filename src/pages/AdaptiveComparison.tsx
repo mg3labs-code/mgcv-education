@@ -103,7 +103,7 @@ const sections = [
         { type: "prompt", icon: "🤖", text: "AI: \"Prove that √2 is irrational using contradiction.\"" },
         { type: "student", icon: "👤", text: "Student: \"Assume √2 = p/q where p,q are coprime...\"" },
         { type: "ai", icon: "🤖", text: "AI: \"Define coprime. Now, what if I claim √4 is also irrational using your proof? Where does it break?\"" },
-        { type: "jee-note", icon: "⚡", text: "This is EXACTLY how IIT interview panels test — they take your proof and try to break it." },
+        { type: "jee-note", icon: "⚡", text: "This is EXACTLY how elite interview panels test — they take your proof and try to break it." },
       ],
       feel: "Rigorous, challenging. Prepares for oral examination.",
     },
