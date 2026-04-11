@@ -35,7 +35,7 @@ const ImageTextEffect = () => {
           transition={{ duration: 0.5, delay: 0.05, ease: "easeOut" }}
           className="inline-block font-black leading-none hero-glow-text mr-[0.15em]"
           style={{
-            fontSize: "clamp(2.5rem, 7vw, 6.5rem)",
+            fontSize: "clamp(2rem, 5.2vw, 5.5rem)",
             letterSpacing: "-0.02em",
           }}
         >
@@ -53,7 +53,7 @@ const ImageTextEffect = () => {
                 whileHover={{ scale: 1.1, y: -5 }}
                 className="inline-block font-black leading-none cursor-default relative"
                 style={{
-                  fontSize: "clamp(2.5rem, 7vw, 6.5rem)",
+                  fontSize: "clamp(2rem, 5.2vw, 5.5rem)",
                   backgroundImage: `url(${l.img})`,
                   backgroundSize: "cover",
                   backgroundPosition: "center",
