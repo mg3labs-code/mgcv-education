@@ -10,6 +10,7 @@ import WhyThisWorks from "@/components/landing/WhyThisWorks";
 import ResearchProvenMethods from "@/components/landing/ResearchProvenMethods";
 import LoadingScreen from "@/components/LoadingScreen";
 import { Menu, X, ArrowRight, GraduationCap, BookOpen } from "lucide-react";
+import ImageTextEffect from "@/components/landing/ImageTextEffect";
 import { motion, AnimatePresence } from "framer-motion";
 import heroStudents from "@/assets/hero-students.webp";
 import heroFutureLearning from "@/assets/hero-future-learning.jpg";
@@ -273,41 +274,31 @@ const Index = () => {
               </div>
             </motion.div>
 
-            {/* Hero Headline — Designer-Grade */}
+            {/* Hero Headline */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.1, ease: "easeOut" as const }}
-              className="mb-4"
+              className="mb-2"
             >
-              {/* Line 1: World-Class — shimmer glow */}
+              {/* Line 1: World-Class + THINKING (image-filled) */}
               <motion.p
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.5, delay: 0.05 }}
-                className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight hero-glow-text"
-                style={{ lineHeight: 1.08 }}
+                className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-black tracking-tight hero-glow-text"
+                style={{ lineHeight: 1.1 }}
               >
                 World-Class
               </motion.p>
+              <ImageTextEffect />
 
-              {/* Line 2: THINKING — vivid animated gradient, larger */}
+              {/* Line 2: For Every Student */}
               <motion.p
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 0.15 }}
-                className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tighter hero-thinking-text"
-                style={{ lineHeight: 1.0 }}
-              >
-                THINKING
-              </motion.p>
-
-              {/* Line 3: For Every Student — clean, grounded */}
-              <motion.p
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-                className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground/90 mt-1"
+                transition={{ duration: 0.5, delay: 0.7 }}
+                className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent to-info mt-1"
                 style={{ lineHeight: 1.1 }}
               >
                 For Every Student.
