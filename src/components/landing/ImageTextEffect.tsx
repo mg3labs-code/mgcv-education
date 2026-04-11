@@ -60,8 +60,9 @@ const ImageTextEffect = () => {
                   WebkitBackgroundClip: "text",
                   backgroundClip: "text",
                   color: "transparent",
-                  WebkitTextStroke: "0.5px rgba(255,255,255,0.08)",
                   letterSpacing: "-0.03em",
+                  filter: "contrast(1.3) saturate(1.4)",
+                  WebkitTextStroke: "1px rgba(0,0,0,0.15)",
                   transition: "filter 0.3s ease",
                 }}
               >
