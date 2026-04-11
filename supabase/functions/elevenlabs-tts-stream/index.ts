@@ -163,6 +163,12 @@ serve(async (req) => {
 
     const voice = voiceId || "EXAVITQu4vr4xnSDxMaL"; // Sarah
 
+    // Warm greeting voice (Lily) gets slower, more expressive settings
+    const isWarmGreeting = voice === "pFZP5JQG7iQjIQuC4Bku";
+    const voiceSettings = isWarmGreeting
+      ? { stability: 0.4, similarity_boost: 0.8, style: 0.35, use_speaker_boost: true, speed: 0.85 }
+      : { stability: 0.5, similarity_boost: 0.75, style: 0, use_speaker_boost: true, speed: 1.0 };
+
     const response = await fetch(
       `https://api.elevenlabs.io/v1/text-to-speech/${voice}/stream?output_format=mp3_44100_128`,
       {
@@ -173,14 +179,8 @@ serve(async (req) => {
         },
         body: JSON.stringify({
           text: sanitized,
-          model_id: "eleven_v3",
-          voice_settings: {
-            stability: 0.5,
-            similarity_boost: 0.75,
-            style: 0,
-            use_speaker_boost: true,
-            speed: 1.0,
-          },
+          model_id: "eleven_multilingual_v2",
+          voice_settings: voiceSettings,
         }),
       }
     );
