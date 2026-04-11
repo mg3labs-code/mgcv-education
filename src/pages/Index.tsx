@@ -274,31 +274,21 @@ const Index = () => {
               </div>
             </motion.div>
 
-            {/* Hero Headline */}
+            {/* Hero Headline — World-Class THINKING on same line */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.1, ease: "easeOut" as const }}
               className="mb-2"
             >
-              {/* Line 1: World-Class + THINKING (image-filled) */}
-              <motion.p
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: 0.05 }}
-                className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-black tracking-tight hero-glow-text"
-                style={{ lineHeight: 1.1 }}
-              >
-                World-Class
-              </motion.p>
               <ImageTextEffect />
 
-              {/* Line 2: For Every Student */}
+              {/* For Every Student */}
               <motion.p
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: 0.7 }}
-                className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent to-info mt-1"
+                transition={{ duration: 0.5, delay: 0.9 }}
+                className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent to-info mt-2"
                 style={{ lineHeight: 1.1 }}
               >
                 For Every Student.
