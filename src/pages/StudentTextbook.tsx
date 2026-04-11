@@ -10,7 +10,7 @@ import { useState } from "react";
 const JOURNEY_STEPS = [
   { label: "Dashboard", emoji: "🧠", desc: "See your Inner OS" },
   { label: "Learn Episode", emoji: "📚", desc: "7-layer deep learning" },
-  { label: "Apply Method", emoji: "🎓", desc: "Oxford & Harvard tools" },
+  { label: "Apply Method", emoji: "🎓", desc: "Research-proven tools" },
   { label: "Track Growth", emoji: "📈", desc: "Watch dimensions grow" },
   { label: "Next Episode", emoji: "🚀", desc: "Keep the momentum" },
 ];

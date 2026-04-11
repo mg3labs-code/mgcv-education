@@ -324,11 +324,11 @@ const TextbookEpisode = () => {
 
   // Skill-mapping toasts for micro-connections
   const SKILL_TOASTS: Record<string, string> = useMemo(() => ({
-    assumptions: "You just practiced the same skill IIT interviewers test 🏛️",
-    application: "Harvard calls this the Case Method — you're already doing it 🎓",
+    assumptions: "You just practiced the same skill elite interviewers test 🏛️",
+    application: "Top institutions call this the Case Method — you're already doing it 🎓",
     reasoning: "This is how JEE Advanced separates toppers from memorizers 🧠",
     explain: "Feynman won a Nobel Prize using this exact technique 🔬",
-    connections: "Oxford tutorials work exactly like this — connecting ideas across fields 🇬🇧",
+    connections: "Elite tutorial systems work exactly like this — connecting ideas across fields 🧠",
   }), []);
 
   // Helper: advance with celebration
