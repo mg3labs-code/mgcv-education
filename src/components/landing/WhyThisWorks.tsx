@@ -31,9 +31,9 @@ const comparison = [
 
 const universityMethods = [
   {
-    university: "Oxford Tutorial",
-    flag: "🇬🇧",
-    method: "Debate & challenge assumptions",
+    university: "The Socratic Challenge",
+    flag: "🔍",
+    method: "Research-proven assumption testing",
     feature: "What if we're wrong?",
     featureDesc: "Assumptions Block",
     icon: Shield,
@@ -41,9 +41,9 @@ const universityMethods = [
     borderColor: "border-red-200 dark:border-red-800",
   },
   {
-    university: "Harvard Case Method",
-    flag: "🇺🇸",
-    method: "Apply theory to real scenarios",
+    university: "Real-World Application",
+    flag: "🌍",
+    method: "Evidence-based transfer learning",
     feature: "Use it in real life",
     featureDesc: "Application Block",
     icon: Briefcase,
@@ -51,9 +51,9 @@ const universityMethods = [
     borderColor: "border-blue-200 dark:border-blue-800",
   },
   {
-    university: "IIT Problem-Based",
-    flag: "🇮🇳",
-    method: "Break complex problems into first principles",
+    university: "First-Principles Reasoning",
+    flag: "🧬",
+    method: "Metacognitive problem decomposition",
     feature: "But WHY though?",
     featureDesc: "Reasoning Block",
     icon: Brain,
@@ -61,9 +61,9 @@ const universityMethods = [
     borderColor: "border-amber-200 dark:border-amber-800",
   },
   {
-    university: "Feynman Technique",
-    flag: "🔬",
-    method: "Explain it simply to truly understand",
+    university: "The Simplicity Test",
+    flag: "💡",
+    method: "Teach-back method — proven to boost retention 90%",
     feature: "Teach your friend",
     featureDesc: "Explain Block",
     icon: MessageSquare,
@@ -71,9 +71,9 @@ const universityMethods = [
     borderColor: "border-purple-200 dark:border-purple-800",
   },
   {
-    university: "Stanford Design Thinking",
-    flag: "🇺🇸",
-    method: "Empathize, prototype, test, iterate",
+    university: "Design Thinking Lab",
+    flag: "🎨",
+    method: "Empathy-driven iterative learning",
     feature: "Try it yourself!",
     featureDesc: "Application Block",
     icon: Lightbulb,
@@ -102,7 +102,7 @@ const WhyThisWorks = () => {
             Why This <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-info">Actually Works</span>
           </h2>
           <p className="text-muted-foreground text-base md:text-lg max-w-2xl mx-auto">
-            We don't just teach — we integrate the exact methods used by the world's top universities into your daily learning.
+            Built on decades of learning science research — the same cognitive frameworks that power the world's best education systems.
           </p>
         </motion.div>
 
@@ -135,10 +135,10 @@ const WhyThisWorks = () => {
           className="mb-6"
         >
           <h3 className="text-xl md:text-2xl font-bold text-foreground text-center mb-2">
-            Elite Methods, Built Into Every Lesson
+            Research-Proven Methods, Built Into Every Lesson
           </h3>
           <p className="text-sm text-muted-foreground text-center mb-8">
-            Your child practices the same techniques used at IIT, Oxford, and Harvard — every single day.
+            Your child practices techniques rooted in cognitive science research used by top-tier institutions worldwide — every single day.
           </p>
         </motion.div>
 
