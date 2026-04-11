@@ -1,72 +1,66 @@
 
 
-## Landing Page UX Overhaul + Login Fix
+## Remove University Names + Strengthen Methodology Branding
 
-Based on the detailed UI audit you shared, here are the fixes:
+Replace all named university references with research-backed, legally safe, high-impact language. Prioritize cognitive science and metacognitive framing — your own IP is stronger than borrowed prestige.
 
-### 1. Clean Up Nav — Remove Duplication
+### Changes by File
 
-**Current**: Nav has "Student Login", "Teacher Login", "About", "Contact Us" (button) — duplicated by hero CTAs.
+**1. `src/pages/Index.tsx` (line 304) — Hero subtitle**
+- "proven methods from **Stanford, MIT & Oxford**"
+- **New**: "built on **cognitive science & metacognitive research** — the foundations behind the world's highest-performing education systems"
 
-**New nav structure**: `Student Inner OS` (logo) · `About` · `For Schools` · `Login` · `[Start Learning]` (primary button)
+**2. `src/components/landing/WhyThisWorks.tsx` — Method cards + copy**
 
-- "Login" opens a unified login modal (user picks student/teacher inside)
-- "For Schools" opens the contact modal
-- "Start Learning" is the single primary CTA → opens student signup
-- Remove "Teacher Portal" button from hero entirely
+Replace university-named cards with research-methodology names using stronger impact language:
 
-### 2. Fix Headline Hierarchy
+| Current Card | New Card Name | New Subtitle |
+|---|---|---|
+| Oxford Tutorial | The Socratic Challenge | "Research-proven assumption testing" |
+| Harvard Case Method | Real-World Application | "Evidence-based transfer learning" |
+| IIT Problem-Based | First-Principles Reasoning | "Metacognitive problem decomposition" |
+| Feynman Technique | The Simplicity Test | "Teach-back method — proven to boost retention 90%" |
+| Stanford Design Thinking | Design Thinking Lab | "Empathy-driven iterative learning" |
 
-**Current**: "World-Class" / ImageTextEffect("THINKING") / "For Every Student." — three separate visual treatments breaking reading flow.
+Remove all country flags. Replace with relevant scientific emoji or keep icons only.
 
-**New**: Clean two-line headline:
-```
-World-Class Thinking
-For Every Student.
-```
-- "Thinking" gets a gradient accent color but stays as text (keep the visual pop without the image collage breaking readability)
-- Subheading gets larger size and more contrast — natural follow-up, not buried
+Section subtitle (line 141): "used at IIT, Oxford, and Harvard" → "rooted in cognitive science research used by top-tier institutions worldwide"
 
-### 3. Elevate 5 Inner OS Dimensions
+Section header subtitle (line 105): → "Built on decades of learning science research — the same cognitive frameworks that power the world's best education systems."
 
-**Current**: Tiny floating badge on hero image corner.
+**3. `src/components/landing/TrustBadges.tsx` (line 29)**
+- "Oxford-level pedagogy tools" → "research-proven pedagogy tools"
 
-**New**: Remove the floating badge. The existing "Visual Showcase Section" (lines 423-466) already shows 4 dimensions as cards — expand it to show all 5 and position it right after TrustBadges as its own prominent section.
+**4. `src/components/landing/ResearchProvenMethods.tsx` — Full overhaul**
 
-### 4. Add Trust Signal to Hero
+Part B university tabs: Replace institution names with methodology names:
+- Tab: "IIT" → "First Principles"
+- Tab: "Oxford" → "Socratic Method"
+- Tab: "Harvard / MIT" → "Case Method"
+- Tab: "Stanford" → "Design Thinking"
 
-Add a subtle line below the hero CTA: "Trusted by 200+ schools across India" with small school/partner indicators.
+Remove flags from tabs. Remove all university names from descriptions — focus on methodology descriptions and research citations.
 
-### 5. Fix Login Modal
+Subtitle (line 144): "used by IIT, Oxford, Harvard, and Stanford" → "backed by decades of cognitive science and metacognitive research"
 
-- Test and verify the login flow works correctly
-- The modal code looks structurally sound — check for any runtime issues with auth state or iframe detection blocking login unnecessarily
+Subtitle (line 234): "used at IIT, Oxford, Harvard, and Stanford" → "rooted in proven learning science used by the world's top institutions"
 
-### Files Changed
+Part A exam timelines (lines 41, 51): "Olympiad → MIT / Stanford" → "Olympiad → Global Top Universities". Remove "MIT, Stanford, Cambridge" from timeline text → "top global universities"
 
-| File | Change |
-|------|--------|
-| `src/pages/Index.tsx` | Restructure nav (unified Login + For Schools), simplify hero headline, remove Teacher Portal hero button, add trust line, remove floating badge |
-| `src/components/landing/ImageTextEffect.tsx` | Simplify or remove — replace with styled text "Thinking" |
+**5. `src/pages/TextbookEpisode.tsx` (lines 327-331) — Skill toasts**
+- "IIT interviewers test" → "elite interviewers test"
+- "Harvard calls this the Case Method" → "Top institutions call this the Case Method"
+- "Oxford tutorials work exactly like this" → "Elite tutorial systems work exactly like this"
 
-### Nav Before → After
+**6. `src/pages/StudentTextbook.tsx` (line 13)**
+- "Oxford & Harvard tools" → "Research-proven tools"
 
-```text
-BEFORE: [Student Inner OS]  Student Login  Teacher Login  About  [Contact Us]
-AFTER:  [Student Inner OS]  About  For Schools  Login  [Start Learning →]
-```
+**7. `src/pages/AdaptiveComparison.tsx` (lines 101-106)**
+- "JEE Mode → IIT Interview Prep" stays (JEE/IIT is exam context, not brand endorsement)
+- "how IIT interview panels test" → "how elite interview panels test"
 
-### Hero Before → After
-
-```text
-BEFORE:                          AFTER:
-World-Class                      World-Class Thinking
-[IMAGE COLLAGE: THINKING]        For Every Student.
-For Every Student.
-                                 We bring proven methods from Stanford,
-We integrate proven methods...   MIT & Oxford into your curriculum.
-
-[Start Learning] [Teacher Portal] [Start Learning →] [For Schools]
-                                 Trusted by 200+ schools across India
-```
+### What stays
+- "JEE" and "NEET" — these are exam names, not university brands, and are safe
+- "Feynman" in internal textbook blocks — educational methodology attribution is fair use
+- "Design Thinking" — generic term, fully safe
 
