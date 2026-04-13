@@ -110,10 +110,10 @@ const App = () => (
                 <Route path="/teacher/quiz" element={<ProtectedRoute><TeacherDashboard /></ProtectedRoute>} />
                 <Route path="/teacher/insights" element={<ProtectedRoute><TeacherInsights /></ProtectedRoute>} />
                 <Route path="/teacher/exam-room" element={<ProtectedRoute><StudentExamRoom /></ProtectedRoute>} />
-                <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
-                <Route path="/admin/schools" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
-                <Route path="/admin/analytics" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
-                <Route path="/admin/settings" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+                <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/admin/schools" element={<AdminDashboard />} />
+                <Route path="/admin/analytics" element={<AdminDashboard />} />
+                <Route path="/admin/settings" element={<AdminDashboard />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
