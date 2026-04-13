@@ -172,9 +172,14 @@ const ReasoningVisualDemo = () => {
     } catch (err: any) {
       console.error(err);
       const isTimeout = err?.name === "AbortError" || err?.message?.includes("Failed to send");
+      const isCredits = err?.message?.includes("402") || err?.message?.includes("non-2xx");
       toast({
-        title: isTimeout ? "Generation timed out ⏱️" : "Generation failed",
-        description: isTimeout ? "The visual is being generated in the background. Check the library below in a minute." : "Please try again",
+        title: isCredits ? "AI credits temporarily exhausted 💳" : isTimeout ? "Generation timed out ⏱️" : "Generation failed",
+        description: isCredits 
+          ? "Please try loading a previously generated visual from the library below, or try again later." 
+          : isTimeout 
+          ? "The visual is being generated in the background. Check the library below in a minute." 
+          : "Please try again",
         variant: "destructive",
       });
     } finally {
