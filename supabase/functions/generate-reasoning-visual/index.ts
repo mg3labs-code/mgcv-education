@@ -99,7 +99,87 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { topic, subject, grade } = await req.json();
+    const body = await req.json();
+    const { topic, subject, grade, action, slug: repairSlug, step_index } = body;
+
+    // ── Repair single broken image ──
+    if (action === "repair-image" && repairSlug && typeof step_index === "number") {
+      const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+      if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
+      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+      const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+      const supabase = createClient(supabaseUrl, serviceKey);
+
+      const { data: row } = await supabase
+        .from("reasoning_visuals")
+        .select("*")
+        .eq("slug", repairSlug)
+        .maybeSingle();
+
+      if (!row) {
+        return new Response(JSON.stringify({ error: "Visual not found" }), {
+          status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const stepsArr = row.steps as any[];
+      const step = stepsArr[step_index];
+      if (!step) {
+        return new Response(JSON.stringify({ error: "Step not found" }), {
+          status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const elitePrompt = buildImagePrompt(step, row.subject, row.grade);
+      const imgResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "google/gemini-3.1-flash-image-preview",
+          messages: [{ role: "user", content: elitePrompt }],
+          modalities: ["image", "text"],
+        }),
+      });
+
+      if (!imgResp.ok) {
+        const status = imgResp.status;
+        await imgResp.text();
+        return new Response(JSON.stringify({ error: status === 402 ? "Credits exhausted" : "Image generation failed" }), {
+          status, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const imgData = await imgResp.json();
+      const imageB64 = imgData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+      if (!imageB64) {
+        return new Response(JSON.stringify({ error: "No image returned" }), {
+          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const b64Data = imageB64.replace(/^data:image\/\w+;base64,/, "");
+      const bytes = Uint8Array.from(atob(b64Data), (c) => c.charCodeAt(0));
+      const filePath = `${repairSlug}/step-${step_index + 1}.png`;
+      const { error: uploadErr } = await supabase.storage
+        .from("reasoning-visuals")
+        .upload(filePath, bytes, { contentType: "image/png", upsert: true });
+
+      if (uploadErr) {
+        return new Response(JSON.stringify({ error: "Upload failed" }), {
+          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const newUrl = `${supabaseUrl}/storage/v1/object/public/reasoning-visuals/${filePath}`;
+      stepsArr[step_index].image_url = newUrl;
+
+      await supabase.from("reasoning_visuals").update({ steps: stepsArr }).eq("id", row.id);
+
+      return new Response(JSON.stringify({ image_url: newUrl, repaired: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     if (!topic) {
       return new Response(JSON.stringify({ error: "topic is required" }), {
         status: 400,

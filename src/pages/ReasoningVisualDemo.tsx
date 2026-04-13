@@ -3,11 +3,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ReasoningStep } from "@/components/textbook/ActiveReasoningVisual";
+import ReasoningImage, { getImageHealthStats } from "@/components/textbook/ReasoningImage";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import {
   Brain, Beaker, Atom, Calculator, Leaf, Zap, Loader2, ArrowLeft,
-  Lightbulb, Puzzle, GitBranch, CheckCircle2, Clock, BookOpen
+  Lightbulb, Puzzle, GitBranch, CheckCircle2, Clock, BookOpen, AlertTriangle, ShieldCheck
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -338,20 +339,15 @@ const ReasoningVisualDemo = () => {
                     </div>
 
                     <CardContent className="p-4 space-y-3">
-                      {step.image_url ? (
-                        <div className="rounded-lg overflow-hidden border border-border bg-muted">
-                          <img
-                            src={step.image_url}
-                            alt={`Step ${step.step_number}: ${step.title}`}
-                            className="w-full h-48 object-contain bg-background"
-                            loading="lazy"
-                          />
-                        </div>
-                      ) : (
-                        <div className="rounded-lg border border-dashed border-border h-48 flex items-center justify-center bg-muted/50">
-                          <p className="text-xs text-muted-foreground">Image not available</p>
-                        </div>
-                      )}
+                      <ReasoningImage
+                        src={step.image_url}
+                        alt={`Step ${step.step_number}: ${step.title}`}
+                        stepIndex={i}
+                        slug={`${selectedSubject.toLowerCase()}_${inputTopic.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 60)}`}
+                        onImageFixed={(idx, newUrl) => {
+                          setSteps(prev => prev.map((s, si) => si === idx ? { ...s, image_url: newUrl } : s));
+                        }}
+                      />
 
                       <p className="text-sm text-foreground leading-relaxed">{step.explanation}</p>
 
@@ -392,6 +388,7 @@ const ReasoningVisualDemo = () => {
               {gallery.map((visual) => {
                 const SubjIcon = subjectIcons[visual.subject] || Brain;
                 const firstImage = (visual.steps as ReasoningStep[])?.[0]?.image_url;
+                const health = getImageHealthStats(visual.steps as any[]);
                 return (
                   <Card
                     key={visual.id}
@@ -400,12 +397,20 @@ const ReasoningVisualDemo = () => {
                   >
                     <CardContent className="p-3 space-y-2">
                       {firstImage ? (
-                        <div className="rounded-md overflow-hidden border border-border h-28">
+                        <div className="rounded-md overflow-hidden border border-border h-28 relative">
                           <img
                             src={firstImage}
                             alt={visual.topic}
                             className="w-full h-full object-contain bg-background group-hover:scale-105 transition-transform"
                             loading="lazy"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = "none";
+                              const parent = (e.target as HTMLImageElement).parentElement;
+                              if (parent) {
+                                parent.classList.add("flex", "items-center", "justify-center", "bg-muted/30");
+                                parent.innerHTML = `<span class="text-xs text-destructive/60 flex items-center gap-1">⚠️ Image broken</span>`;
+                              }
+                            }}
                           />
                         </div>
                       ) : (
@@ -426,6 +431,15 @@ const ReasoningVisualDemo = () => {
                             <Clock className="h-3 w-3" />
                             {new Date(visual.created_at).toLocaleDateString()}
                           </span>
+                          {health.healthy ? (
+                            <span className="ml-auto" aria-label="All images available">
+                              <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+                            </span>
+                          ) : (
+                            <span className="ml-auto" aria-label={`${health.withUrl}/${health.total} images`}>
+                              <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
+                            </span>
+                          )}
                         </div>
                       </div>
                     </CardContent>

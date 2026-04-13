@@ -1,0 +1,2 @@
+CREATE POLICY "Service can update reasoning visuals" ON public.reasoning_visuals FOR UPDATE TO public USING (true) WITH CHECK (true);
+CREATE POLICY "Service can delete reasoning visuals" ON public.reasoning_visuals FOR DELETE TO public USING (true);
