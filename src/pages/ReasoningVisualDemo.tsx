@@ -3,11 +3,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ReasoningStep } from "@/components/textbook/ActiveReasoningVisual";
+import ReasoningImage, { getImageHealthStats } from "@/components/textbook/ReasoningImage";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import {
   Brain, Beaker, Atom, Calculator, Leaf, Zap, Loader2, ArrowLeft,
-  Lightbulb, Puzzle, GitBranch, CheckCircle2, Clock, BookOpen
+  Lightbulb, Puzzle, GitBranch, CheckCircle2, Clock, BookOpen, AlertTriangle, ShieldCheck
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
