@@ -50,6 +50,11 @@ const ReasoningImage = ({ src, alt, stepIndex, slug, className = "", onImageFixe
         body: { action: "repair-image", slug, step_index: stepIndex },
       });
       if (error) throw error;
+      if (data?.fallback) {
+        setStatus("error");
+        toast.error(data.message || "Image generation temporarily unavailable — try again later.");
+        return;
+      }
       if (data?.image_url) {
         setCurrentSrc(data.image_url);
         setRetryCount(0);
