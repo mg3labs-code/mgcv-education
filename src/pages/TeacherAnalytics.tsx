@@ -1,9 +1,7 @@
 import { useState, useMemo } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, Legend, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
-} from "recharts";
+import ThinkingNetwork from "@/components/ThinkingNetwork";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 
 interface Student {
   roll: number;
@@ -72,285 +70,312 @@ const studentsData: Student[] = [
   { roll: 129849, name: "Avni Gupta", score: 40, performance: "Below Average", strengths: "Application of Integrals, Three Dimensional Geometry", weaknesses: "Differential Equations" },
 ];
 
-const PERF_COLORS: Record<string, string> = {
-  Outstanding: "#4CAF50",
-  Excellent: "#2196F3",
-  "Very Good": "#00BCD4",
-  Good: "#FF9800",
-  Average: "#FF5722",
-  "Below Average": "#9C27B0",
+const PERF_CONFIG: Record<string, { color: string; bg: string; label: string }> = {
+  Outstanding: { color: "#059669", bg: "#F0FDF4", label: "⭐ Outstanding" },
+  Excellent: { color: "#2563EB", bg: "#EFF6FF", label: "🎯 Excellent" },
+  "Very Good": { color: "#0D9488", bg: "#F0FDFA", label: "✅ Very Good" },
+  Good: { color: "#F59E0B", bg: "#FEF3C7", label: "👍 Good" },
+  Average: { color: "#EA580C", bg: "#FFF7ED", label: "📊 Average" },
+  "Below Average": { color: "#DC2626", bg: "#FEF2F2", label: "⚠️ Needs Help" },
 };
 
-const getGrade = (score: number) => {
-  if (score >= 90) return "A+";
-  if (score >= 80) return "A";
-  if (score >= 70) return "B+";
-  if (score >= 60) return "B";
-  if (score >= 50) return "C";
-  if (score >= 40) return "D";
-  return "F";
-};
+type FilterType = "all" | "Outstanding" | "Excellent" | "Very Good" | "Good" | "Average" | "Below Average";
 
 const TeacherAnalytics = () => {
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [filter, setFilter] = useState<FilterType>("all");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const stats = useMemo(() => {
     const total = studentsData.length;
     const avg = Math.round(studentsData.reduce((s, st) => s + st.score, 0) / total);
-    const outstanding = studentsData.filter((s) => s.performance === "Outstanding").length;
-    const passRate = Math.round((studentsData.filter((s) => s.score >= 60).length / total) * 100);
-    return { total, avg, outstanding, passRate };
+    const top = studentsData.filter(s => s.score >= 80).length;
+    const needsHelp = studentsData.filter(s => s.score < 50).length;
+    const passRate = Math.round((studentsData.filter(s => s.score >= 60).length / total) * 100);
+    return { total, avg, top, needsHelp, passRate };
   }, []);
 
-  const scoreDistribution = useMemo(() => {
-    const ranges = { "90-100": 0, "80-89": 0, "70-79": 0, "60-69": 0, "50-59": 0, "40-49": 0, "0-39": 0 };
-    studentsData.forEach((s) => {
-      if (s.score >= 90) ranges["90-100"]++;
-      else if (s.score >= 80) ranges["80-89"]++;
-      else if (s.score >= 70) ranges["70-79"]++;
-      else if (s.score >= 60) ranges["60-69"]++;
-      else if (s.score >= 50) ranges["50-59"]++;
-      else if (s.score >= 40) ranges["40-49"]++;
-      else ranges["0-39"]++;
-    });
-    return Object.entries(ranges).map(([range, count]) => ({ range, count }));
+  const filteredStudents = useMemo(() => {
+    let list = [...studentsData];
+    if (filter !== "all") list = list.filter(s => s.performance === filter);
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter(s => s.name.toLowerCase().includes(q));
+    }
+    return list.sort((a, b) => b.score - a.score);
+  }, [filter, searchQuery]);
+
+  const perfGroups = useMemo(() => {
+    const groups: Record<string, number> = {};
+    studentsData.forEach(s => { groups[s.performance] = (groups[s.performance] || 0) + 1; });
+    return Object.entries(groups).sort((a, b) => b[1] - a[1]);
   }, []);
 
-  const performancePie = useMemo(() => {
-    const counts: Record<string, number> = {};
-    studentsData.forEach((s) => { counts[s.performance] = (counts[s.performance] || 0) + 1; });
-    return Object.entries(counts).map(([name, value]) => ({ name, value }));
-  }, []);
-
-  const strengthsData = useMemo(() => {
-    const counts: Record<string, number> = {};
-    studentsData.forEach((s) => {
-      if (s.strengths && s.strengths !== "None") {
-        s.strengths.split(", ").forEach((str) => { counts[str] = (counts[str] || 0) + 1; });
-      }
-    });
-    return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([name, count]) => ({ name, count }));
-  }, []);
-
-  const weaknessesData = useMemo(() => {
-    const counts: Record<string, number> = {};
-    studentsData.forEach((s) => {
-      if (s.weaknesses && s.weaknesses !== "None") {
-        s.weaknesses.split(", ").forEach((w) => { counts[w] = (counts[w] || 0) + 1; });
-      }
-    });
-    return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([name, count]) => ({ name, count }));
-  }, []);
-
-  const selectedRadar = useMemo(() => {
+  // Generate mock "thinking" scores for selected student (based on their actual score)
+  const studentThinking = useMemo(() => {
     if (!selectedStudent) return [];
-    const classAvg = Math.round(studentsData.reduce((s, st) => s + st.score, 0) / studentsData.length);
-    const top = Math.max(...studentsData.map((s) => s.score));
-    const groupStudents = studentsData.filter((s) => s.performance === selectedStudent.performance);
-    const groupAvg = Math.round(groupStudents.reduce((s, st) => s + st.score, 0) / groupStudents.length);
+    const base = selectedStudent.score;
     return [
-      { metric: "Student Score", value: selectedStudent.score },
-      { metric: "Class Average", value: classAvg },
-      { metric: "Group Average", value: groupAvg },
-      { metric: "Top Score", value: top },
+      { name: "Clarity", score: Math.min(100, base + Math.round(Math.random() * 10 - 5)), icon: "👁️", color: "#0D9488" },
+      { name: "Thinking", score: Math.min(100, base + Math.round(Math.random() * 15 - 8)), icon: "🧠", color: "#7C3AED" },
+      { name: "Focus", score: Math.min(100, base + Math.round(Math.random() * 12 - 6)), icon: "🎯", color: "#F59E0B" },
+      { name: "Momentum", score: Math.min(100, base + Math.round(Math.random() * 10 - 3)), icon: "⚡", color: "#3B82F6" },
+      { name: "Character", score: Math.min(100, base + Math.round(Math.random() * 8 - 2)), icon: "❤️", color: "#EC4899" },
     ];
   }, [selectedStudent]);
 
-  const selectedRank = useMemo(() => {
-    if (!selectedStudent) return { rank: 0, percentile: 0 };
-    const rank = studentsData.filter((s) => s.score > selectedStudent.score).length + 1;
-    const percentile = Math.round(((studentsData.length - rank + 1) / studentsData.length) * 100);
-    return { rank, percentile };
-  }, [selectedStudent]);
+  // Score distribution simplified
+  const scoreBands = useMemo(() => [
+    { range: "90–100", count: studentsData.filter(s => s.score >= 90).length, color: "#059669" },
+    { range: "70–89", count: studentsData.filter(s => s.score >= 70 && s.score < 90).length, color: "#0D9488" },
+    { range: "50–69", count: studentsData.filter(s => s.score >= 50 && s.score < 70).length, color: "#F59E0B" },
+    { range: "Below 50", count: studentsData.filter(s => s.score < 50).length, color: "#DC2626" },
+  ], []);
 
-  const barColors = ["#4CAF50", "#66BB6A", "#81C784", "#A5D6A7", "#FFB74D", "#FF8A65", "#E57373"];
+  const getScoreColor = (score: number) => {
+    if (score >= 90) return "#059669";
+    if (score >= 70) return "#0D9488";
+    if (score >= 50) return "#F59E0B";
+    return "#DC2626";
+  };
 
   return (
     <DashboardLayout role="teacher" breadcrumbItems={[{ label: "Dashboard", href: "/teacher" }, { label: "Analytics" }]}>
-      <main className="p-4 md:p-8 max-w-[1400px] mx-auto">
-        {/* Header */}
-        <div className="mb-6 md:mb-8">
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-            📊 Student Performance Analytics
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Comprehensive analysis of performance, strengths, and areas for improvement
-          </p>
-        </div>
+      <div style={{ background: "#FFFBF5", minHeight: "100vh", fontFamily: "'DM Sans', sans-serif", color: "#1C1917" }}>
+        <div style={{ maxWidth: 960, margin: "0 auto", padding: "24px 16px" }}>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-5 mb-8 md:mb-10">
-          {[
-            { value: stats.total, label: "Total Students" },
-            { value: stats.avg, label: "Average Score" },
-            { value: stats.outstanding, label: "Outstanding Students" },
-            { value: `${stats.passRate}%`, label: "Pass Rate (≥60)" },
-          ].map((s, i) => (
-            <div key={i} className="bg-gradient-to-br from-[#667eea] to-[#764ba2] text-white p-6 rounded-2xl text-center shadow-lg hover:-translate-y-1 transition-transform">
-              <div className="text-3xl font-bold mb-2">{s.value}</div>
-              <div className="text-sm opacity-90">{s.label}</div>
-            </div>
-          ))}
-        </div>
-
-        {/* Charts Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
-          {/* Score Distribution */}
-          <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
-            <h3 className="text-lg font-semibold text-card-foreground text-center mb-4">📈 Score Distribution</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={scoreDistribution}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="range" fontSize={12} />
-                <YAxis allowDecimals={false} />
-                <Tooltip />
-                <Bar dataKey="count" name="Students" radius={[4, 4, 0, 0]}>
-                  {scoreDistribution.map((_, i) => (
-                    <Cell key={i} fill={barColors[i % barColors.length]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+          {/* Header */}
+          <div style={{ marginBottom: 24 }}>
+            <h1 style={{ fontFamily: "'Source Serif 4', serif", fontSize: 26, fontWeight: 700, margin: "0 0 4px" }}>
+              📊 Class Analytics
+            </h1>
+            <p style={{ fontSize: 14, color: "#78716C", margin: 0 }}>
+              Simple overview of how your students are performing
+            </p>
           </div>
 
-          {/* Performance Levels */}
-          <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
-            <h3 className="text-lg font-semibold text-card-foreground text-center mb-4">🎯 Performance Levels</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie data={performancePie} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} innerRadius={50} paddingAngle={3} label>
-                  {performancePie.map((entry) => (
-                    <Cell key={entry.name} fill={PERF_COLORS[entry.name] || "#ccc"} />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Top Strengths */}
-          <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
-            <h3 className="text-lg font-semibold text-card-foreground text-center mb-4">💪 Top Strengths</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={strengthsData} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis type="number" allowDecimals={false} />
-                <YAxis type="category" dataKey="name" fontSize={11} width={150} />
-                <Tooltip />
-                <Bar dataKey="count" name="Students" fill="#4CAF50" radius={[0, 4, 4, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Common Weaknesses */}
-          <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
-            <h3 className="text-lg font-semibold text-card-foreground text-center mb-4">⚠️ Common Weaknesses</h3>
-            {weaknessesData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={weaknessesData} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis type="number" allowDecimals={false} />
-                  <YAxis type="category" dataKey="name" fontSize={11} width={150} />
-                  <Tooltip />
-                  <Bar dataKey="count" name="Students needing help" fill="#f44336" radius={[0, 4, 4, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <p className="text-center text-green-500 text-lg mt-12">🎉 Most students have no identified weaknesses!</p>
-            )}
-          </div>
-        </div>
-
-        {/* Student Selector */}
-        <div className="bg-card border border-border rounded-2xl p-6 shadow-sm mb-10">
-          <h3 className="text-lg font-semibold text-card-foreground mb-5">👥 Select a Student for Detailed Analysis</h3>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-3 md:gap-4">
-            {studentsData.map((student) => (
-              <button
-                key={student.roll}
-                onClick={() => setSelectedStudent(student)}
-                className={`p-4 rounded-xl text-white text-center transition-all cursor-pointer border-none hover:scale-105 hover:shadow-lg ${
-                  selectedStudent?.roll === student.roll
-                    ? "bg-gradient-to-br from-[#667eea] to-[#764ba2] scale-105"
-                    : "bg-gradient-to-br from-pink-400 to-rose-500"
-                }`}
-              >
-                <div className="font-semibold text-sm">{student.name}</div>
-                <div className="text-xs opacity-90">Score: {student.score}</div>
-                <div className="text-xs opacity-80">{student.performance}</div>
-              </button>
+          {/* Quick Stats — 4 simple cards */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 24 }}>
+            {[
+              { icon: "👥", value: stats.total, label: "Students", color: "#3B82F6" },
+              { icon: "📈", value: `${stats.avg}%`, label: "Class Average", color: "#0D9488" },
+              { icon: "⭐", value: stats.top, label: "Scoring 80+", color: "#7C3AED" },
+              { icon: "⚠️", value: stats.needsHelp, label: "Need Help (<50)", color: "#DC2626" },
+            ].map(s => (
+              <div key={s.label} style={{
+                background: "white", borderRadius: 14, border: "1px solid #E7E5E4",
+                padding: "16px 12px", textAlign: "center", borderLeft: `4px solid ${s.color}`,
+                boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+              }}>
+                <div style={{ fontSize: 22 }}>{s.icon}</div>
+                <div style={{ fontSize: 24, fontWeight: 700, color: s.color, fontFamily: "'Source Serif 4', serif", marginTop: 4 }}>{s.value}</div>
+                <div style={{ fontSize: 11, color: "#78716C" }}>{s.label}</div>
+              </div>
             ))}
           </div>
-        </div>
 
-        {/* Individual Analysis */}
-        {selectedStudent && (
-          <div className="bg-card border border-border rounded-2xl p-6 shadow-sm mb-10 animate-fade-in">
-            <h3 className="text-xl font-semibold text-card-foreground mb-6">🔍 Individual Student Analysis</h3>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-              {/* Student Info */}
-              <div className="bg-muted/50 p-5 rounded-xl border-l-4 border-[#667eea]">
-                <h4 className="font-semibold text-card-foreground mb-3">📋 Student Information</h4>
-                <p><strong>Name:</strong> {selectedStudent.name}</p>
-                <p><strong>Roll Number:</strong> {selectedStudent.roll}</p>
-                <p><strong>Score:</strong> {selectedStudent.score}/100</p>
-                <span className={`inline-block mt-2 py-1.5 px-4 rounded-full text-white text-sm font-bold`} style={{ backgroundColor: PERF_COLORS[selectedStudent.performance] || "#666" }}>
-                  {selectedStudent.performance}
-                </span>
-              </div>
-
-              {/* Strengths */}
-              <div className="bg-muted/50 p-5 rounded-xl border-l-4 border-green-500">
-                <h4 className="font-semibold text-card-foreground mb-3">💪 Strengths</h4>
-                <ul className="space-y-2">
-                  {selectedStudent.strengths !== "None"
-                    ? selectedStudent.strengths.split(", ").map((s, i) => (
-                        <li key={i} className="bg-card p-2 rounded border-l-3 border-green-500 text-sm">{s}</li>
-                      ))
-                    : <li className="text-muted-foreground text-sm">No specific strengths identified</li>}
-                </ul>
-              </div>
-
-              {/* Weaknesses */}
-              <div className="bg-muted/50 p-5 rounded-xl border-l-4 border-red-500">
-                <h4 className="font-semibold text-card-foreground mb-3">⚠️ Areas for Improvement</h4>
-                <ul className="space-y-2">
-                  {selectedStudent.weaknesses !== "None"
-                    ? selectedStudent.weaknesses.split(", ").map((w, i) => (
-                        <li key={i} className="bg-card p-2 rounded border-l-3 border-red-500 text-sm">{w}</li>
-                      ))
-                    : <li className="text-muted-foreground text-sm">No weaknesses identified</li>}
-                </ul>
-              </div>
-
-              {/* Metrics */}
-              <div className="bg-muted/50 p-5 rounded-xl border-l-4 border-[#667eea]">
-                <h4 className="font-semibold text-card-foreground mb-3">📊 Performance Metrics</h4>
-                <p><strong>Class Rank:</strong> {selectedRank.rank}/{studentsData.length}</p>
-                <p><strong>Percentile:</strong> {selectedRank.percentile}th</p>
-                <p><strong>Above/Below Average:</strong> {selectedStudent.score >= stats.avg ? "+" : ""}{selectedStudent.score - stats.avg} points</p>
-                <p><strong>Grade:</strong> {getGrade(selectedStudent.score)}</p>
-              </div>
-            </div>
-
-            {/* Radar Chart */}
-            <div className="bg-card border border-border rounded-2xl p-6">
-              <h3 className="text-lg font-semibold text-card-foreground text-center mb-4">📈 Performance Comparison</h3>
-              <ResponsiveContainer width="100%" height={300}>
-                <RadarChart data={selectedRadar}>
-                  <PolarGrid />
-                  <PolarAngleAxis dataKey="metric" fontSize={12} />
-                  <PolarRadiusAxis domain={[0, 100]} tickCount={6} />
-                  <Radar dataKey="value" stroke="#667eea" fill="#667eea" fillOpacity={0.2} />
-                  <Tooltip />
-                </RadarChart>
-              </ResponsiveContainer>
+          {/* Score Distribution — simple horizontal bars */}
+          <div style={{
+            background: "white", borderRadius: 16, border: "1px solid #E7E5E4",
+            padding: 24, marginBottom: 24, boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+          }}>
+            <h3 style={{ fontFamily: "'Source Serif 4', serif", fontSize: 18, fontWeight: 700, margin: "0 0 16px" }}>
+              📈 Score Distribution
+            </h3>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {scoreBands.map(b => (
+                <div key={b.range} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: "#1C1917", width: 80, flexShrink: 0 }}>{b.range}</span>
+                  <div style={{ flex: 1, height: 28, background: "#F5F5F4", borderRadius: 8, overflow: "hidden", position: "relative" }}>
+                    <div style={{
+                      width: `${(b.count / stats.total) * 100}%`, height: "100%",
+                      background: b.color, borderRadius: 8, minWidth: b.count > 0 ? 24 : 0,
+                      transition: "width 0.5s",
+                    }} />
+                  </div>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: b.color, width: 40, textAlign: "right" }}>
+                    {b.count}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
-        )}
-      </main>
+
+          {/* Performance Groups — simple chips showing counts */}
+          <div style={{
+            background: "white", borderRadius: 16, border: "1px solid #E7E5E4",
+            padding: 24, marginBottom: 24, boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+          }}>
+            <h3 style={{ fontFamily: "'Source Serif 4', serif", fontSize: 18, fontWeight: 700, margin: "0 0 16px" }}>
+              🎯 Performance Groups
+            </h3>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+              {perfGroups.map(([perf, count]) => {
+                const cfg = PERF_CONFIG[perf] || { color: "#666", bg: "#F5F5F4", label: perf };
+                return (
+                  <button key={perf} onClick={() => setFilter(filter === perf ? "all" : perf as FilterType)} style={{
+                    display: "flex", alignItems: "center", gap: 8, padding: "10px 16px",
+                    borderRadius: 12, border: filter === perf ? `2px solid ${cfg.color}` : "1px solid #E7E5E4",
+                    background: filter === perf ? cfg.bg : "white", cursor: "pointer",
+                    transition: "all 0.15s",
+                  }}>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: cfg.color }}>{cfg.label}</span>
+                    <span style={{
+                      background: cfg.color, color: "white", fontSize: 12, fontWeight: 700,
+                      width: 26, height: 26, borderRadius: "50%", display: "flex",
+                      alignItems: "center", justifyContent: "center",
+                    }}>{count}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Student List — clean searchable list */}
+          <div style={{
+            background: "white", borderRadius: 16, border: "1px solid #E7E5E4",
+            padding: 24, marginBottom: 24, boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 12 }}>
+              <h3 style={{ fontFamily: "'Source Serif 4', serif", fontSize: 18, fontWeight: 700, margin: 0 }}>
+                👥 Students ({filteredStudents.length})
+              </h3>
+              <input
+                type="text"
+                placeholder="Search student..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                style={{
+                  padding: "8px 14px", borderRadius: 10, border: "1px solid #E7E5E4",
+                  fontSize: 13, fontFamily: "'DM Sans', sans-serif", outline: "none",
+                  width: 200, background: "#FAFAF9",
+                }}
+              />
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {filteredStudents.map(student => {
+                const cfg = PERF_CONFIG[student.performance] || { color: "#666", bg: "#F5F5F4", label: student.performance };
+                const isSelected = selectedStudent?.roll === student.roll;
+                return (
+                  <div key={student.roll}>
+                    <button
+                      onClick={() => setSelectedStudent(isSelected ? null : student)}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 14, padding: "12px 16px",
+                        borderRadius: 12, border: isSelected ? `2px solid ${cfg.color}` : "1px solid #E7E5E4",
+                        background: isSelected ? cfg.bg : "white", cursor: "pointer",
+                        width: "100%", textAlign: "left", transition: "all 0.15s",
+                      }}
+                    >
+                      {/* Avatar */}
+                      <div style={{
+                        width: 38, height: 38, borderRadius: "50%",
+                        background: `linear-gradient(135deg, ${getScoreColor(student.score)}20, ${getScoreColor(student.score)}40)`,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: 14, fontWeight: 700, color: getScoreColor(student.score), flexShrink: 0,
+                        fontFamily: "'DM Sans', sans-serif",
+                      }}>
+                        {student.name.split(" ").map(n => n[0]).join("")}
+                      </div>
+
+                      {/* Name & strengths */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontWeight: 600, fontSize: 14, color: "#1C1917" }}>{student.name}</div>
+                        <div style={{ fontSize: 11, color: "#78716C", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {student.strengths !== "None" ? student.strengths : "No specific strengths"}
+                        </div>
+                      </div>
+
+                      {/* Score bar */}
+                      <div style={{ width: 80, flexShrink: 0 }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                          <span style={{ fontSize: 14, fontWeight: 700, color: getScoreColor(student.score), fontFamily: "'Source Serif 4', serif" }}>
+                            {student.score}%
+                          </span>
+                        </div>
+                        <div style={{ height: 5, background: "#E7E5E4", borderRadius: 3, overflow: "hidden" }}>
+                          <div style={{ width: `${student.score}%`, height: "100%", background: getScoreColor(student.score), borderRadius: 3 }} />
+                        </div>
+                      </div>
+
+                      {/* Performance badge */}
+                      <span style={{
+                        fontSize: 10, fontWeight: 700, padding: "4px 10px", borderRadius: 8,
+                        background: cfg.bg, color: cfg.color, flexShrink: 0, whiteSpace: "nowrap",
+                      }}>
+                        {cfg.label}
+                      </span>
+                    </button>
+
+                    {/* Expanded detail — simplified */}
+                    {isSelected && (
+                      <div style={{
+                        margin: "0 8px", padding: 20, borderRadius: "0 0 16px 16px",
+                        border: `1px solid ${cfg.color}30`, borderTop: "none",
+                        background: cfg.bg,
+                      }}>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+                          {/* Left — Thinking Network */}
+                          <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                            <h4 style={{ fontFamily: "'Source Serif 4', serif", fontWeight: 700, fontSize: 15, margin: "0 0 8px", color: "#1C1917" }}>
+                              🧠 Thinking Profile
+                            </h4>
+                            <p style={{ fontSize: 12, color: "#78716C", margin: "0 0 12px", textAlign: "center" }}>
+                              How {student.name.split(" ")[0]}'s cognitive skills connect
+                            </p>
+                            <ThinkingNetwork scores={studentThinking} size="sm" />
+                          </div>
+
+                          {/* Right — Quick Info */}
+                          <div>
+                            <div style={{ marginBottom: 16 }}>
+                              <h4 style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: 13, margin: "0 0 8px", color: "#059669" }}>💪 Strong In</h4>
+                              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                                {student.strengths !== "None" ? student.strengths.split(", ").map((s, i) => (
+                                  <span key={i} style={{ fontSize: 11, padding: "4px 10px", borderRadius: 8, background: "#F0FDF4", color: "#059669", fontWeight: 600 }}>{s}</span>
+                                )) : <span style={{ fontSize: 12, color: "#A8A29E" }}>—</span>}
+                              </div>
+                            </div>
+
+                            {student.weaknesses !== "None" && (
+                              <div style={{ marginBottom: 16 }}>
+                                <h4 style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: 13, margin: "0 0 8px", color: "#DC2626" }}>⚠️ Needs Work</h4>
+                                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                                  {student.weaknesses.split(", ").map((w, i) => (
+                                    <span key={i} style={{ fontSize: 11, padding: "4px 10px", borderRadius: 8, background: "#FEF2F2", color: "#DC2626", fontWeight: 600 }}>{w}</span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            <div style={{
+                              display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 12,
+                            }}>
+                              <div style={{ padding: "10px 12px", borderRadius: 10, background: "white", textAlign: "center" }}>
+                                <div style={{ fontSize: 18, fontWeight: 700, color: "#3B82F6", fontFamily: "'Source Serif 4', serif" }}>
+                                  #{studentsData.filter(s => s.score > student.score).length + 1}
+                                </div>
+                                <div style={{ fontSize: 10, color: "#78716C" }}>Class Rank</div>
+                              </div>
+                              <div style={{ padding: "10px 12px", borderRadius: 10, background: "white", textAlign: "center" }}>
+                                <div style={{ fontSize: 18, fontWeight: 700, color: "#7C3AED", fontFamily: "'Source Serif 4', serif" }}>
+                                  {student.score >= stats.avg ? "+" : ""}{student.score - stats.avg}
+                                </div>
+                                <div style={{ fontSize: 10, color: "#78716C" }}>vs Average</div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
     </DashboardLayout>
   );
 };
