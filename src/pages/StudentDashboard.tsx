@@ -238,7 +238,7 @@ function InnerOS({ position = "normal", scores }: {
     return (
       <div style={{
         background: "linear-gradient(135deg, #0D9488, #134E4A)",
-        borderRadius: 20, padding: "32px 28px", color: "white",
+        borderRadius: 20, padding: "28px 24px", color: "white",
         position: "relative", overflow: "hidden",
       }}>
         <div style={{
@@ -246,44 +246,30 @@ function InnerOS({ position = "normal", scores }: {
           borderRadius: "50%", background: "rgba(255,255,255,0.06)",
         }} />
         <div style={{ position: "relative", zIndex: 1 }}>
-          <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 28, flexWrap: "wrap" }}>
-            <div style={{ position: "relative", width: 120, height: 120, flexShrink: 0 }}>
-              <svg width="120" height="120" viewBox="0 0 120 120" style={{ transform: "rotate(-90deg)" }}>
-                <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="10" />
-                <circle cx="60" cy="60" r="50" fill="none" stroke="white" strokeWidth="10"
-                  strokeLinecap="round" strokeDasharray={`${(avgScore / 100) * 314} 314`} />
-              </svg>
-              <div style={{
-                position: "absolute", inset: 0, display: "flex", flexDirection: "column",
-                alignItems: "center", justifyContent: "center",
-              }}>
-                <span style={{ fontSize: 28, fontWeight: 700, fontFamily: "'Source Serif 4', serif" }}>{avgScore}%</span>
-              </div>
-            </div>
-            <div style={{ flex: 1, minWidth: 180 }}>
-              <h3 style={{ fontFamily: "'Source Serif 4', serif", fontSize: 22, fontWeight: 700, margin: 0 }}>Your Learning Strengths</h3>
-              <p style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", margin: "4px 0 8px", fontFamily: "'DM Sans', sans-serif" }}>Growing stronger every day</p>
-              <span style={{
-                background: "rgba(255,255,255,0.15)", padding: "4px 12px", borderRadius: 20,
-                fontSize: 12, fontWeight: 600, fontFamily: "'DM Sans', sans-serif",
-              }}>↑ +5% this week</span>
-            </div>
+          <div style={{ textAlign: "center", marginBottom: 8 }}>
+            <h3 style={{ fontFamily: "'Source Serif 4', serif", fontSize: 22, fontWeight: 700, margin: 0 }}>Your Thinking Network</h3>
+            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", margin: "4px 0 0", fontFamily: "'DM Sans', sans-serif" }}>
+              How your cognitive skills connect & grow
+            </p>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12, marginTop: 24 }}>
-            {scores.map(d => {
-              const change = d.score - d.prev;
-              return (
-                <div key={d.name} style={{
-                  textAlign: "center", padding: "12px 8px",
-                  background: "rgba(255,255,255,0.08)", borderRadius: 12,
-                }}>
-                  <div style={{ fontSize: 24 }}>{d.icon}</div>
-                  <div style={{ fontSize: 20, fontWeight: 700, fontFamily: "'Source Serif 4', serif", marginTop: 4 }}>{d.score}%</div>
-                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", fontFamily: "'DM Sans', sans-serif" }}>{d.name}</div>
-                  {change > 0 && <div style={{ fontSize: 10, color: "#6EE7B7", fontWeight: 600, marginTop: 2, fontFamily: "'DM Sans', sans-serif" }}>+{change}%</div>}
-                </div>
-              );
-            })}
+
+          {/* ThinkingNetwork — white themed inside dark card */}
+          <div style={{
+            background: "rgba(255,255,255,0.95)", borderRadius: 16, padding: "16px 8px",
+            margin: "12px 0",
+          }}>
+            <ThinkingNetwork scores={scores} size="md" />
+          </div>
+
+          <div style={{ display: "flex", justifyContent: "center", gap: 16, marginTop: 8 }}>
+            <span style={{
+              background: "rgba(255,255,255,0.15)", padding: "4px 12px", borderRadius: 20,
+              fontSize: 12, fontWeight: 600, fontFamily: "'DM Sans', sans-serif",
+            }}>↑ +5% this week</span>
+            <span style={{
+              background: "rgba(255,255,255,0.15)", padding: "4px 12px", borderRadius: 20,
+              fontSize: 12, fontWeight: 600, fontFamily: "'DM Sans', sans-serif",
+            }}>🧠 {avgScore}% overall</span>
           </div>
         </div>
       </div>
