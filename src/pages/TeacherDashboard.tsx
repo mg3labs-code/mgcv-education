@@ -108,21 +108,21 @@ const TeacherDashboard = () => {
             ))}
           </div>
 
-          {/* Class-wide Inner OS */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 20 }}>
-            {classMetrics.map(d => (
-              <div key={d.label} style={{
-                background: "white", borderRadius: 14, border: "1px solid #E7E5E4",
-                padding: "16px 14px", textAlign: "center",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
-                borderLeft: `4px solid ${d.color}`,
-              }}>
-                <div style={{ fontSize: 24 }}>{d.icon}</div>
-                <div style={{ fontSize: 22, fontWeight: 700, color: "#1C1917", fontFamily: "'Source Serif 4', serif", marginTop: 4 }}>{d.score}%</div>
-                <div style={{ fontSize: 12, color: "#78716C", fontFamily: "'DM Sans', sans-serif" }}>{d.label}</div>
-                <div style={{ fontSize: 10, color: "#A8A29E", fontFamily: "'DM Sans', sans-serif", marginTop: 2 }}>{d.students} students</div>
-              </div>
-            ))}
+          {/* Class Thinking Network */}
+          <div style={{
+            background: "white", borderRadius: 16, border: "1px solid #E7E5E4",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.04)", padding: 24, marginBottom: 20,
+          }}>
+            <h3 style={{ fontFamily: "'Source Serif 4', serif", fontSize: 18, fontWeight: 700, color: "#1C1917", margin: "0 0 4px" }}>
+              🧠 Class Thinking Profile
+            </h3>
+            <p style={{ fontSize: 12, color: "#78716C", margin: "0 0 12px", fontFamily: "'DM Sans', sans-serif" }}>
+              Average cognitive dimensions across {studentCount} students
+            </p>
+            <ThinkingNetwork
+              scores={classMetrics.map(d => ({ name: d.label.replace("Avg ", ""), score: d.score, icon: d.icon, color: d.color }))}
+              size="md"
+            />
           </div>
 
           {/* Today's Classes */}
