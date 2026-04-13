@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { findTextbookMatch } from "@/data/topicTextbookMap";
 import PopQuizModal from "@/components/student/PopQuizModal";
 import LearnTab from "@/components/student/LearnTab";
+import ThinkingNetwork from "@/components/ThinkingNetwork";
 import TasksTab from "@/components/student/TasksTab";
 import GrowthTab from "@/components/student/GrowthTab";
 import ExamAlertBanner from "@/components/student/ExamAlertBanner";
