@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ReasoningStep } from "@/components/textbook/ActiveReasoningVisual";
 import ReasoningImage, { getImageHealthStats } from "@/components/textbook/ReasoningImage";
+import BulkImageRepair from "@/components/textbook/BulkImageRepair";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import {
