@@ -339,20 +339,15 @@ const ReasoningVisualDemo = () => {
                     </div>
 
                     <CardContent className="p-4 space-y-3">
-                      {step.image_url ? (
-                        <div className="rounded-lg overflow-hidden border border-border bg-muted">
-                          <img
-                            src={step.image_url}
-                            alt={`Step ${step.step_number}: ${step.title}`}
-                            className="w-full h-48 object-contain bg-background"
-                            loading="lazy"
-                          />
-                        </div>
-                      ) : (
-                        <div className="rounded-lg border border-dashed border-border h-48 flex items-center justify-center bg-muted/50">
-                          <p className="text-xs text-muted-foreground">Image not available</p>
-                        </div>
-                      )}
+                      <ReasoningImage
+                        src={step.image_url}
+                        alt={`Step ${step.step_number}: ${step.title}`}
+                        stepIndex={i}
+                        slug={`${selectedSubject.toLowerCase()}_${inputTopic.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 60)}`}
+                        onImageFixed={(idx, newUrl) => {
+                          setSteps(prev => prev.map((s, si) => si === idx ? { ...s, image_url: newUrl } : s));
+                        }}
+                      />
 
                       <p className="text-sm text-foreground leading-relaxed">{step.explanation}</p>
 
