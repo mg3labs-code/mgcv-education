@@ -388,6 +388,7 @@ const ReasoningVisualDemo = () => {
               {gallery.map((visual) => {
                 const SubjIcon = subjectIcons[visual.subject] || Brain;
                 const firstImage = (visual.steps as ReasoningStep[])?.[0]?.image_url;
+                const health = getImageHealthStats(visual.steps as any[]);
                 return (
                   <Card
                     key={visual.id}
@@ -396,12 +397,20 @@ const ReasoningVisualDemo = () => {
                   >
                     <CardContent className="p-3 space-y-2">
                       {firstImage ? (
-                        <div className="rounded-md overflow-hidden border border-border h-28">
+                        <div className="rounded-md overflow-hidden border border-border h-28 relative">
                           <img
                             src={firstImage}
                             alt={visual.topic}
                             className="w-full h-full object-contain bg-background group-hover:scale-105 transition-transform"
                             loading="lazy"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = "none";
+                              const parent = (e.target as HTMLImageElement).parentElement;
+                              if (parent) {
+                                parent.classList.add("flex", "items-center", "justify-center", "bg-muted/30");
+                                parent.innerHTML = `<span class="text-xs text-destructive/60 flex items-center gap-1">⚠️ Image broken</span>`;
+                              }
+                            }}
                           />
                         </div>
                       ) : (
@@ -422,6 +431,11 @@ const ReasoningVisualDemo = () => {
                             <Clock className="h-3 w-3" />
                             {new Date(visual.created_at).toLocaleDateString()}
                           </span>
+                          {health.healthy ? (
+                            <ShieldCheck className="h-3.5 w-3.5 text-emerald-500 ml-auto" title="All images available" />
+                          ) : (
+                            <AlertTriangle className="h-3.5 w-3.5 text-amber-500 ml-auto" title={`${health.withUrl}/${health.total} images`} />
+                          )}
                         </div>
                       </div>
                     </CardContent>
