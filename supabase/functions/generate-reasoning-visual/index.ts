@@ -152,8 +152,9 @@ Deno.serve(async (req) => {
       const imgData = await imgResp.json();
       const imageB64 = imgData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
       if (!imageB64) {
-        return new Response(JSON.stringify({ error: "No image returned" }), {
-          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        console.error("Repair: AI returned 200 but no image in response", JSON.stringify(imgData).slice(0, 500));
+        return new Response(JSON.stringify({ error: "IMAGE_GENERATION_FAILED", fallback: true, message: "AI did not return an image — try again in a moment" }), {
+          status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
