@@ -379,10 +379,27 @@ const ReasoningVisualDemo = () => {
         {/* Previously Generated Gallery */}
         {gallery.length > 0 && (
           <div className="space-y-4 pt-4 border-t border-border">
-            <div className="flex items-center gap-2">
-              <BookOpen className="h-5 w-5 text-primary" />
-              <h2 className="text-lg font-bold text-foreground">Previously Generated</h2>
-              <span className="text-xs text-muted-foreground">({gallery.length} visuals)</span>
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-2">
+                <BookOpen className="h-5 w-5 text-primary" />
+                <h2 className="text-lg font-bold text-foreground">Previously Generated</h2>
+                <span className="text-xs text-muted-foreground">({gallery.length} visuals)</span>
+              </div>
+              <BulkImageRepair
+                gallery={gallery.map(v => ({
+                  ...v,
+                  slug: `${v.subject.toLowerCase()}_${v.topic.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 60)}`,
+                  steps: v.steps as any[],
+                }))}
+                onRepairComplete={async () => {
+                  const { data } = await supabase
+                    .from("reasoning_visuals")
+                    .select("id, topic, subject, grade, steps, created_at")
+                    .order("created_at", { ascending: false })
+                    .limit(20);
+                  if (data) setGallery(data as unknown as StoredVisual[]);
+                }}
+              />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
