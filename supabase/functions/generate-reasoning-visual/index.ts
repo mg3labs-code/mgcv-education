@@ -149,7 +149,16 @@ Deno.serve(async (req) => {
         });
       }
 
-      const imgData = await imgResp.json();
+      const imgText = await imgResp.text();
+      let imgData: any;
+      try {
+        imgData = JSON.parse(imgText);
+      } catch {
+        console.error("Repair: AI returned non-JSON response:", imgText.slice(0, 300));
+        return new Response(JSON.stringify({ error: "IMAGE_GENERATION_FAILED", fallback: true, message: "AI returned an invalid response — try again" }), {
+          status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
       const imageB64 = imgData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
       if (!imageB64) {
         console.error("Repair: AI returned 200 but no image in response", JSON.stringify(imgData).slice(0, 500));
