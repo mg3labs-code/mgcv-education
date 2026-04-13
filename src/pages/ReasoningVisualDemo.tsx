@@ -432,9 +432,13 @@ const ReasoningVisualDemo = () => {
                             {new Date(visual.created_at).toLocaleDateString()}
                           </span>
                           {health.healthy ? (
-                            <ShieldCheck className="h-3.5 w-3.5 text-emerald-500 ml-auto" title="All images available" />
+                            <span className="ml-auto" aria-label="All images available">
+                              <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+                            </span>
                           ) : (
-                            <AlertTriangle className="h-3.5 w-3.5 text-amber-500 ml-auto" title={`${health.withUrl}/${health.total} images`} />
+                            <span className="ml-auto" aria-label={`${health.withUrl}/${health.total} images`}>
+                              <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
+                            </span>
                           )}
                         </div>
                       </div>
