@@ -556,7 +556,15 @@ const StudentDashboard = () => {
         fontFamily: "'DM Sans', sans-serif", color: "#1C1917",
       }}>
         <div style={{ maxWidth: 900, margin: "0 auto", padding: "24px 16px" }}>
-          <style>{`@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }`}</style>
+          <style>{`
+            @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+            @keyframes unlockGlow {
+              0% { transform: scale(0.95); opacity: 0; box-shadow: 0 0 0 0 rgba(13,148,136,0); }
+              50% { transform: scale(1.02); box-shadow: 0 0 30px 10px rgba(13,148,136,0.15); }
+              100% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 0 rgba(13,148,136,0); }
+            }
+            .unlock-animate { animation: unlockGlow 0.8s ease-out; }
+          `}</style>
 
           {/* ===== HOME TAB ===== */}
           {activeTab === "home" && (
