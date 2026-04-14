@@ -46,7 +46,7 @@ export interface ContentBlock {
 }
 
 export interface ConceptContent {
-  sections: { heading: string; body: string; highlight?: boolean }[];
+  sections: { heading: string; body: string; highlight?: boolean; originalText?: string; source?: string }[];
   keyFormulas?: string[];
   example?: { question: string; solution: string }[];
 }
