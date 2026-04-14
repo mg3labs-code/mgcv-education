@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Send, Loader2, RotateCcw, CheckCircle2, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import CompanionVoiceInput from "@/components/student/CompanionVoiceInput";
 
 interface ComprehensionCheckProps {
   sectionTitle: string;
@@ -120,19 +121,27 @@ const ComprehensionCheck = ({ sectionTitle, onPass, onSkip, isFirstVisit, onResu
         What did you understand? 🤔
       </p>
       <p style={{ fontSize: 12, color: "#78716C", marginBottom: 12 }}>
-        Say it in a few lines — this helps you learn better!
+        Say it in a few lines — type or speak!
       </p>
-      <textarea
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        rows={3}
-        placeholder="In my own words, I understood that..."
-        style={{
-          width: "100%", borderRadius: 10, border: "1.5px solid #E7E5E4",
-          background: "white", padding: "10px 14px", fontSize: 14,
-          resize: "none", outline: "none", fontFamily: "'DM Sans', sans-serif",
-        }}
-      />
+      <div className="relative">
+        <textarea
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          rows={3}
+          placeholder="In my own words, I understood that..."
+          style={{
+            width: "100%", borderRadius: 10, border: "1.5px solid #E7E5E4",
+            background: "white", padding: "10px 14px", paddingRight: 48, fontSize: 14,
+            resize: "none", outline: "none", fontFamily: "'DM Sans', sans-serif",
+          }}
+        />
+        <div className="absolute right-2 bottom-2">
+          <CompanionVoiceInput
+            onTranscript={(t) => setText(prev => prev ? `${prev} ${t}` : t)}
+            disabled={loading}
+          />
+        </div>
+      </div>
       <div className="flex items-center justify-between mt-2">
         <span style={{ fontSize: 11, color: "#A8A29E" }}>{wordCount} words</span>
         <div className="flex gap-2">

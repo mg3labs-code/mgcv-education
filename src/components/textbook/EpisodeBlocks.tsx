@@ -518,10 +518,18 @@ export const ExplainBlock = ({ content, onComplete }: { content: ExplainContent;
 
 // ─── Assessment Block ───────────────────────────────────────
 
-export const AssessmentBlock = ({ content, onComplete, onWrongAttempt }: { content: AssessmentContent; onComplete?: () => void; onWrongAttempt?: () => void }) => {
+export const AssessmentBlock = ({ content, onComplete, onWrongAttempt, onAnswerChange }: { content: AssessmentContent; onComplete?: () => void; onWrongAttempt?: () => void; onAnswerChange?: () => void }) => {
   const [selected, setSelected] = useState<Record<number, number>>({});
   const [submitted, setSubmitted] = useState<Record<number, boolean>>({});
-  const handleSelect = (qi: number, oi: number) => { if (submitted[qi]) return; setSelected({ ...selected, [qi]: oi }); };
+  const [changeCounts, setChangeCounts] = useState<Record<number, number>>({});
+  const handleSelect = (qi: number, oi: number) => {
+    if (submitted[qi]) return;
+    if (selected[qi] !== undefined && selected[qi] !== oi) {
+      setChangeCounts(prev => ({ ...prev, [qi]: (prev[qi] || 0) + 1 }));
+      onAnswerChange?.();
+    }
+    setSelected({ ...selected, [qi]: oi });
+  };
   const handleSubmit = (qi: number) => {
     const isCorrect = selected[qi] === content.questions[qi].correctIndex;
     if (!isCorrect) onWrongAttempt?.();
@@ -529,6 +537,9 @@ export const AssessmentBlock = ({ content, onComplete, onWrongAttempt }: { conte
     setSubmitted(newSubmitted);
     if (Object.keys(newSubmitted).length === content.questions.length) onComplete?.();
   };
+
+  const allAttempted = Object.keys(submitted).length === content.questions.length;
+
   return (
     <div className="space-y-5">
       {content.questions.map((q, qi) => {
@@ -652,12 +663,34 @@ export const ExerciseBlock = ({ content, onComplete }: { content: ExerciseConten
                   ❌ False
                 </button>
               </div>
+            ) : isTF && showAnswer[i] ? (
+              <div className="px-5 py-4">
+                {/* T/F Result feedback */}
+                {tfAnswers[i] && (
+                  <div className={`rounded-xl p-4 mb-3 ${
+                    tfAnswers[i] === correctAnswer
+                      ? "bg-green-50 dark:bg-green-950/30 border-2 border-green-300 dark:border-green-700"
+                      : "bg-red-50 dark:bg-red-950/30 border-2 border-red-300 dark:border-red-700"
+                  }`}>
+                    <p className={`font-semibold text-sm ${tfAnswers[i] === correctAnswer ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400"}`}>
+                      {tfAnswers[i] === correctAnswer ? "✅ Correct!" : `❌ Incorrect — The answer is ${correctAnswer === "true" ? "True" : "False"}`}
+                    </p>
+                  </div>
+                )}
+                {p.answer && (
+                  <div className="rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-950/30 dark:to-green-950/20 border border-emerald-200 dark:border-emerald-800 p-4">
+                    <p className="text-[0.95rem] text-emerald-800 dark:text-emerald-300 leading-relaxed">
+                      {p.answer}
+                    </p>
+                  </div>
+                )}
+              </div>
             ) : (
               <div className="px-5 py-3 space-y-3">
                 {/* Workspace toggle */}
                 {!showAnswer[i] && !isTF && (
                   <>
-                    {!hasWorkspace ? (
+                    {!showWorkspace[i] ? (
                       <button
                         onClick={() => setShowWorkspace({ ...showWorkspace, [i]: true })}
                         className="text-sm text-primary font-medium hover:underline flex items-center gap-1.5"
@@ -670,12 +703,12 @@ export const ExerciseBlock = ({ content, onComplete }: { content: ExerciseConten
                           className="w-full rounded-lg border bg-background px-3 py-2.5 text-base resize-none focus:outline-none focus:ring-2 focus:ring-primary/30"
                           rows={3}
                           placeholder="Work out your solution here..."
-                          value={workAnswer}
+                          value={workAnswers[i] || ""}
                           onChange={(e) => setWorkAnswers({ ...workAnswers, [i]: e.target.value })}
                         />
-                        {workAnswer.trim().length > 2 && (
+                        {(workAnswers[i] || "").trim().length > 2 && (
                           <SubmitEvaluate
-                            answer={workAnswer}
+                            answer={workAnswers[i] || ""}
                             prompt={p.text}
                             topic={content.source}
                             onComplete={() => handleReveal(i)}
