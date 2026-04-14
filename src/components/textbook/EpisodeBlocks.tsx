@@ -483,7 +483,7 @@ export const ExplainBlock = ({ content, onComplete }: { content: ExplainContent;
           <PenLine className="h-3.5 w-3.5" /> Write It
         </button>
         <button onClick={() => setMode("voice")} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${mode === "voice" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
-          <Mic className="h-3.5 w-3.5" /> Speak It
+          <AudioLines className="h-3.5 w-3.5" /> Speak It
         </button>
       </div>
       {mode === "voice" ? (

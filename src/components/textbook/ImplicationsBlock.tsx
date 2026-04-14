@@ -90,14 +90,14 @@ const ImplicationsBlock = ({ content }: { content: ImplicationsContent }) => {
                   <span className={`text-xs ${wordCount > content.wordLimit ? "text-destructive" : "text-muted-foreground"}`}>Limit: {content.wordLimit}</span>
                 )}
                 <Button variant="outline" size="sm" onClick={() => setVoiceMode(true)}>
-                  <Mic className="h-3.5 w-3.5 mr-1" /> 🎤 Say it out loud instead
+                  <AudioLines className="h-3.5 w-3.5 mr-1" /> 🎤 Say it out loud instead
                 </Button>
               </div>
             </div>
           </>
         ) : (
           <div className="rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 p-6 text-center">
-            <Mic className="h-8 w-8 text-primary mx-auto mb-2" />
+            <AudioLines className="h-8 w-8 text-primary mx-auto mb-2" />
             <p className="text-sm text-muted-foreground mb-3">Voice recording coming soon — for now, type your ideas!</p>
             <Button variant="ghost" size="sm" onClick={() => setVoiceMode(false)}>Switch to text</Button>
           </div>
