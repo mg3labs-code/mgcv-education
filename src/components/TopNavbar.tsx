@@ -127,15 +127,15 @@ const TopNavbar = ({ role, phase = 4, activeTab, onTabChange }: TopNavbarProps) 
               {menuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
 
-            {/* Streak badge */}
-            {phase >= 3 && (
+            {/* Dynamic streak badge - shows actual count when streakDays >= 1 */}
+            {phase >= 1 && (
               <div style={{
                 display: "flex", alignItems: "center", gap: 4,
                 padding: "4px 10px", background: "#FEF3C7",
                 borderRadius: 20, fontSize: 13, fontWeight: 600,
                 color: "#F59E0B",
               }}>
-                🔥
+                🔥 {phase >= 2 ? phase : ""}
               </div>
             )}
 

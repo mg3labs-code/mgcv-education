@@ -11,6 +11,7 @@ import ThinkingNetwork from "@/components/ThinkingNetwork";
 import TasksTab from "@/components/student/TasksTab";
 import GrowthTab from "@/components/student/GrowthTab";
 import ExamAlertBanner from "@/components/student/ExamAlertBanner";
+import { useDiscoveryToasts } from "@/hooks/useDiscoveryToasts";
 
 interface ScheduleItem {
   type: string;
