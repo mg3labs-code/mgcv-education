@@ -111,12 +111,16 @@ const Index = () => {
     setModalType("");
     setLoginType("");
     setAuthMode("login");
+    setAuthMethod("email");
     setShowForgot(false);
     setEmail("");
     setPassword("");
     setFullName("");
     setClassName("");
     setSchoolName("");
+    setPhoneNumber("");
+    setOtpCode("");
+    setOtpSent(false);
     setLoginError(null);
   }, []);
 
