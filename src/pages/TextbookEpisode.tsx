@@ -57,6 +57,20 @@ const blockLabels: Record<string, string> = {
   jee_problems: "⚡ JEE Problem Bank", jee_extension: "🔬 Beyond Board", jee_speed_drill: "⏱️ Speed Drill",
 };
 
+const sectionHooks: Record<string, string> = {
+  concept: "The foundation — like learning the rules of your favorite game before playing 🎮",
+  activity: "Get hands-on — the best way to make knowledge stick!",
+  exercise: "Practice like a champion — repetition builds mastery",
+  recall: "No peeking — honest recall builds real memory 🧠",
+  assessment: "Time to prove it — just like cricket players practice in nets 🏏",
+  explain: "If you can teach it, you truly understand it",
+  reasoning: "This is how JEE toppers and Oxford scholars think — questioning WHY 🎓",
+  assumptions: "Challenge what everyone assumes — this builds elite thinking",
+  connections: "Surprising links across subjects — how geniuses connect dots 🌐",
+  application: "Real-world usage — how Sundar Pichai would apply this 💡",
+  implications: "What this changes for the future — think like a researcher",
+};
+
 // 3-Phase system: UNDERSTAND → PROVE → MASTER
 const UNDERSTAND_BLOCKS = new Set(["concept", "activity", "exercise"]);
 const PROVE_BLOCKS = new Set(["recall", "explain", "assessment"]);
