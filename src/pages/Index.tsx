@@ -88,10 +88,6 @@ const Index = () => {
   const openModal = (type: "student" | "teacher" | "about" | "contact") => {
     setMobileMenuOpen(false);
     if (type === "student" || type === "teacher") {
-      if (inIframe) {
-        openStandalonePreview();
-        return;
-      }
       setLoginType(type);
       setModalType("login");
     } else {
@@ -101,10 +97,6 @@ const Index = () => {
 
   const openUnifiedLogin = () => {
     setMobileMenuOpen(false);
-    if (inIframe) {
-      openStandalonePreview();
-      return;
-    }
     setLoginType("");
     setModalType("login");
   };
@@ -555,6 +547,7 @@ const Index = () => {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.3, ease: "easeOut" as const }}
             className="glass-premium rounded-2xl p-8 md:p-10 w-full max-w-[440px] text-center relative border border-border/50 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
           >
             <button onClick={closeModal} className="absolute top-4 right-5 text-2xl cursor-pointer text-muted-foreground hover:text-foreground bg-transparent border-none">
               ×
