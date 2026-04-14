@@ -31,6 +31,7 @@ import { Switch } from "@/components/ui/switch";
 import SectionCelebration from "@/components/textbook/SectionCelebration";
 import ComprehensionCheck from "@/components/textbook/ComprehensionCheck";
 import EpisodeLoadingTransition from "@/components/textbook/EpisodeLoadingTransition";
+import SectionVoiceGuide from "@/components/textbook/SectionVoiceGuide";
 
 const LANGUAGE_SUBJECTS = new Set(["Telugu", "Hindi"]);
 
