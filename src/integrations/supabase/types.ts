@@ -724,6 +724,7 @@ export type Database = {
           id: string
           interests: string[] | null
           learning_style: string | null
+          milestones_seen: Json | null
           onboarding_completed: boolean
           preferred_language: string
           updated_at: string
@@ -736,6 +737,7 @@ export type Database = {
           id?: string
           interests?: string[] | null
           learning_style?: string | null
+          milestones_seen?: Json | null
           onboarding_completed?: boolean
           preferred_language?: string
           updated_at?: string
@@ -748,6 +750,7 @@ export type Database = {
           id?: string
           interests?: string[] | null
           learning_style?: string | null
+          milestones_seen?: Json | null
           onboarding_completed?: boolean
           preferred_language?: string
           updated_at?: string
