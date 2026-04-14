@@ -400,6 +400,7 @@ const TextbookEpisode = () => {
         comprehension_result: comp?.result || null,
         comprehension_attempts: comp?.attempts || 0,
         completed_at: new Date().toISOString(),
+        answer_changes: answerChanges[blockIndex] || 0,
       }, { onConflict: "user_id,chapter_id,episode_id,block_index" });
     } catch (e) {
       console.error("Failed to persist interaction:", e);
