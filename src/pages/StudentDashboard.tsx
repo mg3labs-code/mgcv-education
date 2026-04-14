@@ -11,6 +11,7 @@ import ThinkingNetwork from "@/components/ThinkingNetwork";
 import TasksTab from "@/components/student/TasksTab";
 import GrowthTab from "@/components/student/GrowthTab";
 import ExamAlertBanner from "@/components/student/ExamAlertBanner";
+import { useDiscoveryToasts } from "@/hooks/useDiscoveryToasts";
 
 interface ScheduleItem {
   type: string;
@@ -457,14 +458,39 @@ const StudentDashboard = () => {
   const accountCreated = innerOS?.created_at ? new Date(innerOS.created_at) : null;
   const accountAgeDays = accountCreated ? Math.floor((Date.now() - accountCreated.getTime()) / (1000 * 60 * 60 * 24)) : 0;
 
-  // Phase computation
+  // Behavioral phase computation (behavior-driven, not time-based)
+  const hasUsedScholarMethod = useMemo(() => {
+    if (!methodCounts) return false;
+    return (methodCounts["tutorial_defense"] ?? 0) > 0 || (methodCounts["first_principles"] ?? 0) > 0;
+  }, [methodCounts]);
+
   const phase = useMemo(() => {
     const eps = episodeCount ?? 0;
-    if (accountAgeDays >= 14) return 4;
-    if (accountAgeDays >= 7) return 3;
+    if (eps >= 10 && streakDays >= 5) return 4;
+    if (eps >= 5 && hasUsedScholarMethod) return 3;
     if (eps >= 3) return 2;
     return 1;
-  }, [episodeCount, accountAgeDays]);
+  }, [episodeCount, streakDays, hasUsedScholarMethod]);
+
+  // Check if student has any submissions (for discovery toast)
+  const { data: hasSubmission } = useQuery({
+    queryKey: ["student-has-submission", user?.id],
+    queryFn: async () => {
+      const { count, error } = await supabase.from("student_submissions").select("*", { count: "exact", head: true }).eq("student_id", user!.id);
+      if (error) throw error;
+      return (count ?? 0) > 0;
+    },
+    enabled: !!user,
+  });
+
+  // Progressive discovery toasts
+  useDiscoveryToasts({
+    userId: user?.id,
+    episodeCount: episodeCount ?? 0,
+    streakDays,
+    hasUsedScholarMethod,
+    hasSubmission: hasSubmission ?? false,
+  });
 
   useEffect(() => {
     const fetchAllSchedules = async () => {
@@ -530,7 +556,15 @@ const StudentDashboard = () => {
         fontFamily: "'DM Sans', sans-serif", color: "#1C1917",
       }}>
         <div style={{ maxWidth: 900, margin: "0 auto", padding: "24px 16px" }}>
-          <style>{`@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }`}</style>
+          <style>{`
+            @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+            @keyframes unlockGlow {
+              0% { transform: scale(0.95); opacity: 0; box-shadow: 0 0 0 0 rgba(13,148,136,0); }
+              50% { transform: scale(1.02); box-shadow: 0 0 30px 10px rgba(13,148,136,0.15); }
+              100% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 0 rgba(13,148,136,0); }
+            }
+            .unlock-animate { animation: unlockGlow 0.8s ease-out; }
+          `}</style>
 
           {/* ===== HOME TAB ===== */}
           {activeTab === "home" && (
@@ -586,7 +620,7 @@ const StudentDashboard = () => {
 
               {/* PHASE 2: Inner OS as normal card */}
               {phase === 2 || phase === 3 ? (
-                <div style={{ marginTop: 16 }}>
+                <div style={{ marginTop: 16 }} className="unlock-animate">
                   <FadeSlide show={phase >= 2} delay={150}>
                     <InnerOS position="normal" scores={dimensionScores} />
                   </FadeSlide>
@@ -595,7 +629,7 @@ const StudentDashboard = () => {
 
               {/* PHASE 3+: Scholar Methods */}
               {phase >= 3 && (
-                <div style={{ marginTop: 16 }}>
+                <div style={{ marginTop: 16 }} className="unlock-animate">
                   <FadeSlide show={phase >= 3} delay={200}>
                     <ScholarMethods methodCounts={methodCounts ?? {}} />
                   </FadeSlide>
@@ -613,7 +647,7 @@ const StudentDashboard = () => {
               {phase < 3 && (
                 <div style={{ marginTop: 16 }}>
                   <FadeSlide delay={250}>
-                    <LockedPlaceholder icon="🎓" title="Think Like a Scholar" unlockText="Unlocks after 1 week of learning" />
+                    <LockedPlaceholder icon="🎓" title="Think Like a Scholar" unlockText="Complete 5 episodes & try a Scholar Method to unlock" />
                   </FadeSlide>
                 </div>
               )}
