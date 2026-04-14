@@ -36,6 +36,9 @@ const AttractionDemo = lazy(() => import("./pages/AttractionDemo"));
 const TextbookReference = lazy(() => import("./pages/TextbookReference"));
 const AdaptiveComparison = lazy(() => import("./pages/AdaptiveComparison"));
 const ReasoningVisualDemo = lazy(() => import("./pages/ReasoningVisualDemo"));
+const DemoDesignA = lazy(() => import("./pages/DemoDesignA"));
+const DemoDesignB = lazy(() => import("./pages/DemoDesignB"));
+const DemoDesignC = lazy(() => import("./pages/DemoDesignC"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
@@ -87,6 +90,9 @@ const App = () => (
                 <Route path="/textbook-reference/:chapterId/:episodeId" element={<TextbookReference />} />
                 <Route path="/board-vs-jee" element={<AdaptiveComparison />} />
                 <Route path="/reasoning-visual" element={<ReasoningVisualDemo />} />
+                <Route path="/demo/design-a" element={<DemoDesignA />} />
+                <Route path="/demo/design-b" element={<DemoDesignB />} />
+                <Route path="/demo/design-c" element={<DemoDesignC />} />
                 <Route path="/student" element={<ProtectedRoute><StudentDashboard /></ProtectedRoute>} />
                 <Route path="/student/episode/:id" element={<ProtectedRoute><LearningEpisode /></ProtectedRoute>} />
                 <Route path="/student/onboarding" element={<ProtectedRoute><StudentOnboarding /></ProtectedRoute>} />
