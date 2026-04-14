@@ -649,82 +649,36 @@ const Index = () => {
                       Continue with Google
                     </button>
 
-                    {/* Auth Method Tabs */}
-                    <div className="flex rounded-xl bg-muted/50 p-1 mb-4">
-                      <button onClick={() => { setAuthMethod("email"); setLoginError(null); }}
-                        className={`flex-1 py-2 rounded-lg text-xs font-medium transition-all flex items-center justify-center gap-1.5 ${authMethod === "email" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
-                        <Mail className="h-3.5 w-3.5" /> Email
+                    <form onSubmit={handleSubmit} className="space-y-3">
+                      {authMode === "signup" && (
+                        <>
+                          <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} required
+                            placeholder="Full name" className={inputClass} />
+                          {loginType === "teacher" && (
+                            <input type="text" value={schoolName} onChange={(e) => setSchoolName(e.target.value)}
+                              placeholder="School name" className={inputClass} />
+                          )}
+                        </>
+                      )}
+                      <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required
+                        placeholder="Email address" className={inputClass} />
+                      <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6}
+                        placeholder="Password" className={inputClass} />
+                      <button type="submit" disabled={submitting}
+                        className="w-full py-4 rounded-xl bg-primary text-primary-foreground text-sm font-semibold transition-all mt-2 hover:shadow-[0_10px_30px_hsl(162_65%_38%/0.3)] disabled:opacity-50">
+                        {submitting ? "Authenticating..." : authMode === "login" ? "Sign In" : "Create Account"}
                       </button>
-                      <button onClick={() => { setAuthMethod("phone"); setLoginError(null); setOtpSent(false); }}
-                        className={`flex-1 py-2 rounded-lg text-xs font-medium transition-all flex items-center justify-center gap-1.5 ${authMethod === "phone" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
-                        <Phone className="h-3.5 w-3.5" /> Phone
+                    </form>
+                    <div className="flex justify-between mt-5">
+                      <button onClick={() => setShowForgot(true)}
+                        className="text-muted-foreground text-xs hover:text-primary bg-transparent border-none cursor-pointer transition-colors">
+                        Forgot Password?
+                      </button>
+                      <button onClick={() => setAuthMode(authMode === "login" ? "signup" : "login")}
+                        className="text-muted-foreground text-xs hover:text-primary bg-transparent border-none cursor-pointer transition-colors">
+                        {authMode === "login" ? "Create Account" : "Sign In Instead"}
                       </button>
                     </div>
-
-                    {authMethod === "email" ? (
-                      <>
-                        <form onSubmit={handleSubmit} className="space-y-3">
-                          {authMode === "signup" && (
-                            <>
-                              <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} required
-                                placeholder="Full name" className={inputClass} />
-                              {loginType === "teacher" && (
-                                <input type="text" value={schoolName} onChange={(e) => setSchoolName(e.target.value)}
-                                  placeholder="School name" className={inputClass} />
-                              )}
-                            </>
-                          )}
-                          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required
-                            placeholder="Email address" className={inputClass} />
-                          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6}
-                            placeholder="Password" className={inputClass} />
-                          <button type="submit" disabled={submitting}
-                            className="w-full py-4 rounded-xl bg-primary text-primary-foreground text-sm font-semibold transition-all mt-2 hover:shadow-[0_10px_30px_hsl(162_65%_38%/0.3)] disabled:opacity-50">
-                            {submitting ? "Authenticating..." : authMode === "login" ? "Sign In" : "Create Account"}
-                          </button>
-                        </form>
-                        <div className="flex justify-between mt-5">
-                          <button onClick={() => setShowForgot(true)}
-                            className="text-muted-foreground text-xs hover:text-primary bg-transparent border-none cursor-pointer transition-colors">
-                            Forgot Password?
-                          </button>
-                          <button onClick={() => setAuthMode(authMode === "login" ? "signup" : "login")}
-                            className="text-muted-foreground text-xs hover:text-primary bg-transparent border-none cursor-pointer transition-colors">
-                            {authMode === "login" ? "Create Account" : "Sign In Instead"}
-                          </button>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        {!otpSent ? (
-                          <div className="space-y-3">
-                            <div className="relative">
-                              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">+91</span>
-                              <input type="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ""))}
-                                placeholder="10-digit mobile number" className={`${inputClass} pl-14`} maxLength={10} />
-                            </div>
-                            <button onClick={handleSendOtp} disabled={submitting || phoneNumber.length < 10}
-                              className="w-full py-4 rounded-xl bg-primary text-primary-foreground text-sm font-semibold transition-all hover:shadow-[0_10px_30px_hsl(162_65%_38%/0.3)] disabled:opacity-50">
-                              {submitting ? "Sending OTP..." : "Send OTP"}
-                            </button>
-                          </div>
-                        ) : (
-                          <form onSubmit={handleVerifyOtp} className="space-y-3">
-                            <p className="text-xs text-muted-foreground mb-2">OTP sent to +91{phoneNumber}</p>
-                            <input type="text" value={otpCode} onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
-                              placeholder="Enter 6-digit OTP" className={inputClass} maxLength={6} autoFocus />
-                            <button type="submit" disabled={submitting || otpCode.length < 6}
-                              className="w-full py-4 rounded-xl bg-primary text-primary-foreground text-sm font-semibold transition-all hover:shadow-[0_10px_30px_hsl(162_65%_38%/0.3)] disabled:opacity-50">
-                              {submitting ? "Verifying..." : "Verify & Sign In"}
-                            </button>
-                            <button type="button" onClick={() => { setOtpSent(false); setOtpCode(""); }}
-                              className="text-muted-foreground text-xs hover:text-primary bg-transparent border-none cursor-pointer transition-colors w-full text-center mt-2">
-                              ← Change number
-                            </button>
-                          </form>
-                        )}
-                      </>
-                    )}
 
                     {loginError && (
                       <div className="mt-3 bg-destructive/10 border border-destructive/20 rounded-xl p-4 text-left">
