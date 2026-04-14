@@ -4,7 +4,7 @@ import { ContentBlock, ConceptContent, ActivityContent as ActivityContentType, R
 import { useChapterEpisodes, useEpisodeBlocks } from "@/hooks/useTextbookData";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { BookOpen, Brain, Briefcase, Check, CheckCircle2, Cloud, Compass, Eye, Image, Lightbulb, Link, Map, MessageSquare, Mic, PenLine, Search, Shield, Sparkles, Zap, RotateCcw, GripHorizontal, X, ChevronLeft, Menu, MoreHorizontal } from "lucide-react";
+import { BookOpen, Brain, Briefcase, Check, CheckCircle2, Cloud, Compass, Eye, Image, Lightbulb, Link, Map, MessageSquare, AudioLines, PenLine, Search, Shield, Sparkles, Zap, RotateCcw, GripHorizontal, X, ChevronLeft, Menu, MoreHorizontal, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -309,7 +309,17 @@ const TextbookEpisode = () => {
 
   const goToBlock = useCallback((index: number) => {
     if (isBlockLocked(index)) {
-      toast.error("Complete all Core sections first 🔒");
+      const block = navBlocks[index];
+      const blockType = block?.type || "";
+      if (PROVE_BLOCKS.has(blockType)) {
+        const remaining = (phaseIndices[0]?.indices ?? []).filter(i => !understoodBlocks.has(i)).length;
+        toast.error(`Complete ${remaining} more Understand section${remaining > 1 ? "s" : ""} to unlock 🔒`);
+      } else if (MASTER_BLOCKS.has(blockType) || JEE_BLOCKS.has(blockType)) {
+        const remaining = (phaseIndices[1]?.indices ?? []).filter(i => !understoodBlocks.has(i)).length;
+        toast.error(`Complete ${remaining} more Prove section${remaining > 1 ? "s" : ""} to unlock 🔒`);
+      } else {
+        toast.error("Complete previous sections first 🔒");
+      }
       return;
     }
     // Track time spent on current section
@@ -981,56 +991,89 @@ const TextbookEpisode = () => {
             {/* ═══ 3-PHASE SECTIONS ═══ */}
             {phaseIndices.map((phase, pi) => {
               const phaseDone = phase.indices.filter(i => understoodBlocks.has(i)).length;
+              const isPhaseFullyLocked = phase.indices.length > 0 && phase.indices.every(i => isBlockLocked(i));
+              
+              // Calculate unlock progress message
+              let unlockHint = "";
+              if (isPhaseFullyLocked && pi === 1) {
+                const understandTotal = phaseIndices[0]?.indices?.length ?? 0;
+                const understandDone = phaseIndices[0]?.indices?.filter(i => understoodBlocks.has(i)).length ?? 0;
+                const remaining = understandTotal - understandDone;
+                unlockHint = remaining > 0 ? `Complete ${remaining} more section${remaining > 1 ? "s" : ""} to unlock` : "";
+              } else if (isPhaseFullyLocked && pi === 2) {
+                const proveTotal = phaseIndices[1]?.indices?.length ?? 0;
+                const proveDone = phaseIndices[1]?.indices?.filter(i => understoodBlocks.has(i)).length ?? 0;
+                const remaining = proveTotal - proveDone;
+                unlockHint = remaining > 0 ? `Complete ${remaining} more section${remaining > 1 ? "s" : ""} to unlock` : "";
+              }
+
               return (
-                <div key={phase.id} style={{ marginBottom: 20 }}>
+                <div key={phase.id} style={{ marginBottom: 20, opacity: isPhaseFullyLocked ? 0.6 : 1, transition: "opacity 0.3s" }}>
                   {/* Phase header */}
                   <div style={{
                     display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8,
                     padding: "8px 12px", borderRadius: 10,
-                    background: phase.color === "#0D9488" ? "#F0FDFA" : phase.color === "#3B82F6" ? "#EFF6FF" : "#F5F3FF",
-                    borderTop: `3px solid ${phase.color}`,
+                    background: isPhaseFullyLocked ? "#F5F5F4" : (phase.color === "#0D9488" ? "#F0FDFA" : phase.color === "#3B82F6" ? "#EFF6FF" : "#F5F3FF"),
+                    borderTop: `3px solid ${isPhaseFullyLocked ? "#D6D3D1" : phase.color}`,
                   }}>
-                    <div>
-                      <span style={{ fontSize: 11, fontWeight: 800, color: phase.color, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                        {phase.shortLabel}
-                      </span>
-                      <p style={{ fontSize: 13, fontWeight: 700, color: "#1C1917", margin: "2px 0 0" }}>{phase.label}</p>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      {isPhaseFullyLocked && <Lock className="h-3.5 w-3.5" style={{ color: "#A8A29E" }} />}
+                      <div>
+                        <span style={{ fontSize: 11, fontWeight: 800, color: isPhaseFullyLocked ? "#A8A29E" : phase.color, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                          {phase.shortLabel}
+                        </span>
+                        <p style={{ fontSize: 13, fontWeight: 700, color: isPhaseFullyLocked ? "#78716C" : "#1C1917", margin: "2px 0 0" }}>{phase.label}</p>
+                      </div>
                     </div>
                     <span style={{ fontSize: 11, fontWeight: 600, color: "#A8A29E" }}>
-                      {phaseDone}/{phase.indices.length}
+                      {isPhaseFullyLocked ? <Lock className="h-3 w-3" style={{ color: "#D6D3D1" }} /> : `${phaseDone}/${phase.indices.length}`}
                     </span>
                   </div>
                   <p style={{ fontSize: 11, color: "#78716C", marginBottom: 8 }}>{phase.subtitle}</p>
+                  
+                  {/* Unlock progress hint */}
+                  {unlockHint && (
+                    <div style={{
+                      display: "flex", alignItems: "center", gap: 6, padding: "6px 10px",
+                      marginBottom: 8, borderRadius: 8, background: "#FFFBEB",
+                      border: "1px solid #FDE68A",
+                    }}>
+                      <Lock className="h-3 w-3" style={{ color: "#D97706", flexShrink: 0 }} />
+                      <span style={{ fontSize: 11, fontWeight: 600, color: "#92400E" }}>{unlockHint}</span>
+                    </div>
+                  )}
 
                   {phase.indices.map(i => {
                     const b = navBlocks[i];
                     const isActive = i === activeBlock;
                     const isDone = understoodBlocks.has(i);
+                    const locked = isBlockLocked(i);
                     return (
-                      <button key={i} onClick={() => { goToBlock(i); setShowSectionsSheet(false); }} style={{
+                      <button key={i} onClick={() => { goToBlock(i); if (!locked) setShowSectionsSheet(false); }} style={{
                         width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 12px",
-                        borderRadius: 10, border: isDone ? `1px solid ${phase.color}40` : "1px solid #E7E5E4",
-                        textAlign: "left", marginBottom: 4, cursor: "pointer",
-                        background: isDone ? `${phase.color}08` : isActive ? "#F0FDFA" : "white",
+                        borderRadius: 10, border: locked ? "1px solid #E7E5E4" : isDone ? `1px solid ${phase.color}40` : "1px solid #E7E5E4",
+                        textAlign: "left", marginBottom: 4, cursor: locked ? "not-allowed" : "pointer",
+                        background: locked ? "#FAFAF9" : isDone ? `${phase.color}08` : isActive ? "#F0FDFA" : "white",
                         transition: "all 0.15s",
                       }}>
                         <div style={{
                           width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
-                          background: isDone ? phase.color : "#F5F5F4",
+                          background: locked ? "#E7E5E4" : isDone ? phase.color : "#F5F5F4",
                           display: "flex", alignItems: "center", justifyContent: "center",
-                          color: isDone ? "white" : "#78716C", fontSize: 12, fontWeight: 700,
+                          color: locked ? "#A8A29E" : isDone ? "white" : "#78716C", fontSize: 12, fontWeight: 700,
                         }}>
-                          {isDone ? "✓" : b.icon || "•"}
+                          {locked ? <Lock className="h-3 w-3" /> : isDone ? "✓" : b.icon || "•"}
                         </div>
                         <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: 13, fontWeight: 600, color: "#1C1917" }}>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: locked ? "#A8A29E" : "#1C1917" }}>
                             {blockLabels[b.type] || b.title}
                           </div>
                           <div style={{ fontSize: 11, color: "#A8A29E" }}>
-                            {layerMeta[b.type]?.badge?.split(" ").slice(1).join(" ") || b.type}
+                            {locked ? "Locked" : (layerMeta[b.type]?.badge?.split(" ").slice(1).join(" ") || b.type)}
                           </div>
                         </div>
                         {isDone && <span style={{ fontSize: 11, fontWeight: 600, color: phase.color }}>✓ Done</span>}
+                        {locked && !isDone && <Lock className="h-3.5 w-3.5" style={{ color: "#D6D3D1" }} />}
                       </button>
                     );
                   })}

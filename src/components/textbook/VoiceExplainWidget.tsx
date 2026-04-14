@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Mic, MicOff, Loader2, Send, Volume2, Sparkles } from "lucide-react";
+import { AudioLines, MicOff, Loader2, Send, Volume2, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -147,7 +147,7 @@ const VoiceExplainWidget = ({ topic, prompt, guidePoints, onTranscript }: VoiceE
           ) : isTranscribing || isAnalyzing ? (
             <Loader2 className="h-6 w-6 animate-spin" />
           ) : (
-            <Mic className="h-6 w-6" />
+            <AudioLines className="h-6 w-6" />
           )}
         </Button>
 
@@ -229,7 +229,7 @@ const VoiceExplainWidget = ({ topic, prompt, guidePoints, onTranscript }: VoiceE
 
           {/* Try again */}
           <Button variant="outline" size="sm" onClick={startRecording}>
-            <Mic className="h-3.5 w-3.5 mr-1" /> Try Again
+            <AudioLines className="h-3.5 w-3.5 mr-1" /> Try Again
           </Button>
         </div>
       )}
