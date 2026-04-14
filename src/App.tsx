@@ -36,6 +36,9 @@ const AttractionDemo = lazy(() => import("./pages/AttractionDemo"));
 const TextbookReference = lazy(() => import("./pages/TextbookReference"));
 const AdaptiveComparison = lazy(() => import("./pages/AdaptiveComparison"));
 const ReasoningVisualDemo = lazy(() => import("./pages/ReasoningVisualDemo"));
+const DemoDesignA = lazy(() => import("./pages/DemoDesignA"));
+const DemoDesignB = lazy(() => import("./pages/DemoDesignB"));
+const DemoDesignC = lazy(() => import("./pages/DemoDesignC"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
