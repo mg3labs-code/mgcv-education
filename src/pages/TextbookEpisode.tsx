@@ -437,9 +437,16 @@ const TextbookEpisode = () => {
       toast(SKILL_TOASTS[block.type], { duration: 4000 });
     }
 
+    // Check reasoning gate before moving to master phase
+    const nextIdx = activeBlock < navBlocks.length - 1 ? activeBlock + 1 : -1;
+    if (nextIdx >= 0 && checkReasoningGate(nextIdx)) {
+      setShowReasoningGate(true);
+      return;
+    }
+
     // Show celebration then move
     setShowCelebration(true);
-  }, [activeBlock, persistUnderstood, markBlockInteracted, persistInteraction, sectionStartTime, navBlocks, SKILL_TOASTS]);
+  }, [activeBlock, persistUnderstood, markBlockInteracted, persistInteraction, sectionStartTime, navBlocks, SKILL_TOASTS, checkReasoningGate]);
 
   const handleCelebrationDone = useCallback(() => {
     setShowCelebration(false);
@@ -973,27 +980,30 @@ const TextbookEpisode = () => {
         </div>
 
         {/* Center: Continue/Finish — PROMINENT & CENTERED */}
-        <div style={{ flex: 1, display: "flex", justifyContent: "center" }}>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
           {!isLastBlock ? (
-            <button onClick={() => advanceWithCelebration(activeBlock)} style={{
+            <button onClick={() => !isContinueGated && advanceWithCelebration(activeBlock)} disabled={isContinueGated} style={{
               padding: "10px 28px", borderRadius: 14, border: "none",
-              background: "linear-gradient(135deg, #0D9488, #14B8A6)",
-              fontSize: 15, fontWeight: 700, color: "white",
-              cursor: "pointer",
+              background: isContinueGated ? "#D6D3D1" : "linear-gradient(135deg, #0D9488, #14B8A6)",
+              fontSize: 15, fontWeight: 700, color: isContinueGated ? "#A8A29E" : "white",
+              cursor: isContinueGated ? "not-allowed" : "pointer",
               transition: "all 0.2s",
-              boxShadow: "0 4px 14px rgba(13,148,136,0.35)",
-              minWidth: 140,
+              boxShadow: isContinueGated ? "none" : "0 4px 14px rgba(13,148,136,0.35)",
+              minWidth: 140, opacity: isContinueGated ? 0.7 : 1,
             }}>Continue →</button>
           ) : (
-            <button onClick={() => advanceWithCelebration(activeBlock)} style={{
+            <button onClick={() => !isContinueGated && advanceWithCelebration(activeBlock)} disabled={isContinueGated} style={{
               padding: "10px 28px", borderRadius: 14, border: "none",
-              background: "linear-gradient(135deg, #059669, #10B981)",
-              fontSize: 15, fontWeight: 700, color: "white",
-              cursor: "pointer",
+              background: isContinueGated ? "#D6D3D1" : "linear-gradient(135deg, #059669, #10B981)",
+              fontSize: 15, fontWeight: 700, color: isContinueGated ? "#A8A29E" : "white",
+              cursor: isContinueGated ? "not-allowed" : "pointer",
               transition: "all 0.2s",
-              boxShadow: "0 4px 14px rgba(5,150,105,0.35)",
-              minWidth: 140,
+              boxShadow: isContinueGated ? "none" : "0 4px 14px rgba(5,150,105,0.35)",
+              minWidth: 140, opacity: isContinueGated ? 0.7 : 1,
             }}>Finish ✓</button>
+          )}
+          {continueHint && (
+            <span style={{ fontSize: 10, color: "#A8A29E", fontWeight: 500 }}>{continueHint}</span>
           )}
         </div>
 
