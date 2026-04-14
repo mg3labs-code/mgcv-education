@@ -15,6 +15,8 @@ interface AuthContextType {
   loading: boolean;
   signUp: (email: string, password: string, fullName: string, role: AppRole, className?: string, schoolName?: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
+  signInWithPhone: (phone: string) => Promise<void>;
+  verifyPhoneOtp: (phone: string, token: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -121,6 +123,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (error) throw error;
   };
 
+  const signInWithPhone = async (phone: string) => {
+    const { error } = await supabase.auth.signInWithOtp({ phone });
+    if (error) throw error;
+  };
+
+  const verifyPhoneOtp = async (phone: string, token: string) => {
+    const { error } = await supabase.auth.verifyOtp({ phone, token, type: "sms" });
+    if (error) throw error;
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
     setRole(null);
@@ -128,7 +140,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, role, fullName, loading, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, session, role, fullName, loading, signUp, signIn, signInWithPhone, verifyPhoneOtp, signOut }}>
       {children}
     </AuthContext.Provider>
   );
