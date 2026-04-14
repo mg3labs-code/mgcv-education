@@ -270,6 +270,23 @@ const TextbookEpisode = () => {
     return false;
   }, [navBlocks, understoodBlocks, phaseIndices, isLanguage]);
 
+  // Phase unlock toasts — fire once per episode when a phase transitions from locked to available
+  const prevUnlockRef = useRef<{ prove: boolean; master: boolean }>({ prove: false, master: false });
+  useEffect(() => {
+    if (navBlocks.length === 0) return;
+    const understandDone = (phaseIndices[0]?.indices ?? []).every(i => understoodBlocks.has(i)) && (phaseIndices[0]?.indices ?? []).length > 0;
+    const proveDone = (phaseIndices[1]?.indices ?? []).every(i => understoodBlocks.has(i)) && (phaseIndices[1]?.indices ?? []).length > 0;
+
+    if (understandDone && !prevUnlockRef.current.prove) {
+      prevUnlockRef.current.prove = true;
+      toast.success("🎯 Test Yourself unlocked! You understood the basics.", { duration: 4000 });
+    }
+    if (proveDone && !prevUnlockRef.current.master) {
+      prevUnlockRef.current.master = true;
+      toast.success("🚀 Challenge Yourself unlocked! Time for deeper thinking.", { duration: 4000 });
+    }
+  }, [understoodBlocks, phaseIndices, navBlocks.length]);
+
   useEffect(() => { totalBlocksRef.current = navBlocks.length; }, [navBlocks.length]);
 
   // Load understood blocks from DB
