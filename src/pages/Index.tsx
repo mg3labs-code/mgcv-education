@@ -88,10 +88,6 @@ const Index = () => {
   const openModal = (type: "student" | "teacher" | "about" | "contact") => {
     setMobileMenuOpen(false);
     if (type === "student" || type === "teacher") {
-      if (inIframe) {
-        openStandalonePreview();
-        return;
-      }
       setLoginType(type);
       setModalType("login");
     } else {
@@ -101,10 +97,6 @@ const Index = () => {
 
   const openUnifiedLogin = () => {
     setMobileMenuOpen(false);
-    if (inIframe) {
-      openStandalonePreview();
-      return;
-    }
     setLoginType("");
     setModalType("login");
   };
