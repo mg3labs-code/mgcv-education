@@ -472,6 +472,26 @@ const StudentDashboard = () => {
     return 1;
   }, [episodeCount, streakDays, hasUsedScholarMethod]);
 
+  // Check if student has any submissions (for discovery toast)
+  const { data: hasSubmission } = useQuery({
+    queryKey: ["student-has-submission", user?.id],
+    queryFn: async () => {
+      const { count, error } = await supabase.from("student_submissions").select("*", { count: "exact", head: true }).eq("student_id", user!.id);
+      if (error) throw error;
+      return (count ?? 0) > 0;
+    },
+    enabled: !!user,
+  });
+
+  // Progressive discovery toasts
+  useDiscoveryToasts({
+    userId: user?.id,
+    episodeCount: episodeCount ?? 0,
+    streakDays,
+    hasUsedScholarMethod,
+    hasSubmission: hasSubmission ?? false,
+  });
+
   useEffect(() => {
     const fetchAllSchedules = async () => {
       if (!user) return;
