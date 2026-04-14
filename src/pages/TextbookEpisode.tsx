@@ -414,6 +414,18 @@ const TextbookEpisode = () => {
     connections: "Elite tutorial systems work exactly like this — connecting ideas across fields 🧠",
   }), []);
 
+  // Pre-reasoning gate: check when entering Master phase
+  const checkReasoningGate = useCallback((nextIndex: number) => {
+    const block = navBlocks[nextIndex];
+    if (!block || !MASTER_BLOCKS.has(block.type)) return false;
+    const gateKey = `reasoning_gate_${chapterId}_${episodeId}`;
+    if (localStorage.getItem(gateKey)) return false;
+    const prevBlock = navBlocks[activeBlock];
+    if (prevBlock && MASTER_BLOCKS.has(prevBlock.type)) return false;
+    localStorage.setItem(gateKey, "1");
+    return true;
+  }, [navBlocks, activeBlock, chapterId, episodeId]);
+
   // Helper: advance with celebration
   const advanceWithCelebration = useCallback((nextIndex: number) => {
     // Record final time for current section
@@ -529,18 +541,6 @@ const TextbookEpisode = () => {
     return "";
   }, [navBlocks, activeBlock, readingTimer, blockCompleted, READING_TYPES, ASSESSMENT_TYPES, INTERACTIVE_TYPES]);
 
-  // Pre-reasoning gate: check when entering Master phase
-  const checkReasoningGate = useCallback((nextIndex: number) => {
-    const block = navBlocks[nextIndex];
-    if (!block || !MASTER_BLOCKS.has(block.type)) return false;
-    const gateKey = `reasoning_gate_${chapterId}_${episodeId}`;
-    if (localStorage.getItem(gateKey)) return false;
-    // Check if previous block was NOT master
-    const prevBlock = navBlocks[activeBlock];
-    if (prevBlock && MASTER_BLOCKS.has(prevBlock.type)) return false;
-    localStorage.setItem(gateKey, "1");
-    return true;
-  }, [navBlocks, activeBlock, chapterId, episodeId]);
 
   const onAnswerChange = useCallback(() => {
     setAnswerChanges(prev => ({ ...prev, [activeBlock]: (prev[activeBlock] || 0) + 1 }));
