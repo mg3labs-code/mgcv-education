@@ -73,8 +73,30 @@ const SubmitEvaluate = ({ answer, prompt, topic, onComplete, minWords = 3 }: {
 
 // ─── Concept Block (Design C Hybrid — Cards + Semantic Boxes) ──
 
+// Extract formula-like lines from body text (e.g. "N = {1, 2, 3, ...}" or "p/q where...")
+const extractFormulas = (body: string): { text: string; formulas: string[] } => {
+  if (!body) return { text: body, formulas: [] };
+  const lines = body.split('\n');
+  const formulas: string[] = [];
+  const textLines: string[] = [];
+  for (const line of lines) {
+    const trimmed = line.trim();
+    // Detect formula patterns: set notation, equations, mathematical expressions
+    if (
+      /^[A-Z]\s*=\s*\{/.test(trimmed) || // N = {1, 2, ...}
+      /^[A-Z]\s*⊂/.test(trimmed) || // N ⊂ W
+      /^\{.*\}$/.test(trimmed) || // {1, 2, 3}
+      (/[=≠≤≥<>⊂⊃∈∉]/.test(trimmed) && trimmed.length < 80 && /\d/.test(trimmed))
+    ) {
+      formulas.push(trimmed);
+    } else {
+      textLines.push(line);
+    }
+  }
+  return { text: textLines.join('\n').trim(), formulas };
+};
+
 export const ConceptBlock = ({ content, onComplete }: { content: ConceptContent; onComplete?: () => void }) => {
-  // Color palette for section icons
   const iconColors = ["#6366F1", "#F59E0B", "#3B82F6", "#8B5CF6", "#10B981", "#EF4444", "#EC4899"];
 
   const sectionIcons: Record<string, string> = {
@@ -82,6 +104,8 @@ export const ConceptBlock = ({ content, onComplete }: { content: ConceptContent;
     "integer": "➖", "rational": "📐", "irrational": "🌀", "real": "📊",
     "step": "🔢", "method": "🔢", "algorithm": "🔢", "how": "🔢",
     "important": "⚠️", "remember": "⚠️", "note": "⚠️", "key": "⚠️",
+    "imagine": "💡", "think": "🤔", "family": "👨‍👩‍👧‍👦", "putting": "🔗",
+    "classify": "📋", "example": "💡", "practice": "✏️",
   };
 
   const getIcon = (heading: string) => {
@@ -92,62 +116,77 @@ export const ConceptBlock = ({ content, onComplete }: { content: ConceptContent;
     return "📌";
   };
 
-  const isDefinition = (heading: string) => {
-    const l = heading?.toLowerCase() || "";
-    return l.includes("what is") || l.includes("definition");
-  };
   const isStep = (heading: string) => {
     const l = heading?.toLowerCase() || "";
     return l.includes("step") || l.includes("how to") || l.includes("method") || l.includes("algorithm");
   };
   const isImportant = (heading: string) => {
     const l = heading?.toLowerCase() || "";
-    return l.includes("important") || l.includes("remember") || l.includes("key point") || l.includes("note");
+    return l.includes("important") || l.includes("remember") || l.includes("key point") || l.includes("note") || l.includes("putting it all");
   };
 
   return (
     <div className="space-y-4">
-      {content.sections.map((s, i) => (
-        <ContentCard
-          key={i}
-          icon={getIcon(s.heading)}
-          iconBg={iconColors[i % iconColors.length]}
-          title={s.heading}
-          originalText={s.originalText}
-          source={s.source}
-        >
-          {/* Definition box for definitions or first section */}
-          {(isDefinition(s.heading) || i === 0) ? (
-            <DefinitionBox>{s.body}</DefinitionBox>
-          ) : isImportant(s.heading) ? (
-            <NoteBox>{s.body}</NoteBox>
-          ) : isStep(s.heading) ? (
-            <StepBox steps={s.body?.split('\n').filter(line => line.trim()) || []} />
-          ) : (
-            <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{s.body}</p>
-          )}
-        </ContentCard>
-      ))}
+      {content.sections.map((s, i) => {
+        const { text: cleanBody, formulas } = extractFormulas(s.body || "");
 
-      {/* Key Formulas — each in a FormulaBox */}
+        return (
+          <ContentCard
+            key={i}
+            icon={getIcon(s.heading)}
+            iconBg={iconColors[i % iconColors.length]}
+            title={s.heading}
+            originalText={s.originalText}
+            source={s.source}
+          >
+            {/* Main body — always use DefinitionBox for concept explanations */}
+            {isImportant(s.heading) ? (
+              <NoteBox>{cleanBody}</NoteBox>
+            ) : isStep(s.heading) ? (
+              <StepBox steps={cleanBody.split('\n').filter(line => line.trim())} />
+            ) : (
+              <DefinitionBox>{cleanBody}</DefinitionBox>
+            )}
+
+            {/* Extracted formulas from body text */}
+            {formulas.length > 0 && formulas.map((f, fi) => (
+              <FormulaBox key={fi}>{f}</FormulaBox>
+            ))}
+          </ContentCard>
+        );
+      })}
+
+      {/* Key Formulas */}
       {content.keyFormulas && content.keyFormulas.length > 0 && (
-        <div className="space-y-2">
+        <ContentCard icon="🎯" iconBg="#7C3AED" title="Key Formulas">
           {content.keyFormulas.map((f, i) => (
             <FormulaBox key={i}>{f}</FormulaBox>
           ))}
-        </div>
+        </ContentCard>
       )}
 
       {/* Solved Examples */}
-      {(content as any).solvedExamples && (content as any).solvedExamples.length > 0 && (
-        <div className="space-y-3">
-          {(content as any).solvedExamples.map((ex: any, i: number) => (
-            <ExampleBox key={i} title={`Solved Example ${i + 1}`}>
+      {content.example && content.example.length > 0 && (
+        <ContentCard icon="💡" iconBg="#10B981" title="Solved Examples">
+          {content.example.map((ex, i) => (
+            <ExampleBox key={i} title={`Example ${i + 1}`}>
               <p className="font-semibold text-foreground mb-1">{ex.question}</p>
               <p className="whitespace-pre-line">{ex.solution}</p>
             </ExampleBox>
           ))}
-        </div>
+        </ContentCard>
+      )}
+
+      {/* Legacy solvedExamples field */}
+      {(content as any).solvedExamples && (content as any).solvedExamples.length > 0 && (
+        <ContentCard icon="💡" iconBg="#10B981" title="Solved Examples">
+          {(content as any).solvedExamples.map((ex: any, i: number) => (
+            <ExampleBox key={i} title={`Example ${i + 1}`}>
+              <p className="font-semibold text-foreground mb-1">{ex.question}</p>
+              <p className="whitespace-pre-line">{ex.solution}</p>
+            </ExampleBox>
+          ))}
+        </ContentCard>
       )}
 
       {(content as any).media && <InlineMedia media={(content as any).media} />}
