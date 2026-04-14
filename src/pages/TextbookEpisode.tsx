@@ -1176,6 +1176,38 @@ const TextbookEpisode = () => {
       {/* Celebration overlay */}
       <SectionCelebration show={showCelebration} onDone={handleCelebrationDone} />
 
+      {/* Pre-reasoning excitement gate */}
+      {showReasoningGate && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center" style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)" }}>
+          <div style={{
+            background: "white", borderRadius: 20, padding: 32, maxWidth: 380, width: "90%",
+            textAlign: "center", boxShadow: "0 25px 50px rgba(0,0,0,0.15)",
+          }}>
+            <div style={{ fontSize: 48, marginBottom: 12 }}>🧠</div>
+            <h2 style={{ fontSize: 22, fontWeight: 800, color: "#1C1917", marginBottom: 8, fontFamily: "'DM Sans', sans-serif" }}>
+              Ready to think like a scholar?
+            </h2>
+            <p style={{ fontSize: 14, color: "#78716C", marginBottom: 8, lineHeight: 1.6 }}>
+              This is how Oxford students and JEE toppers approach problems — by questioning <strong>WHY</strong>.
+            </p>
+            <p style={{ fontSize: 12, color: "#A8A29E", marginBottom: 24 }}>
+              You've mastered the basics. Now let's go deeper. 🚀
+            </p>
+            <div style={{ display: "flex", gap: 12 }}>
+              <button onClick={() => setShowReasoningGate(false)} style={{
+                flex: 1, padding: "12px 0", borderRadius: 12, border: "1px solid #E7E5E4",
+                background: "white", fontSize: 14, fontWeight: 600, color: "#57534E", cursor: "pointer",
+              }}>Not yet</button>
+              <button onClick={() => { setShowReasoningGate(false); setShowCelebration(true); }} style={{
+                flex: 1, padding: "12px 0", borderRadius: 12, border: "none",
+                background: "linear-gradient(135deg, #8B5CF6, #7C3AED)", fontSize: 14, fontWeight: 700,
+                color: "white", cursor: "pointer", boxShadow: "0 4px 14px rgba(139,92,246,0.4)",
+              }}>Let's go! 🚀</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Modals */}
       <TutorialDefenseModal open={showDefense} onOpenChange={setShowDefense} topic={episode.title} episodeTitle={`${chapter.title} — ${episode.title}`} subject={chapter.title} chapterId={chapterId} episodeId={episodeId} />
       <FirstPrinciplesModal open={showFirstPrinciples} onOpenChange={setShowFirstPrinciples} topic={episode.title} episodeTitle={`${chapter.title} — ${episode.title}`} subject={chapter.title} chapterId={chapterId} episodeId={episodeId} />
