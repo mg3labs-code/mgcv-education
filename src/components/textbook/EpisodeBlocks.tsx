@@ -5,6 +5,7 @@ import { GripHorizontal, AudioLines, PenLine, RotateCcw, ChevronDown, ChevronUp,
 import VoiceExplainWidget from "@/components/textbook/VoiceExplainWidget";
 import InlineMedia from "@/components/textbook/InlineMedia";
 import { supabase } from "@/integrations/supabase/client";
+import { ContentCard, DefinitionBox, FormulaBox, ExampleBox, NoteBox, StepBox } from "@/components/textbook/ContentCard";
 
 // ─── AI Evaluate Helper ─────────────────────────────────────
 
@@ -70,124 +71,81 @@ const SubmitEvaluate = ({ answer, prompt, topic, onComplete, minWords = 3 }: {
   );
 };
 
-// ─── Concept Block (Rich Visual Presentation) ───────────────
+// ─── Concept Block (Design C Hybrid — Cards + Semantic Boxes) ──
 
 export const ConceptBlock = ({ content, onComplete }: { content: ConceptContent; onComplete?: () => void }) => {
+  // Color palette for section icons
+  const iconColors = ["#6366F1", "#F59E0B", "#3B82F6", "#8B5CF6", "#10B981", "#EF4444", "#EC4899"];
+
+  const sectionIcons: Record<string, string> = {
+    "what": "📖", "definition": "📖", "natural": "🔢", "whole": "0️⃣",
+    "integer": "➖", "rational": "📐", "irrational": "🌀", "real": "📊",
+    "step": "🔢", "method": "🔢", "algorithm": "🔢", "how": "🔢",
+    "important": "⚠️", "remember": "⚠️", "note": "⚠️", "key": "⚠️",
+  };
+
+  const getIcon = (heading: string) => {
+    const lower = heading?.toLowerCase() || "";
+    for (const [key, icon] of Object.entries(sectionIcons)) {
+      if (lower.includes(key)) return icon;
+    }
+    return "📌";
+  };
+
+  const isDefinition = (heading: string) => {
+    const l = heading?.toLowerCase() || "";
+    return l.includes("what is") || l.includes("definition");
+  };
+  const isStep = (heading: string) => {
+    const l = heading?.toLowerCase() || "";
+    return l.includes("step") || l.includes("how to") || l.includes("method") || l.includes("algorithm");
+  };
+  const isImportant = (heading: string) => {
+    const l = heading?.toLowerCase() || "";
+    return l.includes("important") || l.includes("remember") || l.includes("key point") || l.includes("note");
+  };
+
   return (
-    <div className="space-y-5">
-      {content.sections.map((s, i) => {
-        const hasQuestion = s.body?.includes("?");
-        const isDefinition = s.heading?.toLowerCase().includes("what is") || s.heading?.toLowerCase().includes("definition") || i === 0;
-        const isStep = s.heading?.toLowerCase().includes("step") || s.heading?.toLowerCase().includes("how to") || s.heading?.toLowerCase().includes("method") || s.heading?.toLowerCase().includes("algorithm");
-        const isImportant = s.heading?.toLowerCase().includes("important") || s.heading?.toLowerCase().includes("remember") || s.heading?.toLowerCase().includes("key point") || s.heading?.toLowerCase().includes("note");
+    <div className="space-y-4">
+      {content.sections.map((s, i) => (
+        <ContentCard
+          key={i}
+          icon={getIcon(s.heading)}
+          iconBg={iconColors[i % iconColors.length]}
+          title={s.heading}
+          originalText={s.originalText}
+          source={s.source}
+        >
+          {/* Definition box for definitions or first section */}
+          {(isDefinition(s.heading) || i === 0) ? (
+            <DefinitionBox>{s.body}</DefinitionBox>
+          ) : isImportant(s.heading) ? (
+            <NoteBox>{s.body}</NoteBox>
+          ) : isStep(s.heading) ? (
+            <StepBox steps={s.body?.split('\n').filter(line => line.trim()) || []} />
+          ) : (
+            <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{s.body}</p>
+          )}
+        </ContentCard>
+      ))}
 
-        // Definition-style box for the first section or explicit definitions
-        if (isDefinition && i === 0) {
-          return (
-            <div key={i} className="rounded-2xl overflow-hidden border-2 border-indigo-200 dark:border-indigo-800 shadow-sm">
-              <div className="bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-950/40 dark:to-blue-950/30 px-5 py-3 border-b border-indigo-200 dark:border-indigo-800">
-                <h4 className="font-bold text-indigo-700 dark:text-indigo-400 text-lg flex items-center gap-2">
-                  📖 {s.heading}
-                </h4>
-              </div>
-              <div className="px-5 py-4 bg-gradient-to-br from-indigo-50/50 to-blue-50/30 dark:from-indigo-950/20 dark:to-blue-950/10">
-                <p className="text-[0.95rem] text-foreground leading-[1.9] whitespace-pre-line">{s.body}</p>
-              </div>
-            </div>
-          );
-        }
-
-        // Important/Note box
-        if (isImportant) {
-          return (
-            <div key={i} className="rounded-xl border-2 border-amber-300 dark:border-amber-700 bg-gradient-to-br from-amber-50 to-yellow-50/50 dark:from-amber-950/30 dark:to-yellow-950/20 p-5 shadow-sm">
-              <h4 className="font-bold text-amber-700 dark:text-amber-400 text-base mb-2 flex items-center gap-2">
-                ⚠️ {s.heading}
-              </h4>
-              <p className="text-[0.95rem] text-foreground leading-[1.8] whitespace-pre-line">{s.body}</p>
-            </div>
-          );
-        }
-
-        // Step-by-step box
-        if (isStep) {
-          const steps = s.body?.split('\n').filter(line => line.trim()) || [];
-          return (
-            <div key={i} className="rounded-xl border border-blue-200 dark:border-blue-800 overflow-hidden shadow-sm">
-              <div className="bg-blue-50 dark:bg-blue-950/30 px-5 py-3 border-b border-blue-200 dark:border-blue-800">
-                <h4 className="font-bold text-blue-700 dark:text-blue-400 text-base flex items-center gap-2">
-                  🔢 {s.heading}
-                </h4>
-              </div>
-              <div className="p-4 space-y-2">
-                {steps.map((step, j) => (
-                  <div key={j} className="flex items-start gap-3 p-3 rounded-lg bg-blue-50/40 dark:bg-blue-950/10 border border-blue-100 dark:border-blue-900">
-                    <span className="h-7 w-7 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
-                      {j + 1}
-                    </span>
-                    <p className="text-[0.95rem] text-foreground leading-relaxed">{step}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          );
-        }
-
-        // Question/Think-about box
-        if (hasQuestion) {
-          return (
-            <div key={i} className="rounded-xl border-2 border-teal-200 dark:border-teal-800 bg-gradient-to-br from-teal-50/60 to-cyan-50/40 dark:from-teal-950/20 dark:to-cyan-950/10 p-5 shadow-sm">
-              <h4 className="font-semibold text-teal-700 dark:text-teal-400 text-base mb-2 flex items-center gap-2">
-                🤔 {s.heading}
-              </h4>
-              <p className="text-[0.95rem] text-foreground leading-[1.8] whitespace-pre-line border-l-4 border-teal-400 dark:border-teal-600 pl-4">{s.body}</p>
-            </div>
-          );
-        }
-
-        // Standard content section with visual lift
-        return (
-          <div key={i} className="rounded-xl p-5 border border-border/50 bg-card/80 hover:shadow-sm transition-shadow">
-            <h4 className="font-semibold text-foreground text-[1.05rem] mb-3 flex items-center gap-2">
-              <span className="w-1.5 h-6 rounded-full bg-primary inline-block" />
-              {s.heading}
-            </h4>
-            <p className="text-[0.95rem] text-muted-foreground leading-[1.9] whitespace-pre-line">{s.body}</p>
-          </div>
-        );
-      })}
-
-      {/* Key Formulas — gradient highlight box */}
+      {/* Key Formulas — each in a FormulaBox */}
       {content.keyFormulas && content.keyFormulas.length > 0 && (
-        <div className="rounded-2xl overflow-hidden shadow-md">
-          <div className="bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 px-5 py-3">
-            <h4 className="text-sm font-bold text-white flex items-center gap-2">🎯 Key Formulas</h4>
-          </div>
-          <div className="bg-gradient-to-br from-violet-50 to-indigo-50 dark:from-violet-950/30 dark:to-indigo-950/20 p-5 space-y-3">
-            {content.keyFormulas.map((f, i) => (
-              <div key={i} className="text-center">
-                <p className="text-lg font-mono font-semibold text-foreground bg-white/80 dark:bg-card/80 rounded-xl py-3 px-5 inline-block shadow-sm border border-violet-200 dark:border-violet-800">{f}</p>
-              </div>
-            ))}
-          </div>
+        <div className="space-y-2">
+          {content.keyFormulas.map((f, i) => (
+            <FormulaBox key={i}>{f}</FormulaBox>
+          ))}
         </div>
       )}
 
-      {/* Solved Examples — step-by-step visual */}
+      {/* Solved Examples */}
       {(content as any).solvedExamples && (content as any).solvedExamples.length > 0 && (
         <div className="space-y-3">
           {(content as any).solvedExamples.map((ex: any, i: number) => (
-            <div key={i} className="rounded-2xl overflow-hidden border-2 border-emerald-200 dark:border-emerald-800 shadow-sm">
-              <div className="bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-950/40 dark:to-green-950/30 px-5 py-3 border-b border-emerald-200 dark:border-emerald-800">
-                <h4 className="text-sm font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-2">
-                  💡 Solved Example {i + 1}
-                </h4>
-              </div>
-              <div className="p-5 bg-emerald-50/30 dark:bg-emerald-950/10">
-                <p className="text-base font-semibold text-foreground mb-3">{ex.question}</p>
-                <p className="text-[0.95rem] text-muted-foreground leading-relaxed whitespace-pre-line">{ex.solution}</p>
-              </div>
-            </div>
+            <ExampleBox key={i} title={`Solved Example ${i + 1}`}>
+              <p className="font-semibold text-foreground mb-1">{ex.question}</p>
+              <p className="whitespace-pre-line">{ex.solution}</p>
+            </ExampleBox>
           ))}
         </div>
       )}
