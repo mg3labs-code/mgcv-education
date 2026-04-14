@@ -457,14 +457,19 @@ const StudentDashboard = () => {
   const accountCreated = innerOS?.created_at ? new Date(innerOS.created_at) : null;
   const accountAgeDays = accountCreated ? Math.floor((Date.now() - accountCreated.getTime()) / (1000 * 60 * 60 * 24)) : 0;
 
-  // Phase computation
+  // Behavioral phase computation (behavior-driven, not time-based)
+  const hasUsedScholarMethod = useMemo(() => {
+    if (!methodCounts) return false;
+    return (methodCounts["tutorial_defense"] ?? 0) > 0 || (methodCounts["first_principles"] ?? 0) > 0;
+  }, [methodCounts]);
+
   const phase = useMemo(() => {
     const eps = episodeCount ?? 0;
-    if (accountAgeDays >= 14) return 4;
-    if (accountAgeDays >= 7) return 3;
+    if (eps >= 10 && streakDays >= 5) return 4;
+    if (eps >= 5 && hasUsedScholarMethod) return 3;
     if (eps >= 3) return 2;
     return 1;
-  }, [episodeCount, accountAgeDays]);
+  }, [episodeCount, streakDays, hasUsedScholarMethod]);
 
   useEffect(() => {
     const fetchAllSchedules = async () => {
@@ -613,7 +618,7 @@ const StudentDashboard = () => {
               {phase < 3 && (
                 <div style={{ marginTop: 16 }}>
                   <FadeSlide delay={250}>
-                    <LockedPlaceholder icon="🎓" title="Think Like a Scholar" unlockText="Unlocks after 1 week of learning" />
+                    <LockedPlaceholder icon="🎓" title="Think Like a Scholar" unlockText="Complete 5 episodes & try a Scholar Method to unlock" />
                   </FadeSlide>
                 </div>
               )}

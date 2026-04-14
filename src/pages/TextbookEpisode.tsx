@@ -228,8 +228,47 @@ const TextbookEpisode = () => {
     indices: navBlocks.map((b, i) => ({ type: b.type, i })).filter(({ type }) => p.blockSet.has(type)).map(({ i }) => i),
   })), [navBlocks]);
 
-  // No blocks are locked in 3-phase system
-  const isBlockLocked = useCallback((_index: number) => false, []);
+  // 3-Phase sequential locking: Understand → Prove → Master/JEE
+  const isBlockLocked = useCallback((index: number) => {
+    const block = navBlocks[index];
+    if (!block) return false;
+    const type = block.type;
+
+    // Understand phase is always unlocked
+    if (UNDERSTAND_BLOCKS.has(type)) return false;
+
+    // Language blocks: Read always open, Practice needs Read done, Express needs Practice done
+    if (isLanguage) {
+      if (LANG_READ_BLOCKS.has(type)) return false;
+      const readIndices = navBlocks.map((b, i) => ({ type: b.type, i })).filter(({ type: t }) => LANG_READ_BLOCKS.has(t)).map(({ i }) => i);
+      const allReadDone = readIndices.length === 0 || readIndices.every(i => understoodBlocks.has(i));
+      if (LANG_PRACTICE_BLOCKS.has(type)) return !allReadDone;
+      const practiceIndices = navBlocks.map((b, i) => ({ type: b.type, i })).filter(({ type: t }) => LANG_PRACTICE_BLOCKS.has(t)).map(({ i }) => i);
+      const allPracticeDone = practiceIndices.length === 0 || practiceIndices.every(i => understoodBlocks.has(i));
+      if (LANG_EXPRESS_BLOCKS.has(type)) return !allPracticeDone;
+      return false;
+    }
+
+    // Prove phase: locked until ALL Understand blocks are understood
+    if (PROVE_BLOCKS.has(type)) {
+      const understandIndices = phaseIndices[0]?.indices ?? [];
+      return understandIndices.length > 0 && !understandIndices.every(i => understoodBlocks.has(i));
+    }
+
+    // Master phase: locked until ALL Prove blocks are understood
+    if (MASTER_BLOCKS.has(type)) {
+      const proveIdxs = phaseIndices[1]?.indices ?? [];
+      return proveIdxs.length > 0 && !proveIdxs.every(i => understoodBlocks.has(i));
+    }
+
+    // JEE phase: follows Master unlock rules
+    if (JEE_BLOCKS.has(type)) {
+      const proveIdxs = phaseIndices[1]?.indices ?? [];
+      return proveIdxs.length > 0 && !proveIdxs.every(i => understoodBlocks.has(i));
+    }
+
+    return false;
+  }, [navBlocks, understoodBlocks, phaseIndices, isLanguage]);
 
   useEffect(() => { totalBlocksRef.current = navBlocks.length; }, [navBlocks.length]);
 
