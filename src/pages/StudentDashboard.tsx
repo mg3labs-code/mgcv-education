@@ -620,7 +620,7 @@ const StudentDashboard = () => {
 
               {/* PHASE 2: Inner OS as normal card */}
               {phase === 2 || phase === 3 ? (
-                <div style={{ marginTop: 16 }}>
+                <div style={{ marginTop: 16 }} className="unlock-animate">
                   <FadeSlide show={phase >= 2} delay={150}>
                     <InnerOS position="normal" scores={dimensionScores} />
                   </FadeSlide>
@@ -629,7 +629,7 @@ const StudentDashboard = () => {
 
               {/* PHASE 3+: Scholar Methods */}
               {phase >= 3 && (
-                <div style={{ marginTop: 16 }}>
+                <div style={{ marginTop: 16 }} className="unlock-animate">
                   <FadeSlide show={phase >= 3} delay={200}>
                     <ScholarMethods methodCounts={methodCounts ?? {}} />
                   </FadeSlide>
