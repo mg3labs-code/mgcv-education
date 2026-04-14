@@ -464,6 +464,66 @@ const TextbookEpisode = () => {
 
   // Content blocks (non-interactive) that need comprehension check
   const CONTENT_TYPES = useMemo(() => new Set(["concept", "reasoning", "connections", "implications"]), []);
+  // Reading types that need minimum time
+  const READING_TYPES = useMemo(() => new Set(["concept", "reasoning", "connections", "implications"]), []);
+  const ASSESSMENT_TYPES = useMemo(() => new Set(["assessment"]), []);
+  const READING_MIN_SECONDS = 90;
+
+  // Reading timer — counts up while on reading sections
+  useEffect(() => {
+    const block = navBlocks[activeBlock];
+    if (!block || !READING_TYPES.has(block.type)) {
+      setReadingTimer(0);
+      return;
+    }
+    setReadingTimer(0);
+    const id = setInterval(() => setReadingTimer(t => t + 1), 1000);
+    return () => clearInterval(id);
+  }, [activeBlock, navBlocks]);
+
+  // Check if continue is allowed
+  const isContinueGated = useMemo(() => {
+    const block = navBlocks[activeBlock];
+    if (!block) return false;
+    // Reading sections: need minimum time
+    if (READING_TYPES.has(block.type) && readingTimer < READING_MIN_SECONDS) return true;
+    // Assessment sections: need all questions attempted
+    if (ASSESSMENT_TYPES.has(block.type) && !blockCompleted.has(activeBlock)) return true;
+    // Interactive sections: need completion
+    if (INTERACTIVE_TYPES.has(block.type) && !blockCompleted.has(activeBlock)) return true;
+    return false;
+  }, [navBlocks, activeBlock, readingTimer, blockCompleted, READING_TYPES, ASSESSMENT_TYPES, INTERACTIVE_TYPES]);
+
+  const continueHint = useMemo(() => {
+    const block = navBlocks[activeBlock];
+    if (!block) return "";
+    if (READING_TYPES.has(block.type) && readingTimer < READING_MIN_SECONDS) {
+      const remaining = READING_MIN_SECONDS - readingTimer;
+      const mins = Math.floor(remaining / 60);
+      const secs = remaining % 60;
+      return `Read for ${mins}:${secs.toString().padStart(2, "0")} more...`;
+    }
+    if (ASSESSMENT_TYPES.has(block.type) && !blockCompleted.has(activeBlock)) return "Answer all questions first";
+    if (INTERACTIVE_TYPES.has(block.type) && !blockCompleted.has(activeBlock)) return "Complete the activity first";
+    return "";
+  }, [navBlocks, activeBlock, readingTimer, blockCompleted, READING_TYPES, ASSESSMENT_TYPES, INTERACTIVE_TYPES]);
+
+  // Pre-reasoning gate: check when entering Master phase
+  const checkReasoningGate = useCallback((nextIndex: number) => {
+    const block = navBlocks[nextIndex];
+    if (!block || !MASTER_BLOCKS.has(block.type)) return false;
+    const gateKey = `reasoning_gate_${chapterId}_${episodeId}`;
+    if (localStorage.getItem(gateKey)) return false;
+    // Check if previous block was NOT master
+    const prevBlock = navBlocks[activeBlock];
+    if (prevBlock && MASTER_BLOCKS.has(prevBlock.type)) return false;
+    localStorage.setItem(gateKey, "1");
+    return true;
+  }, [navBlocks, activeBlock, chapterId, episodeId]);
+
+  const onAnswerChange = useCallback(() => {
+    setAnswerChanges(prev => ({ ...prev, [activeBlock]: (prev[activeBlock] || 0) + 1 }));
+  }, [activeBlock]);
 
   if (isLoading) {
     return <EpisodeLoadingTransition />;
