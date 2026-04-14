@@ -554,7 +554,7 @@ const TextbookEpisode = () => {
         case "activity": return <VocabularyCardBlock content={block.content as any} subjectName={langSubject} />;
         case "recall": return <RecallBlock content={block.content as RecallContent} onComplete={onBlockComplete} />;
         case "explain": return <ExplainBlock content={block.content as ExplainContent} onComplete={onBlockComplete} />;
-      case "assessment": return <AssessmentBlock content={block.content as AssessmentContent} onComplete={onBlockComplete} onWrongAttempt={onWrongAttempt} />;
+      case "assessment": return <AssessmentBlock content={block.content as AssessmentContent} onComplete={onBlockComplete} onWrongAttempt={onWrongAttempt} onAnswerChange={onAnswerChange} />;
         case "exercise": return <GrammarPatternBlock content={block.content as any} />;
         case "reasoning": return <StoryReadingBlock content={block.content as any} subjectName={langSubject} />;
         case "assumptions": return <AssumptionsBlock content={block.content as AssumptionsContent} onStartDefense={() => setShowDefense(true)} />;
@@ -569,7 +569,7 @@ const TextbookEpisode = () => {
       case "activity": return <ActivityBlock content={block.content as ActivityContent} onComplete={onBlockComplete} />;
       case "recall": return <RecallBlock content={block.content as RecallContent} onComplete={onBlockComplete} />;
       case "explain": return <ExplainBlock content={block.content as ExplainContent} onComplete={onBlockComplete} />;
-      case "assessment": return <AssessmentBlock content={block.content as AssessmentContent} onComplete={onBlockComplete} onWrongAttempt={onWrongAttempt} />;
+      case "assessment": return <AssessmentBlock content={block.content as AssessmentContent} onComplete={onBlockComplete} onWrongAttempt={onWrongAttempt} onAnswerChange={onAnswerChange} />;
       case "exercise": return <ExerciseBlock content={block.content as ExerciseContent} onComplete={onBlockComplete} />;
       case "reasoning": return <ReasoningBlock content={block.content as ReasoningContent} />;
       case "assumptions": return <AssumptionsBlock content={block.content as AssumptionsContent} onStartDefense={() => setShowDefense(true)} />;
@@ -827,9 +827,9 @@ const TextbookEpisode = () => {
               <h1 style={{ fontSize: 22, fontWeight: 700, color: JEE_BLOCKS.has(block.type) ? "#D97706" : "#1C1917", marginBottom: 4, fontFamily: "'Source Serif 4', serif" }}>
                 {block.icon} {block.title}
               </h1>
-              <p style={{ fontSize: 13, color: "#A8A29E", marginBottom: 20, fontStyle: "italic" }}>
-                {blockSubtitles[block.type] || ""}
-              </p>
+               <p style={{ fontSize: 13, color: "#A8A29E", marginBottom: 20, fontStyle: "italic" }}>
+                 {sectionHooks[block.type] || blockSubtitles[block.type] || ""}
+               </p>
 
               {/* Block content with colored border */}
               <div className={`bg-card rounded-xl border-l-4 ${JEE_BLOCKS.has(block.type) ? "border-l-amber-500" : ((meta as any).border || "border-l-primary")} shadow-sm`}>
