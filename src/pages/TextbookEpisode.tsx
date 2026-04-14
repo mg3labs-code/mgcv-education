@@ -309,7 +309,17 @@ const TextbookEpisode = () => {
 
   const goToBlock = useCallback((index: number) => {
     if (isBlockLocked(index)) {
-      toast.error("Complete all Core sections first 🔒");
+      const block = navBlocks[index];
+      const blockType = block?.type || "";
+      if (PROVE_BLOCKS.has(blockType)) {
+        const remaining = (phaseIndices[0]?.indices ?? []).filter(i => !understoodBlocks.has(i)).length;
+        toast.error(`Complete ${remaining} more Understand section${remaining > 1 ? "s" : ""} to unlock 🔒`);
+      } else if (MASTER_BLOCKS.has(blockType) || JEE_BLOCKS.has(blockType)) {
+        const remaining = (phaseIndices[1]?.indices ?? []).filter(i => !understoodBlocks.has(i)).length;
+        toast.error(`Complete ${remaining} more Prove section${remaining > 1 ? "s" : ""} to unlock 🔒`);
+      } else {
+        toast.error("Complete previous sections first 🔒");
+      }
       return;
     }
     // Track time spent on current section
