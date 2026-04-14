@@ -10,7 +10,7 @@ import FeatureShowcase from "@/components/landing/FeatureShowcase";
 import WhyThisWorks from "@/components/landing/WhyThisWorks";
 import ResearchProvenMethods from "@/components/landing/ResearchProvenMethods";
 import LoadingScreen from "@/components/LoadingScreen";
-import { Menu, X, ArrowRight, GraduationCap, BookOpen, Phone, Mail } from "lucide-react";
+import { Menu, X, ArrowRight, GraduationCap, BookOpen } from "lucide-react";
 import ImageTextEffect from "@/components/landing/ImageTextEffect";
 import { motion, AnimatePresence } from "framer-motion";
 import heroStudents from "@/assets/hero-students.webp";
@@ -26,7 +26,6 @@ const heroImages = [
 type LoginType = "student" | "teacher" | "";
 type ModalType = "login" | "about" | "contact" | "";
 type AuthMode = "login" | "signup";
-type AuthMethod = "email" | "phone" | "google";
 
 const isInIframe = () => {
   try { return window.self !== window.top; } catch { return true; }
@@ -34,23 +33,19 @@ const isInIframe = () => {
 
 const Index = () => {
   const navigate = useNavigate();
-  const { user, role, loading, signIn, signUp, signInWithPhone, verifyPhoneOtp } = useAuth();
+  const { user, role, loading, signIn, signUp } = useAuth();
   const { toast } = useToast();
   const inIframe = isInIframe();
   const standalonePreviewUrl = typeof window !== "undefined" ? window.location.href : "/";
   const [modalType, setModalType] = useState<ModalType>("");
   const [loginType, setLoginType] = useState<LoginType>("");
   const [authMode, setAuthMode] = useState<AuthMode>("login");
-  const [authMethod, setAuthMethod] = useState<AuthMethod>("email");
   const [showForgot, setShowForgot] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [className, setClassName] = useState("");
   const [schoolName, setSchoolName] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [otpCode, setOtpCode] = useState("");
-  const [otpSent, setOtpSent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [loginError, setLoginError] = useState<{ message: string; code?: string; suggestion: string } | null>(null);
@@ -111,16 +106,12 @@ const Index = () => {
     setModalType("");
     setLoginType("");
     setAuthMode("login");
-    setAuthMethod("email");
     setShowForgot(false);
     setEmail("");
     setPassword("");
     setFullName("");
     setClassName("");
     setSchoolName("");
-    setPhoneNumber("");
-    setOtpCode("");
-    setOtpSent(false);
     setLoginError(null);
   }, []);
 
@@ -196,40 +187,8 @@ const Index = () => {
     }
   };
 
-  const handleSendOtp = async () => {
-    if (!phoneNumber || phoneNumber.length < 10) {
-      setLoginError({ message: "Invalid phone number", suggestion: "Enter a valid phone number with country code (e.g. +91XXXXXXXXXX)" });
-      return;
-    }
-    setSubmitting(true);
-    setLoginError(null);
-    try {
-      const formattedPhone = phoneNumber.startsWith("+") ? phoneNumber : `+91${phoneNumber}`;
-      await signInWithPhone(formattedPhone);
-      setOtpSent(true);
-      toast({ title: "OTP Sent!", description: "Check your phone for the verification code." });
-    } catch (err: any) {
-      setLoginError(parseError(err));
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitting(true);
-    setLoginError(null);
-    try {
-      const formattedPhone = phoneNumber.startsWith("+") ? phoneNumber : `+91${phoneNumber}`;
-      await verifyPhoneOtp(formattedPhone, otpCode);
-      toast({ title: "Welcome!" });
-      closeModal();
-    } catch (err: any) {
-      setLoginError(parseError(err));
-    } finally {
-      setSubmitting(false);
-    }
-  };
+
 
   if (loading) return <LoadingScreen />;
   if (user && role) return null;
