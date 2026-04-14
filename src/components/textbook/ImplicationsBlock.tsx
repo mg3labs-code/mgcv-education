@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ImplicationsContent } from "@/data/textbookData";
-import { Compass, Mic, Send, Loader2, CheckCircle2, RotateCcw } from "lucide-react";
+import { Compass, AudioLines, Send, Loader2, CheckCircle2, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { InsightCard, ExampleCard, ImportantNote } from "@/components/textbook/ContentCards";

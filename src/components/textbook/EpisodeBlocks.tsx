@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { ConceptContent, RecallContent, ExplainContent, AssessmentContent, ExerciseContent } from "@/data/textbookData";
 import { Button } from "@/components/ui/button";
-import { GripHorizontal, Mic, PenLine, RotateCcw, ChevronDown, ChevronUp, Send, Loader2, CheckCircle2, Sparkles } from "lucide-react";
+import { GripHorizontal, AudioLines, PenLine, RotateCcw, ChevronDown, ChevronUp, Send, Loader2, CheckCircle2, Sparkles } from "lucide-react";
 import VoiceExplainWidget from "@/components/textbook/VoiceExplainWidget";
 import InlineMedia from "@/components/textbook/InlineMedia";
 import { supabase } from "@/integrations/supabase/client";
