@@ -1,0 +1,1 @@
+ALTER TABLE public.episode_interactions ADD COLUMN answer_changes integer NOT NULL DEFAULT 0;

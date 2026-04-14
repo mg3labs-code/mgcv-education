@@ -31,6 +31,7 @@ import { Switch } from "@/components/ui/switch";
 import SectionCelebration from "@/components/textbook/SectionCelebration";
 import ComprehensionCheck from "@/components/textbook/ComprehensionCheck";
 import EpisodeLoadingTransition from "@/components/textbook/EpisodeLoadingTransition";
+import SectionVoiceGuide from "@/components/textbook/SectionVoiceGuide";
 
 const LANGUAGE_SUBJECTS = new Set(["Telugu", "Hindi"]);
 
@@ -55,6 +56,20 @@ const blockLabels: Record<string, string> = {
   connections: "Where else does this hide?", application: "Use it in real life",
   implications: "What does this change?", visual_aid: "See it in action",
   jee_problems: "⚡ JEE Problem Bank", jee_extension: "🔬 Beyond Board", jee_speed_drill: "⏱️ Speed Drill",
+};
+
+const sectionHooks: Record<string, string> = {
+  concept: "The foundation — like learning the rules of your favorite game before playing 🎮",
+  activity: "Get hands-on — the best way to make knowledge stick!",
+  exercise: "Practice like a champion — repetition builds mastery",
+  recall: "No peeking — honest recall builds real memory 🧠",
+  assessment: "Time to prove it — just like cricket players practice in nets 🏏",
+  explain: "If you can teach it, you truly understand it",
+  reasoning: "This is how JEE toppers and Oxford scholars think — questioning WHY 🎓",
+  assumptions: "Challenge what everyone assumes — this builds elite thinking",
+  connections: "Surprising links across subjects — how geniuses connect dots 🌐",
+  application: "Real-world usage — how Sundar Pichai would apply this 💡",
+  implications: "What this changes for the future — think like a researcher",
 };
 
 // 3-Phase system: UNDERSTAND → PROVE → MASTER
@@ -109,6 +124,9 @@ const TextbookEpisode = () => {
   const [wrongAttempts, setWrongAttempts] = useState<Record<number, number>>({});
   const [comprehensionResults, setComprehensionResults] = useState<Record<number, { result: string; attempts: number }>>({});
   const [jeeMode, setJeeMode] = useState(false);
+  const [readingTimer, setReadingTimer] = useState(0);
+  const [showReasoningGate, setShowReasoningGate] = useState(false);
+  const [answerChanges, setAnswerChanges] = useState<Record<number, number>>({});
   const contentRef = useRef<HTMLDivElement>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const totalBlocksRef = useRef(0);
@@ -382,6 +400,7 @@ const TextbookEpisode = () => {
         comprehension_result: comp?.result || null,
         comprehension_attempts: comp?.attempts || 0,
         completed_at: new Date().toISOString(),
+        answer_changes: answerChanges[blockIndex] || 0,
       }, { onConflict: "user_id,chapter_id,episode_id,block_index" });
     } catch (e) {
       console.error("Failed to persist interaction:", e);
@@ -396,6 +415,18 @@ const TextbookEpisode = () => {
     explain: "Feynman won a Nobel Prize using this exact technique 🔬",
     connections: "Elite tutorial systems work exactly like this — connecting ideas across fields 🧠",
   }), []);
+
+  // Pre-reasoning gate: check when entering Master phase
+  const checkReasoningGate = useCallback((nextIndex: number) => {
+    const block = navBlocks[nextIndex];
+    if (!block || !MASTER_BLOCKS.has(block.type)) return false;
+    const gateKey = `reasoning_gate_${chapterId}_${episodeId}`;
+    if (localStorage.getItem(gateKey)) return false;
+    const prevBlock = navBlocks[activeBlock];
+    if (prevBlock && MASTER_BLOCKS.has(prevBlock.type)) return false;
+    localStorage.setItem(gateKey, "1");
+    return true;
+  }, [navBlocks, activeBlock, chapterId, episodeId]);
 
   // Helper: advance with celebration
   const advanceWithCelebration = useCallback((nextIndex: number) => {
@@ -420,9 +451,16 @@ const TextbookEpisode = () => {
       toast(SKILL_TOASTS[block.type], { duration: 4000 });
     }
 
+    // Check reasoning gate before moving to master phase
+    const nextIdx = activeBlock < navBlocks.length - 1 ? activeBlock + 1 : -1;
+    if (nextIdx >= 0 && checkReasoningGate(nextIdx)) {
+      setShowReasoningGate(true);
+      return;
+    }
+
     // Show celebration then move
     setShowCelebration(true);
-  }, [activeBlock, persistUnderstood, markBlockInteracted, persistInteraction, sectionStartTime, navBlocks, SKILL_TOASTS]);
+  }, [activeBlock, persistUnderstood, markBlockInteracted, persistInteraction, sectionStartTime, navBlocks, SKILL_TOASTS, checkReasoningGate]);
 
   const handleCelebrationDone = useCallback(() => {
     setShowCelebration(false);
@@ -461,6 +499,54 @@ const TextbookEpisode = () => {
 
   // Content blocks (non-interactive) that need comprehension check
   const CONTENT_TYPES = useMemo(() => new Set(["concept", "reasoning", "connections", "implications"]), []);
+  // Reading types that need minimum time
+  const READING_TYPES = useMemo(() => new Set(["concept", "reasoning", "connections", "implications"]), []);
+  const ASSESSMENT_TYPES = useMemo(() => new Set(["assessment"]), []);
+  const READING_MIN_SECONDS = 90;
+
+  // Reading timer — counts up while on reading sections
+  useEffect(() => {
+    const block = navBlocks[activeBlock];
+    if (!block || !READING_TYPES.has(block.type)) {
+      setReadingTimer(0);
+      return;
+    }
+    setReadingTimer(0);
+    const id = setInterval(() => setReadingTimer(t => t + 1), 1000);
+    return () => clearInterval(id);
+  }, [activeBlock, navBlocks]);
+
+  // Check if continue is allowed
+  const isContinueGated = useMemo(() => {
+    const block = navBlocks[activeBlock];
+    if (!block) return false;
+    // Reading sections: need minimum time
+    if (READING_TYPES.has(block.type) && readingTimer < READING_MIN_SECONDS) return true;
+    // Assessment sections: need all questions attempted
+    if (ASSESSMENT_TYPES.has(block.type) && !blockCompleted.has(activeBlock)) return true;
+    // Interactive sections: need completion
+    if (INTERACTIVE_TYPES.has(block.type) && !blockCompleted.has(activeBlock)) return true;
+    return false;
+  }, [navBlocks, activeBlock, readingTimer, blockCompleted, READING_TYPES, ASSESSMENT_TYPES, INTERACTIVE_TYPES]);
+
+  const continueHint = useMemo(() => {
+    const block = navBlocks[activeBlock];
+    if (!block) return "";
+    if (READING_TYPES.has(block.type) && readingTimer < READING_MIN_SECONDS) {
+      const remaining = READING_MIN_SECONDS - readingTimer;
+      const mins = Math.floor(remaining / 60);
+      const secs = remaining % 60;
+      return `Read for ${mins}:${secs.toString().padStart(2, "0")} more...`;
+    }
+    if (ASSESSMENT_TYPES.has(block.type) && !blockCompleted.has(activeBlock)) return "Answer all questions first";
+    if (INTERACTIVE_TYPES.has(block.type) && !blockCompleted.has(activeBlock)) return "Complete the activity first";
+    return "";
+  }, [navBlocks, activeBlock, readingTimer, blockCompleted, READING_TYPES, ASSESSMENT_TYPES, INTERACTIVE_TYPES]);
+
+
+  const onAnswerChange = useCallback(() => {
+    setAnswerChanges(prev => ({ ...prev, [activeBlock]: (prev[activeBlock] || 0) + 1 }));
+  }, [activeBlock]);
 
   if (isLoading) {
     return <EpisodeLoadingTransition />;
@@ -491,7 +577,7 @@ const TextbookEpisode = () => {
         case "activity": return <VocabularyCardBlock content={block.content as any} subjectName={langSubject} />;
         case "recall": return <RecallBlock content={block.content as RecallContent} onComplete={onBlockComplete} />;
         case "explain": return <ExplainBlock content={block.content as ExplainContent} onComplete={onBlockComplete} />;
-      case "assessment": return <AssessmentBlock content={block.content as AssessmentContent} onComplete={onBlockComplete} onWrongAttempt={onWrongAttempt} />;
+      case "assessment": return <AssessmentBlock content={block.content as AssessmentContent} onComplete={onBlockComplete} onWrongAttempt={onWrongAttempt} onAnswerChange={onAnswerChange} />;
         case "exercise": return <GrammarPatternBlock content={block.content as any} />;
         case "reasoning": return <StoryReadingBlock content={block.content as any} subjectName={langSubject} />;
         case "assumptions": return <AssumptionsBlock content={block.content as AssumptionsContent} onStartDefense={() => setShowDefense(true)} />;
@@ -506,7 +592,7 @@ const TextbookEpisode = () => {
       case "activity": return <ActivityBlock content={block.content as ActivityContent} onComplete={onBlockComplete} />;
       case "recall": return <RecallBlock content={block.content as RecallContent} onComplete={onBlockComplete} />;
       case "explain": return <ExplainBlock content={block.content as ExplainContent} onComplete={onBlockComplete} />;
-      case "assessment": return <AssessmentBlock content={block.content as AssessmentContent} onComplete={onBlockComplete} onWrongAttempt={onWrongAttempt} />;
+      case "assessment": return <AssessmentBlock content={block.content as AssessmentContent} onComplete={onBlockComplete} onWrongAttempt={onWrongAttempt} onAnswerChange={onAnswerChange} />;
       case "exercise": return <ExerciseBlock content={block.content as ExerciseContent} onComplete={onBlockComplete} />;
       case "reasoning": return <ReasoningBlock content={block.content as ReasoningContent} />;
       case "assumptions": return <AssumptionsBlock content={block.content as AssumptionsContent} onStartDefense={() => setShowDefense(true)} />;
@@ -764,9 +850,9 @@ const TextbookEpisode = () => {
               <h1 style={{ fontSize: 22, fontWeight: 700, color: JEE_BLOCKS.has(block.type) ? "#D97706" : "#1C1917", marginBottom: 4, fontFamily: "'Source Serif 4', serif" }}>
                 {block.icon} {block.title}
               </h1>
-              <p style={{ fontSize: 13, color: "#A8A29E", marginBottom: 20, fontStyle: "italic" }}>
-                {blockSubtitles[block.type] || ""}
-              </p>
+               <p style={{ fontSize: 13, color: "#A8A29E", marginBottom: 20, fontStyle: "italic" }}>
+                 {sectionHooks[block.type] || blockSubtitles[block.type] || ""}
+               </p>
 
               {/* Block content with colored border */}
               <div className={`bg-card rounded-xl border-l-4 ${JEE_BLOCKS.has(block.type) ? "border-l-amber-500" : ((meta as any).border || "border-l-primary")} shadow-sm`}>
@@ -896,27 +982,30 @@ const TextbookEpisode = () => {
         </div>
 
         {/* Center: Continue/Finish — PROMINENT & CENTERED */}
-        <div style={{ flex: 1, display: "flex", justifyContent: "center" }}>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
           {!isLastBlock ? (
-            <button onClick={() => advanceWithCelebration(activeBlock)} style={{
+            <button onClick={() => !isContinueGated && advanceWithCelebration(activeBlock)} disabled={isContinueGated} style={{
               padding: "10px 28px", borderRadius: 14, border: "none",
-              background: "linear-gradient(135deg, #0D9488, #14B8A6)",
-              fontSize: 15, fontWeight: 700, color: "white",
-              cursor: "pointer",
+              background: isContinueGated ? "#D6D3D1" : "linear-gradient(135deg, #0D9488, #14B8A6)",
+              fontSize: 15, fontWeight: 700, color: isContinueGated ? "#A8A29E" : "white",
+              cursor: isContinueGated ? "not-allowed" : "pointer",
               transition: "all 0.2s",
-              boxShadow: "0 4px 14px rgba(13,148,136,0.35)",
-              minWidth: 140,
+              boxShadow: isContinueGated ? "none" : "0 4px 14px rgba(13,148,136,0.35)",
+              minWidth: 140, opacity: isContinueGated ? 0.7 : 1,
             }}>Continue →</button>
           ) : (
-            <button onClick={() => advanceWithCelebration(activeBlock)} style={{
+            <button onClick={() => !isContinueGated && advanceWithCelebration(activeBlock)} disabled={isContinueGated} style={{
               padding: "10px 28px", borderRadius: 14, border: "none",
-              background: "linear-gradient(135deg, #059669, #10B981)",
-              fontSize: 15, fontWeight: 700, color: "white",
-              cursor: "pointer",
+              background: isContinueGated ? "#D6D3D1" : "linear-gradient(135deg, #059669, #10B981)",
+              fontSize: 15, fontWeight: 700, color: isContinueGated ? "#A8A29E" : "white",
+              cursor: isContinueGated ? "not-allowed" : "pointer",
               transition: "all 0.2s",
-              boxShadow: "0 4px 14px rgba(5,150,105,0.35)",
-              minWidth: 140,
+              boxShadow: isContinueGated ? "none" : "0 4px 14px rgba(5,150,105,0.35)",
+              minWidth: 140, opacity: isContinueGated ? 0.7 : 1,
             }}>Finish ✓</button>
+          )}
+          {continueHint && (
+            <span style={{ fontSize: 10, color: "#A8A29E", fontWeight: 500 }}>{continueHint}</span>
           )}
         </div>
 
@@ -1088,6 +1177,48 @@ const TextbookEpisode = () => {
 
       {/* Celebration overlay */}
       <SectionCelebration show={showCelebration} onDone={handleCelebrationDone} />
+
+      {/* Pre-reasoning excitement gate */}
+      {showReasoningGate && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center" style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)" }}>
+          <div style={{
+            background: "white", borderRadius: 20, padding: 32, maxWidth: 380, width: "90%",
+            textAlign: "center", boxShadow: "0 25px 50px rgba(0,0,0,0.15)",
+          }}>
+            <div style={{ fontSize: 48, marginBottom: 12 }}>🧠</div>
+            <h2 style={{ fontSize: 22, fontWeight: 800, color: "#1C1917", marginBottom: 8, fontFamily: "'DM Sans', sans-serif" }}>
+              Ready to think like a scholar?
+            </h2>
+            <p style={{ fontSize: 14, color: "#78716C", marginBottom: 8, lineHeight: 1.6 }}>
+              This is how Oxford students and JEE toppers approach problems — by questioning <strong>WHY</strong>.
+            </p>
+            <p style={{ fontSize: 12, color: "#A8A29E", marginBottom: 24 }}>
+              You've mastered the basics. Now let's go deeper. 🚀
+            </p>
+            <div style={{ display: "flex", gap: 12 }}>
+              <button onClick={() => setShowReasoningGate(false)} style={{
+                flex: 1, padding: "12px 0", borderRadius: 12, border: "1px solid #E7E5E4",
+                background: "white", fontSize: 14, fontWeight: 600, color: "#57534E", cursor: "pointer",
+              }}>Not yet</button>
+              <button onClick={() => { setShowReasoningGate(false); setShowCelebration(true); }} style={{
+                flex: 1, padding: "12px 0", borderRadius: 12, border: "none",
+                background: "linear-gradient(135deg, #8B5CF6, #7C3AED)", fontSize: 14, fontWeight: 700,
+                color: "white", cursor: "pointer", boxShadow: "0 4px 14px rgba(139,92,246,0.4)",
+              }}>Let's go! 🚀</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Voice Guide */}
+      {block && (
+        <SectionVoiceGuide
+          sectionTitle={block.title || blockLabels[block.type] || "this section"}
+          sectionType={block.type}
+          episodeTitle={episode.title}
+          onWrongAnswer={(wrongAttempts[activeBlock] || 0) > 0}
+        />
+      )}
 
       {/* Modals */}
       <TutorialDefenseModal open={showDefense} onOpenChange={setShowDefense} topic={episode.title} episodeTitle={`${chapter.title} — ${episode.title}`} subject={chapter.title} chapterId={chapterId} episodeId={episodeId} />

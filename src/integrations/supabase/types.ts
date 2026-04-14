@@ -307,6 +307,7 @@ export type Database = {
       }
       episode_interactions: {
         Row: {
+          answer_changes: number
           block_index: number
           block_type: string
           chapter_id: string
@@ -322,6 +323,7 @@ export type Database = {
           wrong_attempts: number
         }
         Insert: {
+          answer_changes?: number
           block_index: number
           block_type: string
           chapter_id: string
@@ -337,6 +339,7 @@ export type Database = {
           wrong_attempts?: number
         }
         Update: {
+          answer_changes?: number
           block_index?: number
           block_type?: string
           chapter_id?: string
