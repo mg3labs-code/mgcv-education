@@ -10,7 +10,7 @@ import FeatureShowcase from "@/components/landing/FeatureShowcase";
 import WhyThisWorks from "@/components/landing/WhyThisWorks";
 import ResearchProvenMethods from "@/components/landing/ResearchProvenMethods";
 import LoadingScreen from "@/components/LoadingScreen";
-import { Menu, X, ArrowRight, GraduationCap, BookOpen } from "lucide-react";
+import { Menu, X, ArrowRight, GraduationCap, BookOpen, Phone, Mail } from "lucide-react";
 import ImageTextEffect from "@/components/landing/ImageTextEffect";
 import { motion, AnimatePresence } from "framer-motion";
 import heroStudents from "@/assets/hero-students.webp";
