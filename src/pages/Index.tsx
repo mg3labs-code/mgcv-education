@@ -26,6 +26,7 @@ const heroImages = [
 type LoginType = "student" | "teacher" | "";
 type ModalType = "login" | "about" | "contact" | "";
 type AuthMode = "login" | "signup";
+type AuthMethod = "email" | "phone" | "google";
 
 const isInIframe = () => {
   try { return window.self !== window.top; } catch { return true; }
