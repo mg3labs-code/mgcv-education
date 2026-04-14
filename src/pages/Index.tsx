@@ -176,6 +176,61 @@ const Index = () => {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setSubmitting(true);
+    setLoginError(null);
+    try {
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
+      });
+      if (result.error) {
+        setLoginError({ message: result.error.message || "Google sign-in failed", suggestion: "Please try again or use email/phone instead." });
+      }
+      if (result.redirected) return;
+      toast({ title: "Welcome!" });
+      closeModal();
+    } catch (err: any) {
+      setLoginError(parseError(err));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleSendOtp = async () => {
+    if (!phoneNumber || phoneNumber.length < 10) {
+      setLoginError({ message: "Invalid phone number", suggestion: "Enter a valid phone number with country code (e.g. +91XXXXXXXXXX)" });
+      return;
+    }
+    setSubmitting(true);
+    setLoginError(null);
+    try {
+      const formattedPhone = phoneNumber.startsWith("+") ? phoneNumber : `+91${phoneNumber}`;
+      await signInWithPhone(formattedPhone);
+      setOtpSent(true);
+      toast({ title: "OTP Sent!", description: "Check your phone for the verification code." });
+    } catch (err: any) {
+      setLoginError(parseError(err));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setLoginError(null);
+    try {
+      const formattedPhone = phoneNumber.startsWith("+") ? phoneNumber : `+91${phoneNumber}`;
+      await verifyPhoneOtp(formattedPhone, otpCode);
+      toast({ title: "Welcome!" });
+      closeModal();
+    } catch (err: any) {
+      setLoginError(parseError(err));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   if (loading) return <LoadingScreen />;
   if (user && role) return null;
 
