@@ -1,66 +1,98 @@
 
 
-## Remove University Names + Strengthen Methodology Branding
+# Progressive Disclosure Implementation Plan
 
-Replace all named university references with research-backed, legally safe, high-impact language. Prioritize cognitive science and metacognitive framing — your own IP is stronger than borrowed prestige.
+## Overview
+Transform the student experience from time-based unlocks to **behavior-driven progressive disclosure** across 3 systems: behavioral dashboard phases, textbook phase locking, and guided discovery toasts.
 
-### Changes by File
+---
 
-**1. `src/pages/Index.tsx` (line 304) — Hero subtitle**
-- "proven methods from **Stanford, MIT & Oxford**"
-- **New**: "built on **cognitive science & metacognitive research** — the foundations behind the world's highest-performing education systems"
+## Step 1: Database Migration
+Add `milestones_seen` JSONB column to `student_preferences` table to track which discovery moments have fired (persists across devices).
 
-**2. `src/components/landing/WhyThisWorks.tsx` — Method cards + copy**
+```sql
+ALTER TABLE public.student_preferences 
+ADD COLUMN IF NOT EXISTS milestones_seen jsonb DEFAULT '{}'::jsonb;
+```
 
-Replace university-named cards with research-methodology names using stronger impact language:
+---
 
-| Current Card | New Card Name | New Subtitle |
+## Step 2: Behavioral Dashboard Phases (StudentDashboard.tsx)
+
+**Current** (lines 461-467): Uses `accountAgeDays` for phases 3 & 4.
+
+**New logic:**
+- Phase 1: Default (< 3 episodes)
+- Phase 2: `eps >= 3` (Inner OS unlocks) — already correct
+- Phase 3: `eps >= 5 AND hasUsedScholarMethod` (Scholar Methods unlock)
+- Phase 4: `eps >= 10 AND streakDays >= 5` (Hero Inner OS)
+
+Add a query to `method_sessions` to check `hasUsedScholarMethod` (any completed session where `method_type` is `defense` or `first_principles`).
+
+Update locked placeholder text:
+- "Your Learning Strengths" → "Complete 3 episodes to unlock" (already correct)
+- "Think Like a Scholar" → "Complete 5 episodes & try a Scholar Method to unlock"
+
+---
+
+## Step 3: Textbook 3-Phase Locking (TextbookEpisode.tsx)
+
+**Current** (line 232): `isBlockLocked` always returns `false`.
+
+**New logic:**
+- **Understand phase** blocks: Always unlocked
+- **Prove phase** blocks: Locked until ALL Understand blocks are marked understood
+- **Master phase** blocks: Locked until ALL Prove blocks are marked understood
+- **JEE phase** blocks: Follow Master phase unlock (locked until Master is available)
+
+Implementation:
+1. Compute `understandIndices` and `proveIndices` from `phaseIndices`
+2. Check `understoodBlocks` set against these indices
+3. Show lock icon + toast "Complete all Understand sections first 🔒" when tapping locked block
+4. Fire a one-time unlock toast when a phase transitions: "🎯 Test Yourself unlocked!" and "🚀 Challenge Yourself unlocked!"
+
+---
+
+## Step 4: Discovery Toasts Hook (new: src/hooks/useDiscoveryToasts.ts)
+
+A hook that reads milestones from `student_preferences.milestones_seen` and fires one-time toasts based on behavioral triggers:
+
+| Milestone Key | Trigger | Toast Message |
 |---|---|---|
-| Oxford Tutorial | The Socratic Challenge | "Research-proven assumption testing" |
-| Harvard Case Method | Real-World Application | "Evidence-based transfer learning" |
-| IIT Problem-Based | First-Principles Reasoning | "Metacognitive problem decomposition" |
-| Feynman Technique | The Simplicity Test | "Teach-back method — proven to boost retention 90%" |
-| Stanford Design Thinking | Design Thinking Lab | "Empathy-driven iterative learning" |
+| `first_episode` | `episodeCount >= 1` | "🔥 1 day streak! Keep going tomorrow" |
+| `inner_os_unlocked` | `episodeCount >= 3` | "📊 Your Learning Strengths are ready!" |
+| `first_assignment` | First submission exists | "✅ Your teacher can see your work now" |
+| `scholar_unlocked` | `episodeCount >= 5 && hasUsedMethod` | "🎓 Scholar Methods unlocked!" |
+| `growth_ready` | `streakDays >= 7` | "📈 My Growth is ready — see your week!" |
 
-Remove all country flags. Replace with relevant scientific emoji or keep icons only.
+After firing, mark the milestone in the DB so it never fires again.
 
-Section subtitle (line 141): "used at IIT, Oxford, and Harvard" → "rooted in cognitive science research used by top-tier institutions worldwide"
+---
 
-Section header subtitle (line 105): → "Built on decades of learning science research — the same cognitive frameworks that power the world's best education systems."
+## Step 5: Streak Badge in TopNavbar
 
-**3. `src/components/landing/TrustBadges.tsx` (line 29)**
-- "Oxford-level pedagogy tools" → "research-proven pedagogy tools"
+Add `🔥 {streakDays}` badge in the student navbar (next to the existing streak badge area, line ~130 of TopNavbar.tsx). Only show when `streakDays >= 1`. Currently there's a static "🔥" badge at phase >= 3 — change to show actual streak count and display from phase >= 1 once `streakDays >= 1`.
 
-**4. `src/components/landing/ResearchProvenMethods.tsx` — Full overhaul**
+---
 
-Part B university tabs: Replace institution names with methodology names:
-- Tab: "IIT" → "First Principles"
-- Tab: "Oxford" → "Socratic Method"
-- Tab: "Harvard / MIT" → "Case Method"
-- Tab: "Stanford" → "Design Thinking"
+## Step 6: Phase Transition Animations (StudentDashboard.tsx)
 
-Remove flags from tabs. Remove all university names from descriptions — focus on methodology descriptions and research citations.
+When Inner OS transitions from locked placeholder to visible card (phase 1→2), add a one-time scale-up + glow CSS animation. Track in localStorage whether the user has seen the "unlock" animation to avoid replaying it.
 
-Subtitle (line 144): "used by IIT, Oxford, Harvard, and Stanford" → "backed by decades of cognitive science and metacognitive research"
+---
 
-Subtitle (line 234): "used at IIT, Oxford, Harvard, and Stanford" → "rooted in proven learning science used by the world's top institutions"
+## Files Modified
 
-Part A exam timelines (lines 41, 51): "Olympiad → MIT / Stanford" → "Olympiad → Global Top Universities". Remove "MIT, Stanford, Cambridge" from timeline text → "top global universities"
+1. **Migration** — Add `milestones_seen` column
+2. **`src/pages/StudentDashboard.tsx`** — Behavioral phase logic, method_sessions query, updated placeholder text
+3. **`src/pages/TextbookEpisode.tsx`** — `isBlockLocked` with real phase locking logic, unlock toasts
+4. **`src/hooks/useDiscoveryToasts.ts`** — New hook for milestone-based one-time toasts
+5. **`src/components/TopNavbar.tsx`** — Dynamic streak badge with count
+6. **`src/integrations/supabase/types.ts`** — Will auto-update after migration
 
-**5. `src/pages/TextbookEpisode.tsx` (lines 327-331) — Skill toasts**
-- "IIT interviewers test" → "elite interviewers test"
-- "Harvard calls this the Case Method" → "Top institutions call this the Case Method"
-- "Oxford tutorials work exactly like this" → "Elite tutorial systems work exactly like this"
-
-**6. `src/pages/StudentTextbook.tsx` (line 13)**
-- "Oxford & Harvard tools" → "Research-proven tools"
-
-**7. `src/pages/AdaptiveComparison.tsx` (lines 101-106)**
-- "JEE Mode → IIT Interview Prep" stays (JEE/IIT is exam context, not brand endorsement)
-- "how IIT interview panels test" → "how elite interview panels test"
-
-### What stays
-- "JEE" and "NEET" — these are exam names, not university brands, and are safe
-- "Feynman" in internal textbook blocks — educational methodology attribution is fair use
-- "Design Thinking" — generic term, fully safe
+## Priority Order
+1. Textbook phase locking (biggest learning impact)
+2. Behavioral dashboard phases
+3. Discovery toasts + streak badge
+4. Phase transition animations
 
