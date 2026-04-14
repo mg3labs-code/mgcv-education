@@ -109,6 +109,9 @@ const TextbookEpisode = () => {
   const [wrongAttempts, setWrongAttempts] = useState<Record<number, number>>({});
   const [comprehensionResults, setComprehensionResults] = useState<Record<number, { result: string; attempts: number }>>({});
   const [jeeMode, setJeeMode] = useState(false);
+  const [readingTimer, setReadingTimer] = useState(0);
+  const [showReasoningGate, setShowReasoningGate] = useState(false);
+  const [answerChanges, setAnswerChanges] = useState<Record<number, number>>({});
   const contentRef = useRef<HTMLDivElement>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const totalBlocksRef = useRef(0);
