@@ -1209,6 +1209,16 @@ const TextbookEpisode = () => {
         </div>
       )}
 
+      {/* Voice Guide */}
+      {block && (
+        <SectionVoiceGuide
+          sectionTitle={block.title || blockLabels[block.type] || "this section"}
+          sectionType={block.type}
+          episodeTitle={episode.title}
+          onWrongAnswer={(wrongAttempts[activeBlock] || 0) > 0}
+        />
+      )}
+
       {/* Modals */}
       <TutorialDefenseModal open={showDefense} onOpenChange={setShowDefense} topic={episode.title} episodeTitle={`${chapter.title} — ${episode.title}`} subject={chapter.title} chapterId={chapterId} episodeId={episodeId} />
       <FirstPrinciplesModal open={showFirstPrinciples} onOpenChange={setShowFirstPrinciples} topic={episode.title} episodeTitle={`${chapter.title} — ${episode.title}`} subject={chapter.title} chapterId={chapterId} episodeId={episodeId} />
