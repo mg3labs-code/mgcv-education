@@ -34,19 +34,23 @@ const isInIframe = () => {
 
 const Index = () => {
   const navigate = useNavigate();
-  const { user, role, loading, signIn, signUp } = useAuth();
+  const { user, role, loading, signIn, signUp, signInWithPhone, verifyPhoneOtp } = useAuth();
   const { toast } = useToast();
   const inIframe = isInIframe();
   const standalonePreviewUrl = typeof window !== "undefined" ? window.location.href : "/";
   const [modalType, setModalType] = useState<ModalType>("");
   const [loginType, setLoginType] = useState<LoginType>("");
   const [authMode, setAuthMode] = useState<AuthMode>("login");
+  const [authMethod, setAuthMethod] = useState<AuthMethod>("email");
   const [showForgot, setShowForgot] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [className, setClassName] = useState("");
   const [schoolName, setSchoolName] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [otpCode, setOtpCode] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [loginError, setLoginError] = useState<{ message: string; code?: string; suggestion: string } | null>(null);
