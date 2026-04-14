@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { lovable } from "@/integrations/lovable/index";
 import ForgotPasswordModal from "@/components/ForgotPasswordModal";
 import GradientMeshBg from "@/components/landing/GradientMeshBg";
 import TrustBadges from "@/components/landing/TrustBadges";
