@@ -1,98 +1,82 @@
 
 
-# Progressive Disclosure Implementation Plan
+# Textbook Learning Experience Enhancement Plan
 
 ## Overview
-Transform the student experience from time-based unlocks to **behavior-driven progressive disclosure** across 3 systems: behavioral dashboard phases, textbook phase locking, and guided discovery toasts.
+This is a large, multi-faceted enhancement touching engagement tracking, bug fixes, interaction gating, voice guidance, and JEE UI improvements across the textbook episode system.
 
 ---
 
-## Step 1: Database Migration
-Add `milestones_seen` JSONB column to `student_preferences` table to track which discovery moments have fired (persists across devices).
+## What Gets Built
 
-```sql
-ALTER TABLE public.student_preferences 
-ADD COLUMN IF NOT EXISTS milestones_seen jsonb DEFAULT '{}'::jsonb;
-```
+### 1. Fix True/False Feedback Bug (EpisodeBlocks.tsx)
+**Problem**: When a student selects the wrong True/False answer, the revealed answer still shows a green `✓` checkmark — misleading.
+**Fix**: After T/F submission, show whether student was correct/wrong with distinct feedback (green "Correct!" vs red "Incorrect — the answer is...") instead of just revealing the answer with a green checkmark.
 
----
+### 2. Gate "Continue" Button with Minimum Engagement (TextbookEpisode.tsx)
+- **Reading sections** (concept, reasoning, connections, implications): Disable "Continue" for the first 90 seconds (not full 3-4 min, which would frustrate — 90s is the sweet spot). Show a subtle countdown: "Read for 1:12 more..."
+- **MCQ/Assessment sections**: Disable "Continue" until ALL questions are attempted (submitted, not just selected).
+- **All other interactive sections** (activity, exercise, explain, recall): Require `blockCompleted` before enabling Continue.
+- The button shows a disabled state with a hint explaining why it's locked.
 
-## Step 2: Behavioral Dashboard Phases (StudentDashboard.tsx)
+### 3. Pre-Reasoning Excitement Gate (TextbookEpisode.tsx)
+Before entering the Master/Deep Reasoning phase (layer 6+), show a one-time interstitial:
+- "Ready to think like a scholar? 🧠"
+- Brief hook: "This is how Oxford students and JEE toppers approach problems — by questioning WHY."
+- Two buttons: "Let's go!" (proceeds) and "Not yet" (stays on current block).
+- Only shows once per episode (tracked in localStorage).
 
-**Current** (lines 461-467): Uses `accountAgeDays` for phases 3 & 4.
+### 4. Voice Companion Integration — Section-Aware Guide
+**New component**: `SectionVoiceGuide` — a persistent voice companion that:
+- Knows which section the student is on and what content they're reading
+- Auto-offers guidance on section entry: "This section is about [topic]. Let me explain the key idea..."
+- Detects idle time (>60s no scroll/interaction): "Need help? Tap me to hear an explanation"
+- On wrong MCQ answers: "Think about it differently — what if you consider..."
+- Uses the existing `elevenlabs-tts-stream` edge function for Telugu/English voice
+- Lives as a floating pill at the bottom of the content area (above the bottom bar)
+- Same voice system as Buddy (reuses existing infrastructure)
 
-**New logic:**
-- Phase 1: Default (< 3 episodes)
-- Phase 2: `eps >= 3` (Inner OS unlocks) — already correct
-- Phase 3: `eps >= 5 AND hasUsedScholarMethod` (Scholar Methods unlock)
-- Phase 4: `eps >= 10 AND streakDays >= 5` (Hero Inner OS)
+### 5. Voice Input for ComprehensionCheck (ComprehensionCheck.tsx)
+Add `CompanionVoiceInput` to the comprehension check textarea, so students can speak their understanding instead of typing. The component already exists — just wire it in.
 
-Add a query to `method_sessions` to check `hasUsedScholarMethod` (any completed session where `method_type` is `defense` or `first_principles`).
+### 6. JEE Questions — Card-by-Card Navigation (JeeProblemsBlock.tsx)
+**Current**: Already implements one-at-a-time with Next/Previous — this is working correctly.
+**Enhancement**: Add a collapsible card wrapper with excitement hook:
+- Before showing the first question, show a teaser: "⚡ These are actual JEE-level problems. Top 2% of students solve these. Ready?"
+- Add a progress bar showing question index.
+- After completion, show comparison: "You scored X/Y — that puts you in the top Z% for this topic!"
 
-Update locked placeholder text:
-- "Your Learning Strengths" → "Complete 3 episodes to unlock" (already correct)
-- "Think Like a Scholar" → "Complete 5 episodes & try a Scholar Method to unlock"
+### 7. Section Excitement Hooks (TextbookEpisode.tsx)
+Add contextual micro-copy before each phase that connects to student interests:
+- **Understand**: "This is the foundation — like learning the rules of your favorite game before playing"
+- **Prove**: "Time to test yourself — just like how cricket players practice in nets before a match"
+- **Master**: "Only elite thinkers reach this level — like how Sundar Pichai or APJ Abdul Kalam approached problems"
+- These are subtle one-line hooks shown below the section title, replacing the current static `blockSubtitles`.
 
----
-
-## Step 3: Textbook 3-Phase Locking (TextbookEpisode.tsx)
-
-**Current** (line 232): `isBlockLocked` always returns `false`.
-
-**New logic:**
-- **Understand phase** blocks: Always unlocked
-- **Prove phase** blocks: Locked until ALL Understand blocks are marked understood
-- **Master phase** blocks: Locked until ALL Prove blocks are marked understood
-- **JEE phase** blocks: Follow Master phase unlock (locked until Master is available)
-
-Implementation:
-1. Compute `understandIndices` and `proveIndices` from `phaseIndices`
-2. Check `understoodBlocks` set against these indices
-3. Show lock icon + toast "Complete all Understand sections first 🔒" when tapping locked block
-4. Fire a one-time unlock toast when a phase transitions: "🎯 Test Yourself unlocked!" and "🚀 Challenge Yourself unlocked!"
-
----
-
-## Step 4: Discovery Toasts Hook (new: src/hooks/useDiscoveryToasts.ts)
-
-A hook that reads milestones from `student_preferences.milestones_seen` and fires one-time toasts based on behavioral triggers:
-
-| Milestone Key | Trigger | Toast Message |
-|---|---|---|
-| `first_episode` | `episodeCount >= 1` | "🔥 1 day streak! Keep going tomorrow" |
-| `inner_os_unlocked` | `episodeCount >= 3` | "📊 Your Learning Strengths are ready!" |
-| `first_assignment` | First submission exists | "✅ Your teacher can see your work now" |
-| `scholar_unlocked` | `episodeCount >= 5 && hasUsedMethod` | "🎓 Scholar Methods unlocked!" |
-| `growth_ready` | `streakDays >= 7` | "📈 My Growth is ready — see your week!" |
-
-After firing, mark the milestone in the DB so it never fires again.
-
----
-
-## Step 5: Streak Badge in TopNavbar
-
-Add `🔥 {streakDays}` badge in the student navbar (next to the existing streak badge area, line ~130 of TopNavbar.tsx). Only show when `streakDays >= 1`. Currently there's a static "🔥" badge at phase >= 3 — change to show actual streak count and display from phase >= 1 once `streakDays >= 1`.
-
----
-
-## Step 6: Phase Transition Animations (StudentDashboard.tsx)
-
-When Inner OS transitions from locked placeholder to visible card (phase 1→2), add a one-time scale-up + glow CSS animation. Track in localStorage whether the user has seen the "unlock" animation to avoid replaying it.
+### 8. Track MCQ Answer Changes (EpisodeBlocks.tsx)
+In `AssessmentBlock`, track how many times a student changes their selected answer before submitting. Pass this count to `onWrongAttempt` or a new callback. Persist in `episode_interactions`.
 
 ---
 
 ## Files Modified
 
-1. **Migration** — Add `milestones_seen` column
-2. **`src/pages/StudentDashboard.tsx`** — Behavioral phase logic, method_sessions query, updated placeholder text
-3. **`src/pages/TextbookEpisode.tsx`** — `isBlockLocked` with real phase locking logic, unlock toasts
-4. **`src/hooks/useDiscoveryToasts.ts`** — New hook for milestone-based one-time toasts
-5. **`src/components/TopNavbar.tsx`** — Dynamic streak badge with count
-6. **`src/integrations/supabase/types.ts`** — Will auto-update after migration
+| File | Changes |
+|------|---------|
+| `src/components/textbook/EpisodeBlocks.tsx` | T/F bug fix, MCQ answer change tracking, completion gating |
+| `src/pages/TextbookEpisode.tsx` | Continue button gating (time + completion), pre-reasoning gate, section hooks, voice guide integration |
+| `src/components/textbook/ComprehensionCheck.tsx` | Add voice input option |
+| `src/components/textbook/JeeProblemsBlock.tsx` | Excitement teaser, completion comparison |
+| New: `src/components/textbook/SectionVoiceGuide.tsx` | Section-aware voice companion pill |
+
+## Database Changes
+- Add `answer_changes` integer column to `episode_interactions` table (migration)
 
 ## Priority Order
-1. Textbook phase locking (biggest learning impact)
-2. Behavioral dashboard phases
-3. Discovery toasts + streak badge
-4. Phase transition animations
+1. True/False bug fix (immediate quality fix)
+2. Continue button gating (biggest learning impact)
+3. Voice input in ComprehensionCheck (quick win)
+4. Pre-reasoning excitement gate
+5. MCQ answer change tracking
+6. JEE card excitement hooks
+7. Section voice guide (most complex, biggest engagement boost)
 
