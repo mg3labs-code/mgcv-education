@@ -188,11 +188,6 @@ const VisualAidBlock = ({ content }: VisualAidBlockProps) => {
             📷 {content.caption}
           </p>
         )}
-        {content.explanation && hasValidUrl && (
-          <p className="text-sm text-muted-foreground leading-relaxed bg-muted/30 rounded-lg p-3">
-            {content.explanation}
-          </p>
-        )}
       </div>
 
       {/* Zoom modal */}
