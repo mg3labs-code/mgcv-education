@@ -314,20 +314,24 @@ Deno.serve(async (req) => {
     console.log("No cache hit, generating for:", topic);
     const subjectGuidance = getSubjectGuidance(subj);
 
-    const decomposeResp = await fetch(
-      "https://ai.gateway.lovable.dev/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
-          messages: [
-            {
-              role: "system",
-              content: `You are an elite educational content designer who creates NCERT/CBSE textbook-quality visual breakdowns. You specialize in creating hyper-specific visual prompts that produce professional educational infographics with maximum student retention.
+    const requestSteps = async (): Promise<ReasoningStep[]> => {
+      const maxAttempts = 3;
+
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        const decomposeResp = await fetch(
+          "https://ai.gateway.lovable.dev/v1/chat/completions",
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${LOVABLE_API_KEY}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              model: "google/gemini-2.5-flash",
+              messages: [
+                {
+                  role: "system",
+                  content: `You are an elite educational content designer who creates NCERT/CBSE textbook-quality visual breakdowns. You specialize in creating hyper-specific visual prompts that produce professional educational infographics with maximum student retention.
 
 ${subjectGuidance}
 
@@ -341,10 +345,10 @@ CRITICAL RULES for visual_prompt:
 - Specify numbered callouts: "callout ① points to electrode, callout ② points to electrolyte"
 - Include specific scientific notation, formulas, and units
 - Describe cross-sections, cutaways, or exploded views when applicable`,
-            },
-            {
-              role: "user",
-              content: `Break down this topic into 4 reasoning steps: "${topic}"
+                },
+                {
+                  role: "user",
+                  content: `Break down this topic into 4 reasoning steps: "${topic}"
 
 Return JSON array with exactly 4 objects:
 [
@@ -360,87 +364,98 @@ Return JSON array with exactly 4 objects:
   { "step_number": 3, "title": "Explore Possibilities", ... },
   { "step_number": 4, "title": "Logical Conclusion", ... }
 ]`,
-            },
-          ],
-          tools: [
-            {
-              type: "function",
-              function: {
-                name: "reasoning_steps",
-                description: "Return 4 reasoning steps with elite-level visual prompts",
-                parameters: {
-                  type: "object",
-                  properties: {
-                    steps: {
-                      type: "array",
-                      items: {
-                        type: "object",
-                        properties: {
-                          step_number: { type: "number" },
-                          title: { type: "string" },
-                          subtitle: { type: "string" },
-                          explanation: { type: "string" },
-                          visual_prompt: { type: "string" },
-                          key_labels: {
-                            type: "array",
-                            items: { type: "string" },
+                },
+              ],
+              tools: [
+                {
+                  type: "function",
+                  function: {
+                    name: "reasoning_steps",
+                    description: "Return 4 reasoning steps with elite-level visual prompts",
+                    parameters: {
+                      type: "object",
+                      properties: {
+                        steps: {
+                          type: "array",
+                          items: {
+                            type: "object",
+                            properties: {
+                              step_number: { type: "number" },
+                              title: { type: "string" },
+                              subtitle: { type: "string" },
+                              explanation: { type: "string" },
+                              visual_prompt: { type: "string" },
+                              key_labels: {
+                                type: "array",
+                                items: { type: "string" },
+                              },
+                            },
+                            required: [
+                              "step_number",
+                              "title",
+                              "subtitle",
+                              "explanation",
+                              "visual_prompt",
+                              "key_labels",
+                            ],
                           },
                         },
-                        required: [
-                          "step_number",
-                          "title",
-                          "subtitle",
-                          "explanation",
-                          "visual_prompt",
-                          "key_labels",
-                        ],
                       },
+                      required: ["steps"],
                     },
                   },
-                  required: ["steps"],
                 },
+              ],
+              tool_choice: {
+                type: "function",
+                function: { name: "reasoning_steps" },
               },
-            },
-          ],
-          tool_choice: {
-            type: "function",
-            function: { name: "reasoning_steps" },
-          },
-        }),
-      }
-    );
+            }),
+          }
+        );
 
-    if (!decomposeResp.ok) {
-      const errText = await decomposeResp.text();
-      console.error("Decompose error:", decomposeResp.status, errText);
-      if (decomposeResp.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limited, please try again later" }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (decomposeResp.status === 402) {
-        return new Response(JSON.stringify({ error: "Credits exhausted" }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      return new Response(JSON.stringify({ error: "Failed to decompose topic" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+        if (!decomposeResp.ok) {
+          const errText = await decomposeResp.text();
+          console.error(`Decompose error attempt ${attempt}:`, decomposeResp.status, errText);
 
-    const decomposeData = await decomposeResp.json();
-    const toolCall = decomposeData.choices?.[0]?.message?.tool_calls?.[0];
-    let steps: ReasoningStep[];
+          if (decomposeResp.status === 402) {
+            throw new Error("Credits exhausted");
+          }
 
-    if (toolCall) {
-      const parsed = JSON.parse(toolCall.function.arguments);
-      steps = parsed.steps;
-    } else {
-      const content = decomposeData.choices?.[0]?.message?.content || "";
-      const jsonMatch = content.match(/\[[\s\S]*\]/);
-      if (!jsonMatch) throw new Error("Could not parse reasoning steps");
-      steps = JSON.parse(jsonMatch[0]);
-    }
+          if (decomposeResp.status === 429 && attempt < maxAttempts) {
+            await sleep(1500 * attempt);
+            continue;
+          }
+
+          break;
+        }
+
+        try {
+          const decomposeData = await decomposeResp.json();
+          const toolCall = decomposeData.choices?.[0]?.message?.tool_calls?.[0];
+
+          if (toolCall) {
+            const parsed = JSON.parse(toolCall.function.arguments);
+            return parsed.steps;
+          }
+
+          const content = decomposeData.choices?.[0]?.message?.content || "";
+          const jsonMatch = content.match(/\[[\s\S]*\]/);
+          if (jsonMatch) {
+            return JSON.parse(jsonMatch[0]);
+          }
+        } catch (parseErr) {
+          console.error("Failed to parse AI reasoning response:", parseErr);
+        }
+
+        break;
+      }
+
+      console.warn("Using fallback reasoning steps for:", topic);
+      return buildFallbackSteps(topic, subj);
+    };
+
+    const steps = await requestSteps();
 
     // Background image generation function
     const generateImagesInBackground = async () => {
