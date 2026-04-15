@@ -5,7 +5,7 @@ import { GripHorizontal, AudioLines, PenLine, RotateCcw, ChevronDown, ChevronUp,
 import VoiceExplainWidget from "@/components/textbook/VoiceExplainWidget";
 import InlineMedia from "@/components/textbook/InlineMedia";
 import { supabase } from "@/integrations/supabase/client";
-import { ContentCard, DefinitionBox, FormulaBox, ExampleBox, NoteBox, StepBox } from "@/components/textbook/ContentCard";
+import { ContentCard, DefinitionBox, FormulaBox, ExampleBox, NoteBox, StepBox, ContainmentChain, KeyRelationshipBanner } from "@/components/textbook/ContentCard";
 
 // ─── AI Evaluate Helper ─────────────────────────────────────
 
@@ -312,6 +312,23 @@ export const ConceptBlock = ({ content, onComplete }: { content: ConceptContent;
           </ContentCard>
         );
       })}
+
+      {/* Containment Chain — auto-detect number classification topics */}
+      {content.sections.some(s => {
+        const l = (s.heading || "").toLowerCase();
+        return l.includes("putting it all") || l.includes("real number") || l.includes("number system") || l.includes("classification");
+      }) && (
+        <ContainmentChain
+          items={[
+            { label: "N", color: "#10B981" },
+            { label: "W", color: "#3B82F6" },
+            { label: "Z", color: "#8B5CF6" },
+            { label: "Q", color: "#F59E0B" },
+            { label: "R", color: "#EF4444" },
+          ]}
+          description="Natural ⊂ Whole ⊂ Integer ⊂ Rational ⊂ Real — every number set contains the previous one"
+        />
+      )}
 
       {content.keyFormulas && content.keyFormulas.length > 0 && (
         <ContentCard icon="🎯" iconBg="#7C3AED" title="Key Formulas">
