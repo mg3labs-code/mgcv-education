@@ -49,7 +49,6 @@ const VisualReasoningDemo = () => {
     setExpandedStep(null);
 
     try {
-      // Step 1: Generate text reasoning via edge function
       const { data, error } = await supabase.functions.invoke("generate-reasoning-visual", {
         body: { topic: t, subject, grade: "Grade 10", skip_images: true },
       });
@@ -57,7 +56,6 @@ const VisualReasoningDemo = () => {
       if (error) throw error;
 
       if (data?.steps) {
-        // Map steps with emojis
         const emojis = ["🔍", "⚙️", "🔗", "✅"];
         const mapped: VisualStep[] = data.steps.map((s: any, i: number) => ({
           step_number: s.step_number || i + 1,
@@ -69,11 +67,11 @@ const VisualReasoningDemo = () => {
         setSteps(mapped);
         setExpandedStep(0);
 
-        // Step 2: Generate images in background if missing
+        // If images are being generated in the background, poll for them
         const missingImages = mapped.filter(s => !s.image_url);
-        if (missingImages.length > 0) {
+        if (missingImages.length > 0 && data?.images_generating) {
           setGeneratingImages(true);
-          generateStepImages(mapped, t, subject);
+          pollForImages(t, subject);
         }
       }
     } catch (err) {
@@ -84,26 +82,35 @@ const VisualReasoningDemo = () => {
     }
   };
 
-  const generateStepImages = async (stepsArr: VisualStep[], topicStr: string, subject: string) => {
-    // Generate images one by one using the edge function
-    for (let i = 0; i < stepsArr.length; i++) {
-      if (stepsArr[i].image_url) continue;
+  // Poll the same endpoint — cached result will have images once background gen completes
+  const pollForImages = async (topicStr: string, subject: string) => {
+    const maxAttempts = 12; // ~60 seconds total
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      await new Promise(r => setTimeout(r, 5000));
       try {
         const { data } = await supabase.functions.invoke("generate-reasoning-visual", {
-          body: {
-            action: "generate-single-image",
-            topic: topicStr,
-            subject,
-            step_index: i,
-            step_title: stepsArr[i].title,
-            step_explanation: stepsArr[i].explanation,
-          },
+          body: { topic: topicStr, subject, grade: "Grade 10" },
         });
-        if (data?.image_url) {
-          setSteps(prev => prev.map((s, idx) => idx === i ? { ...s, image_url: data.image_url } : s));
+        if (data?.steps) {
+          const emojis = ["🔍", "⚙️", "🔗", "✅"];
+          const hasNewImages = data.steps.some((s: any) => s.image_url);
+          if (hasNewImages) {
+            setSteps(data.steps.map((s: any, i: number) => ({
+              step_number: s.step_number || i + 1,
+              title: s.title,
+              explanation: s.explanation,
+              emoji: emojis[i] || "📌",
+              image_url: s.image_url,
+            })));
+            const allDone = data.steps.every((s: any) => s.image_url);
+            if (allDone || data.cached) {
+              setGeneratingImages(false);
+              return;
+            }
+          }
         }
-      } catch (err) {
-        console.error(`Image gen failed for step ${i}:`, err);
+      } catch {
+        // ignore poll errors
       }
     }
     setGeneratingImages(false);
