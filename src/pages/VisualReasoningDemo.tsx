@@ -50,7 +50,7 @@ const VisualReasoningDemo = () => {
 
     try {
       const { data, error } = await supabase.functions.invoke("generate-reasoning-visual", {
-        body: { topic: t, subject, grade: "Grade 10", skip_images: true },
+        body: { topic: t, subject, grade: "Grade 10" },
       });
 
       if (error) throw error;
