@@ -532,6 +532,7 @@ export type Database = {
           created_at: string
           grade: string
           id: string
+          quiz: Json | null
           search_tokens: unknown
           slug: string
           steps: Json
@@ -542,6 +543,7 @@ export type Database = {
           created_at?: string
           grade?: string
           id?: string
+          quiz?: Json | null
           search_tokens?: unknown
           slug: string
           steps?: Json
@@ -552,6 +554,7 @@ export type Database = {
           created_at?: string
           grade?: string
           id?: string
+          quiz?: Json | null
           search_tokens?: unknown
           slug?: string
           steps?: Json

@@ -6,6 +6,7 @@ import { Loader2, ArrowLeft, Sparkles, ChevronRight, RefreshCw } from "lucide-re
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import IconSelectionQuiz, { type QuizIcon } from "@/components/textbook/IconSelectionQuiz";
 
 /* ── Types ── */
 interface VisualStep {
@@ -14,6 +15,11 @@ interface VisualStep {
   explanation: string;
   image_url?: string;
   emoji: string;
+}
+
+interface QuizData {
+  question: string;
+  icons: QuizIcon[];
 }
 
 /* ── Preset concepts for quick demo ── */
@@ -36,9 +42,11 @@ const VisualReasoningDemo = () => {
   const [topic, setTopic] = useState("");
   const [activeTopic, setActiveTopic] = useState("");
   const [steps, setSteps] = useState<VisualStep[]>([]);
+  const [quiz, setQuiz] = useState<QuizData | null>(null);
   const [loading, setLoading] = useState(false);
   const [generatingImages, setGeneratingImages] = useState(false);
   const [expandedStep, setExpandedStep] = useState<number | null>(null);
+  const [quizCompleted, setQuizCompleted] = useState(false);
 
   const generate = async (t: string, subject = "Science") => {
     if (!t.trim()) return;
@@ -46,6 +54,8 @@ const VisualReasoningDemo = () => {
     setActiveTopic(t);
     setLoading(true);
     setSteps([]);
+    setQuiz(null);
+    setQuizCompleted(false);
     setExpandedStep(null);
 
     try {
@@ -67,7 +77,12 @@ const VisualReasoningDemo = () => {
         setSteps(mapped);
         setExpandedStep(0);
 
-        // If images are being generated in the background, poll for them
+        // Set quiz data if available
+        if (data.quiz) {
+          setQuiz(data.quiz);
+        }
+
+        // If images are being generated in the background, poll
         const missingImages = mapped.filter(s => !s.image_url);
         if (missingImages.length > 0 && data?.images_generating) {
           setGeneratingImages(true);
@@ -82,9 +97,8 @@ const VisualReasoningDemo = () => {
     }
   };
 
-  // Poll the same endpoint — cached result will have images once background gen completes
   const pollForImages = async (topicStr: string, subject: string) => {
-    const maxAttempts = 12; // ~60 seconds total
+    const maxAttempts = 12;
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       await new Promise(r => setTimeout(r, 5000));
       try {
@@ -102,6 +116,10 @@ const VisualReasoningDemo = () => {
               emoji: emojis[i] || "📌",
               image_url: s.image_url,
             })));
+            // Also update quiz if returned
+            if (data.quiz && !quiz) {
+              setQuiz(data.quiz);
+            }
             const allDone = data.steps.every((s: any) => s.image_url);
             if (allDone || data.cached) {
               setGeneratingImages(false);
@@ -128,7 +146,7 @@ const VisualReasoningDemo = () => {
           </Link>
           <div>
             <h1 className="text-base font-bold text-foreground">📖 Visual Reasoning Demo</h1>
-            <p className="text-[11px] text-muted-foreground">PDF-style illustrated step-by-step</p>
+            <p className="text-[11px] text-muted-foreground">PDF-style illustrated step-by-step + quiz</p>
           </div>
         </div>
       </div>
@@ -172,7 +190,7 @@ const VisualReasoningDemo = () => {
           </div>
         )}
 
-        {/* Results — PDF-style vertical flow */}
+        {/* Results */}
         {steps.length > 0 && !loading && (
           <div className="space-y-4">
             {/* Title banner */}
@@ -186,7 +204,7 @@ const VisualReasoningDemo = () => {
               )}
             </div>
 
-            {/* Steps — vertical accordion-like cards */}
+            {/* Steps */}
             <div className="space-y-3">
               {steps.map((step, i) => {
                 const style = STEP_STYLES[i % STEP_STYLES.length];
@@ -197,7 +215,6 @@ const VisualReasoningDemo = () => {
                     key={i}
                     className={`rounded-xl border ${style.border} ${style.bg} overflow-hidden transition-all`}
                   >
-                    {/* Step header — always visible */}
                     <button
                       onClick={() => setExpandedStep(isExpanded ? null : i)}
                       className="w-full flex items-center gap-3 px-4 py-3 text-left"
@@ -212,10 +229,8 @@ const VisualReasoningDemo = () => {
                       <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${isExpanded ? "rotate-90" : ""}`} />
                     </button>
 
-                    {/* Expanded content */}
                     {isExpanded && (
                       <div className="px-4 pb-4 space-y-3 animate-fade-in">
-                        {/* Illustration */}
                         <div className="rounded-lg border border-border bg-background overflow-hidden">
                           {step.image_url ? (
                             <img
@@ -252,12 +267,10 @@ const VisualReasoningDemo = () => {
                           )}
                         </div>
 
-                        {/* Explanation text */}
                         <p className="text-[13px] text-foreground/90 leading-relaxed">
                           {step.explanation}
                         </p>
 
-                        {/* Next step button */}
                         {i < steps.length - 1 && (
                           <Button
                             size="sm"
@@ -280,9 +293,25 @@ const VisualReasoningDemo = () => {
               })}
             </div>
 
+            {/* Icon Selection Quiz — PDF-style gamification */}
+            {quiz && (
+              <div className="mt-6">
+                <IconSelectionQuiz
+                  question={quiz.question}
+                  icons={quiz.icons}
+                  onComplete={(score, total) => {
+                    setQuizCompleted(true);
+                    if (score === total) {
+                      toast.success("Perfect score! 🎉");
+                    }
+                  }}
+                />
+              </div>
+            )}
+
             {/* Reset */}
             <div className="text-center pt-2">
-              <Button variant="outline" size="sm" onClick={() => { setSteps([]); setTopic(""); setActiveTopic(""); }}>
+              <Button variant="outline" size="sm" onClick={() => { setSteps([]); setQuiz(null); setTopic(""); setActiveTopic(""); setQuizCompleted(false); }}>
                 Try Another Concept
               </Button>
             </div>
