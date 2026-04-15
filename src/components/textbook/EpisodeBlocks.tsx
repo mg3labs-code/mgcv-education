@@ -5,7 +5,7 @@ import { GripHorizontal, AudioLines, PenLine, RotateCcw, ChevronDown, ChevronUp,
 import VoiceExplainWidget from "@/components/textbook/VoiceExplainWidget";
 import InlineMedia from "@/components/textbook/InlineMedia";
 import { supabase } from "@/integrations/supabase/client";
-import { ContentCard, DefinitionBox, FormulaBox, ExampleBox, NoteBox, StepBox } from "@/components/textbook/ContentCard";
+import { ContentCard, DefinitionBox, FormulaBox, ExampleBox, NoteBox, StepBox, ContainmentChain, KeyRelationshipBanner } from "@/components/textbook/ContentCard";
 
 // ─── AI Evaluate Helper ─────────────────────────────────────
 
