@@ -93,6 +93,48 @@ Include these labels prominently: ${step.key_labels.join(", ")}
 Style: Indian NCERT educational textbook illustration, flat vector design, bright pastel palette on clean white background, large clear text annotations, hand-drawn but professional feel, infographic poster layout. NOT photorealistic.`;
 }
 
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+function buildFallbackSteps(topic: string, subject: string): ReasoningStep[] {
+  const safeTopic = topic.trim() || "this concept";
+  const safeSubject = subject || "Science";
+
+  return [
+    {
+      step_number: 1,
+      title: "What is the idea?",
+      subtitle: "Start with the main meaning",
+      explanation: `First, understand what ${safeTopic} means in simple words. This gives you the base idea before you study the details.`,
+      visual_prompt: `Simple teaching diagram for ${safeTopic} in ${safeSubject}. One main central idea, large title, clean white background, three labeled parts, numbered callouts ①②③, child-friendly mascot pointing to the main idea.`,
+      key_labels: [safeTopic, safeSubject, "Main Idea", "Overview"],
+    },
+    {
+      step_number: 2,
+      title: "What are the parts?",
+      subtitle: "Break it into smaller pieces",
+      explanation: `Next, split the topic into smaller parts. Learning becomes easier when each part is seen clearly and one by one.`,
+      visual_prompt: `Educational breakdown diagram for ${safeTopic}. Show the concept divided into 3 to 4 clear parts, left-to-right flow, soft colors, numbered labels ①②③④, and a simple legend box.`,
+      key_labels: ["Parts", "Labels", "Flow", "Structure"],
+    },
+    {
+      step_number: 3,
+      title: "How does it work?",
+      subtitle: "Follow the process",
+      explanation: `Now look at how the parts work together. Follow the order slowly so the full process becomes easy to remember.`,
+      visual_prompt: `Process diagram for ${safeTopic}. Use arrows to show sequence, input to process to output, clean layout, simple callouts, and one friendly mascot explaining the key step.`,
+      key_labels: ["Input", "Process", "Output", "Sequence"],
+    },
+    {
+      step_number: 4,
+      title: "Why does it matter?",
+      subtitle: "Connect to the result",
+      explanation: `Finally, connect the process to the result. This helps you understand why the topic matters and how to remember it better.`,
+      visual_prompt: `Summary diagram for ${safeTopic}. Show final result, real-life meaning, clean conclusion panel, labeled arrows, and a short recap section with bold headings.`,
+      key_labels: ["Result", "Meaning", "Conclusion", "Recall"],
+    },
+  ];
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
