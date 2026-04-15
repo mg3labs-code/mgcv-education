@@ -220,7 +220,6 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (exactMatch) {
-      // Check if cached entry has images — if not, skip cache and regenerate
       const cachedSteps = exactMatch.steps as any[];
       const hasAllImages = cachedSteps.length > 0 && cachedSteps.every((s: any) => s.image_url);
       if (hasAllImages) {
@@ -230,9 +229,13 @@ Deno.serve(async (req) => {
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      console.log("Exact match found but NO images, regenerating:", slug);
-      // Delete the broken cache entry so we can re-insert
-      await supabase.from("reasoning_visuals").delete().eq("id", exactMatch.id);
+      // Images still generating — return what we have without re-triggering generation
+      const hasSomeImages = cachedSteps.some((s: any) => s.image_url);
+      console.log("Exact match found, images pending:", slug, "some:", hasSomeImages);
+      return new Response(
+        JSON.stringify({ steps: cachedSteps, cached: true, match: "partial", images_generating: !hasAllImages }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     // 2. Full-text search for related topics
