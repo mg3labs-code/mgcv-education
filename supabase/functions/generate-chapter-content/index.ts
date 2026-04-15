@@ -131,7 +131,8 @@ Return a JSON array of content blocks in this exact order:
 Each block must have: { "block_type": string, "title": string, "icon": string, "content": object }
 
 The content object structure for each type:
-- concept: { sections: [{heading, body, highlight?}], keyFormulas?: string[], example?: [{question, solution}] }
+- concept: { sections: [{heading, definition: string (1-3 concise sentences explaining the concept), formulas?: string[] (mathematical notations/set notations), examples?: string[] (bullet-point examples like "• 7 is Natural, Whole, Integer, Rational, Real"), notes?: string[] (important warnings/tips), body?: string (ONLY if content doesn't fit definition/formula/example/note pattern)}], keyFormulas?: string[], example?: [{question, solution}], solvedExamples?: [{question, solution}] }
+  IMPORTANT for concept sections: Split content into semantic fields. Put the core explanation in "definition", any formulas in "formulas", worked examples as bullet strings in "examples", and warnings/tips in "notes". Keep "definition" SHORT (1-3 sentences max). Do NOT dump everything into "body" — use the structured fields.
 - visual_aid: { type: "image", url: "", caption: string, explanation: string, alt: string, searchTerms: string }
   For visual_aid blocks: leave "url" as empty string (it will be resolved later). 
   Set "searchTerms" to SPECIFIC descriptive keywords that would find an existing educational diagram online.
