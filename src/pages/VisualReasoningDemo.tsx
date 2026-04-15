@@ -241,7 +241,7 @@ const VisualReasoningDemo = () => {
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       setGeneratingImages(true);
-                                      generateStepImages(steps, activeTopic, "Science");
+                                      pollForImages(activeTopic, "Science");
                                     }}
                                   >
                                     <RefreshCw className="h-3 w-3 mr-1" /> Generate
