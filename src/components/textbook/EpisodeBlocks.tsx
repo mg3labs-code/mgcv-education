@@ -164,10 +164,29 @@ const JeeInsightMini = ({ heading }: { heading: string }) => {
 
 // ─── Concept Block (Design C Hybrid — Cards + Semantic Boxes) ──
 
+// Strip HTML tags from content, converting to plain text
+const stripHtml = (html: string): string => {
+  if (!html) return html;
+  // Convert <li> to bullet lines, <br> to newlines
+  let text = html
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/li>/gi, '\n')
+    .replace(/<li[^>]*>/gi, '• ')
+    .replace(/<\/?(ul|ol|p|div|span|b|strong|i|em|h[1-6])[^>]*>/gi, '')
+    .replace(/<[^>]+>/g, '') // strip remaining tags
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&quot;/g, '"');
+  return text.trim();
+};
+
 // Extract formula-like lines from body text
 const extractFormulas = (body: string): { text: string; formulas: string[] } => {
   if (!body) return { text: body, formulas: [] };
-  const lines = body.split('\n');
+  const cleaned = stripHtml(body);
+  const lines = cleaned.split('\n');
   const formulas: string[] = [];
   const textLines: string[] = [];
   for (const line of lines) {
@@ -306,8 +325,8 @@ export const ConceptBlock = ({ content, onComplete }: { content: ConceptContent;
         <ContentCard icon="💡" iconBg="#10B981" title="Solved Examples">
           {content.example.map((ex, i) => (
             <ExampleBox key={i} title={`Example ${i + 1}`}>
-              <p className="font-semibold text-foreground mb-1">{ex.question}</p>
-              <p className="whitespace-pre-line">{ex.solution}</p>
+              <p className="font-semibold text-foreground mb-1">{stripHtml(ex.question)}</p>
+              <p className="whitespace-pre-line">{stripHtml(ex.solution)}</p>
             </ExampleBox>
           ))}
         </ContentCard>
@@ -317,8 +336,8 @@ export const ConceptBlock = ({ content, onComplete }: { content: ConceptContent;
         <ContentCard icon="💡" iconBg="#10B981" title="Solved Examples">
           {(content as any).solvedExamples.map((ex: any, i: number) => (
             <ExampleBox key={i} title={`Example ${i + 1}`}>
-              <p className="font-semibold text-foreground mb-1">{ex.question}</p>
-              <p className="whitespace-pre-line">{ex.solution}</p>
+              <p className="font-semibold text-foreground mb-1">{stripHtml(ex.question)}</p>
+              <p className="whitespace-pre-line">{stripHtml(ex.solution)}</p>
             </ExampleBox>
           ))}
         </ContentCard>
