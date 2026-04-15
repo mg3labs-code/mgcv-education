@@ -39,6 +39,7 @@ const ReasoningVisualDemo = lazy(() => import("./pages/ReasoningVisualDemo"));
 const DemoDesignA = lazy(() => import("./pages/DemoDesignA"));
 const DemoDesignB = lazy(() => import("./pages/DemoDesignB"));
 const DemoDesignC = lazy(() => import("./pages/DemoDesignC"));
+const VisualReasoningDemo = lazy(() => import("./pages/VisualReasoningDemo"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
