@@ -455,9 +455,14 @@ Return JSON array with exactly 4 objects:
         }
       };
 
-      // Generate all 4 images in parallel batches of 2
-      await Promise.allSettled([generateImage(steps[0], 0), generateImage(steps[1], 1)]);
-      await Promise.allSettled([generateImage(steps[2], 2), generateImage(steps[3], 3)]);
+      // Generate images sequentially to avoid rate limits
+      for (let i = 0; i < steps.length; i++) {
+        await generateImage(steps[i], i);
+        // Small delay between requests to avoid 429
+        if (i < steps.length - 1) {
+          await new Promise(r => setTimeout(r, 2000));
+        }
+      }
 
       // Persist to DB with images
       const { error: insertErr } = await supabase
