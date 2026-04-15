@@ -16,6 +16,17 @@ interface ReasoningStep {
   image_url?: string;
 }
 
+interface QuizIcon {
+  emoji: string;
+  label: string;
+  isCorrect: boolean;
+}
+
+interface QuizData {
+  question: string;
+  icons: QuizIcon[];
+}
+
 /* ─── Subject-specific visual vocabulary for decomposition ─── */
 function getSubjectGuidance(subject: string): string {
   const s = subject.toLowerCase();
@@ -135,6 +146,20 @@ function buildFallbackSteps(topic: string, subject: string): ReasoningStep[] {
   ];
 }
 
+function buildFallbackQuiz(topic: string): QuizData {
+  return {
+    question: `Which of these are related to ${topic}?`,
+    icons: [
+      { emoji: "📖", label: "Textbook", isCorrect: true },
+      { emoji: "🧠", label: "Thinking", isCorrect: true },
+      { emoji: "🎮", label: "Gaming", isCorrect: false },
+      { emoji: "✏️", label: "Practice", isCorrect: true },
+      { emoji: "🏖️", label: "Beach", isCorrect: false },
+      { emoji: "🔬", label: "Experiment", isCorrect: true },
+    ],
+  };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -142,7 +167,7 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { topic, subject, grade, action, slug: repairSlug, step_index, skip_images } = body;
+    const { topic, subject, grade, action, slug: repairSlug, step_index } = body;
 
     // ── Repair single broken image ──
     if (action === "repair-image" && repairSlug && typeof step_index === "number") {
@@ -264,18 +289,17 @@ Deno.serve(async (req) => {
     if (exactMatch) {
       const cachedSteps = exactMatch.steps as any[];
       const hasAllImages = cachedSteps.length > 0 && cachedSteps.every((s: any) => s.image_url);
-      if (hasAllImages) {
-        console.log("Exact match found with images for:", slug);
-        return new Response(
-          JSON.stringify({ steps: exactMatch.steps, cached: true, match: "exact" }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      // Images still generating — return what we have without re-triggering generation
-      const hasSomeImages = cachedSteps.some((s: any) => s.image_url);
-      console.log("Exact match found, images pending:", slug, "some:", hasSomeImages);
+      
+      // Return cached data — globally shared for ALL users
+      console.log("Cache hit for:", slug, "allImages:", hasAllImages);
       return new Response(
-        JSON.stringify({ steps: cachedSteps, cached: true, match: "partial", images_generating: !hasAllImages }),
+        JSON.stringify({
+          steps: cachedSteps,
+          quiz: (exactMatch as any).quiz || null,
+          cached: true,
+          match: hasAllImages ? "exact" : "partial",
+          images_generating: !hasAllImages,
+        }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -301,6 +325,7 @@ Deno.serve(async (req) => {
         return new Response(
           JSON.stringify({
             steps: relatedMatches[0].steps,
+            quiz: (relatedMatches[0] as any).quiz || null,
             cached: true,
             match: "related",
             original_topic: relatedMatches[0].topic,
@@ -310,11 +335,11 @@ Deno.serve(async (req) => {
       }
     }
 
-    // 3. No match — generate new content with elite prompts
+    // 3. No match — generate new content
     console.log("No cache hit, generating for:", topic);
     const subjectGuidance = getSubjectGuidance(subj);
 
-    const requestSteps = async (): Promise<ReasoningStep[]> => {
+    const requestStepsAndQuiz = async (): Promise<{ steps: ReasoningStep[]; quiz: QuizData }> => {
       const maxAttempts = 3;
 
       for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -331,11 +356,11 @@ Deno.serve(async (req) => {
               messages: [
                 {
                   role: "system",
-                  content: `You are an elite educational content designer who creates NCERT/CBSE textbook-quality visual breakdowns. You specialize in creating hyper-specific visual prompts that produce professional educational infographics with maximum student retention.
+                  content: `You are an elite educational content designer who creates NCERT/CBSE textbook-quality visual breakdowns AND gamification quizzes. You specialize in creating hyper-specific visual prompts that produce professional educational infographics with maximum student retention.
 
 ${subjectGuidance}
 
-Break down any topic into exactly 4 active reasoning steps for ${gr} ${subj} students. Return ONLY valid JSON.
+Break down any topic into exactly 4 active reasoning steps for ${gr} ${subj} students, AND create a fun icon-selection quiz game. Return ONLY valid JSON.
 
 CRITICAL RULES for visual_prompt:
 - Be EXTREMELY specific — name exact molecules, forces, structures, equations
@@ -344,34 +369,56 @@ CRITICAL RULES for visual_prompt:
 - Include a cartoon mascot character in at least 2 of the 4 steps
 - Specify numbered callouts: "callout ① points to electrode, callout ② points to electrolyte"
 - Include specific scientific notation, formulas, and units
-- Describe cross-sections, cutaways, or exploded views when applicable`,
+- Describe cross-sections, cutaways, or exploded views when applicable
+
+QUIZ RULES:
+- Create a fun "What Are Needed For [Topic]?" style quiz
+- Use 8-10 icons total: 4-5 correct + 4-5 distractors
+- Each icon has an emoji and a short label
+- Distractors should be plausible but clearly wrong to an informed student
+- Question should be simple and engaging`,
                 },
                 {
                   role: "user",
-                  content: `Break down this topic into 4 reasoning steps: "${topic}"
+                  content: `Break down this topic into 4 reasoning steps AND create an icon quiz: "${topic}"
 
-Return JSON array with exactly 4 objects:
-[
-  {
-    "step_number": 1,
-    "title": "Understand the Problem",
-    "subtitle": "short catchy subtitle",
-    "explanation": "2-3 sentence explanation for students using simple Grade 4-5 English",
-    "visual_prompt": "EXTREMELY detailed and specific prompt for generating a labeled educational diagram — include exact chemical formulas OR force magnitudes OR anatomical structures OR geometric measurements. Specify colors for each element. Describe layout (left/right panels, top/bottom flow). Include numbered callouts ①②③. Mention a cute cartoon mascot character. Describe arrows with colors and labels.",
-    "key_labels": ["label1", "label2", "label3", "label4"]
-  },
-  { "step_number": 2, "title": "Break It Into Parts", ... },
-  { "step_number": 3, "title": "Explore Possibilities", ... },
-  { "step_number": 4, "title": "Logical Conclusion", ... }
-]`,
+Return JSON with this EXACT structure:
+{
+  "steps": [
+    {
+      "step_number": 1,
+      "title": "Understand the Problem",
+      "subtitle": "short catchy subtitle",
+      "explanation": "2-3 sentence explanation for students using simple Grade 4-5 English",
+      "visual_prompt": "EXTREMELY detailed prompt for educational diagram...",
+      "key_labels": ["label1", "label2", "label3", "label4"]
+    },
+    { "step_number": 2, "title": "Break It Into Parts", ... },
+    { "step_number": 3, "title": "Explore Possibilities", ... },
+    { "step_number": 4, "title": "Logical Conclusion", ... }
+  ],
+  "quiz": {
+    "question": "What Are Needed For Photosynthesis? 🌱",
+    "icons": [
+      { "emoji": "☀️", "label": "Sunlight", "isCorrect": true },
+      { "emoji": "💧", "label": "Water", "isCorrect": true },
+      { "emoji": "🌬️", "label": "CO₂", "isCorrect": true },
+      { "emoji": "🍃", "label": "Chlorophyll", "isCorrect": true },
+      { "emoji": "🔥", "label": "Fire", "isCorrect": false },
+      { "emoji": "🧊", "label": "Ice", "isCorrect": false },
+      { "emoji": "⚡", "label": "Lightning", "isCorrect": false },
+      { "emoji": "🌙", "label": "Moonlight", "isCorrect": false }
+    ]
+  }
+}`,
                 },
               ],
               tools: [
                 {
                   type: "function",
                   function: {
-                    name: "reasoning_steps",
-                    description: "Return 4 reasoning steps with elite-level visual prompts",
+                    name: "reasoning_and_quiz",
+                    description: "Return 4 reasoning steps with visual prompts AND an icon-selection quiz",
                     parameters: {
                       type: "object",
                       properties: {
@@ -390,25 +437,37 @@ Return JSON array with exactly 4 objects:
                                 items: { type: "string" },
                               },
                             },
-                            required: [
-                              "step_number",
-                              "title",
-                              "subtitle",
-                              "explanation",
-                              "visual_prompt",
-                              "key_labels",
-                            ],
+                            required: ["step_number", "title", "subtitle", "explanation", "visual_prompt", "key_labels"],
                           },
                         },
+                        quiz: {
+                          type: "object",
+                          properties: {
+                            question: { type: "string" },
+                            icons: {
+                              type: "array",
+                              items: {
+                                type: "object",
+                                properties: {
+                                  emoji: { type: "string" },
+                                  label: { type: "string" },
+                                  isCorrect: { type: "boolean" },
+                                },
+                                required: ["emoji", "label", "isCorrect"],
+                              },
+                            },
+                          },
+                          required: ["question", "icons"],
+                        },
                       },
-                      required: ["steps"],
+                      required: ["steps", "quiz"],
                     },
                   },
                 },
               ],
               tool_choice: {
                 type: "function",
-                function: { name: "reasoning_steps" },
+                function: { name: "reasoning_and_quiz" },
               },
             }),
           }
@@ -436,28 +495,35 @@ Return JSON array with exactly 4 objects:
 
           if (toolCall) {
             const parsed = JSON.parse(toolCall.function.arguments);
-            return parsed.steps;
+            return {
+              steps: parsed.steps || buildFallbackSteps(topic, subj),
+              quiz: parsed.quiz || buildFallbackQuiz(topic),
+            };
           }
 
           const content = decomposeData.choices?.[0]?.message?.content || "";
-          const jsonMatch = content.match(/\[[\s\S]*\]/);
+          const jsonMatch = content.match(/\{[\s\S]*\}/);
           if (jsonMatch) {
-            return JSON.parse(jsonMatch[0]);
+            const parsed = JSON.parse(jsonMatch[0]);
+            return {
+              steps: parsed.steps || buildFallbackSteps(topic, subj),
+              quiz: parsed.quiz || buildFallbackQuiz(topic),
+            };
           }
         } catch (parseErr) {
-          console.error("Failed to parse AI reasoning response:", parseErr);
+          console.error("Failed to parse AI response:", parseErr);
         }
 
         break;
       }
 
-      console.warn("Using fallback reasoning steps for:", topic);
-      return buildFallbackSteps(topic, subj);
+      console.warn("Using fallback for:", topic);
+      return { steps: buildFallbackSteps(topic, subj), quiz: buildFallbackQuiz(topic) };
     };
 
-    const steps = await requestSteps();
+    const { steps, quiz } = await requestStepsAndQuiz();
 
-    // Background image generation function
+    // Background image generation
     const generateImagesInBackground = async () => {
       const generateImage = async (step: ReasoningStep, index: number) => {
         console.log(`Generating elite image for step ${index + 1}: ${step.title}`);
@@ -518,7 +584,6 @@ Return JSON array with exactly 4 objects:
       // Generate images sequentially to avoid rate limits
       for (let i = 0; i < steps.length; i++) {
         await generateImage(steps[i], i);
-        // Update DB row after each image so polls see progress
         await supabase.from("reasoning_visuals").update({ steps }).eq("slug", slug);
         if (i < steps.length - 1) {
           await new Promise(r => setTimeout(r, 3000));
@@ -527,16 +592,30 @@ Return JSON array with exactly 4 objects:
       console.log("All images generated for:", topic);
     };
 
-    // Persist text-only steps to DB immediately so polls return cached data
+    // Persist text + quiz to DB immediately (globally cached for all users)
     const { error: insertErr } = await supabase
       .from("reasoning_visuals")
-      .insert({ topic, subject: subj, grade: gr, slug, steps });
+      .insert({ topic, subject: subj, grade: gr, slug, steps, quiz });
 
     if (insertErr) {
       console.error("Failed to persist initial visual:", insertErr);
+      // If slug collision (already exists), just return what we have
+      if (insertErr.code === "23505") {
+        const { data: existing } = await supabase
+          .from("reasoning_visuals")
+          .select("*")
+          .eq("slug", slug)
+          .maybeSingle();
+        if (existing) {
+          return new Response(
+            JSON.stringify({ steps: existing.steps, quiz: (existing as any).quiz, cached: true, match: "exact" }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+      }
     }
 
-    // Generate images in the background
+    // Generate images in background
     // @ts-ignore - EdgeRuntime is available in Deno edge runtime
     if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) {
       // @ts-ignore
@@ -546,7 +625,7 @@ Return JSON array with exactly 4 objects:
     }
 
     return new Response(
-      JSON.stringify({ steps, cached: false, match: "new", images_generating: true }),
+      JSON.stringify({ steps, quiz, cached: false, match: "new", images_generating: true }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
