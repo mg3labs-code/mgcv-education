@@ -93,6 +93,48 @@ Include these labels prominently: ${step.key_labels.join(", ")}
 Style: Indian NCERT educational textbook illustration, flat vector design, bright pastel palette on clean white background, large clear text annotations, hand-drawn but professional feel, infographic poster layout. NOT photorealistic.`;
 }
 
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+function buildFallbackSteps(topic: string, subject: string): ReasoningStep[] {
+  const safeTopic = topic.trim() || "this concept";
+  const safeSubject = subject || "Science";
+
+  return [
+    {
+      step_number: 1,
+      title: "What is the idea?",
+      subtitle: "Start with the main meaning",
+      explanation: `First, understand what ${safeTopic} means in simple words. This gives you the base idea before you study the details.`,
+      visual_prompt: `Simple teaching diagram for ${safeTopic} in ${safeSubject}. One main central idea, large title, clean white background, three labeled parts, numbered callouts ①②③, child-friendly mascot pointing to the main idea.`,
+      key_labels: [safeTopic, safeSubject, "Main Idea", "Overview"],
+    },
+    {
+      step_number: 2,
+      title: "What are the parts?",
+      subtitle: "Break it into smaller pieces",
+      explanation: `Next, split the topic into smaller parts. Learning becomes easier when each part is seen clearly and one by one.`,
+      visual_prompt: `Educational breakdown diagram for ${safeTopic}. Show the concept divided into 3 to 4 clear parts, left-to-right flow, soft colors, numbered labels ①②③④, and a simple legend box.`,
+      key_labels: ["Parts", "Labels", "Flow", "Structure"],
+    },
+    {
+      step_number: 3,
+      title: "How does it work?",
+      subtitle: "Follow the process",
+      explanation: `Now look at how the parts work together. Follow the order slowly so the full process becomes easy to remember.`,
+      visual_prompt: `Process diagram for ${safeTopic}. Use arrows to show sequence, input to process to output, clean layout, simple callouts, and one friendly mascot explaining the key step.`,
+      key_labels: ["Input", "Process", "Output", "Sequence"],
+    },
+    {
+      step_number: 4,
+      title: "Why does it matter?",
+      subtitle: "Connect to the result",
+      explanation: `Finally, connect the process to the result. This helps you understand why the topic matters and how to remember it better.`,
+      visual_prompt: `Summary diagram for ${safeTopic}. Show final result, real-life meaning, clean conclusion panel, labeled arrows, and a short recap section with bold headings.`,
+      key_labels: ["Result", "Meaning", "Conclusion", "Recall"],
+    },
+  ];
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -100,7 +142,7 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { topic, subject, grade, action, slug: repairSlug, step_index } = body;
+    const { topic, subject, grade, action, slug: repairSlug, step_index, skip_images } = body;
 
     // ── Repair single broken image ──
     if (action === "repair-image" && repairSlug && typeof step_index === "number") {
@@ -272,20 +314,24 @@ Deno.serve(async (req) => {
     console.log("No cache hit, generating for:", topic);
     const subjectGuidance = getSubjectGuidance(subj);
 
-    const decomposeResp = await fetch(
-      "https://ai.gateway.lovable.dev/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
-          messages: [
-            {
-              role: "system",
-              content: `You are an elite educational content designer who creates NCERT/CBSE textbook-quality visual breakdowns. You specialize in creating hyper-specific visual prompts that produce professional educational infographics with maximum student retention.
+    const requestSteps = async (): Promise<ReasoningStep[]> => {
+      const maxAttempts = 3;
+
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        const decomposeResp = await fetch(
+          "https://ai.gateway.lovable.dev/v1/chat/completions",
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${LOVABLE_API_KEY}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              model: "google/gemini-2.5-flash",
+              messages: [
+                {
+                  role: "system",
+                  content: `You are an elite educational content designer who creates NCERT/CBSE textbook-quality visual breakdowns. You specialize in creating hyper-specific visual prompts that produce professional educational infographics with maximum student retention.
 
 ${subjectGuidance}
 
@@ -299,10 +345,10 @@ CRITICAL RULES for visual_prompt:
 - Specify numbered callouts: "callout ① points to electrode, callout ② points to electrolyte"
 - Include specific scientific notation, formulas, and units
 - Describe cross-sections, cutaways, or exploded views when applicable`,
-            },
-            {
-              role: "user",
-              content: `Break down this topic into 4 reasoning steps: "${topic}"
+                },
+                {
+                  role: "user",
+                  content: `Break down this topic into 4 reasoning steps: "${topic}"
 
 Return JSON array with exactly 4 objects:
 [
@@ -318,87 +364,98 @@ Return JSON array with exactly 4 objects:
   { "step_number": 3, "title": "Explore Possibilities", ... },
   { "step_number": 4, "title": "Logical Conclusion", ... }
 ]`,
-            },
-          ],
-          tools: [
-            {
-              type: "function",
-              function: {
-                name: "reasoning_steps",
-                description: "Return 4 reasoning steps with elite-level visual prompts",
-                parameters: {
-                  type: "object",
-                  properties: {
-                    steps: {
-                      type: "array",
-                      items: {
-                        type: "object",
-                        properties: {
-                          step_number: { type: "number" },
-                          title: { type: "string" },
-                          subtitle: { type: "string" },
-                          explanation: { type: "string" },
-                          visual_prompt: { type: "string" },
-                          key_labels: {
-                            type: "array",
-                            items: { type: "string" },
+                },
+              ],
+              tools: [
+                {
+                  type: "function",
+                  function: {
+                    name: "reasoning_steps",
+                    description: "Return 4 reasoning steps with elite-level visual prompts",
+                    parameters: {
+                      type: "object",
+                      properties: {
+                        steps: {
+                          type: "array",
+                          items: {
+                            type: "object",
+                            properties: {
+                              step_number: { type: "number" },
+                              title: { type: "string" },
+                              subtitle: { type: "string" },
+                              explanation: { type: "string" },
+                              visual_prompt: { type: "string" },
+                              key_labels: {
+                                type: "array",
+                                items: { type: "string" },
+                              },
+                            },
+                            required: [
+                              "step_number",
+                              "title",
+                              "subtitle",
+                              "explanation",
+                              "visual_prompt",
+                              "key_labels",
+                            ],
                           },
                         },
-                        required: [
-                          "step_number",
-                          "title",
-                          "subtitle",
-                          "explanation",
-                          "visual_prompt",
-                          "key_labels",
-                        ],
                       },
+                      required: ["steps"],
                     },
                   },
-                  required: ["steps"],
                 },
+              ],
+              tool_choice: {
+                type: "function",
+                function: { name: "reasoning_steps" },
               },
-            },
-          ],
-          tool_choice: {
-            type: "function",
-            function: { name: "reasoning_steps" },
-          },
-        }),
-      }
-    );
+            }),
+          }
+        );
 
-    if (!decomposeResp.ok) {
-      const errText = await decomposeResp.text();
-      console.error("Decompose error:", decomposeResp.status, errText);
-      if (decomposeResp.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limited, please try again later" }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (decomposeResp.status === 402) {
-        return new Response(JSON.stringify({ error: "Credits exhausted" }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      return new Response(JSON.stringify({ error: "Failed to decompose topic" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+        if (!decomposeResp.ok) {
+          const errText = await decomposeResp.text();
+          console.error(`Decompose error attempt ${attempt}:`, decomposeResp.status, errText);
 
-    const decomposeData = await decomposeResp.json();
-    const toolCall = decomposeData.choices?.[0]?.message?.tool_calls?.[0];
-    let steps: ReasoningStep[];
+          if (decomposeResp.status === 402) {
+            throw new Error("Credits exhausted");
+          }
 
-    if (toolCall) {
-      const parsed = JSON.parse(toolCall.function.arguments);
-      steps = parsed.steps;
-    } else {
-      const content = decomposeData.choices?.[0]?.message?.content || "";
-      const jsonMatch = content.match(/\[[\s\S]*\]/);
-      if (!jsonMatch) throw new Error("Could not parse reasoning steps");
-      steps = JSON.parse(jsonMatch[0]);
-    }
+          if (decomposeResp.status === 429 && attempt < maxAttempts) {
+            await sleep(1500 * attempt);
+            continue;
+          }
+
+          break;
+        }
+
+        try {
+          const decomposeData = await decomposeResp.json();
+          const toolCall = decomposeData.choices?.[0]?.message?.tool_calls?.[0];
+
+          if (toolCall) {
+            const parsed = JSON.parse(toolCall.function.arguments);
+            return parsed.steps;
+          }
+
+          const content = decomposeData.choices?.[0]?.message?.content || "";
+          const jsonMatch = content.match(/\[[\s\S]*\]/);
+          if (jsonMatch) {
+            return JSON.parse(jsonMatch[0]);
+          }
+        } catch (parseErr) {
+          console.error("Failed to parse AI reasoning response:", parseErr);
+        }
+
+        break;
+      }
+
+      console.warn("Using fallback reasoning steps for:", topic);
+      return buildFallbackSteps(topic, subj);
+    };
+
+    const steps = await requestSteps();
 
     // Background image generation function
     const generateImagesInBackground = async () => {
