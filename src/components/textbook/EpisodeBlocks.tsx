@@ -325,8 +325,8 @@ export const ConceptBlock = ({ content, onComplete }: { content: ConceptContent;
         <ContentCard icon="💡" iconBg="#10B981" title="Solved Examples">
           {content.example.map((ex, i) => (
             <ExampleBox key={i} title={`Example ${i + 1}`}>
-              <p className="font-semibold text-foreground mb-1">{ex.question}</p>
-              <p className="whitespace-pre-line">{ex.solution}</p>
+              <p className="font-semibold text-foreground mb-1">{stripHtml(ex.question)}</p>
+              <p className="whitespace-pre-line">{stripHtml(ex.solution)}</p>
             </ExampleBox>
           ))}
         </ContentCard>
@@ -336,8 +336,8 @@ export const ConceptBlock = ({ content, onComplete }: { content: ConceptContent;
         <ContentCard icon="💡" iconBg="#10B981" title="Solved Examples">
           {(content as any).solvedExamples.map((ex: any, i: number) => (
             <ExampleBox key={i} title={`Example ${i + 1}`}>
-              <p className="font-semibold text-foreground mb-1">{ex.question}</p>
-              <p className="whitespace-pre-line">{ex.solution}</p>
+              <p className="font-semibold text-foreground mb-1">{stripHtml(ex.question)}</p>
+              <p className="whitespace-pre-line">{stripHtml(ex.solution)}</p>
             </ExampleBox>
           ))}
         </ContentCard>
