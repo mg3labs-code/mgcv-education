@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { ReasoningContent } from "@/data/textbookData";
-import { Eye, Lightbulb, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+import { Eye, Lightbulb, ChevronDown, ChevronUp, Loader2, Send } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import CompanionVoiceInput from "@/components/student/CompanionVoiceInput";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
@@ -250,22 +252,11 @@ const ReasoningBlock = ({ content }: { content: ReasoningContent }) => {
             {/* Step content */}
             <div className="p-5 space-y-4">
               {stepIdx === 0 ? (
-                /* Step 1: Understand the Problem */
-                <div className="space-y-4">
-                  <StepIllustration
-                    prompt={content.centralQuestion}
-                    stepLabel="understand the problem"
-                  />
-                  <div className="rounded-xl bg-muted/50 p-4 border border-border/50">
-                    <p className="text-sm font-semibold text-foreground mb-2">🎯 The Big Question:</p>
-                    <p className="text-[0.95rem] text-foreground/90 leading-relaxed">
-                      {content.centralQuestion}
-                    </p>
-                  </div>
-                  <p className="text-xs text-muted-foreground italic text-center">
-                    Think about this for a moment before moving to the next step →
-                  </p>
-                </div>
+              /* Step 1: Understand the Problem */
+                <Step1ThinkBox
+                  centralQuestion={content.centralQuestion}
+                  onSubmit={() => goToStep(1)}
+                />
               ) : (
                 /* Steps 2-4: Map to whyQuestions */
                 (() => {
