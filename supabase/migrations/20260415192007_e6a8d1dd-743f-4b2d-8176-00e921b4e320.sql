@@ -1,0 +1,1 @@
+ALTER TABLE public.reasoning_visuals ADD COLUMN IF NOT EXISTS quiz jsonb DEFAULT NULL;
