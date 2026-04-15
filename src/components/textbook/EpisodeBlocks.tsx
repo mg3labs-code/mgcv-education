@@ -264,9 +264,16 @@ export const ConceptBlock = ({ content, onComplete }: { content: ConceptContent;
 
   return (
     <div className="space-y-3">
-      {content.sections.map((s, i) => {
-        const { text: cleanBody, formulas } = extractFormulas(s.body || "");
-        const { definition, examples, notes } = splitBodyContent(cleanBody);
+      {content.sections.map((s: any, i: number) => {
+        // Prefer structured fields from AI; fall back to parsing body
+        const hasStructured = s.definition || s.formulas || s.examples || s.notes;
+        const { text: cleanBody, formulas: parsedFormulas } = extractFormulas(stripHtml(s.body || ""));
+        const parsed = splitBodyContent(cleanBody);
+
+        const defText = s.definition || parsed.definition || cleanBody;
+        const allFormulas = s.formulas?.length ? s.formulas : parsedFormulas;
+        const allExamples = s.examples?.length ? s.examples : parsed.examples;
+        const allNotes = s.notes?.length ? s.notes : parsed.notes;
 
         return (
           <ContentCard
@@ -277,31 +284,31 @@ export const ConceptBlock = ({ content, onComplete }: { content: ConceptContent;
           >
             {/* Definition — short, concise */}
             {isImportant(s.heading) ? (
-              <NoteBox>{definition || cleanBody}</NoteBox>
+              <NoteBox>{defText}</NoteBox>
             ) : isStep(s.heading) ? (
-              <StepBox steps={cleanBody.split('\n').filter(line => line.trim())} />
+              <StepBox steps={cleanBody.split('\n').filter((line: string) => line.trim())} />
             ) : (
-              <DefinitionBox>{definition || cleanBody}</DefinitionBox>
+              <DefinitionBox>{defText}</DefinitionBox>
             )}
 
             {/* Formula boxes */}
-            {formulas.length > 0 && formulas.map((f, fi) => (
+            {allFormulas.length > 0 && allFormulas.map((f: string, fi: number) => (
               <FormulaBox key={fi}>{f}</FormulaBox>
             ))}
 
             {/* Example box — teal, separated */}
-            {examples.length > 0 && (
+            {allExamples.length > 0 && (
               <ExampleBox title="Example">
-                {examples.map((ex, j) => (
+                {allExamples.map((ex: string, j: number) => (
                   <p key={j} className="text-sm leading-snug">{ex}</p>
                 ))}
               </ExampleBox>
             )}
 
             {/* Note/Warning — amber */}
-            {notes.length > 0 && (
+            {allNotes.length > 0 && (
               <NoteBox>
-                {notes.map((n, j) => (
+                {allNotes.map((n: string, j: number) => (
                   <span key={j}>{n} </span>
                 ))}
               </NoteBox>
