@@ -142,7 +142,7 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { topic, subject, grade, action, slug: repairSlug, step_index } = body;
+    const { topic, subject, grade, action, slug: repairSlug, step_index, skip_images } = body;
 
     // ── Repair single broken image ──
     if (action === "repair-image" && repairSlug && typeof step_index === "number") {
