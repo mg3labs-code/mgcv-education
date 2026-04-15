@@ -1,0 +1,38 @@
+export const STEP_META = [
+  {
+    number: 1,
+    label: "Understand the Problem",
+    emoji: "🔍",
+    color: "from-sky-100 to-blue-50 dark:from-sky-950/40 dark:to-blue-950/30",
+    borderColor: "border-sky-300 dark:border-sky-700",
+    badgeColor: "bg-sky-500 text-white",
+    description: "What exactly are we trying to figure out?",
+  },
+  {
+    number: 2,
+    label: "Break It Into Parts",
+    emoji: "🧩",
+    color: "from-amber-50 to-yellow-50 dark:from-amber-950/30 dark:to-yellow-950/20",
+    borderColor: "border-amber-300 dark:border-amber-700",
+    badgeColor: "bg-amber-500 text-white",
+    description: "Let's look at each piece separately.",
+  },
+  {
+    number: 3,
+    label: "Explore Possibilities",
+    emoji: "💡",
+    color: "from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/20",
+    borderColor: "border-emerald-300 dark:border-emerald-700",
+    badgeColor: "bg-emerald-500 text-white",
+    description: "What could be happening and why?",
+  },
+  {
+    number: 4,
+    label: "Logical Conclusion",
+    emoji: "✅",
+    color: "from-violet-50 to-purple-50 dark:from-violet-950/30 dark:to-purple-950/20",
+    borderColor: "border-violet-300 dark:border-violet-700",
+    badgeColor: "bg-violet-500 text-white",
+    description: "So the answer is...",
+  },
+];
