@@ -71,6 +71,97 @@ const SubmitEvaluate = ({ answer, prompt, topic, onComplete, minWords = 3 }: {
   );
 };
 
+// ─── JEE Mini Insight (compact question after each concept) ───
+
+const jeeInsightMap: Record<string, { question: string; trap: string; answer: string; tag?: string }> = {
+  "natural": {
+    question: "If S = {x : x is a natural number and x² < 20}, find n(S).",
+    trap: "Students forget that √20 ≈ 4.47, so x can be 1,2,3,4 only — not 5!",
+    answer: "n(S) = 4",
+    tag: "JEE Main 2019 Style",
+  },
+  "whole": {
+    question: "The smallest whole number which is NOT a natural number is?",
+    trap: "Confusing 'whole' with 'natural' — 0 is the key difference!",
+    answer: "0",
+    tag: "CET / MAT Pattern",
+  },
+  "integer": {
+    question: "How many integers lie between -√5 and √10?",
+    trap: "√5 ≈ 2.23, √10 ≈ 3.16 → integers: -2, -1, 0, 1, 2, 3 → answer is 6, not 5.",
+    answer: "6 integers",
+    tag: "JEE Main 2020 Style",
+  },
+  "rational": {
+    question: "Between any two rational numbers, there exist _____ rational numbers.",
+    trap: "Many students say 'one' or 'finite' — it's actually infinitely many!",
+    answer: "Infinitely many",
+    tag: "IIT JEE / Olympiad",
+  },
+  "irrational": {
+    question: "Is π + e rational or irrational?",
+    trap: "This is actually an open problem in math! But for JEE: sum of two irrationals can be rational (e.g., √2 + (-√2) = 0).",
+    answer: "Unknown (but likely irrational)",
+    tag: "Advanced Concept",
+  },
+  "real": {
+    question: "Which of these is NOT a real number: √(-4), √4, 0, -π?",
+    trap: "√(-4) = 2i is imaginary, not real. Students often pick -π as 'not real' because of the negative.",
+    answer: "√(-4)",
+    tag: "JEE Main Pattern",
+  },
+  "classify": {
+    question: "Classify 0.101001000100001... — is it rational or irrational?",
+    trap: "Non-terminating but NOT repeating → irrational! Students confuse 'long decimal' with 'repeating'.",
+    answer: "Irrational",
+    tag: "JEE Main 2018 Style",
+  },
+  "set": {
+    question: "If A ⊂ B and B ⊂ C, can we say A ⊂ C?",
+    trap: "Yes — subset relation is transitive. But A ∈ B and B ∈ C does NOT mean A ∈ C!",
+    answer: "Yes (transitive property)",
+    tag: "JEE / Olympiad",
+  },
+  "decimal": {
+    question: "Is 0.999... equal to 1?",
+    trap: "Yes! Let x = 0.999..., then 10x = 9.999..., so 9x = 9, x = 1. Most students say 'close but not equal'.",
+    answer: "Yes, 0.999... = 1",
+    tag: "MIT / Olympiad Classic",
+  },
+};
+
+const JeeInsightMini = ({ heading }: { heading: string }) => {
+  const lower = heading?.toLowerCase() || "";
+  let insight: { question: string; trap: string; answer: string; tag?: string } | null = null;
+
+  for (const [key, val] of Object.entries(jeeInsightMap)) {
+    if (lower.includes(key)) { insight = val; break; }
+  }
+
+  const [showAnswer, setShowAnswer] = useState(false);
+
+  if (!insight) return null;
+
+  return (
+    <div className="mt-3 rounded-lg border border-amber-200 dark:border-amber-800/60 bg-gradient-to-r from-amber-50/80 to-orange-50/60 dark:from-amber-950/20 dark:to-orange-950/10 p-3">
+      <div className="flex items-center gap-1.5 mb-1.5">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/40 px-1.5 py-0.5 rounded">⚡ {insight.tag || "JEE Style"}</span>
+      </div>
+      <p className="text-xs font-semibold text-foreground leading-snug mb-1.5">{insight.question}</p>
+      <div className="rounded-md bg-red-50/80 dark:bg-red-950/20 border border-red-200/60 dark:border-red-800/40 px-2.5 py-1.5 mb-1.5">
+        <p className="text-[11px] text-red-700 dark:text-red-400 leading-snug">🚫 <span className="font-semibold">Common Trap:</span> {insight.trap}</p>
+      </div>
+      {!showAnswer ? (
+        <button onClick={() => setShowAnswer(true)} className="text-[11px] font-medium text-amber-600 dark:text-amber-400 hover:underline">
+          Tap to see answer →
+        </button>
+      ) : (
+        <p className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 animate-fade-in">✅ {insight.answer}</p>
+      )}
+    </div>
+  );
+};
+
 // ─── Concept Block (Design C Hybrid — Cards + Semantic Boxes) ──
 
 // Extract formula-like lines from body text (e.g. "N = {1, 2, 3, ...}" or "p/q where...")
@@ -81,11 +172,10 @@ const extractFormulas = (body: string): { text: string; formulas: string[] } => 
   const textLines: string[] = [];
   for (const line of lines) {
     const trimmed = line.trim();
-    // Detect formula patterns: set notation, equations, mathematical expressions
     if (
-      /^[A-Z]\s*=\s*\{/.test(trimmed) || // N = {1, 2, ...}
-      /^[A-Z]\s*⊂/.test(trimmed) || // N ⊂ W
-      /^\{.*\}$/.test(trimmed) || // {1, 2, 3}
+      /^[A-Z]\s*=\s*\{/.test(trimmed) ||
+      /^[A-Z]\s*⊂/.test(trimmed) ||
+      /^\{.*\}$/.test(trimmed) ||
       (/[=≠≤≥<>⊂⊃∈∉]/.test(trimmed) && trimmed.length < 80 && /\d/.test(trimmed))
     ) {
       formulas.push(trimmed);
@@ -139,7 +229,6 @@ export const ConceptBlock = ({ content, onComplete }: { content: ConceptContent;
             originalText={s.originalText}
             source={s.source}
           >
-            {/* Main body — always use DefinitionBox for concept explanations */}
             {isImportant(s.heading) ? (
               <NoteBox>{cleanBody}</NoteBox>
             ) : isStep(s.heading) ? (
@@ -148,15 +237,16 @@ export const ConceptBlock = ({ content, onComplete }: { content: ConceptContent;
               <DefinitionBox>{cleanBody}</DefinitionBox>
             )}
 
-            {/* Extracted formulas from body text */}
             {formulas.length > 0 && formulas.map((f, fi) => (
               <FormulaBox key={fi}>{f}</FormulaBox>
             ))}
+
+            {/* JEE Mini Insight — compact question + trap after each definition */}
+            <JeeInsightMini heading={s.heading} />
           </ContentCard>
         );
       })}
 
-      {/* Key Formulas */}
       {content.keyFormulas && content.keyFormulas.length > 0 && (
         <ContentCard icon="🎯" iconBg="#7C3AED" title="Key Formulas">
           {content.keyFormulas.map((f, i) => (
@@ -165,7 +255,6 @@ export const ConceptBlock = ({ content, onComplete }: { content: ConceptContent;
         </ContentCard>
       )}
 
-      {/* Solved Examples */}
       {content.example && content.example.length > 0 && (
         <ContentCard icon="💡" iconBg="#10B981" title="Solved Examples">
           {content.example.map((ex, i) => (
@@ -177,7 +266,6 @@ export const ConceptBlock = ({ content, onComplete }: { content: ConceptContent;
         </ContentCard>
       )}
 
-      {/* Legacy solvedExamples field */}
       {(content as any).solvedExamples && (content as any).solvedExamples.length > 0 && (
         <ContentCard icon="💡" iconBg="#10B981" title="Solved Examples">
           {(content as any).solvedExamples.map((ex: any, i: number) => (
