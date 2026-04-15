@@ -164,7 +164,7 @@ const JeeInsightMini = ({ heading }: { heading: string }) => {
 
 // ─── Concept Block (Design C Hybrid — Cards + Semantic Boxes) ──
 
-// Extract formula-like lines from body text (e.g. "N = {1, 2, 3, ...}" or "p/q where...")
+// Extract formula-like lines from body text
 const extractFormulas = (body: string): { text: string; formulas: string[] } => {
   if (!body) return { text: body, formulas: [] };
   const lines = body.split('\n');
@@ -184,6 +184,34 @@ const extractFormulas = (body: string): { text: string; formulas: string[] } => 
     }
   }
   return { text: textLines.join('\n').trim(), formulas };
+};
+
+// Split body into definition (first sentence/paragraph) + example lines + note lines
+const splitBodyContent = (body: string): { definition: string; examples: string[]; notes: string[] } => {
+  if (!body) return { definition: "", examples: [], notes: [] };
+  const lines = body.split('\n').map(l => l.trim()).filter(Boolean);
+  const definition: string[] = [];
+  const examples: string[] = [];
+  const notes: string[] = [];
+  let mode: "def" | "example" | "note" = "def";
+
+  for (const line of lines) {
+    const lower = line.toLowerCase();
+    // Detect example lines
+    if (lower.startsWith("example") || lower.startsWith("• ") || lower.startsWith("- ") || /^[•\-\*]\s/.test(line) || /→/.test(line) || lower.startsWith("for instance") || lower.startsWith("e.g")) {
+      mode = "example";
+    }
+    // Detect note/warning lines
+    if (lower.startsWith("note:") || lower.startsWith("remember:") || lower.startsWith("important:") || lower.startsWith("⚠") || lower.startsWith("caution")) {
+      mode = "note";
+    }
+
+    if (mode === "example") examples.push(line);
+    else if (mode === "note") notes.push(line);
+    else definition.push(line);
+  }
+
+  return { definition: definition.join(' '), examples, notes };
 };
 
 export const ConceptBlock = ({ content, onComplete }: { content: ConceptContent; onComplete?: () => void }) => {
@@ -216,9 +244,10 @@ export const ConceptBlock = ({ content, onComplete }: { content: ConceptContent;
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {content.sections.map((s, i) => {
         const { text: cleanBody, formulas } = extractFormulas(s.body || "");
+        const { definition, examples, notes } = splitBodyContent(cleanBody);
 
         return (
           <ContentCard
@@ -226,22 +255,40 @@ export const ConceptBlock = ({ content, onComplete }: { content: ConceptContent;
             icon={getIcon(s.heading)}
             iconBg={iconColors[i % iconColors.length]}
             title={s.heading}
-            originalText={s.originalText}
-            source={s.source}
           >
+            {/* Definition — short, concise */}
             {isImportant(s.heading) ? (
-              <NoteBox>{cleanBody}</NoteBox>
+              <NoteBox>{definition || cleanBody}</NoteBox>
             ) : isStep(s.heading) ? (
               <StepBox steps={cleanBody.split('\n').filter(line => line.trim())} />
             ) : (
-              <DefinitionBox>{cleanBody}</DefinitionBox>
+              <DefinitionBox>{definition || cleanBody}</DefinitionBox>
             )}
 
+            {/* Formula boxes */}
             {formulas.length > 0 && formulas.map((f, fi) => (
               <FormulaBox key={fi}>{f}</FormulaBox>
             ))}
 
-            {/* JEE Mini Insight — compact question + trap after each definition */}
+            {/* Example box — teal, separated */}
+            {examples.length > 0 && (
+              <ExampleBox title="Example">
+                {examples.map((ex, j) => (
+                  <p key={j} className="text-sm leading-snug">{ex}</p>
+                ))}
+              </ExampleBox>
+            )}
+
+            {/* Note/Warning — amber */}
+            {notes.length > 0 && (
+              <NoteBox>
+                {notes.map((n, j) => (
+                  <span key={j}>{n} </span>
+                ))}
+              </NoteBox>
+            )}
+
+            {/* JEE Mini Insight */}
             <JeeInsightMini heading={s.heading} />
           </ContentCard>
         );
