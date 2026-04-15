@@ -12,34 +12,28 @@ export const ContentCard = ({
   title,
   children,
   defaultOpen = true,
-  originalText,
-  source,
 }: {
   icon: string;
   iconBg?: string;
   title: string;
   children: React.ReactNode;
   defaultOpen?: boolean;
-  originalText?: string;
-  source?: string;
 }) => {
   const [open, setOpen] = useState(defaultOpen);
-  const [showOriginal, setShowOriginal] = useState(false);
 
   return (
     <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
-      {/* Card header — always visible, click to collapse */}
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center gap-3 px-5 py-4 text-left hover:bg-muted/30 transition-colors"
+        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-muted/30 transition-colors"
       >
         <span
-          className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-sm font-bold shrink-0"
+          className="inline-flex items-center justify-center w-7 h-7 rounded-lg text-xs font-bold shrink-0"
           style={{ background: iconBg || "hsl(var(--primary))", color: "#fff" }}
         >
           {icon}
         </span>
-        <span className="font-bold text-base text-foreground flex-1">{title}</span>
+        <span className="font-bold text-[15px] text-foreground flex-1">{title}</span>
         {open ? (
           <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0" />
         ) : (
@@ -47,31 +41,9 @@ export const ContentCard = ({
         )}
       </button>
 
-      {/* Collapsible body */}
       {open && (
-        <div className="px-5 pb-5 space-y-3">
+        <div className="px-4 pb-4 space-y-2.5">
           {children}
-
-          {/* "See original textbook text" toggle */}
-          {originalText && (
-            <div className="pt-2">
-              <button
-                onClick={() => setShowOriginal(!showOriginal)}
-                className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-              >
-                📖 See original textbook text
-                {showOriginal ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-              </button>
-              {showOriginal && (
-                <div className="mt-2 bg-muted/40 border border-border rounded-lg px-4 py-3 text-sm text-muted-foreground leading-relaxed">
-                  <p className="italic">"{originalText}"</p>
-                  {source && (
-                    <p className="mt-1.5 text-xs text-muted-foreground/70">— {source}</p>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
         </div>
       )}
     </div>
