@@ -34,39 +34,39 @@ const StudentTextbook = () => {
     <PageLayout role="student" breadcrumbItems={breadcrumbs}>
       <div className="max-w-5xl mx-auto">
 
-        {/* ── Learning Journey Flow ── */}
-        <div className="mb-8 bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 border border-indigo-200 rounded-2xl p-5 md:p-6">
+        {/* ── Learning Journey Flow — desktop only (hidden on mobile to reduce clutter) ── */}
+        <div className="hidden md:block mb-8 bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 border border-indigo-200 rounded-2xl p-5 md:p-6">
           <h2 className="text-base font-bold text-foreground text-center mb-4">🗺️ Your Learning Journey</h2>
-          <div className="flex items-center justify-between overflow-x-auto gap-1 pb-1">
+          <div className="flex items-center justify-between gap-1">
             {JOURNEY_STEPS.map((step, i) => (
-              <div key={step.label} className="flex items-center min-w-0">
-                <div className="flex flex-col items-center text-center min-w-[80px]">
+              <div key={step.label} className="flex items-center min-w-0 flex-1">
+                <div className="flex flex-col items-center text-center flex-1 min-w-0 px-1">
                   <div className="w-11 h-11 rounded-full bg-white border-2 border-primary/30 flex items-center justify-center text-xl shadow-sm mb-1.5">
                     {step.emoji}
                   </div>
-                  <span className="text-xs font-semibold text-foreground">{step.label}</span>
-                  <span className="text-[10px] text-muted-foreground">{step.desc}</span>
+                  <span className="text-xs font-semibold text-foreground truncate w-full">{step.label}</span>
+                  <span className="text-[10px] text-muted-foreground truncate w-full">{step.desc}</span>
                 </div>
                 {i < JOURNEY_STEPS.length - 1 && (
-                  <ArrowRight className="h-4 w-4 text-primary/40 shrink-0 mx-1" />
+                  <ArrowRight className="h-4 w-4 text-primary/40 shrink-0" />
                 )}
               </div>
             ))}
           </div>
         </div>
 
-        {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+        {/* Header — compact on mobile */}
+        <div className="mb-5">
+          <div className="flex items-center gap-3 mb-1">
+            <div className="h-9 w-9 md:h-10 md:w-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
               <BookOpen className="h-5 w-5 text-primary" />
             </div>
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">📚 My Textbook</h1>
-              <p className="text-sm text-muted-foreground">Class X · Telangana State Board</p>
+            <div className="min-w-0">
+              <h1 className="text-lg md:text-2xl font-bold text-foreground truncate">📚 My Textbook</h1>
+              <p className="text-xs md:text-sm text-muted-foreground">Class X · Telangana State Board</p>
             </div>
           </div>
-          <p className="text-muted-foreground mt-2 text-sm">
+          <p className="hidden md:block text-muted-foreground mt-2 text-sm">
             Every chapter transformed into bite-sized episodes. Read, interact, recall & master — at your own pace.
           </p>
         </div>
