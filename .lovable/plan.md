@@ -1,56 +1,57 @@
 
 
-# Plan: Add IconSelectionQuiz to Textbook Lessons (Alongside ComprehensionCheck)
+# Plan: Textbook Episode — Multi-Fix (FlipReveal, Progress, Quiz Placement, Dedup)
 
-## What exists today
+The user raised ~8 issues in their previous message. This plan addresses all of them in a single implementation pass.
 
-- **ComprehensionCheck** — a free-text "explain in your own words" check shown after content blocks in `TextbookEpisode.tsx`. Students type/speak, AI evaluates understanding.
-- **IconSelectionQuiz** — a tap-to-select icon grid game (PDF-style). Currently only used in `/demo/visual-reasoning`.
-- The `reasoning_visuals` table already stores a `quiz` jsonb column with icon quiz data.
+## Issues & Fixes
 
-## Design: Two-Phase Comprehension Flow
+### 1. FlipRevealCard: Move after first section, not at top
+**Current**: FlipRevealCard renders BEFORE the block content (line 861–874 in TextbookEpisode.tsx).
+**Fix**: Move it AFTER the first `<section>` inside ConceptBlock, or more practically, render it AFTER the content `<div>` (line 876) instead of before it. This places the visual breakdown after the student reads the first section of the concept.
 
-**Neither component replaces the other.** Instead, the flow becomes:
+### 2. FlipRevealCard: Auto-flip back after 4 seconds
+**Current**: Card stays flipped until manually clicked.
+**Fix**: In `FlipRevealCard.tsx`, add a `useEffect` that sets a 4-second timer when `flipped` becomes `true`, then auto-sets `flipped = false`. Reset timer if user interacts.
 
-1. **Phase 1 — Quick Quiz** (IconSelectionQuiz): Fast, gamified, visual check. Generated per-topic and cached globally in `reasoning_visuals`.
-2. **Phase 2 — Explain Check** (ComprehensionCheck): The existing "What did you understand?" free-text input. Shown after the quiz is completed (or if no quiz data exists, shown directly as today).
+### 3. Duplicate defense prompts (orange Assumptions + green ComprehensionCheck)
+**Current**: Both `AssumptionsBlock` (with "Challenge your assumptions" orange prompt) AND `SectionQuizGate`/`ComprehensionCheck` (green "What did you understand?") appear for `assumptions` type blocks since `CONTENT_TYPES` includes it.
+**Fix**: Remove `"assumptions"` from `CONTENT_TYPES` set (line 503). Assumptions blocks already have their own interactive defense mechanism — they don't need ComprehensionCheck on top.
 
-This gives students a fun warm-up before the deeper comprehension task.
+### 4. Progress not saved / sections look fresh on revisit
+**Current**: `understoodBlocks` loads from DB on mount (line 312–328), but `blockCompleted` and `visitedBlocks` reset on every mount. When navigating back, interactive blocks appear unfinished.
+**Fix**: 
+- Persist `blockCompleted` alongside `understoodBlocks` in `layer_scores` JSON (add `completed` array).
+- On load, restore `blockCompleted` from DB.
+- Also restore `visitedBlocks` from localStorage (already partially done via `visited_blocks_*` key, but `isFirstVisitToBlock` logic needs to also check `understoodBlocks`).
 
-## Implementation Steps
+### 5. Icon Quiz placement — should be in sections 5-11, not section 1
+**Current**: `SectionQuizGate` renders for ALL `CONTENT_TYPES` blocks (`concept`, `reasoning`, `connections`, `implications`), including the very first concept block.
+**Fix**: Only show `SectionQuizGate` quiz game when `activeBlock >= 4` (5th section onwards). For blocks 0-3, show only `ComprehensionCheck` directly. This ensures the quiz appears in the harder middle/later sections where it helps simplify complexity.
 
-### 1. Create a wrapper component `SectionQuizGate`
-A new component (`src/components/textbook/SectionQuizGate.tsx`) that:
-- Takes `sectionTitle`, `subject`, the existing `onPass`/`onSkip`/`onResult` props
-- On mount, queries `reasoning_visuals` for cached quiz data matching the topic
-- If quiz data exists: shows `IconSelectionQuiz` first, then reveals `ComprehensionCheck` after quiz completion
-- If no quiz data: falls through to `ComprehensionCheck` immediately (no change from today)
-- Includes a "Skip quiz" option so it never blocks progress
+### 6. Duplicate/repetitive quiz questions in same episode
+**Current**: Each block independently fetches quiz from `reasoning_visuals` by slug. Multiple concept blocks in the same episode can show similar quizzes.
+**Fix**: In `SectionQuizGate`, track which quizzes have been shown in the episode via a Set passed as prop or context. If quiz slug was already used, skip to ComprehensionCheck directly.
 
-### 2. Update `TextbookEpisode.tsx`
-- Import `SectionQuizGate` and wrap the existing `ComprehensionCheck` usage (lines 864-879)
-- Pass the current block's title and subject context so the quiz lookup works
-- No removal of `ComprehensionCheck` — it stays as the second phase inside the wrapper
+### 7. JEE mini text not displaying
+**Current**: Need to check `JeeExtensionBlock` rendering — likely a content structure mismatch.
+**Fix**: Will inspect and fix the content access pattern in JeeExtensionBlock to handle both `sections` array and flat content shapes.
 
-### 3. Background quiz generation (edge function)
-- When `generate-reasoning-visual` creates steps for a topic, it already generates a `quiz` object
-- Add a lightweight edge function action (`fetch-quiz-only`) that generates just the quiz for topics that have no reasoning visual yet — so quizzes work for all block types, not just reasoning blocks
-- Cache globally (no `user_id` filter) so one generation serves all students
+### 8. Time spent per page not persisted
+**Current**: `sectionTimings` resets on remount. `persistInteraction` is called only on advance.
+**Fix**: Also call `persistInteraction` on component unmount (cleanup effect) for the current active block, so partial time is saved even if the student exits mid-section.
 
-### 4. Quiz data fallback
-- For topics where no cached quiz exists and generation hasn't run, the component gracefully skips to the text check
-- No blank screens, no loading spinners blocking lesson flow
+## Files to Change
 
-## What does NOT change
-- ComprehensionCheck component itself — untouched
-- IconSelectionQuiz component itself — untouched
-- Existing textbook block rendering — untouched
-- The quiz is additive only
+| File | Changes |
+|------|---------|
+| `src/components/textbook/FlipRevealCard.tsx` | Add 4s auto-flip-back timer |
+| `src/pages/TextbookEpisode.tsx` | Move FlipRevealCard after content; remove `assumptions` from CONTENT_TYPES; gate quiz to blocks 5+; persist blockCompleted; save time on unmount; pass shown-quiz tracking |
+| `src/components/textbook/SectionQuizGate.tsx` | Accept `shownSlugs` prop to skip duplicate quizzes; skip quiz if block index < 5 |
+| `src/components/textbook/JeeExtensionBlock.tsx` | Fix content rendering for edge cases |
 
-## File changes summary
-| File | Action |
-|------|--------|
-| `src/components/textbook/SectionQuizGate.tsx` | **Create** — wrapper combining quiz + comprehension |
-| `src/pages/TextbookEpisode.tsx` | **Edit** — swap `ComprehensionCheck` for `SectionQuizGate` (which contains ComprehensionCheck inside) |
-| `supabase/functions/generate-reasoning-visual/index.ts` | **Edit** — add `fetch-quiz-only` action for standalone quiz generation |
+## Not changing
+- ComprehensionCheck component itself — stays intact
+- Content generation or text complexity — that's a separate content pipeline task
+- Math template differences — requires separate audit
 
