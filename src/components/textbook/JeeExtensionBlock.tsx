@@ -10,6 +10,11 @@ interface Props {
 const JeeExtensionBlock = ({ content, onComplete }: Props) => {
   const [expanded, setExpanded] = useState(true);
 
+  // Handle both direct content and nested structures
+  const sections = content?.sections || [];
+  const advancedFormulas = content?.advancedFormulas || [];
+  const proofSketch = content?.proofSketch || "";
+
   return (
     <div className="space-y-4">
       <button
@@ -23,9 +28,9 @@ const JeeExtensionBlock = ({ content, onComplete }: Props) => {
         {expanded ? <ChevronUp className="h-4 w-4 text-amber-600" /> : <ChevronDown className="h-4 w-4 text-amber-600" />}
       </button>
 
-      {expanded && (
+      {expanded && sections.length > 0 && (
         <div className="space-y-4 pl-1">
-          {content.sections.map((s, i) => (
+          {sections.map((s, i) => (
             <div key={i} className="rounded-xl border border-amber-200 dark:border-amber-800 bg-card p-4 space-y-2">
               <h4 className="font-semibold text-foreground text-base flex items-center gap-2">
                 <span className="w-1.5 h-5 rounded-full bg-amber-500 inline-block" />
@@ -40,23 +45,23 @@ const JeeExtensionBlock = ({ content, onComplete }: Props) => {
             </div>
           ))}
 
-          {content.advancedFormulas && content.advancedFormulas.length > 0 && (
+          {advancedFormulas.length > 0 && (
             <div className="rounded-xl overflow-hidden border-2 border-amber-300 dark:border-amber-700">
               <div className="bg-gradient-to-r from-amber-600 to-orange-600 px-4 py-2">
                 <h4 className="text-xs font-bold text-white">🎯 Advanced Formulas (JEE Level)</h4>
               </div>
               <div className="p-4 space-y-2 bg-amber-50/50 dark:bg-amber-950/10">
-                {content.advancedFormulas.map((f, i) => (
+                {advancedFormulas.map((f, i) => (
                   <p key={i} className="text-center text-base font-mono font-semibold text-foreground bg-white/80 dark:bg-card/80 rounded-lg py-2 px-4 border border-amber-200 dark:border-amber-800">{f}</p>
                 ))}
               </div>
             </div>
           )}
 
-          {content.proofSketch && (
+          {proofSketch && (
             <div className="rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50/30 dark:bg-amber-950/10 p-4">
               <h4 className="text-xs font-bold text-amber-700 dark:text-amber-400 mb-2">📐 Proof Sketch</h4>
-              <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{content.proofSketch}</p>
+              <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{proofSketch}</p>
             </div>
           )}
         </div>

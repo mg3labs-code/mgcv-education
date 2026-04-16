@@ -152,18 +152,19 @@ const TextbookEpisode = () => {
     setComprehensionResults({});
   }, [episodeId]);
 
-  const persistUnderstood = useCallback((understood: Set<number>) => {
+  const persistUnderstood = useCallback((understood: Set<number>, completed?: Set<number>) => {
     if (!user || !chapterId || !episodeId) return;
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     setSaveStatus("saving");
     saveTimerRef.current = setTimeout(async () => {
       const arr = Array.from(understood);
+      const compArr = completed ? Array.from(completed) : [];
       const pct = totalBlocksRef.current > 0 ? Math.round((arr.length / totalBlocksRef.current) * 100) : 0;
       const { error } = await supabase
         .from("episode_progress")
         .upsert({
           user_id: user.id, chapter_id: chapterId, episode_id: episodeId,
-          layer_scores: { understood: arr }, completion_pct: pct,
+          layer_scores: { understood: arr, completed: compArr }, completion_pct: pct,
           completed_at: pct === 100 ? new Date().toISOString() : null,
         }, { onConflict: "user_id,chapter_id,episode_id" });
       setSaveStatus(error ? "idle" : "saved");
@@ -309,7 +310,7 @@ const TextbookEpisode = () => {
 
   useEffect(() => { totalBlocksRef.current = navBlocks.length; }, [navBlocks.length]);
 
-  // Load understood blocks from DB
+  // Load understood + completed blocks from DB
   useEffect(() => {
     if (!user || !chapterId || !episodeId) return;
     supabase.from("episode_progress").select("layer_scores, completion_pct, completed_at")
@@ -318,8 +319,8 @@ const TextbookEpisode = () => {
         if (data?.layer_scores && typeof data.layer_scores === "object" && !Array.isArray(data.layer_scores)) {
           const scores = data.layer_scores as Record<string, unknown>;
           if (Array.isArray(scores.understood)) setUnderstoodBlocks(new Set(scores.understood as number[]));
+          if (Array.isArray(scores.completed)) setBlockCompleted(new Set(scores.completed as number[]));
         }
-        // If episode was previously completed, show the already-completed state
         if (data?.completed_at) {
           setAlreadyCompleted(true);
           setShowCompletion(true);
@@ -409,7 +410,24 @@ const TextbookEpisode = () => {
     }
   }, [user, chapterId, episodeId, navBlocks, sectionTimings, comprehensionResults, wrongAttempts]);
 
-  // Skill-mapping toasts for micro-connections
+  // Persist time on unmount for the current active block
+  useEffect(() => {
+    return () => {
+      const timeSpent = Math.round((Date.now() - sectionStartTime) / 1000);
+      if (timeSpent > 0 && user && chapterId && episodeId) {
+        const block = navBlocks[activeBlock];
+        if (block) {
+          supabase.from("episode_interactions" as any).upsert({
+            user_id: user.id, chapter_id: chapterId, episode_id: episodeId,
+            block_index: activeBlock, block_type: block.type,
+            time_spent_seconds: (sectionTimings[activeBlock] || 0) + timeSpent,
+            completed_at: new Date().toISOString(),
+          }, { onConflict: "user_id,chapter_id,episode_id,block_index" }).then(() => {});
+        }
+      }
+    };
+  }, [activeBlock, episodeId]);
+
   const SKILL_TOASTS: Record<string, string> = useMemo(() => ({
     assumptions: "You just practiced the same skill elite interviewers test 🏛️",
     application: "Top institutions call this the Case Method — you're already doing it 🎓",
@@ -436,11 +454,14 @@ const TextbookEpisode = () => {
     const timeSpent = Math.round((Date.now() - sectionStartTime) / 1000);
     setSectionTimings(prev => ({ ...prev, [activeBlock]: (prev[activeBlock] || 0) + timeSpent }));
 
-    // Auto-mark current as understood
+    // Auto-mark current as understood and persist completed
     setUnderstoodBlocks(prev => {
       const next = new Set(prev);
       next.add(activeBlock);
-      persistUnderstood(next);
+      const updatedCompleted = new Set(blockCompleted);
+      updatedCompleted.add(activeBlock);
+      setBlockCompleted(updatedCompleted);
+      persistUnderstood(next, updatedCompleted);
       return next;
     });
     markBlockInteracted(activeBlock);
@@ -501,6 +522,8 @@ const TextbookEpisode = () => {
 
   // Content blocks (non-interactive) that need comprehension check
   const CONTENT_TYPES = useMemo(() => new Set(["concept", "reasoning", "connections", "implications"]), []);
+  // Track shown quiz slugs to prevent duplicates within an episode
+  const shownQuizSlugsRef = useRef<Set<string>>(new Set());
   // Reading types that need minimum time
   const READING_TYPES = useMemo(() => new Set(["concept", "reasoning", "connections", "implications"]), []);
   const ASSESSMENT_TYPES = useMemo(() => new Set(["assessment"]), []);
@@ -857,7 +880,13 @@ const TextbookEpisode = () => {
                </p>
 
               {/* Block content with colored border */}
-              {/* Flip-to-Reveal visual breakdown (only for complex topics) */}
+              <div className={`bg-card rounded-xl border-l-4 ${JEE_BLOCKS.has(block.type) ? "border-l-amber-500" : ((meta as any).border || "border-l-primary")} shadow-sm`}>
+                <div className="p-5">
+                  {renderBlock(block)}
+                </div>
+              </div>
+
+              {/* Flip-to-Reveal visual breakdown — AFTER first section content */}
               {(() => {
                 const flipData = getFlipRevealForBlock(block.title || "");
                 return flipData ? (
@@ -873,18 +902,15 @@ const TextbookEpisode = () => {
                 ) : null;
               })()}
 
-              <div className={`bg-card rounded-xl border-l-4 ${JEE_BLOCKS.has(block.type) ? "border-l-amber-500" : ((meta as any).border || "border-l-primary")} shadow-sm`}>
-                <div className="p-5">
-                  {renderBlock(block)}
-                </div>
-              </div>
-
               {/* ═══ Two-Phase: Quiz Game → Comprehension Check ═══ */}
-              {CONTENT_TYPES.has(block.type) && (
+              {/* Quiz only for blocks 5+ (index >= 4); assumptions excluded — has own defense */}
+              {CONTENT_TYPES.has(block.type) && block.type !== "assumptions" && (
                 <SectionQuizGate
                   sectionTitle={block.title || blockLabels[block.type] || "this section"}
                   subject={langSubject || chapter?.title?.split(" ")[0] || "Science"}
                   isFirstVisit={isFirstVisitToBlock}
+                  blockIndex={activeBlock}
+                  shownSlugs={shownQuizSlugsRef.current}
                   onResult={onComprehensionResult}
                   onPass={() => {
                     markBlockVisited(activeBlock);

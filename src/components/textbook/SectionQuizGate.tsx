@@ -9,6 +9,8 @@ interface SectionQuizGateProps {
   sectionTitle: string;
   subject?: string;
   isFirstVisit: boolean;
+  blockIndex?: number;
+  shownSlugs?: Set<string>;
   onPass: () => void;
   onSkip: () => void;
   onResult?: (result: "pass" | "revise" | "skip", attempts: number) => void;
@@ -23,6 +25,8 @@ const SectionQuizGate = ({
   sectionTitle,
   subject,
   isFirstVisit,
+  blockIndex = 0,
+  shownSlugs,
   onPass,
   onSkip,
   onResult,
@@ -33,18 +37,27 @@ const SectionQuizGate = ({
 
   useEffect(() => {
     if (!isFirstVisit) return;
+    // Only show icon quiz for blocks 5+ (index >= 4)
+    if (blockIndex < 4) {
+      setQuizLoading(false);
+      return;
+    }
     let cancelled = false;
 
     const fetchQuiz = async () => {
       try {
-        // Build slug same way as edge function
         const subj = subject || "Science";
         const slug = `${subj.toLowerCase()}_${sectionTitle
           .toLowerCase()
           .replace(/[^a-z0-9]+/g, "-")
           .slice(0, 60)}`;
 
-        // Check cache first
+        // Skip if this slug was already shown in this episode
+        if (shownSlugs?.has(slug)) {
+          if (!cancelled) setQuizLoading(false);
+          return;
+        }
+
         const { data } = await supabase
           .from("reasoning_visuals")
           .select("quiz")
@@ -55,10 +68,10 @@ const SectionQuizGate = ({
           const q = data.quiz as unknown as QuizData;
           if (q.question && q.icons?.length > 0) {
             setQuizData(q);
+            shownSlugs?.add(slug);
           }
         }
 
-        // If no cache, try generating quiz-only in background (fire-and-forget)
         if (!data?.quiz) {
           supabase.functions
             .invoke("generate-reasoning-visual", {
@@ -67,6 +80,7 @@ const SectionQuizGate = ({
             .then(({ data: genData }) => {
               if (!cancelled && genData?.quiz?.question && genData.quiz.icons?.length > 0) {
                 setQuizData(genData.quiz);
+                shownSlugs?.add(slug);
               }
             })
             .catch(() => {});
@@ -80,7 +94,7 @@ const SectionQuizGate = ({
 
     fetchQuiz();
     return () => { cancelled = true; };
-  }, [sectionTitle, subject, isFirstVisit]);
+  }, [sectionTitle, subject, isFirstVisit, blockIndex, shownSlugs]);
 
   if (!isFirstVisit) return null;
 
