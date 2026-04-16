@@ -10,6 +10,8 @@ import LearnTab from "@/components/student/LearnTab";
 import ThinkingNetwork from "@/components/ThinkingNetwork";
 import TasksTab from "@/components/student/TasksTab";
 import GrowthTab from "@/components/student/GrowthTab";
+import InnerOSAnalytics from "@/components/student/InnerOSAnalytics";
+import { useVoiceGuide } from "@/hooks/useVoiceGuide";
 import ExamAlertBanner from "@/components/student/ExamAlertBanner";
 import { useDiscoveryToasts } from "@/hooks/useDiscoveryToasts";
 
@@ -411,6 +413,7 @@ const StudentDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [quizSubject, setQuizSubject] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("home");
+  useVoiceGuide("student-dashboard", "Welcome back. Ready for today's session?");
 
   const { data: innerOS } = useQuery({
     queryKey: ["student-inner-os", user?.id],
@@ -671,14 +674,17 @@ const StudentDashboard = () => {
 
           {/* ===== GROWTH TAB ===== */}
           {activeTab === "growth" && (
-            <GrowthTab
-              dimensionScores={dimensionScores}
-              streakDays={streakDays}
-              episodeCount={episodeCount ?? 0}
-              methodCounts={methodCounts ?? {}}
-              breakthroughs={breakthroughs ?? []}
-              weeklyGrowth={Number(innerOS?.weekly_growth ?? 0)}
-            />
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              {user?.id && <InnerOSAnalytics userId={user.id} />}
+              <GrowthTab
+                dimensionScores={dimensionScores}
+                streakDays={streakDays}
+                episodeCount={episodeCount ?? 0}
+                methodCounts={methodCounts ?? {}}
+                breakthroughs={breakthroughs ?? []}
+                weeklyGrowth={Number(innerOS?.weekly_growth ?? 0)}
+              />
+            </div>
           )}
 
           {/* ===== MESSAGES TAB ===== */}
