@@ -99,7 +99,7 @@ const SectionQuizGate = ({
         if (!data?.quiz) {
           supabase.functions
             .invoke("generate-reasoning-visual", {
-              body: { topic: sectionTitle, subject: subj, action: "fetch-quiz-only" },
+              body: { topic: sectionTitle, subject: subj, action: "fetch-quiz-only", difficulty },
             })
             .then(({ data: genData }) => {
               if (!cancelled && genData?.quiz?.question && genData.quiz.icons?.length > 0) {
@@ -118,7 +118,7 @@ const SectionQuizGate = ({
 
     fetchQuiz();
     return () => { cancelled = true; };
-  }, [sectionTitle, subject, isFirstVisit, blockIndex, shownSlugs]);
+  }, [sectionTitle, subject, isFirstVisit, blockIndex, shownSlugs, difficulty]);
 
   if (!isFirstVisit) return null;
 
