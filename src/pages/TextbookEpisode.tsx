@@ -325,8 +325,22 @@ const TextbookEpisode = () => {
           setAlreadyCompleted(true);
           setShowCompletion(true);
         }
+        // Restore last active block from localStorage
+        const lastBlockKey = `last_block_${chapterId}_${episodeId}`;
+        const saved = localStorage.getItem(lastBlockKey);
+        if (saved && !data?.completed_at) {
+          const idx = parseInt(saved, 10);
+          if (!isNaN(idx) && idx >= 0) setActiveBlock(idx);
+        }
       });
   }, [user, chapterId, episodeId]);
+
+  // Persist last active block to localStorage
+  useEffect(() => {
+    if (chapterId && episodeId && activeBlock >= 0) {
+      localStorage.setItem(`last_block_${chapterId}_${episodeId}`, String(activeBlock));
+    }
+  }, [chapterId, episodeId, activeBlock]);
 
   const goToBlock = useCallback((index: number) => {
     if (isBlockLocked(index)) {
