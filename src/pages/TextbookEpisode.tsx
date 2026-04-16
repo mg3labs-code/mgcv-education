@@ -520,7 +520,7 @@ const TextbookEpisode = () => {
     }
   }, [chapterId, episodeId]);
 
-  // Content blocks (non-interactive) that need comprehension check
+  // Content blocks that can have an icon quiz gate (blocks 6+)
   const CONTENT_TYPES = useMemo(() => new Set(["concept", "reasoning", "connections", "implications"]), []);
   // Track shown quiz slugs to prevent duplicates within an episode
   const shownQuizSlugsRef = useRef<Set<string>>(new Set());

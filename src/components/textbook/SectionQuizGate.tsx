@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import IconSelectionQuiz, { QuizIcon } from "./IconSelectionQuiz";
-import ComprehensionCheck from "./ComprehensionCheck";
 import { Button } from "@/components/ui/button";
 import { Loader2, SkipForward } from "lucide-react";
 
@@ -21,6 +20,8 @@ interface QuizData {
   icons: QuizIcon[];
 }
 
+const MAX_QUIZZES_PER_EPISODE = 2;
+
 const SectionQuizGate = ({
   sectionTitle,
   subject,
@@ -37,8 +38,8 @@ const SectionQuizGate = ({
 
   useEffect(() => {
     if (!isFirstVisit) return;
-    // Only show icon quiz for blocks 5+ (index >= 4)
-    if (blockIndex < 4) {
+    // Only show icon quiz for blocks 6+ (index >= 5), max 2 per episode
+    if (blockIndex < 5 || (shownSlugs && shownSlugs.size >= MAX_QUIZZES_PER_EPISODE)) {
       setQuizLoading(false);
       return;
     }
@@ -98,6 +99,9 @@ const SectionQuizGate = ({
 
   if (!isFirstVisit) return null;
 
+  // For blocks 0-4, no gate at all — just pass through
+  if (blockIndex < 5) return null;
+
   // Phase 1: Quiz (if available and not done)
   if (!quizDone && !quizLoading && quizData) {
     return (
@@ -106,17 +110,23 @@ const SectionQuizGate = ({
           question={quizData.question}
           icons={quizData.icons}
           onComplete={(score, total) => {
-            setTimeout(() => setQuizDone(true), 1500);
+            setTimeout(() => {
+              setQuizDone(true);
+              onPass();
+            }, 1500);
           }}
         />
         <div className="flex justify-end">
           <Button
             size="sm"
             variant="ghost"
-            onClick={() => setQuizDone(true)}
+            onClick={() => {
+              setQuizDone(true);
+              onSkip();
+            }}
             className="text-muted-foreground text-xs gap-1"
           >
-            <SkipForward className="h-3 w-3" /> Skip to writing
+            <SkipForward className="h-3 w-3" /> Skip
           </Button>
         </div>
       </div>
@@ -133,16 +143,8 @@ const SectionQuizGate = ({
     );
   }
 
-  // Phase 2: ComprehensionCheck (after quiz or if no quiz)
-  return (
-    <ComprehensionCheck
-      sectionTitle={sectionTitle}
-      isFirstVisit={isFirstVisit}
-      onPass={onPass}
-      onSkip={onSkip}
-      onResult={onResult}
-    />
-  );
+  // No quiz available or quiz done — just pass through (no ComprehensionCheck)
+  return null;
 };
 
 export default SectionQuizGate;

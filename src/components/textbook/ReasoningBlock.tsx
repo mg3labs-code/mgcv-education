@@ -1,11 +1,13 @@
-import { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import { ReasoningContent } from "@/data/textbookData";
-import { Lightbulb, ChevronUp } from "lucide-react";
+import { Lightbulb, ChevronUp, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { motion, AnimatePresence } from "framer-motion";
 import { STEP_META } from "./reasoning/stepConfig";
 import ThinkFirstGate from "./reasoning/ThinkFirstGate";
 import Step1ThinkBox from "./reasoning/Step1ThinkBox";
+import CompanionVoiceInput from "@/components/student/CompanionVoiceInput";
 
 const ReasoningBlock = ({ content }: { content: ReasoningContent }) => {
   const [activeStep, setActiveStep] = useState(0);
@@ -113,7 +115,7 @@ const ReasoningBlock = ({ content }: { content: ReasoningContent }) => {
   );
 };
 
-/* ── Step 2-4 Content (no images, clean text) ── */
+/* ── Step 2-4 Content (with voice/text input, same pattern as Step 1) ── */
 const StepContent = ({
   question,
   stepIdx,
@@ -125,6 +127,9 @@ const StepContent = ({
   revealed: boolean;
   onToggleInsight: () => void;
 }) => {
+  const [answer, setAnswer] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+
   if (!question) {
     return (
       <div className="rounded-lg bg-muted/30 p-5 text-center">
@@ -150,22 +155,53 @@ const StepContent = ({
         </div>
       )}
 
-      {/* Insight reveal */}
-      {revealed ? (
-        <div className="rounded-lg bg-emerald-50/60 dark:bg-emerald-950/20 border-2 border-emerald-300 dark:border-emerald-700 p-3 animate-fade-in">
-          <div className="flex items-start gap-2">
-            <Lightbulb className="h-4 w-4 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
-            <div>
-              <p className="text-xs font-bold text-emerald-700 dark:text-emerald-400 mb-0.5">Aha! The insight:</p>
-              <p className="text-sm text-foreground leading-relaxed">{question.deeperInsight}</p>
+      {/* Student answer input (same pattern as Step1ThinkBox) */}
+      {!submitted ? (
+        <div className="space-y-2">
+          <p className="text-xs font-medium text-muted-foreground">✍️ Write or speak your thinking:</p>
+          <div className="relative">
+            <Textarea
+              value={answer}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setAnswer(e.target.value)}
+              placeholder="What do you think and why?"
+              className="min-h-[70px] pr-12 text-sm resize-none"
+            />
+            <div className="absolute right-2 bottom-2">
+              <CompanionVoiceInput
+                onTranscript={(text: string) => setAnswer((prev) => (prev ? prev + " " + text : text))}
+                disabled={false}
+              />
             </div>
           </div>
-          <button onClick={onToggleInsight} className="text-xs text-muted-foreground hover:text-foreground mt-2 flex items-center gap-1">
-            <ChevronUp className="h-3 w-3" /> Hide
-          </button>
+          <Button size="sm" onClick={() => setSubmitted(true)} disabled={answer.trim().length < 5} className="w-full">
+            <Send className="h-3.5 w-3.5 mr-2" /> Submit my thinking
+          </Button>
         </div>
       ) : (
-        <ThinkFirstGate onReveal={onToggleInsight} />
+        <div className="rounded-lg bg-blue-50/60 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-700 p-3">
+          <p className="text-xs font-bold text-blue-700 dark:text-blue-400 mb-0.5">✅ Your thinking:</p>
+          <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap">{answer}</p>
+        </div>
+      )}
+
+      {/* Insight reveal — only after submitting */}
+      {submitted && (
+        revealed ? (
+          <div className="rounded-lg bg-emerald-50/60 dark:bg-emerald-950/20 border-2 border-emerald-300 dark:border-emerald-700 p-3 animate-fade-in">
+            <div className="flex items-start gap-2">
+              <Lightbulb className="h-4 w-4 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-xs font-bold text-emerald-700 dark:text-emerald-400 mb-0.5">Aha! The insight:</p>
+                <p className="text-sm text-foreground leading-relaxed">{question.deeperInsight}</p>
+              </div>
+            </div>
+            <button onClick={onToggleInsight} className="text-xs text-muted-foreground hover:text-foreground mt-2 flex items-center gap-1">
+              <ChevronUp className="h-3 w-3" /> Hide
+            </button>
+          </div>
+        ) : (
+          <ThinkFirstGate onReveal={onToggleInsight} />
+        )
       )}
     </div>
   );

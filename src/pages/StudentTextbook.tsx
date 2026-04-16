@@ -17,7 +17,9 @@ const JOURNEY_STEPS = [
 
 const StudentTextbook = () => {
   const navigate = useNavigate();
-  const { data: subjects, isLoading: subjectsLoading } = useSubjects();
+  const { data: rawSubjects, isLoading: subjectsLoading } = useSubjects();
+  // Filter out generic "Science" — dedicated Chemistry/Physics/Biology cover it
+  const subjects = rawSubjects?.filter(s => s.name !== "Science");
   const [selectedSubject, setSelectedSubject] = useState("Mathematics");
   const { data: chapters, isLoading: chaptersLoading } = useChapters(selectedSubject);
 
