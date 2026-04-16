@@ -28,6 +28,8 @@ import JeeProblemsBlock from "@/components/textbook/JeeProblemsBlock";
 import JeeExtensionBlock from "@/components/textbook/JeeExtensionBlock";
 import JeeSpeedDrillBlock from "@/components/textbook/JeeSpeedDrillBlock";
 import { Switch } from "@/components/ui/switch";
+import FlipRevealCard from "@/components/textbook/FlipRevealCard";
+import { getFlipRevealForBlock } from "@/data/flipRevealData";
 import SectionCelebration from "@/components/textbook/SectionCelebration";
 import SectionQuizGate from "@/components/textbook/SectionQuizGate";
 import EpisodeLoadingTransition from "@/components/textbook/EpisodeLoadingTransition";
@@ -855,6 +857,22 @@ const TextbookEpisode = () => {
                </p>
 
               {/* Block content with colored border */}
+              {/* Flip-to-Reveal visual breakdown (only for complex topics) */}
+              {(() => {
+                const flipData = getFlipRevealForBlock(block.title || "");
+                return flipData ? (
+                  <FlipRevealCard
+                    challenge={flipData.challenge}
+                    hint={flipData.hint}
+                    imageUrl={flipData.imageUrl}
+                    imageAlt={flipData.imageAlt}
+                    explanation={flipData.explanation}
+                    labels={flipData.labels}
+                    emoji={flipData.emoji}
+                  />
+                ) : null;
+              })()}
+
               <div className={`bg-card rounded-xl border-l-4 ${JEE_BLOCKS.has(block.type) ? "border-l-amber-500" : ((meta as any).border || "border-l-primary")} shadow-sm`}>
                 <div className="p-5">
                   {renderBlock(block)}
