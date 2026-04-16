@@ -410,7 +410,24 @@ const TextbookEpisode = () => {
     }
   }, [user, chapterId, episodeId, navBlocks, sectionTimings, comprehensionResults, wrongAttempts]);
 
-  // Skill-mapping toasts for micro-connections
+  // Persist time on unmount for the current active block
+  useEffect(() => {
+    return () => {
+      const timeSpent = Math.round((Date.now() - sectionStartTime) / 1000);
+      if (timeSpent > 0 && user && chapterId && episodeId) {
+        const block = navBlocks[activeBlock];
+        if (block) {
+          supabase.from("episode_interactions" as any).upsert({
+            user_id: user.id, chapter_id: chapterId, episode_id: episodeId,
+            block_index: activeBlock, block_type: block.type,
+            time_spent_seconds: (sectionTimings[activeBlock] || 0) + timeSpent,
+            completed_at: new Date().toISOString(),
+          }, { onConflict: "user_id,chapter_id,episode_id,block_index" }).catch(() => {});
+        }
+      }
+    };
+  }, [activeBlock, episodeId]);
+
   const SKILL_TOASTS: Record<string, string> = useMemo(() => ({
     assumptions: "You just practiced the same skill elite interviewers test 🏛️",
     application: "Top institutions call this the Case Method — you're already doing it 🎓",
