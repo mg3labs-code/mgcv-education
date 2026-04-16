@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import IconSelectionQuiz, { QuizIcon } from "./IconSelectionQuiz";
 import { Button } from "@/components/ui/button";
 import { Loader2, SkipForward } from "lucide-react";
@@ -32,9 +33,31 @@ const SectionQuizGate = ({
   onSkip,
   onResult,
 }: SectionQuizGateProps) => {
+  const { user } = useAuth();
   const [quizData, setQuizData] = useState<QuizData | null>(null);
   const [quizLoading, setQuizLoading] = useState(true);
   const [quizDone, setQuizDone] = useState(false);
+  const [difficulty, setDifficulty] = useState<"easy" | "medium" | "hard">("medium");
+
+  // Compute adaptive difficulty from recent interactions
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("episode_interactions")
+        .select("correct_on_first_try, wrong_attempts")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(10);
+      if (cancelled || !data || data.length < 3) return;
+      const successRate = data.filter(r => r.correct_on_first_try && (r.wrong_attempts || 0) === 0).length / data.length;
+      if (successRate >= 0.75) setDifficulty("hard");
+      else if (successRate < 0.4) setDifficulty("easy");
+      else setDifficulty("medium");
+    })();
+    return () => { cancelled = true; };
+  }, [user]);
 
   useEffect(() => {
     if (!isFirstVisit) return;
@@ -76,7 +99,7 @@ const SectionQuizGate = ({
         if (!data?.quiz) {
           supabase.functions
             .invoke("generate-reasoning-visual", {
-              body: { topic: sectionTitle, subject: subj, action: "fetch-quiz-only" },
+              body: { topic: sectionTitle, subject: subj, action: "fetch-quiz-only", difficulty },
             })
             .then(({ data: genData }) => {
               if (!cancelled && genData?.quiz?.question && genData.quiz.icons?.length > 0) {
@@ -95,7 +118,7 @@ const SectionQuizGate = ({
 
     fetchQuiz();
     return () => { cancelled = true; };
-  }, [sectionTitle, subject, isFirstVisit, blockIndex, shownSlugs]);
+  }, [sectionTitle, subject, isFirstVisit, blockIndex, shownSlugs, difficulty]);
 
   if (!isFirstVisit) return null;
 
@@ -104,8 +127,14 @@ const SectionQuizGate = ({
 
   // Phase 1: Quiz (if available and not done)
   if (!quizDone && !quizLoading && quizData) {
+    const diffBadge = difficulty === "hard" ? { label: "🔥 Advanced", color: "text-red-600" } : difficulty === "easy" ? { label: "🌱 Starter", color: "text-emerald-600" } : { label: "⚡ Standard", color: "text-blue-600" };
     return (
       <div className="mt-4 space-y-2">
+        <div className="flex items-center justify-between">
+          <span className={`text-[10px] font-bold uppercase tracking-wider ${diffBadge.color}`}>
+            {diffBadge.label} · adapted to your pace
+          </span>
+        </div>
         <IconSelectionQuiz
           question={quizData.question}
           icons={quizData.icons}

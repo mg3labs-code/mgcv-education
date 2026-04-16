@@ -40,6 +40,7 @@ const DemoDesignA = lazy(() => import("./pages/DemoDesignA"));
 const DemoDesignB = lazy(() => import("./pages/DemoDesignB"));
 const DemoDesignC = lazy(() => import("./pages/DemoDesignC"));
 const VisualReasoningDemo = lazy(() => import("./pages/VisualReasoningDemo"));
+const StudentDeepDive = lazy(() => import("./pages/StudentDeepDive"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
@@ -106,7 +107,7 @@ const App = () => (
                 <Route path="/student/textbook/:chapterId" element={<ProtectedRoute><TextbookChapter /></ProtectedRoute>} />
                 <Route path="/student/textbook/:chapterId/:episodeId" element={<ProtectedRoute><TextbookEpisode /></ProtectedRoute>} />
                 <Route path="/student/textbook-lab" element={<ProtectedRoute><TextbookLab /></ProtectedRoute>} />
-                <Route path="/student/deep-dive" element={<ProtectedRoute><StudentCalendar /></ProtectedRoute>} />
+                <Route path="/student/deep-dive" element={<ProtectedRoute><StudentDeepDive /></ProtectedRoute>} />
                 <Route path="/teacher" element={<ProtectedRoute><TeacherDashboard /></ProtectedRoute>} />
                 <Route path="/teacher/students" element={<ProtectedRoute><TeacherDashboard /></ProtectedRoute>} />
                 <Route path="/teacher/daily-todo" element={<ProtectedRoute><TeacherDailyTodo /></ProtectedRoute>} />
