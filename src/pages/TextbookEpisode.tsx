@@ -422,7 +422,7 @@ const TextbookEpisode = () => {
             block_index: activeBlock, block_type: block.type,
             time_spent_seconds: (sectionTimings[activeBlock] || 0) + timeSpent,
             completed_at: new Date().toISOString(),
-          }, { onConflict: "user_id,chapter_id,episode_id,block_index" }).catch(() => {});
+          }, { onConflict: "user_id,chapter_id,episode_id,block_index" }).then(() => {});
         }
       }
     };
