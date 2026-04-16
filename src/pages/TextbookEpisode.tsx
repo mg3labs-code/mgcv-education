@@ -520,7 +520,7 @@ const TextbookEpisode = () => {
     }
   }, [chapterId, episodeId]);
 
-  // Content blocks (non-interactive) that need comprehension check
+  // Content blocks that can have an icon quiz gate (blocks 6+)
   const CONTENT_TYPES = useMemo(() => new Set(["concept", "reasoning", "connections", "implications"]), []);
   // Track shown quiz slugs to prevent duplicates within an episode
   const shownQuizSlugsRef = useRef<Set<string>>(new Set());
@@ -815,6 +815,10 @@ const TextbookEpisode = () => {
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+          {/* Phase label inline on mobile */}
+          <span className="sm:hidden" style={{ fontSize: 10, fontWeight: 700, color: currentPhase.color, textTransform: "uppercase" as const, letterSpacing: "0.05em" }}>
+            {currentPhase.shortLabel}
+          </span>
           {saveStatus === "saving" && <Cloud className="h-3 w-3" style={{ color: "#A8A29E" }} />}
           {saveStatus === "saved" && <Check className="h-3 w-3" style={{ color: "#0D9488" }} />}
           <span style={{ fontSize: 12, fontWeight: 600, color: "#78716C", minWidth: 32, textAlign: "right" }}>
@@ -824,9 +828,9 @@ const TextbookEpisode = () => {
       </div>
 
       <>
-      {/* ═══ PHASE BADGE ═══ */}
-      <div style={{
-        display: "flex", alignItems: "center", justifyContent: "space-between",
+      {/* ═══ PHASE BADGE — hidden on small mobile, merged into top bar via color ═══ */}
+      <div className="hidden sm:flex" style={{
+        alignItems: "center", justifyContent: "space-between",
         padding: "6px 16px", fontSize: 12, flexShrink: 0,
         background: currentPhase.color === "#D97706" ? "#FFFBEB" : currentPhase.color === "#0D9488" ? "#F0FDFA" : currentPhase.color === "#3B82F6" ? "#EFF6FF" : "#F5F3FF",
         borderBottom: "1px solid #F5F5F4",
