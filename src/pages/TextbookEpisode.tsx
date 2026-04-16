@@ -527,7 +527,7 @@ const TextbookEpisode = () => {
   // Reading types that need minimum time
   const READING_TYPES = useMemo(() => new Set(["concept", "reasoning", "connections", "implications"]), []);
   const ASSESSMENT_TYPES = useMemo(() => new Set(["assessment"]), []);
-  const READING_MIN_SECONDS = 90;
+  const READING_MIN_SECONDS = 15;
 
   // Reading timer — counts up while on reading sections
   useEffect(() => {
@@ -542,9 +542,12 @@ const TextbookEpisode = () => {
   }, [activeBlock, navBlocks]);
 
   // Check if continue is allowed
+  // CRITICAL: Already-completed blocks (revisits) are ALWAYS continuable — no gates re-applied
   const isContinueGated = useMemo(() => {
     const block = navBlocks[activeBlock];
     if (!block) return false;
+    // Bypass all gates for already-completed blocks (revisits)
+    if (blockCompleted.has(activeBlock) || understoodBlocks.has(activeBlock)) return false;
     // Reading sections: need minimum time
     if (READING_TYPES.has(block.type) && readingTimer < READING_MIN_SECONDS) return true;
     // Assessment sections: need all questions attempted
@@ -552,21 +555,20 @@ const TextbookEpisode = () => {
     // Interactive sections: need completion
     if (INTERACTIVE_TYPES.has(block.type) && !blockCompleted.has(activeBlock)) return true;
     return false;
-  }, [navBlocks, activeBlock, readingTimer, blockCompleted, READING_TYPES, ASSESSMENT_TYPES, INTERACTIVE_TYPES]);
+  }, [navBlocks, activeBlock, readingTimer, blockCompleted, understoodBlocks, READING_TYPES, ASSESSMENT_TYPES, INTERACTIVE_TYPES]);
 
   const continueHint = useMemo(() => {
     const block = navBlocks[activeBlock];
     if (!block) return "";
+    if (blockCompleted.has(activeBlock) || understoodBlocks.has(activeBlock)) return "";
     if (READING_TYPES.has(block.type) && readingTimer < READING_MIN_SECONDS) {
       const remaining = READING_MIN_SECONDS - readingTimer;
-      const mins = Math.floor(remaining / 60);
-      const secs = remaining % 60;
-      return `Read for ${mins}:${secs.toString().padStart(2, "0")} more...`;
+      return `Read for ${remaining}s more...`;
     }
     if (ASSESSMENT_TYPES.has(block.type) && !blockCompleted.has(activeBlock)) return "Answer all questions first";
     if (INTERACTIVE_TYPES.has(block.type) && !blockCompleted.has(activeBlock)) return "Complete the activity first";
     return "";
-  }, [navBlocks, activeBlock, readingTimer, blockCompleted, READING_TYPES, ASSESSMENT_TYPES, INTERACTIVE_TYPES]);
+  }, [navBlocks, activeBlock, readingTimer, blockCompleted, understoodBlocks, READING_TYPES, ASSESSMENT_TYPES, INTERACTIVE_TYPES]);
 
 
   const onAnswerChange = useCallback(() => {
