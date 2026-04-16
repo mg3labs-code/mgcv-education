@@ -127,8 +127,14 @@ const SectionQuizGate = ({
 
   // Phase 1: Quiz (if available and not done)
   if (!quizDone && !quizLoading && quizData) {
+    const diffBadge = difficulty === "hard" ? { label: "🔥 Advanced", color: "text-red-600" } : difficulty === "easy" ? { label: "🌱 Starter", color: "text-emerald-600" } : { label: "⚡ Standard", color: "text-blue-600" };
     return (
       <div className="mt-4 space-y-2">
+        <div className="flex items-center justify-between">
+          <span className={`text-[10px] font-bold uppercase tracking-wider ${diffBadge.color}`}>
+            {diffBadge.label} · adapted to your pace
+          </span>
+        </div>
         <IconSelectionQuiz
           question={quizData.question}
           icons={quizData.icons}
