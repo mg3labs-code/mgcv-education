@@ -29,7 +29,7 @@ import JeeExtensionBlock from "@/components/textbook/JeeExtensionBlock";
 import JeeSpeedDrillBlock from "@/components/textbook/JeeSpeedDrillBlock";
 import { Switch } from "@/components/ui/switch";
 import SectionCelebration from "@/components/textbook/SectionCelebration";
-import ComprehensionCheck from "@/components/textbook/ComprehensionCheck";
+import SectionQuizGate from "@/components/textbook/SectionQuizGate";
 import EpisodeLoadingTransition from "@/components/textbook/EpisodeLoadingTransition";
 import SectionVoiceGuide from "@/components/textbook/SectionVoiceGuide";
 
