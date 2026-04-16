@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import IconSelectionQuiz, { QuizIcon } from "./IconSelectionQuiz";
 import { Button } from "@/components/ui/button";
 import { Loader2, SkipForward } from "lucide-react";
