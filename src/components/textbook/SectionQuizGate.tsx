@@ -33,9 +33,31 @@ const SectionQuizGate = ({
   onSkip,
   onResult,
 }: SectionQuizGateProps) => {
+  const { user } = useAuth();
   const [quizData, setQuizData] = useState<QuizData | null>(null);
   const [quizLoading, setQuizLoading] = useState(true);
   const [quizDone, setQuizDone] = useState(false);
+  const [difficulty, setDifficulty] = useState<"easy" | "medium" | "hard">("medium");
+
+  // Compute adaptive difficulty from recent interactions
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("episode_interactions")
+        .select("correct_on_first_try, wrong_attempts")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(10);
+      if (cancelled || !data || data.length < 3) return;
+      const successRate = data.filter(r => r.correct_on_first_try && (r.wrong_attempts || 0) === 0).length / data.length;
+      if (successRate >= 0.75) setDifficulty("hard");
+      else if (successRate < 0.4) setDifficulty("easy");
+      else setDifficulty("medium");
+    })();
+    return () => { cancelled = true; };
+  }, [user]);
 
   useEffect(() => {
     if (!isFirstVisit) return;
