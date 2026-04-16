@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Eye, RotateCcw, Sparkles, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,17 @@ const FlipRevealCard = ({
 }: FlipRevealCardProps) => {
   const [flipped, setFlipped] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const autoFlipTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Auto-flip back after 4 seconds
+  useEffect(() => {
+    if (flipped) {
+      autoFlipTimer.current = setTimeout(() => setFlipped(false), 4000);
+    }
+    return () => {
+      if (autoFlipTimer.current) clearTimeout(autoFlipTimer.current);
+    };
+  }, [flipped]);
 
   return (
     <div className="perspective-1000 w-full my-4">
