@@ -29,7 +29,7 @@ import JeeExtensionBlock from "@/components/textbook/JeeExtensionBlock";
 import JeeSpeedDrillBlock from "@/components/textbook/JeeSpeedDrillBlock";
 import { Switch } from "@/components/ui/switch";
 import SectionCelebration from "@/components/textbook/SectionCelebration";
-import ComprehensionCheck from "@/components/textbook/ComprehensionCheck";
+import SectionQuizGate from "@/components/textbook/SectionQuizGate";
 import EpisodeLoadingTransition from "@/components/textbook/EpisodeLoadingTransition";
 import SectionVoiceGuide from "@/components/textbook/SectionVoiceGuide";
 
@@ -861,10 +861,11 @@ const TextbookEpisode = () => {
                 </div>
               </div>
 
-              {/* ═══ Comprehension Check for content blocks (first visit) ═══ */}
+              {/* ═══ Two-Phase: Quiz Game → Comprehension Check ═══ */}
               {CONTENT_TYPES.has(block.type) && (
-                <ComprehensionCheck
+                <SectionQuizGate
                   sectionTitle={block.title || blockLabels[block.type] || "this section"}
+                  subject={langSubject || chapter?.title?.split(" ")[0] || "Science"}
                   isFirstVisit={isFirstVisitToBlock}
                   onResult={onComprehensionResult}
                   onPass={() => {

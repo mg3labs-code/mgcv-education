@@ -1,0 +1,1 @@
+ALTER TABLE public.reasoning_visuals ADD CONSTRAINT reasoning_visuals_slug_unique UNIQUE (slug);

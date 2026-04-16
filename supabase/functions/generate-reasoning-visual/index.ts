@@ -264,6 +264,140 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ── Fetch or generate quiz-only (lightweight, no images) ──
+    if (action === "fetch-quiz-only") {
+      const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+      if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
+      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+      const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+      const sb = createClient(supabaseUrl, serviceKey);
+
+      const subj = subject || "Science";
+      const quizSlug = `${subj.toLowerCase()}_${topic.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 60)}`;
+
+      // Check cache
+      const { data: cached } = await sb
+        .from("reasoning_visuals")
+        .select("quiz")
+        .eq("slug", quizSlug)
+        .maybeSingle();
+
+      if (cached?.quiz) {
+        return new Response(JSON.stringify({ quiz: cached.quiz, cached: true }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Generate quiz only via AI
+      try {
+        const quizResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: "google/gemini-2.5-flash",
+            messages: [
+              {
+                role: "system",
+                content: `You create fun icon-selection quiz games for ${subj} students. Return ONLY valid JSON.`,
+              },
+              {
+                role: "user",
+                content: `Create a "What Are Needed For..." style quiz for: "${topic}"
+
+Return JSON:
+{
+  "quiz": {
+    "question": "Which of these are involved in ${topic}? 🎯",
+    "icons": [
+      { "emoji": "☀️", "label": "Sunlight", "isCorrect": true },
+      ...8-10 total icons, 4-5 correct + 4-5 distractors
+    ]
+  }
+}`,
+              },
+            ],
+            tools: [{
+              type: "function",
+              function: {
+                name: "quiz_result",
+                description: "Return quiz data",
+                parameters: {
+                  type: "object",
+                  properties: {
+                    quiz: {
+                      type: "object",
+                      properties: {
+                        question: { type: "string" },
+                        icons: {
+                          type: "array",
+                          items: {
+                            type: "object",
+                            properties: {
+                              emoji: { type: "string" },
+                              label: { type: "string" },
+                              isCorrect: { type: "boolean" },
+                            },
+                            required: ["emoji", "label", "isCorrect"],
+                          },
+                        },
+                      },
+                      required: ["question", "icons"],
+                    },
+                  },
+                  required: ["quiz"],
+                },
+              },
+            }],
+            tool_choice: { type: "function", function: { name: "quiz_result" } },
+          }),
+        });
+
+        if (!quizResp.ok) {
+          return new Response(JSON.stringify({ quiz: null }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        const quizJson = await quizResp.json();
+        let quizData: any = null;
+
+        const toolCall = quizJson.choices?.[0]?.message?.tool_calls?.[0];
+        if (toolCall?.function?.arguments) {
+          const parsed = JSON.parse(toolCall.function.arguments);
+          quizData = parsed.quiz;
+        }
+
+        if (!quizData) {
+          const content = quizJson.choices?.[0]?.message?.content || "";
+          try {
+            const m = content.match(/\{[\s\S]*\}/);
+            if (m) quizData = JSON.parse(m[0]).quiz;
+          } catch {}
+        }
+
+        // Cache it — upsert into reasoning_visuals with empty steps
+        if (quizData?.question && quizData.icons?.length > 0) {
+          await sb.from("reasoning_visuals").upsert({
+            slug: quizSlug,
+            topic,
+            subject: subj,
+            grade: grade || "Grade 10",
+            steps: [],
+            quiz: quizData,
+          }, { onConflict: "slug" });
+        }
+
+        return new Response(JSON.stringify({ quiz: quizData || null }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      } catch (e) {
+        console.error("fetch-quiz-only error:", e);
+        return new Response(JSON.stringify({ quiz: null }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
