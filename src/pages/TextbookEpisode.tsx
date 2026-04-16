@@ -28,6 +28,8 @@ import JeeProblemsBlock from "@/components/textbook/JeeProblemsBlock";
 import JeeExtensionBlock from "@/components/textbook/JeeExtensionBlock";
 import JeeSpeedDrillBlock from "@/components/textbook/JeeSpeedDrillBlock";
 import { Switch } from "@/components/ui/switch";
+import FlipRevealCard from "@/components/textbook/FlipRevealCard";
+import { getFlipRevealForBlock } from "@/data/flipRevealData";
 import SectionCelebration from "@/components/textbook/SectionCelebration";
 import SectionQuizGate from "@/components/textbook/SectionQuizGate";
 import EpisodeLoadingTransition from "@/components/textbook/EpisodeLoadingTransition";
