@@ -861,10 +861,11 @@ const TextbookEpisode = () => {
                 </div>
               </div>
 
-              {/* ═══ Comprehension Check for content blocks (first visit) ═══ */}
+              {/* ═══ Two-Phase: Quiz Game → Comprehension Check ═══ */}
               {CONTENT_TYPES.has(block.type) && (
-                <ComprehensionCheck
+                <SectionQuizGate
                   sectionTitle={block.title || blockLabels[block.type] || "this section"}
+                  subject={langSubject || chapter?.title?.split(" ")[0] || "Science"}
                   isFirstVisit={isFirstVisitToBlock}
                   onResult={onComprehensionResult}
                   onPass={() => {
