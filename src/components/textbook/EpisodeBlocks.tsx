@@ -374,7 +374,7 @@ export const ConceptBlock = ({ content, onComplete }: { content: ConceptContent;
 
 // ─── Tap-to-Place Activity Block (touch + desktop friendly) ─
 
-interface DragDropItem { value: string; categories?: string[] }
+interface DragDropItem { value: string; categories?: string[]; description?: string }
 interface ActivityCategory { id: string; description: string }
 export interface ActivityContent { instruction: string; type?: string; items?: DragDropItem[]; categories?: ActivityCategory[] }
 
