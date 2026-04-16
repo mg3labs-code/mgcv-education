@@ -815,6 +815,10 @@ const TextbookEpisode = () => {
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+          {/* Phase label inline on mobile */}
+          <span className="sm:hidden" style={{ fontSize: 10, fontWeight: 700, color: currentPhase.color, textTransform: "uppercase" as const, letterSpacing: "0.05em" }}>
+            {currentPhase.shortLabel}
+          </span>
           {saveStatus === "saving" && <Cloud className="h-3 w-3" style={{ color: "#A8A29E" }} />}
           {saveStatus === "saved" && <Check className="h-3 w-3" style={{ color: "#0D9488" }} />}
           <span style={{ fontSize: 12, fontWeight: 600, color: "#78716C", minWidth: 32, textAlign: "right" }}>

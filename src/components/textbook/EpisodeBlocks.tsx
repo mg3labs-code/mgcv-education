@@ -483,6 +483,51 @@ const DragDropActivityBlock = ({ content, onComplete }: { content: ActivityConte
   );
 };
 
+const MatchActivityBlock = ({ content, onComplete }: { content: ActivityContent; onComplete?: () => void }) => {
+  const [selected, setSelected] = useState<Record<number, string>>({});
+  const items = content.items || [];
+
+  const handleSelect = (itemIdx: number, option: string) => {
+    const next = { ...selected, [itemIdx]: option };
+    setSelected(next);
+    if (Object.keys(next).length >= items.length) onComplete?.();
+  };
+
+  // Generate plausible options from all item descriptions/values
+  const allDescriptions = items.map(it => it.description || it.value).filter(Boolean);
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-xl bg-primary/5 border border-primary/20 p-4">
+        <p className="text-base font-medium text-foreground leading-relaxed">{content.instruction}</p>
+      </div>
+      {items.map((item, i) => (
+        <div key={i} className="rounded-xl border bg-card p-4 space-y-2">
+          <p className="text-base font-semibold text-foreground">({i + 1}) {item.value}</p>
+          <div className="flex flex-wrap gap-2">
+            {allDescriptions.map((desc, di) => {
+              const isSelected = selected[i] === desc;
+              return (
+                <button
+                  key={di}
+                  onClick={() => handleSelect(i, desc)}
+                  className={`px-3 py-1.5 rounded-full text-sm font-medium border-2 transition-all ${
+                    isSelected
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border bg-card text-foreground hover:border-primary/40"
+                  }`}
+                >
+                  {desc}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 const FallbackActivityBlock = ({ content, onComplete }: { content: ActivityContent; onComplete?: () => void }) => {
   const [answers, setAnswers] = useState<Record<number, string>>({});
   useEffect(() => {
@@ -515,6 +560,9 @@ const FallbackActivityBlock = ({ content, onComplete }: { content: ActivityConte
 
 export const ActivityBlock = ({ content, onComplete }: { content: ActivityContent; onComplete?: () => void }) => {
   if (content.type === "classify" && content.categories && content.items) return <DragDropActivityBlock content={content} onComplete={onComplete} />;
+  if (content.type === "match" && content.items) return <MatchActivityBlock content={content} onComplete={onComplete} />;
+  // If items have descriptions, auto-detect as match
+  if (content.items?.some(it => it.description) && !content.categories) return <MatchActivityBlock content={content} onComplete={onComplete} />;
   return <FallbackActivityBlock content={content} onComplete={onComplete} />;
 };
 
