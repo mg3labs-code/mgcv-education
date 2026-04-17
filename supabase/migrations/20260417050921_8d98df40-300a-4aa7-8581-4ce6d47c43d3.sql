@@ -1,0 +1,1 @@
+DELETE FROM public.content_blocks WHERE episode_id IN ('6e96c9db-0911-4a74-bd42-546929419992','2cae7db2-9921-4f1a-a9e0-0ed7efac0e44','56377fa2-1dc4-49a2-b691-504137ab3319','f2a0bdbb-84b3-4496-9c0c-4f113ab7a53a','8931ea49-568f-457c-99a5-6720537b3155','bf2d6afd-5a16-45b1-891f-6cd5a9df92a2','9d95a0fc-6232-439a-aadf-d9af7f2bcd2c') AND depth='board';
