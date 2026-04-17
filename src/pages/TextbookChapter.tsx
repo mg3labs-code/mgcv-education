@@ -19,6 +19,7 @@ const TextbookChapter = () => {
   const { chapterId } = useParams();
   const navigate = useNavigate();
   const { data: chapter, isLoading } = useChapterEpisodes(chapterId);
+  const { data: progressMap } = useUserEpisodeProgress();
 
   if (isLoading) {
     return (
