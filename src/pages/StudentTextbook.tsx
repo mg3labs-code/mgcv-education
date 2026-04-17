@@ -101,11 +101,24 @@ const StudentTextbook = () => {
             {chapters.map((chapter) => {
               const hasEpisodes = chapter.episodes.length > 0;
               const episodeCount = chapter.episodes.length;
+              const episodeSlugs = chapter.episodes.map((e) => e.id);
+              const chProg = getChapterProgress(progressMap, chapter.id, episodeSlugs);
+              const isComplete = hasEpisodes && chProg.completed === chProg.total;
+              const showResume = hasEpisodes && chProg.completed > 0 && !isComplete;
+
+              const handleClick = () => {
+                if (!hasEpisodes) return;
+                if (showResume && chProg.resumeEpisodeSlug) {
+                  navigate(`/student/textbook/${chapter.id}/${chProg.resumeEpisodeSlug}`);
+                } else {
+                  navigate(`/student/textbook/${chapter.id}`);
+                }
+              };
 
               return (
                 <button
                   key={chapter.id}
-                  onClick={() => hasEpisodes && navigate(`/student/textbook/${chapter.id}`)}
+                  onClick={handleClick}
                   disabled={!hasEpisodes}
                   className={`w-full text-left rounded-xl border p-5 transition-all group ${
                     hasEpisodes
@@ -115,17 +128,32 @@ const StudentTextbook = () => {
                 >
                   <div className="flex items-center gap-4">
                     <div
-                      className="h-12 w-12 rounded-xl flex items-center justify-center text-white font-bold text-lg shrink-0"
+                      className="h-12 w-12 rounded-xl flex items-center justify-center text-white font-bold text-lg shrink-0 relative"
                       style={{ backgroundColor: chapter.color }}
                     >
                       {chapter.number}
+                      {isComplete && (
+                        <span className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-success flex items-center justify-center border-2 border-card">
+                          <CheckCircle2 className="h-3 w-3 text-success-foreground" />
+                        </span>
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <h3 className="font-semibold text-foreground truncate">{chapter.title}</h3>
                         {!hasEpisodes && (
                           <span className="inline-flex items-center gap-1 text-xs bg-muted px-2 py-0.5 rounded-full text-muted-foreground">
                             <Lock className="h-3 w-3" /> Coming Soon
+                          </span>
+                        )}
+                        {isComplete && (
+                          <span className="inline-flex items-center gap-1 text-xs bg-success/10 text-success px-2 py-0.5 rounded-full font-medium">
+                            <CheckCircle2 className="h-3 w-3" /> Completed
+                          </span>
+                        )}
+                        {showResume && (
+                          <span className="inline-flex items-center gap-1 text-xs bg-accent/10 text-accent px-2 py-0.5 rounded-full font-medium">
+                            <PlayCircle className="h-3 w-3" /> Resume
                           </span>
                         )}
                       </div>
@@ -139,13 +167,13 @@ const StudentTextbook = () => {
                         </span>
                         {hasEpisodes && (
                           <span className="flex items-center gap-1">
-                            <BookOpen className="h-3 w-3" /> {episodeCount} episodes
+                            <BookOpen className="h-3 w-3" /> {chProg.completed}/{episodeCount} episodes
                           </span>
                         )}
                       </div>
                       {hasEpisodes && (
                         <div className="mt-2">
-                          <Progress value={0} className="h-1.5" />
+                          <Progress value={chProg.pct} className="h-1.5" />
                         </div>
                       )}
                     </div>
