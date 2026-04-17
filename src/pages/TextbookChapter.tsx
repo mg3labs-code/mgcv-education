@@ -1,8 +1,10 @@
 import { useNavigate, useParams } from "react-router-dom";
 import PageLayout from "@/components/PageLayout";
 import { useChapterEpisodes } from "@/hooks/useTextbookData";
-import { Play, Clock, Sparkles } from "lucide-react";
+import { useUserEpisodeProgress, getEpisodeStatus, getChapterProgress } from "@/hooks/useEpisodeProgress";
+import { Play, Clock, Sparkles, CheckCircle2, PlayCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import { DetailSkeleton } from "@/components/PageSkeleton";
 
 const typeIcons: Record<string, string> = {
