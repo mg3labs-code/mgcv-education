@@ -23,6 +23,7 @@ const StudentTextbook = () => {
   const subjects = rawSubjects?.filter(s => s.name !== "Science");
   const [selectedSubject, setSelectedSubject] = useState("Mathematics");
   const { data: chapters, isLoading: chaptersLoading } = useChapters(selectedSubject);
+  const { data: progressMap } = useUserEpisodeProgress();
 
   const isLoading = subjectsLoading || chaptersLoading;
 
