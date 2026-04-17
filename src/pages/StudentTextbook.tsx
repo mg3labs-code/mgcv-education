@@ -1,7 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import PageLayout from "@/components/PageLayout";
 import { useChapters, useSubjects } from "@/hooks/useTextbookData";
-import { BookOpen, Clock, FileText, Lock, ChevronRight, ArrowRight } from "lucide-react";
+import { useUserEpisodeProgress, getChapterProgress } from "@/hooks/useEpisodeProgress";
+import { BookOpen, Clock, FileText, Lock, ChevronRight, ArrowRight, CheckCircle2, PlayCircle } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { ListSkeleton } from "@/components/PageSkeleton";
 import EmptyState from "@/components/EmptyState";
