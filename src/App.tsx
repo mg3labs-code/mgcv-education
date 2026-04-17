@@ -10,6 +10,7 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import StudyCompanion from "./components/student/StudyCompanion";
 import CommandPalette from "./components/CommandPalette";
 import VoiceGreeting from "./components/VoiceGreeting";
+import VibeCheckModal from "./components/student/VibeCheckModal";
 import Index from "./pages/Index";
 
 const StudentDashboard = lazy(() => import("./pages/StudentDashboard"));
@@ -72,6 +73,12 @@ const CompanionWrapper = () => {
   return <StudyCompanion role={role} />;
 };
 
+const VibeCheckWrapper = () => {
+  const { role } = useAuth();
+  if (role !== "student") return null;
+  return <VibeCheckModal />;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -82,6 +89,7 @@ const App = () => (
           <ErrorBoundary>
             <CommandPalette />
             <CompanionWrapper />
+            <VibeCheckWrapper />
             <VoiceGreeting />
             <Suspense fallback={<PageLoader />}>
               <Routes>
