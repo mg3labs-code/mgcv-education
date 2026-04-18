@@ -37,6 +37,7 @@ import SectionVoiceGuide from "@/components/textbook/SectionVoiceGuide";
 import { DifficultyProvider } from "@/contexts/DifficultyContext";
 import DifficultyToggle from "@/components/textbook/DifficultyToggle";
 import AdaptiveConceptBlock from "@/components/textbook/AdaptiveConceptBlock";
+import AdaptiveReasoningBlock from "@/components/textbook/AdaptiveReasoningBlock";
 
 const LANGUAGE_SUBJECTS = new Set(["Telugu", "Hindi"]);
 
@@ -655,7 +656,17 @@ const TextbookEpisode = () => {
       case "explain": return <ExplainBlock content={block.content as ExplainContent} onComplete={onBlockComplete} />;
       case "assessment": return <AssessmentBlock content={block.content as AssessmentContent} onComplete={onBlockComplete} onWrongAttempt={onWrongAttempt} onAnswerChange={onAnswerChange} />;
       case "exercise": return <ExerciseBlock content={block.content as ExerciseContent} onComplete={onBlockComplete} />;
-      case "reasoning": return <ReasoningBlock content={block.content as ReasoningContent} />;
+      case "reasoning":
+        if (adaptiveEnabled) {
+          return (
+            <AdaptiveReasoningBlock
+              blockId={(block as any).id}
+              content={block.content as ReasoningContent}
+              cachedSimplified={(block.content as any)?.simplified}
+            />
+          );
+        }
+        return <ReasoningBlock content={block.content as ReasoningContent} />;
       case "assumptions": return <AssumptionsBlock content={block.content as AssumptionsContent} onStartDefense={() => setShowDefense(true)} />;
       case "connections": return <ConnectionsBlock content={block.content as ConnectionsContent} />;
       case "application": return <ApplicationBlock content={block.content as ApplicationContent} />;
