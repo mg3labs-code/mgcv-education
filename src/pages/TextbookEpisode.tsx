@@ -34,6 +34,9 @@ import SectionCelebration from "@/components/textbook/SectionCelebration";
 import SectionQuizGate from "@/components/textbook/SectionQuizGate";
 import EpisodeLoadingTransition from "@/components/textbook/EpisodeLoadingTransition";
 import SectionVoiceGuide from "@/components/textbook/SectionVoiceGuide";
+import { DifficultyProvider } from "@/contexts/DifficultyContext";
+import DifficultyToggle from "@/components/textbook/DifficultyToggle";
+import AdaptiveConceptBlock from "@/components/textbook/AdaptiveConceptBlock";
 
 const LANGUAGE_SUBJECTS = new Set(["Telugu", "Hindi"]);
 
