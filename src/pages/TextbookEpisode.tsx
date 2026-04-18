@@ -239,6 +239,11 @@ const TextbookEpisode = () => {
   const langSubject = useMemo(() => getSubjectFromSlug(chapterId), [chapterId]);
   const isLanguage = !!langSubject;
 
+  // ─── ELITE STACK: Adaptive content ──────────────────────
+  // Pilot: enabled for Math Ch1 (and any future opt-in chapters).
+  // Wraps `concept` blocks with explorer/builder/master modes.
+  const adaptiveEnabled = !isLanguage && chapterId === "ch1";
+
   // 3-Phase indices
   const getPhaseForBlock = useCallback((type: string) => {
     if (UNDERSTAND_BLOCKS.has(type)) return phases[0];
@@ -632,7 +637,19 @@ const TextbookEpisode = () => {
       }
     }
     switch (block.type) {
-      case "concept": return <ConceptBlock content={block.content as ConceptContent} onComplete={onBlockComplete} />;
+      case "concept":
+        if (adaptiveEnabled) {
+          return (
+            <AdaptiveConceptBlock
+              blockId={(block as any).id}
+              blockTitle={block.title || "Concept"}
+              content={block.content as ConceptContent}
+              cachedSimplified={(block.content as any)?.simplified}
+              onComplete={onBlockComplete}
+            />
+          );
+        }
+        return <ConceptBlock content={block.content as ConceptContent} onComplete={onBlockComplete} />;
       case "activity": return <ActivityBlock content={block.content as ActivityContent} onComplete={onBlockComplete} />;
       case "recall": return <RecallBlock content={block.content as RecallContent} onComplete={onBlockComplete} />;
       case "explain": return <ExplainBlock content={block.content as ExplainContent} onComplete={onBlockComplete} />;
@@ -865,6 +882,11 @@ const TextbookEpisode = () => {
           <span style={{ fontWeight: 600, color: "#78716C", fontSize: 11 }}>
             {understoodBlocks.size}/{navBlocks.length} done
           </span>
+          {adaptiveEnabled && (
+            <div style={{ display: "flex", alignItems: "center", borderLeft: "1px solid #E7E5E4", paddingLeft: 8 }}>
+              <DifficultyToggle />
+            </div>
+          )}
           {!isLanguage && (
             <div style={{ display: "flex", alignItems: "center", gap: 4, borderLeft: "1px solid #E7E5E4", paddingLeft: 8 }}>
               <span style={{ fontSize: 10, fontWeight: 700, color: jeeMode ? "#D97706" : "#A8A29E" }}>JEE</span>
@@ -1295,4 +1317,10 @@ const TextbookEpisode = () => {
   );
 };
 
-export default TextbookEpisode;
+const TextbookEpisodeWithProvider = () => (
+  <DifficultyProvider>
+    <TextbookEpisode />
+  </DifficultyProvider>
+);
+
+export default TextbookEpisodeWithProvider;
