@@ -6,6 +6,10 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Link } from "react-router-dom";
+import DownloadCodeButton from "@/components/DownloadCodeButton";
+// Raw source imports — bundled at build time, used by the Download button
+import sourceSelf from "./ExplorerModeDemo.tsx?raw";
+import sourceDownloadBtn from "@/components/DownloadCodeButton.tsx?raw";
 
 /**
  * Explorer Mode Comparison Demo — 4 render approaches side by side.
@@ -109,11 +113,20 @@ const ExplorerModeDemo = () => {
               <div className="font-bold text-sm text-foreground truncate">Explorer Mode — 4 Render Approaches</div>
             </div>
           </div>
-          <Link to="/demo/fallback-strategies" className="hidden sm:flex">
-            <Button variant="outline" size="sm" className="gap-1.5">
-              See fallback strategies <ArrowRight className="h-3.5 w-3.5" />
-            </Button>
-          </Link>
+          <div className="flex items-center gap-2">
+            <DownloadCodeButton
+              filename="explorer-mode-demo.txt"
+              files={[
+                { path: "src/pages/ExplorerModeDemo.tsx", content: sourceSelf },
+                { path: "src/components/DownloadCodeButton.tsx", content: sourceDownloadBtn },
+              ]}
+            />
+            <Link to="/demo/fallback-strategies" className="hidden sm:flex">
+              <Button variant="outline" size="sm" className="gap-1.5">
+                See fallback strategies <ArrowRight className="h-3.5 w-3.5" />
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* Mode pill */}
