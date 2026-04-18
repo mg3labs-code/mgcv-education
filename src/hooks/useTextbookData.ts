@@ -147,12 +147,13 @@ export function useEpisodeBlocks(chapterSlug: string | undefined, episodeSlug: s
       if (error || !blocks) return [];
 
       return blocks.map((b: any) => ({
+        id: b.id, // expose for AI / simplify-block lookups
         type: b.block_type as ContentBlock["type"],
         title: b.title || "",
         icon: b.icon || "📖",
         depth: b.depth || "board",
         content: b.content,
-      })) as ContentBlock[];
+      })) as (ContentBlock & { id: string })[];
     },
   });
 }
