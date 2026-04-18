@@ -12,10 +12,32 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+function unauthorized(msg = "Unauthorized") {
+  return new Response(JSON.stringify({ error: msg }), {
+    status: 401,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    // --- AUTH: require a valid JWT --------------------------------------
+    const authHeader = req.headers.get("Authorization") ?? "";
+    if (!authHeader.startsWith("Bearer ")) return unauthorized("Missing bearer token");
+    const token = authHeader.slice("Bearer ".length).trim();
+    if (!token) return unauthorized("Empty bearer token");
+
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
+    const { data: userData, error: userErr } = await supabaseAdmin.auth.getUser(token);
+    const caller = userData?.user;
+    if (userErr || !caller) return unauthorized("Invalid token");
+
     const raw = await req.json();
     const parsed = BodySchema.safeParse(raw);
     if (!parsed.success) {
@@ -25,16 +47,14 @@ serve(async (req) => {
     }
     const { answer_id } = parsed.data;
 
-    const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
-
-    // Fetch answer with question context
+    // Fetch answer with question + ownership context
     const { data: answer, error: fetchErr } = await supabaseAdmin
       .from("student_answers")
       .select(`
-        id, file_url, file_type, extracted_text, retry_count,
+        id, file_url, file_type, extracted_text, retry_count, student_id,
+        submission:student_submissions!submission_id (
+          assignment:assignments!assignment_id ( teacher_id )
+        ),
         question:assignment_questions!question_id (
           question_text, max_score, rubric, expected_answer_hints
         )
@@ -48,6 +68,12 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // --- AUTHZ: caller must own the answer (student) or own the assignment (teacher) ---
+    const ownerStudentId = (answer as any).student_id as string | undefined;
+    const ownerTeacherId = (answer as any).submission?.assignment?.teacher_id as string | undefined;
+    const isOwner = caller.id === ownerStudentId || caller.id === ownerTeacherId;
+    if (!isOwner) return unauthorized("Forbidden");
 
     // Mark as processing
     await supabaseAdmin
