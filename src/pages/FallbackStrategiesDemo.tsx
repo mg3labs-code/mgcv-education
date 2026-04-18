@@ -6,6 +6,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Loader2, Zap, Database, Sparkles, Clock, ArrowLeft, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
+import DownloadCodeButton from "@/components/DownloadCodeButton";
+// Raw source imports — bundled at build time, used by the Download button
+import sourceSelf from "./FallbackStrategiesDemo.tsx?raw";
+import sourceEdgeFn from "../../supabase/functions/simplify-block/index.ts?raw";
+import sourceDownloadBtn from "@/components/DownloadCodeButton.tsx?raw";
 
 /**
  * Fallback Strategies Demo — three ways to fill Explorer/Builder content for an existing block.
@@ -110,7 +115,17 @@ const FallbackStrategiesDemo = () => {
           <div className="flex items-center gap-3">
             <Link to="/demo/explorer-mode"><Button variant="ghost" size="sm" className="gap-1.5"><ArrowLeft className="h-3.5 w-3.5" /> Back to render demo</Button></Link>
           </div>
-          <Button variant="outline" size="sm" onClick={loadBlock} className="gap-1.5"><RefreshCw className="h-3.5 w-3.5" /> Reload block</Button>
+          <div className="flex items-center gap-2">
+            <DownloadCodeButton
+              filename="fallback-strategies-demo.txt"
+              files={[
+                { path: "src/pages/FallbackStrategiesDemo.tsx", content: sourceSelf },
+                { path: "supabase/functions/simplify-block/index.ts", content: sourceEdgeFn },
+                { path: "src/components/DownloadCodeButton.tsx", content: sourceDownloadBtn },
+              ]}
+            />
+            <Button variant="outline" size="sm" onClick={loadBlock} className="gap-1.5"><RefreshCw className="h-3.5 w-3.5" /> Reload block</Button>
+          </div>
         </div>
       </div>
 

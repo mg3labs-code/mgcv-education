@@ -6,6 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { ArrowLeft, Sparkles, Brain, Lightbulb, Zap, Target, Layers, Code2 } from "lucide-react";
+import DownloadCodeButton from "@/components/DownloadCodeButton";
+// Raw source imports — bundled at build time, used by the Download button
+import sourceSelf from "./EliteIntegrationDemo.tsx?raw";
+import sourceDownloadBtn from "@/components/DownloadCodeButton.tsx?raw";
 
 /* ──────────────────────────────────────────────────────────────
    Elite Design Reference: Adaptive Difficulty Integration
@@ -269,9 +273,18 @@ export default function EliteIntegrationDemo() {
             <h1 className="text-lg font-bold">Elite Integration Reference</h1>
             <p className="text-xs text-muted-foreground">How top product designers adapt content depth in real textbooks</p>
           </div>
-          <Badge className="ml-auto bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0">
-            <Sparkles className="h-3 w-3 mr-1" /> Reference Demo
-          </Badge>
+          <div className="ml-auto flex items-center gap-2">
+            <DownloadCodeButton
+              filename="elite-integration-demo.txt"
+              files={[
+                { path: "src/pages/EliteIntegrationDemo.tsx", content: sourceSelf },
+                { path: "src/components/DownloadCodeButton.tsx", content: sourceDownloadBtn },
+              ]}
+            />
+            <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0">
+              <Sparkles className="h-3 w-3 mr-1" /> Reference Demo
+            </Badge>
+          </div>
         </div>
       </div>
 

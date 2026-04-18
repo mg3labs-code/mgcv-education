@@ -4,6 +4,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ArrowRight, Check, Sparkles, Eye, Cpu, Layers, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import DownloadCodeButton from "@/components/DownloadCodeButton";
+// Raw source imports — bundled at build time, used by the Download button
+import sourceSelf from "./AdaptiveSystemHub.tsx?raw";
+import sourceDownloadBtn from "@/components/DownloadCodeButton.tsx?raw";
 
 type Mode = "explorer" | "builder" | "master";
 
@@ -151,7 +155,16 @@ export default function AdaptiveSystemHub() {
             <Sparkles className="w-4 h-4 text-primary" />
             <h1 className="text-sm sm:text-base font-bold">Adaptive Learning System</h1>
           </div>
-          <Badge variant="outline" className="text-[10px]">3-act tour</Badge>
+          <div className="flex items-center gap-2">
+            <DownloadCodeButton
+              filename="adaptive-system-hub.txt"
+              files={[
+                { path: "src/pages/AdaptiveSystemHub.tsx", content: sourceSelf },
+                { path: "src/components/DownloadCodeButton.tsx", content: sourceDownloadBtn },
+              ]}
+            />
+            <Badge variant="outline" className="text-[10px] hidden sm:inline-flex">3-act tour</Badge>
+          </div>
         </div>
 
         {/* Progress rail */}
