@@ -1356,6 +1356,7 @@ const TextbookEpisode = () => {
 
 // ─── Day-Gated Episode wrapper (3-Day Unlock pilot) ─────────────
 import type { DayPilotContent } from "@/data/dayPilotContent";
+import { useDifficulty } from "@/contexts/DifficultyContext";
 
 const DayGatedEpisode = ({
   episodeTitle,
@@ -1368,34 +1369,73 @@ const DayGatedEpisode = ({
   nextEpisodeTitle?: string;
   onNextEpisode?: () => void;
 }) => {
+  const { chapterId, episodeId } = useParams();
   const { info, isLoading } = useEpisodeDay();
+  const { mode } = useDifficulty();
+  const { data: dbBlocks } = useEpisodeBlocks(chapterId, episodeId, "board");
 
   if (isLoading) return <EpisodeLoadingTransition />;
 
-  // Day 3 done → show growth recap (re-render Day3 final screen)
-  // Day 2 done, day 3 unlocked → Day 3 flow
-  // Day 2 done, day 3 locked → locked wall for Day 3
-  // Day 1 done, day 2 unlocked → Day 2 flow
-  // Day 1 done, day 2 locked → locked wall for Day 2
-  // else → Day 1 flow
+  // Mode caps how many rich sections each Day can pull from the database.
+  // Quick Look = 1 section · Deep Dive = 2 · Full Story = all
+  const cap = mode === "explorer" ? 1 : mode === "builder" ? 2 : 99;
+
+  const blocksByType = (type: string) =>
+    (dbBlocks ?? []).filter((b) => b.type === type);
+
+  // ─── Day 1 story node: first visual_aid from the episode ──
+  const day1VisualBlock = blocksByType("visual_aid")[0];
+  const day1StoryNode = day1VisualBlock ? (
+    <VisualAidBlock content={day1VisualBlock.content as VisualAidContent} />
+  ) : undefined;
+  const day1StoryTitle = day1VisualBlock?.title ?? undefined;
+
+  // ─── Day 2 deep-dive sections: reasoning + connections + application ──
+  const day2RichSections: { title: string; node: React.ReactNode }[] = [];
+  for (const b of blocksByType("reasoning")) {
+    day2RichSections.push({
+      title: b.title || "Why does this work?",
+      node: <ReasoningBlock content={b.content as ReasoningContent} />,
+    });
+  }
+  for (const b of blocksByType("connections")) {
+    day2RichSections.push({
+      title: b.title || "Where else does this show up?",
+      node: <ConnectionsBlock content={b.content as ConnectionsContent} />,
+    });
+  }
+  for (const b of blocksByType("application")) {
+    day2RichSections.push({
+      title: b.title || "Real-world use",
+      node: <ApplicationBlock content={b.content as ApplicationContent} />,
+    });
+  }
+  const day2Sections = day2RichSections.slice(0, cap);
+
+  // ─── Day 3 master sections: assumptions + implications (Full Story shows both) ──
+  const day3RichSections: { title: string; node: React.ReactNode }[] = [];
+  for (const b of blocksByType("assumptions")) {
+    day3RichSections.push({
+      title: b.title || "What if we're wrong?",
+      node: <AssumptionsBlock content={b.content as AssumptionsContent} onStartDefense={() => { /* no-op in Day3 */ }} />,
+    });
+  }
+  for (const b of blocksByType("implications")) {
+    day3RichSections.push({
+      title: b.title || "What this changes",
+      node: <ImplicationsBlock content={b.content as ImplicationsContent} />,
+    });
+  }
+  // Quick Look (cap=1) gets just one stretch section; Deep Dive gets 2; Full Story gets all
+  const day3Sections = day3RichSections.slice(0, cap);
+
   let body: React.ReactNode;
-  if (info.day3Done) {
+  if (info.day3Done || (info.day2Done && !info.day3Locked)) {
     body = (
       <Day3Master
         episodeTitle={episodeTitle}
         whyItWorks={pilot.day3.whyItWorks}
-        proveItPrompt={pilot.day3.proveItPrompt}
-        caseStudy={pilot.day3.caseStudy}
-        growthGains={pilot.day3.growthGains}
-        nextEpisodeTitle={nextEpisodeTitle}
-        onNextEpisode={onNextEpisode}
-      />
-    );
-  } else if (info.day2Done && !info.day3Locked) {
-    body = (
-      <Day3Master
-        episodeTitle={episodeTitle}
-        whyItWorks={pilot.day3.whyItWorks}
+        masterSections={day3Sections}
         proveItPrompt={pilot.day3.proveItPrompt}
         caseStudy={pilot.day3.caseStudy}
         growthGains={pilot.day3.growthGains}
@@ -1410,6 +1450,7 @@ const DayGatedEpisode = ({
       <Day2Build
         episodeTitle={episodeTitle}
         deepDiveText={pilot.day2.deepDiveText}
+        deepDiveSections={day2Sections}
         detective1={pilot.day2.detective1}
         detective2={pilot.day2.detective2}
       />
@@ -1422,6 +1463,9 @@ const DayGatedEpisode = ({
         episodeTitle={episodeTitle}
         hookQuestion={pilot.hookQuestion}
         conceptText={pilot.conceptText}
+        storyNode={day1StoryNode}
+        storyTitle={day1StoryTitle}
+        quickCheck={pilot.quickCheck}
         detectiveStatement={pilot.detective.statement}
         detectiveIsTrue={pilot.detective.isTrue}
         detectiveExplain={pilot.detective.explain}
