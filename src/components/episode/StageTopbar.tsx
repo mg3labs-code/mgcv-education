@@ -1,8 +1,9 @@
-import { ChevronLeft, Flame } from "lucide-react";
+import { ChevronLeft, Flame, Volume2, VolumeX } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { dayLabels, modeLabels } from "@/lib/childFriendlyLabels";
 import { useDifficulty } from "@/contexts/DifficultyContext";
 import { useEpisodeDay } from "@/contexts/EpisodeDayContext";
+import { useSoundFx } from "@/hooks/useSoundFx";
 
 interface Props {
   episodeTitle: string;
@@ -14,6 +15,7 @@ const StageTopbar = ({ episodeTitle, streakDays = 0, exitTo }: Props) => {
   const navigate = useNavigate();
   const { mode } = useDifficulty();
   const { info } = useEpisodeDay();
+  const { muted, toggleMuted } = useSoundFx();
   const day = info.currentDay;
   const dayInfo = dayLabels[day];
   const modeInfo = modeLabels[mode];
@@ -49,6 +51,16 @@ const StageTopbar = ({ episodeTitle, streakDays = 0, exitTo }: Props) => {
           <span>{modeInfo.emoji}</span>
           <span>{modeInfo.name}</span>
         </div>
+
+        {/* Sound toggle */}
+        <button
+          onClick={toggleMuted}
+          className="h-8 w-8 rounded-full flex items-center justify-center hover:bg-muted text-muted-foreground transition-colors"
+          aria-label={muted ? "Unmute sounds" : "Mute sounds"}
+          title={muted ? "Sounds off" : "Sounds on"}
+        >
+          {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+        </button>
 
         {/* Streak badge */}
         <div

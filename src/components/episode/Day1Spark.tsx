@@ -1,11 +1,13 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import { Sparkles, ArrowRight, CheckCircle2, Flame, Lock, BookOpen, Image as ImageIcon, HelpCircle } from "lucide-react";
+import { Sparkles, ArrowRight, CheckCircle2, Flame, Lock, Image as ImageIcon, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useEpisodeDay } from "@/contexts/EpisodeDayContext";
 import { friendlyLabels } from "@/lib/childFriendlyLabels";
 import CompanionVoiceInput from "@/components/student/CompanionVoiceInput";
+import { useSoundFx } from "@/hooks/useSoundFx";
+import TrapReveal from "@/components/episode/TrapReveal";
 import { toast } from "sonner";
 
 export interface QuickCheckQuestion {
@@ -49,6 +51,7 @@ const Day1Spark = ({
 }: Props) => {
   const navigate = useNavigate();
   const { setDayState, isSaving } = useEpisodeDay();
+  const { play } = useSoundFx();
   const [screen, setScreen] = useState<Screen>("hook");
   const [hookAnswer, setHookAnswer] = useState("");
   const [revealReady, setRevealReady] = useState(false);
@@ -85,10 +88,15 @@ const Day1Spark = ({
   const handleDetective = async (choice: boolean) => {
     const correct = choice === detectiveIsTrue;
     setDetective({ choice, correct });
+    play(correct ? "correct" : "wrong");
     if (!correct) {
       setShake(true);
       setTimeout(() => setShake(false), 400);
     }
+  };
+
+  const retryDetective = () => {
+    setDetective(null);
   };
 
   const advanceFromDetective = () => {
@@ -97,6 +105,7 @@ const Day1Spark = ({
   };
 
   const handleFinishDay1 = async () => {
+    play("victory");
     await setDayState({
       day1_completed_at: new Date().toISOString(),
       day1_detective_correct: detective?.correct ?? null,
@@ -256,21 +265,14 @@ const Day1Spark = ({
               </button>
             </div>
           ) : (
-            <div
-              className={`rounded-2xl border-2 p-5 space-y-3 ${
-                detective.correct
-                  ? "border-emerald-400 bg-emerald-50/60 dark:bg-emerald-950/30 animate-[pulse_0.6s_ease-out]"
-                  : "border-orange-400 bg-orange-50/60 dark:bg-orange-950/30"
-              }`}
-            >
-              <p className={`font-bold ${detective.correct ? "text-emerald-700 dark:text-emerald-400" : "text-orange-700 dark:text-orange-400"}`}>
-                {detective.correct ? "Nice thinking!" : "Interesting choice — here's why…"}
-              </p>
-              <p className="text-sm text-foreground leading-relaxed">{detectiveExplain}</p>
-              <Button onClick={advanceFromDetective} className="w-full gap-1" disabled={isSaving}>
-                {quickCheck ? "Continue" : "Finish Day 1"} <ArrowRight className="h-4 w-4" />
-              </Button>
-            </div>
+            <TrapReveal
+              isCorrect={detective.correct}
+              explain={detectiveExplain}
+              onRetry={retryDetective}
+              onContinue={advanceFromDetective}
+              continueLabel={quickCheck ? "Continue" : "Finish Day 1"}
+              disabled={isSaving}
+            />
           )}
 
           <p className="text-center text-[11px] text-muted-foreground">Step {stepNumber("detective")} of {totalSteps}</p>
@@ -310,7 +312,10 @@ const Day1Spark = ({
                   <button
                     key={i}
                     disabled={showFeedback}
-                    onClick={() => setQuickPick(i)}
+                    onClick={() => {
+                      setQuickPick(i);
+                      play(i === quickCheck.correctIndex ? "correct" : "wrong");
+                    }}
                     className={`text-left rounded-xl border-2 px-4 py-3 text-sm font-medium transition-all ${stateClasses}`}
                   >
                     <span className="inline-block w-6 text-muted-foreground">{String.fromCharCode(65 + i)}.</span>
