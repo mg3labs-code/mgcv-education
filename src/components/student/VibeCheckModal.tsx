@@ -258,7 +258,7 @@ const VibeCheckModal = () => {
               }}
             >
               <div
-                className={`absolute inset-7 sm:inset-9 rounded-3xl bg-gradient-to-br ${meta.gradient} opacity-80`}
+                className={`absolute inset-7 sm:inset-9 rounded-3xl bg-gradient-to-br ${meta.gradient} opacity-80 pointer-events-none`}
                 aria-hidden
               />
               <div
