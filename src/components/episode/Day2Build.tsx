@@ -190,34 +190,27 @@ const Day2Build = ({ episodeTitle, deepDiveText, deepDiveSections, detective1, d
           {value === null ? (
             <div className="grid grid-cols-2 gap-3">
               <button
-                onClick={() => setValue(true)}
+                onClick={() => pickAnswer(screen as "det1" | "det2", true)}
                 className="rounded-2xl border-2 border-emerald-300 dark:border-emerald-700 bg-emerald-50/50 dark:bg-emerald-950/20 px-4 py-5 text-emerald-700 dark:text-emerald-400 font-bold hover:scale-[1.02] active:scale-[0.98] transition-transform"
               >
                 <div className="text-2xl mb-1">✅</div> I Believe It
               </button>
               <button
-                onClick={() => setValue(false)}
+                onClick={() => pickAnswer(screen as "det1" | "det2", false)}
                 className="rounded-2xl border-2 border-orange-300 dark:border-orange-700 bg-orange-50/50 dark:bg-orange-950/20 px-4 py-5 text-orange-700 dark:text-orange-400 font-bold hover:scale-[1.02] active:scale-[0.98] transition-transform"
               >
                 <div className="text-2xl mb-1">🤔</div> I Doubt It
               </button>
             </div>
           ) : (
-            <div
-              className={`rounded-2xl border-2 p-5 space-y-3 ${
-                value === d.isTrue
-                  ? "border-emerald-400 bg-emerald-50/60 dark:bg-emerald-950/30"
-                  : "border-orange-400 bg-orange-50/60 dark:bg-orange-950/30"
-              }`}
-            >
-              <p className={`font-bold ${value === d.isTrue ? "text-emerald-700 dark:text-emerald-400" : "text-orange-700 dark:text-orange-400"}`}>
-                {value === d.isTrue ? "Sharp thinking!" : "Worth a closer look — here's why…"}
-              </p>
-              <p className="text-sm text-foreground leading-relaxed">{d.explain}</p>
-              <Button onClick={goNext} className="w-full gap-1" disabled={isSaving}>
-                {isFirst ? "Next" : "Finish Day 2"} <ArrowRight className="h-4 w-4" />
-              </Button>
-            </div>
+            <TrapReveal
+              isCorrect={value === d.isTrue}
+              explain={d.explain}
+              onRetry={() => setValue(null)}
+              onContinue={goNext}
+              continueLabel={isFirst ? "Next" : "Finish Day 2"}
+              disabled={isSaving}
+            />
           )}
           <p className="text-center text-[11px] text-muted-foreground">Step {isFirst ? 4 : 5} of 5</p>
         </div>
