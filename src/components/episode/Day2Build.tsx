@@ -6,6 +6,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useEpisodeDay } from "@/contexts/EpisodeDayContext";
 import { friendlyLabels } from "@/lib/childFriendlyLabels";
 import CompanionVoiceInput from "@/components/student/CompanionVoiceInput";
+import { useSoundFx } from "@/hooks/useSoundFx";
+import TrapReveal from "@/components/episode/TrapReveal";
 import { toast } from "sonner";
 
 export interface DeepDiveSection {
@@ -29,6 +31,7 @@ type Screen = "recall" | "deepdive" | "explain" | "det1" | "det2" | "done";
 const Day2Build = ({ episodeTitle, deepDiveText, deepDiveSections, detective1, detective2 }: Props) => {
   const navigate = useNavigate();
   const { info, setDayState, isSaving } = useEpisodeDay();
+  const { play } = useSoundFx();
   const day1Guess = info.state.day1_hook_answer;
 
   const [screen, setScreen] = useState<Screen>("recall");
@@ -46,8 +49,17 @@ const Day2Build = ({ episodeTitle, deepDiveText, deepDiveSections, detective1, d
   };
 
   const handleFinishDay2 = async () => {
+    play("victory");
     await setDayState({ day2_completed_at: new Date().toISOString() });
     setScreen("done");
+  };
+
+  const pickAnswer = (which: "det1" | "det2", choice: boolean) => {
+    const d = which === "det1" ? detective1 : detective2;
+    const correct = choice === d.isTrue;
+    play(correct ? "correct" : "wrong");
+    if (which === "det1") setDet1(choice);
+    else setDet2(choice);
   };
 
   // Recall
