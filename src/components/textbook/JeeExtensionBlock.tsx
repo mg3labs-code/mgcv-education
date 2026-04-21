@@ -17,6 +17,8 @@ const JeeExtensionBlock = ({ content, onComplete }: Props) => {
   const advancedFormulas = content?.advancedFormulas || [];
   const proofSketch = content?.proofSketch || "";
 
+  if (mode !== "master") return null;
+
   return (
     <div className="space-y-4">
       <button

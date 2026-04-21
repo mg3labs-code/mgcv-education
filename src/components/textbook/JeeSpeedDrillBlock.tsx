@@ -64,6 +64,8 @@ const JeeSpeedDrillBlock = ({ content, onComplete }: Props) => {
   const totalTime = content.totalTimeSeconds || 120;
   const timeUsed = totalTime - timer;
 
+  if (mode !== "master") return null;
+
   if (!started) {
     return (
       <div className="rounded-xl border-2 border-amber-300 dark:border-amber-700 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/20 p-6 text-center space-y-4">

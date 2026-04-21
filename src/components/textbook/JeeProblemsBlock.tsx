@@ -78,6 +78,8 @@ const JeeProblemsBlock = ({ content, onComplete }: Props) => {
   const maxScore = totalQ * 4;
   const pct = maxScore > 0 ? Math.round((netScore / maxScore) * 100) : 0;
 
+  if (mode !== "master") return null;
+
   // Excitement teaser before starting
   if (!started) {
     return (
