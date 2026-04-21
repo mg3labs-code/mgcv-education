@@ -8,6 +8,8 @@ import { friendlyLabels } from "@/lib/childFriendlyLabels";
 import CompanionVoiceInput from "@/components/student/CompanionVoiceInput";
 import { useSoundFx } from "@/hooks/useSoundFx";
 import TrapReveal from "@/components/episode/TrapReveal";
+import SortTheRebels from "@/components/episode/SortTheRebels";
+import type { SortBucketsActivity } from "@/data/dayPilotContent";
 import { toast } from "sonner";
 
 export interface QuickCheckQuestion {
