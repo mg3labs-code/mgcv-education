@@ -34,10 +34,17 @@ import SectionCelebration from "@/components/textbook/SectionCelebration";
 import SectionQuizGate from "@/components/textbook/SectionQuizGate";
 import EpisodeLoadingTransition from "@/components/textbook/EpisodeLoadingTransition";
 import SectionVoiceGuide from "@/components/textbook/SectionVoiceGuide";
-import { DifficultyProvider } from "@/contexts/DifficultyContext";
+import { DifficultyProvider, useDifficulty } from "@/contexts/DifficultyContext";
 import DifficultyToggle from "@/components/textbook/DifficultyToggle";
 import AdaptiveConceptBlock from "@/components/textbook/AdaptiveConceptBlock";
 import AdaptiveReasoningBlock from "@/components/textbook/AdaptiveReasoningBlock";
+import { EpisodeDayProvider, useEpisodeDay } from "@/contexts/EpisodeDayContext";
+import StageTopbar from "@/components/episode/StageTopbar";
+import Day1Spark from "@/components/episode/Day1Spark";
+import Day2Build from "@/components/episode/Day2Build";
+import Day3Master from "@/components/episode/Day3Master";
+import DayLockedWall from "@/components/episode/DayLockedWall";
+import { getPilotContent } from "@/data/dayPilotContent";
 
 const LANGUAGE_SUBJECTS = new Set(["Telugu", "Hindi"]);
 
@@ -610,6 +617,25 @@ const TextbookEpisode = () => {
           <Button variant="outline" onClick={() => navigate("/student/textbook")}>Back to Textbook</Button>
         </div>
       </div>
+    );
+  }
+
+  // ═══ 3-DAY UNLOCK GAME LOOP ═══
+  // Phase 1 pilot: only when hand-authored day content exists for this episode
+  // (currently Math Ch1 Ep1). For all other episodes the original reader runs.
+  const pilotContent = getPilotContent(chapterId, episodeId);
+  if (pilotContent) {
+    return (
+      <DifficultyProvider>
+        <EpisodeDayProvider chapterId={chapterId!} episodeId={episodeId!}>
+          <DayGatedEpisode
+            episodeTitle={episode.title}
+            pilot={pilotContent}
+            nextEpisodeTitle={nextEpisode?.title}
+            onNextEpisode={() => nextEpisode && navigate(`/student/textbook/${chapterId}/${nextEpisode.id}`)}
+          />
+        </EpisodeDayProvider>
+      </DifficultyProvider>
     );
   }
 
