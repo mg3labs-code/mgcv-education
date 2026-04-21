@@ -201,7 +201,7 @@ const Day1Spark = ({
           <div className="text-center min-h-[48px]">
             {revealReady ? (
               <Button
-                onClick={() => setScreen(storyNode ? "story" : "detective")}
+                onClick={() => setScreen(storyNode ? "story" : sortActivity ? "sort" : "detective")}
                 size="lg"
                 className="gap-1 animate-fade-in"
               >
@@ -238,13 +238,31 @@ const Day1Spark = ({
           </div>
 
           <div className="text-center pt-1">
-            <Button onClick={() => setScreen("detective")} size="lg" className="gap-1">
+            <Button onClick={() => setScreen(sortActivity ? "sort" : "detective")} size="lg" className="gap-1">
               Continue <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
           <p className="text-center text-[11px] text-muted-foreground">Step {stepNumber("story")} of {totalSteps}</p>
         </div>
       </div>
+    );
+  }
+
+  // ─── Screen 3.5 (optional): Sort the Rebels ─────────────────
+  if (screen === "sort" && sortActivity) {
+    return (
+      <SortTheRebels
+        variant="buckets"
+        title={sortActivity.title}
+        subtitle={sortActivity.subtitle}
+        buckets={sortActivity.buckets}
+        items={sortActivity.items}
+        explainOnRight={sortActivity.explainOnRight}
+        explainOnWrong={sortActivity.explainOnWrong}
+        onComplete={() => setScreen("detective")}
+        continueLabel="Continue"
+        stepLabel={`Step ${stepNumber("sort")} of ${totalSteps}`}
+      />
     );
   }
 
