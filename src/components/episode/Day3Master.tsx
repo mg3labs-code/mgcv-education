@@ -77,7 +77,7 @@ const Day3Master = ({
             <p className="text-base text-foreground leading-relaxed whitespace-pre-line">{whyItWorks}</p>
           </div>
           <Button
-            onClick={() => setScreen(hasMasterSections ? "deeper" : "prove")}
+            onClick={() => setScreen(hasMasterSections ? "deeper" : hasSort ? "sort" : "prove")}
             size="lg"
             className="w-full gap-1"
           >
