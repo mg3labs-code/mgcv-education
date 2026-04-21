@@ -1354,6 +1354,89 @@ const TextbookEpisode = () => {
   );
 };
 
+// ─── Day-Gated Episode wrapper (3-Day Unlock pilot) ─────────────
+import type { DayPilotContent } from "@/data/dayPilotContent";
+
+const DayGatedEpisode = ({
+  episodeTitle,
+  pilot,
+  nextEpisodeTitle,
+  onNextEpisode,
+}: {
+  episodeTitle: string;
+  pilot: DayPilotContent;
+  nextEpisodeTitle?: string;
+  onNextEpisode?: () => void;
+}) => {
+  const { info, isLoading } = useEpisodeDay();
+
+  if (isLoading) return <EpisodeLoadingTransition />;
+
+  // Day 3 done → show growth recap (re-render Day3 final screen)
+  // Day 2 done, day 3 unlocked → Day 3 flow
+  // Day 2 done, day 3 locked → locked wall for Day 3
+  // Day 1 done, day 2 unlocked → Day 2 flow
+  // Day 1 done, day 2 locked → locked wall for Day 2
+  // else → Day 1 flow
+  let body: React.ReactNode;
+  if (info.day3Done) {
+    body = (
+      <Day3Master
+        episodeTitle={episodeTitle}
+        whyItWorks={pilot.day3.whyItWorks}
+        proveItPrompt={pilot.day3.proveItPrompt}
+        caseStudy={pilot.day3.caseStudy}
+        growthGains={pilot.day3.growthGains}
+        nextEpisodeTitle={nextEpisodeTitle}
+        onNextEpisode={onNextEpisode}
+      />
+    );
+  } else if (info.day2Done && !info.day3Locked) {
+    body = (
+      <Day3Master
+        episodeTitle={episodeTitle}
+        whyItWorks={pilot.day3.whyItWorks}
+        proveItPrompt={pilot.day3.proveItPrompt}
+        caseStudy={pilot.day3.caseStudy}
+        growthGains={pilot.day3.growthGains}
+        nextEpisodeTitle={nextEpisodeTitle}
+        onNextEpisode={onNextEpisode}
+      />
+    );
+  } else if (info.day2Done && info.day3Locked && info.day3UnlocksAt) {
+    body = <DayLockedWall day={3} unlocksAt={info.day3UnlocksAt} episodeTitle={episodeTitle} />;
+  } else if (info.day1Done && !info.day2Locked) {
+    body = (
+      <Day2Build
+        episodeTitle={episodeTitle}
+        deepDiveText={pilot.day2.deepDiveText}
+        detective1={pilot.day2.detective1}
+        detective2={pilot.day2.detective2}
+      />
+    );
+  } else if (info.day1Done && info.day2Locked && info.day2UnlocksAt) {
+    body = <DayLockedWall day={2} unlocksAt={info.day2UnlocksAt} episodeTitle={episodeTitle} />;
+  } else {
+    body = (
+      <Day1Spark
+        episodeTitle={episodeTitle}
+        hookQuestion={pilot.hookQuestion}
+        conceptText={pilot.conceptText}
+        detectiveStatement={pilot.detective.statement}
+        detectiveIsTrue={pilot.detective.isTrue}
+        detectiveExplain={pilot.detective.explain}
+      />
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <StageTopbar episodeTitle={episodeTitle} />
+      {body}
+    </div>
+  );
+};
+
 const TextbookEpisodeWithProvider = () => (
   <DifficultyProvider>
     <TextbookEpisode />

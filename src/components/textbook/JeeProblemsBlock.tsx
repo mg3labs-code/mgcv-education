@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle2, XCircle, AlertTriangle, Clock, RotateCcw, Zap, Trophy } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import type { JeeProblemsContent } from "@/data/textbookData";
+import { useDifficulty } from "@/contexts/DifficultyContext";
 
 interface Props {
   content: JeeProblemsContent;
@@ -10,6 +11,8 @@ interface Props {
 }
 
 const JeeProblemsBlock = ({ content, onComplete }: Props) => {
+  const { mode } = useDifficulty();
+  if (mode !== "master") return null;
   const [started, setStarted] = useState(false);
   const [currentQ, setCurrentQ] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);

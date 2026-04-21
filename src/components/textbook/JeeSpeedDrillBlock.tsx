@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Zap, Clock, CheckCircle2, XCircle, RotateCcw } from "lucide-react";
 import type { JeeSpeedDrillContent } from "@/data/textbookData";
+import { useDifficulty } from "@/contexts/DifficultyContext";
 
 interface Props {
   content: JeeSpeedDrillContent;
@@ -9,6 +10,8 @@ interface Props {
 }
 
 const JeeSpeedDrillBlock = ({ content, onComplete }: Props) => {
+  const { mode } = useDifficulty();
+  if (mode !== "master") return null;
   const [started, setStarted] = useState(false);
   const [currentQ, setCurrentQ] = useState(0);
   const [answer, setAnswer] = useState("");
