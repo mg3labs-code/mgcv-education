@@ -44,7 +44,6 @@ import Day1Spark from "@/components/episode/Day1Spark";
 import Day2Build from "@/components/episode/Day2Build";
 import Day3Master from "@/components/episode/Day3Master";
 import DayLockedWall from "@/components/episode/DayLockedWall";
-import ModeSelectGameCard, { wasModeSelectShown } from "@/components/episode/ModeSelectGameCard";
 import { getPilotContent } from "@/data/dayPilotContent";
 
 const LANGUAGE_SUBJECTS = new Set(["Telugu", "Hindi"]);
@@ -1376,9 +1375,6 @@ const DayGatedEpisode = ({
   const { data: dbBlocks } = useEpisodeBlocks(chapterId, episodeId, "board");
 
   const episodeKey = `${chapterId ?? "?"}::${episodeId ?? "?"}`;
-  const [showModeSelect, setShowModeSelect] = useState<boolean>(
-    () => !wasModeSelectShown(episodeKey),
-  );
   const [dayProgress, setDayProgress] = useState<number>(0);
 
   if (isLoading) return <EpisodeLoadingTransition />;
@@ -1489,13 +1485,6 @@ const DayGatedEpisode = ({
   return (
     <div className="min-h-screen bg-background">
       <StageTopbar episodeTitle={episodeTitle} dayProgress={dayProgress} />
-      {showModeSelect && (
-        <ModeSelectGameCard
-          episodeKey={episodeKey}
-          episodeTitle={episodeTitle}
-          onPicked={() => setShowModeSelect(false)}
-        />
-      )}
       {body}
     </div>
   );
