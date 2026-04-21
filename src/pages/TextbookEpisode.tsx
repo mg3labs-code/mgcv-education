@@ -1356,7 +1356,7 @@ const TextbookEpisode = () => {
 
 // ─── Day-Gated Episode wrapper (3-Day Unlock pilot) ─────────────
 import type { DayPilotContent } from "@/data/dayPilotContent";
-import { useDifficulty } from "@/contexts/DifficultyContext";
+
 
 const DayGatedEpisode = ({
   episodeTitle,
