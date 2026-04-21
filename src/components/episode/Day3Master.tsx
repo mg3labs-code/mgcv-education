@@ -174,7 +174,7 @@ const Day3Master = ({
   }
 
   if (screen === "case") {
-    const stepNum = hasMasterSections ? 4 : 3;
+    const stepNum = totalSteps - 1;
     return (
       <div className="min-h-[80vh] flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-lg space-y-5 animate-fade-in">
