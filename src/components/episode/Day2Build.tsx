@@ -8,6 +8,8 @@ import { friendlyLabels } from "@/lib/childFriendlyLabels";
 import CompanionVoiceInput from "@/components/student/CompanionVoiceInput";
 import { useSoundFx } from "@/hooks/useSoundFx";
 import TrapReveal from "@/components/episode/TrapReveal";
+import SortTheRebels from "@/components/episode/SortTheRebels";
+import type { SortPairsActivity } from "@/data/dayPilotContent";
 import { toast } from "sonner";
 
 export interface DeepDiveSection {
@@ -24,11 +26,14 @@ interface Props {
   deepDiveSections?: DeepDiveSection[];
   detective1: { statement: string; isTrue: boolean; explain: string };
   detective2: { statement: string; isTrue: boolean; explain: string };
+  /** Optional drag-drop pairs activity between deep-dive and explain. */
+  sortActivity?: SortPairsActivity;
+  onProgress?: (progress: number) => void;
 }
 
-type Screen = "recall" | "deepdive" | "explain" | "det1" | "det2" | "done";
+type Screen = "recall" | "deepdive" | "sort" | "explain" | "det1" | "det2" | "done";
 
-const Day2Build = ({ episodeTitle, deepDiveText, deepDiveSections, detective1, detective2 }: Props) => {
+const Day2Build = ({ episodeTitle, deepDiveText, deepDiveSections, detective1, detective2, sortActivity, onProgress }: Props) => {
   const navigate = useNavigate();
   const { info, setDayState, isSaving } = useEpisodeDay();
   const { play } = useSoundFx();

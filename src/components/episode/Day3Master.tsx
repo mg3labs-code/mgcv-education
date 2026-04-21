@@ -7,6 +7,8 @@ import { useEpisodeDay } from "@/contexts/EpisodeDayContext";
 import { friendlyLabels } from "@/lib/childFriendlyLabels";
 import CompanionVoiceInput from "@/components/student/CompanionVoiceInput";
 import { useSoundFx } from "@/hooks/useSoundFx";
+import SortTheRebels from "@/components/episode/SortTheRebels";
+import type { SortOrderActivity } from "@/data/dayPilotContent";
 
 export interface MasterSection {
   title: string;
@@ -24,9 +26,12 @@ interface Props {
   growthGains: { label: string; emoji: string; pct: number }[];
   nextEpisodeTitle?: string;
   onNextEpisode?: () => void;
+  /** Optional drag-reorder activity before Prove-It. */
+  sortActivity?: SortOrderActivity;
+  onProgress?: (progress: number) => void;
 }
 
-type Screen = "why" | "deeper" | "prove" | "case" | "growth";
+type Screen = "why" | "deeper" | "sort" | "prove" | "case" | "growth";
 
 const Day3Master = ({
   episodeTitle,
