@@ -111,7 +111,7 @@ const Day3Master = ({
           </div>
 
           <div className="text-center pt-1">
-            <Button onClick={() => setScreen("prove")} size="lg" className="gap-1">
+            <Button onClick={() => setScreen(hasSort ? "sort" : "prove")} size="lg" className="gap-1">
               Continue <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
@@ -121,8 +121,24 @@ const Day3Master = ({
     );
   }
 
-  if (screen === "prove") {
+  if (screen === "sort" && hasSort && sortActivity) {
     const stepNum = hasMasterSections ? 3 : 2;
+    return (
+      <SortTheRebels
+        variant="order"
+        title={sortActivity.title}
+        subtitle={sortActivity.subtitle}
+        correctOrder={sortActivity.correctOrder}
+        explainOnRight={sortActivity.explainOnRight}
+        explainOnWrong={sortActivity.explainOnWrong}
+        onComplete={() => setScreen("prove")}
+        stepLabel={`Step ${stepNum} of ${totalSteps}`}
+      />
+    );
+  }
+
+  if (screen === "prove") {
+    const stepNum = 1 + (hasMasterSections ? 1 : 0) + (hasSort ? 1 : 0) + 1;
     return (
       <div className="min-h-[80vh] flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-lg space-y-5 animate-fade-in">
