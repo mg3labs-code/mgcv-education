@@ -536,9 +536,18 @@ const VibeCheckModal = () => {
             })}
           </div>
 
-          <p className="text-center text-[11px] text-white/45 mt-5">
-            The game starts the moment you tap. 🎮
-          </p>
+          <div className="text-center mt-5 space-y-2">
+            <p className="text-[11px] text-white/45">
+              The game starts the moment you tap. 🎮
+            </p>
+            <button
+              type="button"
+              onClick={handleSkip}
+              className="text-[11px] text-white/55 hover:text-white/90 underline underline-offset-2 transition-colors"
+            >
+              Skip for now
+            </button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
