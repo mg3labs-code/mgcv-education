@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import { Sparkles, ArrowRight, CheckCircle2, Flame, Clock, Lock } from "lucide-react";
+import { Sparkles, ArrowRight, CheckCircle2, Flame, Lock, BookOpen, Image as ImageIcon, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useEpisodeDay } from "@/contexts/EpisodeDayContext";
@@ -8,12 +8,24 @@ import { friendlyLabels } from "@/lib/childFriendlyLabels";
 import CompanionVoiceInput from "@/components/student/CompanionVoiceInput";
 import { toast } from "sonner";
 
+export interface QuickCheckQuestion {
+  prompt: string;
+  options: string[];
+  correctIndex: number;
+  explain: string;
+}
+
 interface Props {
   episodeTitle: string;
   /** A single hook question for this episode — provided by the page based on episode topic */
   hookQuestion: string;
   /** A short, age-appropriate concept summary (under 80 words) */
   conceptText: string;
+  /** Optional: a richer story/illustration node pulled from the real episode (e.g. <VisualAidBlock>, <StoryReadingBlock>). Rendered between Reveal and Detective. */
+  storyNode?: ReactNode;
+  storyTitle?: string;
+  /** Optional: a single-question multiple-choice quick check shown after Detective. */
+  quickCheck?: QuickCheckQuestion;
   /** A single Believe/Doubt statement and whether it's true */
   detectiveStatement: string;
   detectiveIsTrue: boolean;
@@ -21,12 +33,15 @@ interface Props {
   onComplete?: () => void;
 }
 
-type Screen = "hook" | "reveal" | "detective" | "done";
+type Screen = "hook" | "reveal" | "story" | "detective" | "quickcheck" | "done";
 
 const Day1Spark = ({
   episodeTitle,
   hookQuestion,
   conceptText,
+  storyNode,
+  storyTitle,
+  quickCheck,
   detectiveStatement,
   detectiveIsTrue,
   detectiveExplain,
@@ -38,7 +53,16 @@ const Day1Spark = ({
   const [hookAnswer, setHookAnswer] = useState("");
   const [revealReady, setRevealReady] = useState(false);
   const [detective, setDetective] = useState<{ choice: boolean; correct: boolean } | null>(null);
+  const [quickPick, setQuickPick] = useState<number | null>(null);
   const [shake, setShake] = useState(false);
+
+  // total ordered steps for footer counter
+  const steps: Screen[] = ["hook", "reveal"];
+  if (storyNode) steps.push("story");
+  steps.push("detective");
+  if (quickCheck) steps.push("quickcheck");
+  const stepNumber = (s: Screen) => Math.max(1, steps.indexOf(s) + 1);
+  const totalSteps = steps.length;
 
   // Law 5 — silence is a feature: 3-second pause before "Continue" appears on Reveal
   useEffect(() => {
@@ -65,6 +89,11 @@ const Day1Spark = ({
       setShake(true);
       setTimeout(() => setShake(false), 400);
     }
+  };
+
+  const advanceFromDetective = () => {
+    if (quickCheck) setScreen("quickcheck");
+    else handleFinishDay1();
   };
 
   const handleFinishDay1 = async () => {
@@ -113,7 +142,7 @@ const Day1Spark = ({
           </div>
 
           <p className="text-center text-[11px] text-muted-foreground">
-            Step 1 of 3 · {episodeTitle}
+            Step 1 of {totalSteps} · {episodeTitle}
           </p>
         </div>
       </div>
@@ -144,7 +173,11 @@ const Day1Spark = ({
 
           <div className="text-center min-h-[48px]">
             {revealReady ? (
-              <Button onClick={() => setScreen("detective")} size="lg" className="gap-1 animate-fade-in">
+              <Button
+                onClick={() => setScreen(storyNode ? "story" : "detective")}
+                size="lg"
+                className="gap-1 animate-fade-in"
+              >
                 Continue <ArrowRight className="h-4 w-4" />
               </Button>
             ) : (
@@ -152,13 +185,43 @@ const Day1Spark = ({
             )}
           </div>
 
-          <p className="text-center text-[11px] text-muted-foreground">Step 2 of 3</p>
+          <p className="text-center text-[11px] text-muted-foreground">Step {stepNumber("reveal")} of {totalSteps}</p>
         </div>
       </div>
     );
   }
 
-  // ─── Screen 3: Believe / Doubt ──────────────────────────────
+  // ─── Screen 3 (optional): Story / Visual ───────────────────
+  if (screen === "story" && storyNode) {
+    return (
+      <div className="min-h-[80vh] flex items-start justify-center px-4 py-6">
+        <div className="w-full max-w-2xl space-y-4 animate-fade-in">
+          <div className="text-center space-y-2">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-500/10 text-teal-700 dark:text-teal-400 text-[11px] font-bold uppercase tracking-wide">
+              <ImageIcon className="h-3 w-3" />
+              See it in action
+            </div>
+            {storyTitle && (
+              <h2 className="text-lg font-bold text-foreground leading-tight">{storyTitle}</h2>
+            )}
+          </div>
+
+          <div className="rounded-2xl border border-border bg-card p-3 sm:p-4">
+            {storyNode}
+          </div>
+
+          <div className="text-center pt-1">
+            <Button onClick={() => setScreen("detective")} size="lg" className="gap-1">
+              Continue <ArrowRight className="h-4 w-4" />
+            </Button>
+          </div>
+          <p className="text-center text-[11px] text-muted-foreground">Step {stepNumber("story")} of {totalSteps}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── Screen 4: Believe / Doubt ──────────────────────────────
   if (screen === "detective") {
     const showFeedback = detective !== null;
     return (
@@ -204,13 +267,72 @@ const Day1Spark = ({
                 {detective.correct ? "Nice thinking!" : "Interesting choice — here's why…"}
               </p>
               <p className="text-sm text-foreground leading-relaxed">{detectiveExplain}</p>
-              <Button onClick={handleFinishDay1} className="w-full gap-1" disabled={isSaving}>
-                Finish Day 1 <ArrowRight className="h-4 w-4" />
+              <Button onClick={advanceFromDetective} className="w-full gap-1" disabled={isSaving}>
+                {quickCheck ? "Continue" : "Finish Day 1"} <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
           )}
 
-          <p className="text-center text-[11px] text-muted-foreground">Step 3 of 3</p>
+          <p className="text-center text-[11px] text-muted-foreground">Step {stepNumber("detective")} of {totalSteps}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── Screen 5 (optional): Quick Check ───────────────────────
+  if (screen === "quickcheck" && quickCheck) {
+    const showFeedback = quickPick !== null;
+    const isRight = quickPick === quickCheck.correctIndex;
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center px-4 py-8">
+        <div className="w-full max-w-lg space-y-5 animate-fade-in">
+          <div className="text-center space-y-2">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-400 text-[11px] font-bold uppercase tracking-wide">
+              <HelpCircle className="h-3 w-3" />
+              Quick check
+            </div>
+            <p className="text-sm text-muted-foreground">One quick question — no pressure.</p>
+          </div>
+
+          <div className="rounded-2xl border-2 border-blue-300 dark:border-blue-700 bg-card p-5 space-y-3">
+            <p className="text-base font-medium text-foreground leading-relaxed">{quickCheck.prompt}</p>
+            <div className="grid gap-2">
+              {quickCheck.options.map((opt, i) => {
+                const isSelected = quickPick === i;
+                const isCorrect = i === quickCheck.correctIndex;
+                let stateClasses = "border-border bg-card hover:border-blue-300 dark:hover:border-blue-700";
+                if (showFeedback) {
+                  if (isCorrect) stateClasses = "border-emerald-400 bg-emerald-50/60 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400";
+                  else if (isSelected) stateClasses = "border-orange-400 bg-orange-50/60 dark:bg-orange-950/30 text-orange-700 dark:text-orange-400";
+                  else stateClasses = "border-border bg-muted/30 opacity-60";
+                }
+                return (
+                  <button
+                    key={i}
+                    disabled={showFeedback}
+                    onClick={() => setQuickPick(i)}
+                    className={`text-left rounded-xl border-2 px-4 py-3 text-sm font-medium transition-all ${stateClasses}`}
+                  >
+                    <span className="inline-block w-6 text-muted-foreground">{String.fromCharCode(65 + i)}.</span>
+                    {opt}
+                  </button>
+                );
+              })}
+            </div>
+            {showFeedback && (
+              <div className={`rounded-xl border p-3 text-sm leading-relaxed ${isRight ? "border-emerald-300 bg-emerald-50/40 dark:bg-emerald-950/20 text-foreground" : "border-orange-300 bg-orange-50/40 dark:bg-orange-950/20 text-foreground"}`}>
+                <p className="font-semibold mb-1">{isRight ? "Got it!" : "Not quite — here's why:"}</p>
+                <p>{quickCheck.explain}</p>
+              </div>
+            )}
+            {showFeedback && (
+              <Button onClick={handleFinishDay1} className="w-full gap-1" disabled={isSaving}>
+                Finish Day 1 <ArrowRight className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+
+          <p className="text-center text-[11px] text-muted-foreground">Step {stepNumber("quickcheck")} of {totalSteps}</p>
         </div>
       </div>
     );
