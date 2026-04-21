@@ -375,9 +375,10 @@ const VibeCheckModal = () => {
   const previewMeta = MODE_META[activeMode];
 
   return (
-    <Dialog open={open} onOpenChange={() => { /* locked until done */ }}>
+    <Dialog open={open} onOpenChange={(o) => { if (!o) handleSkip(); }}>
       <DialogContent
         className="sm:max-w-xl p-0 overflow-hidden border-0"
+        aria-describedby={undefined}
         style={{
           background:
             "radial-gradient(ellipse at top, hsl(225 40% 15%) 0%, hsl(225 45% 8%) 60%, hsl(225 50% 5%) 100%)",
