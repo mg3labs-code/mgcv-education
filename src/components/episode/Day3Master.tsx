@@ -1,15 +1,23 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import { GraduationCap, ArrowRight, CheckCircle2, Sparkles, Trophy } from "lucide-react";
+import { GraduationCap, ArrowRight, Sparkles, Trophy, Compass } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useEpisodeDay } from "@/contexts/EpisodeDayContext";
 import { friendlyLabels } from "@/lib/childFriendlyLabels";
 import CompanionVoiceInput from "@/components/student/CompanionVoiceInput";
 
+export interface MasterSection {
+  title: string;
+  /** Pre-rendered React node from the actual textbook (e.g. <AssumptionsBlock />, <ImplicationsBlock />). */
+  node: ReactNode;
+}
+
 interface Props {
   episodeTitle: string;
   whyItWorks: string;
+  /** Optional rich sections (Assumptions, Implications, etc.) shown right after Why-It-Works, before Prove-It. */
+  masterSections?: MasterSection[];
   proveItPrompt: string;
   caseStudy: string;
   growthGains: { label: string; emoji: string; pct: number }[];
@@ -17,11 +25,12 @@ interface Props {
   onNextEpisode?: () => void;
 }
 
-type Screen = "why" | "prove" | "case" | "growth";
+type Screen = "why" | "deeper" | "prove" | "case" | "growth";
 
 const Day3Master = ({
   episodeTitle,
   whyItWorks,
+  masterSections,
   proveItPrompt,
   caseStudy,
   growthGains,
@@ -33,6 +42,9 @@ const Day3Master = ({
   const [screen, setScreen] = useState<Screen>("why");
   const [proveAnswer, setProveAnswer] = useState("");
   const [confettiOn, setConfettiOn] = useState(false);
+
+  const hasMasterSections = !!masterSections && masterSections.length > 0;
+  const totalSteps = hasMasterSections ? 5 : 4;
 
   useEffect(() => {
     if (screen === "growth") {
@@ -54,16 +66,53 @@ const Day3Master = ({
           <div className="rounded-2xl border-2 border-purple-300 dark:border-purple-700 bg-card p-5">
             <p className="text-base text-foreground leading-relaxed whitespace-pre-line">{whyItWorks}</p>
           </div>
-          <Button onClick={() => setScreen("prove")} size="lg" className="w-full gap-1">
+          <Button
+            onClick={() => setScreen(hasMasterSections ? "deeper" : "prove")}
+            size="lg"
+            className="w-full gap-1"
+          >
             Continue <ArrowRight className="h-4 w-4" />
           </Button>
-          <p className="text-center text-[11px] text-muted-foreground">Step 1 of 4 · {episodeTitle}</p>
+          <p className="text-center text-[11px] text-muted-foreground">Step 1 of {totalSteps} · {episodeTitle}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (screen === "deeper" && hasMasterSections) {
+    return (
+      <div className="min-h-[80vh] flex items-start justify-center px-4 py-6">
+        <div className="w-full max-w-2xl space-y-4 animate-fade-in">
+          <div className="text-center space-y-2">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/10 text-purple-700 dark:text-purple-400 text-[11px] font-bold uppercase tracking-wide">
+              <Compass className="h-3 w-3" /> Stretch your thinking
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {masterSections!.map((sec, i) => (
+              <div key={i} className="rounded-2xl border-2 border-purple-200 dark:border-purple-800/60 bg-card p-3 sm:p-4 space-y-2">
+                <h3 className="text-sm font-bold text-purple-700 dark:text-purple-400 uppercase tracking-wide">
+                  {sec.title}
+                </h3>
+                {sec.node}
+              </div>
+            ))}
+          </div>
+
+          <div className="text-center pt-1">
+            <Button onClick={() => setScreen("prove")} size="lg" className="gap-1">
+              Continue <ArrowRight className="h-4 w-4" />
+            </Button>
+          </div>
+          <p className="text-center text-[11px] text-muted-foreground">Step 2 of {totalSteps}</p>
         </div>
       </div>
     );
   }
 
   if (screen === "prove") {
+    const stepNum = hasMasterSections ? 3 : 2;
     return (
       <div className="min-h-[80vh] flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-lg space-y-5 animate-fade-in">
@@ -92,13 +141,14 @@ const Day3Master = ({
               </Button>
             </div>
           </div>
-          <p className="text-center text-[11px] text-muted-foreground">Step 2 of 4</p>
+          <p className="text-center text-[11px] text-muted-foreground">Step {stepNum} of {totalSteps}</p>
         </div>
       </div>
     );
   }
 
   if (screen === "case") {
+    const stepNum = hasMasterSections ? 4 : 3;
     return (
       <div className="min-h-[80vh] flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-lg space-y-5 animate-fade-in">
@@ -113,7 +163,7 @@ const Day3Master = ({
           <Button onClick={() => setScreen("growth")} size="lg" className="w-full gap-1" disabled={isSaving}>
             See your growth <ArrowRight className="h-4 w-4" />
           </Button>
-          <p className="text-center text-[11px] text-muted-foreground">Step 3 of 4</p>
+          <p className="text-center text-[11px] text-muted-foreground">Step {stepNum} of {totalSteps}</p>
         </div>
       </div>
     );

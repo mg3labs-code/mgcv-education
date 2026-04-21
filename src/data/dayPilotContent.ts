@@ -11,6 +11,13 @@ export interface DayPilotContent {
   hookQuestion: string;
   conceptText: string;
   detective: { statement: string; isTrue: boolean; explain: string };
+  /** Optional 1-question multiple-choice quick check shown after Detective on Day 1. */
+  quickCheck?: {
+    prompt: string;
+    options: string[];
+    correctIndex: number;
+    explain: string;
+  };
   day2: {
     deepDiveText: string;
     detective1: { statement: string; isTrue: boolean; explain: string };
@@ -34,6 +41,13 @@ export const dayPilotContent: Record<string, DayPilotContent> = {
       isTrue: false,
       explain:
         "Counting numbers start at 1. Zero was added later — it's a whole number, not a counting (natural) number. Tricky, right?",
+    },
+    quickCheck: {
+      prompt: "Which of these numbers belongs to ALL of these families: counting, whole, integer, AND rational?",
+      options: ["−2", "0", "7", "1.5"],
+      correctIndex: 2,
+      explain:
+        "7 is counted (1, 2, 3… 7), it's whole (no fraction), it's an integer (no negative needed), and it can be written as 7/1 → so it's rational too. Negatives skip 'counting' and 'whole'; 0 skips 'counting'; 1.5 skips 'integer'.",
     },
     day2: {
       deepDiveText:

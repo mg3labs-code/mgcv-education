@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import { Brain, ArrowRight, CheckCircle2, Flame, Lock } from "lucide-react";
+import { Brain, ArrowRight, CheckCircle2, Flame, Lock, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useEpisodeDay } from "@/contexts/EpisodeDayContext";
@@ -8,16 +8,25 @@ import { friendlyLabels } from "@/lib/childFriendlyLabels";
 import CompanionVoiceInput from "@/components/student/CompanionVoiceInput";
 import { toast } from "sonner";
 
+export interface DeepDiveSection {
+  title: string;
+  /** Pre-rendered React node from the actual textbook (e.g. <ReasoningBlock />, <ConnectionsBlock />). */
+  node: ReactNode;
+}
+
 interface Props {
   episodeTitle: string;
+  /** Fallback plain text shown when no rich sections are provided. */
   deepDiveText: string;
+  /** Optional rich sections pulled from the episode's content_blocks (mode-filtered upstream). */
+  deepDiveSections?: DeepDiveSection[];
   detective1: { statement: string; isTrue: boolean; explain: string };
   detective2: { statement: string; isTrue: boolean; explain: string };
 }
 
 type Screen = "recall" | "deepdive" | "explain" | "det1" | "det2" | "done";
 
-const Day2Build = ({ episodeTitle, deepDiveText, detective1, detective2 }: Props) => {
+const Day2Build = ({ episodeTitle, deepDiveText, deepDiveSections, detective1, detective2 }: Props) => {
   const navigate = useNavigate();
   const { info, setDayState, isSaving } = useEpisodeDay();
   const day1Guess = info.state.day1_hook_answer;
@@ -72,20 +81,40 @@ const Day2Build = ({ episodeTitle, deepDiveText, detective1, detective2 }: Props
     );
   }
 
-  // Deep Dive
+  // Deep Dive — uses real DB sections when available, falls back to plain text
   if (screen === "deepdive") {
+    const hasRich = !!deepDiveSections && deepDiveSections.length > 0;
     return (
-      <div className="min-h-[80vh] flex items-center justify-center px-4 py-8">
-        <div className="w-full max-w-lg space-y-5 animate-fade-in">
-          <div className="rounded-2xl border-2 border-blue-300 dark:border-blue-700 bg-card p-5 space-y-3">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-500/15 text-blue-700 dark:text-blue-400 text-[10px] font-bold uppercase tracking-wide">
-              Let's go deeper
+      <div className="min-h-[80vh] flex items-start justify-center px-4 py-6">
+        <div className="w-full max-w-2xl space-y-4 animate-fade-in">
+          <div className="text-center space-y-2">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/15 text-blue-700 dark:text-blue-400 text-[11px] font-bold uppercase tracking-wide">
+              <Layers className="h-3 w-3" /> Let's go deeper
             </div>
-            <p className="text-base text-foreground leading-relaxed whitespace-pre-line">{deepDiveText}</p>
           </div>
-          <Button onClick={() => setScreen("explain")} size="lg" className="w-full gap-1">
-            Continue <ArrowRight className="h-4 w-4" />
-          </Button>
+
+          {hasRich ? (
+            <div className="space-y-4">
+              {deepDiveSections!.map((sec, i) => (
+                <div key={i} className="rounded-2xl border-2 border-blue-200 dark:border-blue-800/60 bg-card p-3 sm:p-4 space-y-2">
+                  <h3 className="text-sm font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wide">
+                    {sec.title}
+                  </h3>
+                  {sec.node}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-2xl border-2 border-blue-300 dark:border-blue-700 bg-card p-5">
+              <p className="text-base text-foreground leading-relaxed whitespace-pre-line">{deepDiveText}</p>
+            </div>
+          )}
+
+          <div className="text-center pt-1">
+            <Button onClick={() => setScreen("explain")} size="lg" className="gap-1">
+              Continue <ArrowRight className="h-4 w-4" />
+            </Button>
+          </div>
           <p className="text-center text-[11px] text-muted-foreground">Step 2 of 5</p>
         </div>
       </div>
