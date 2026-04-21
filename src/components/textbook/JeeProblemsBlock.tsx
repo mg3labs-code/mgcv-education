@@ -12,7 +12,6 @@ interface Props {
 
 const JeeProblemsBlock = ({ content, onComplete }: Props) => {
   const { mode } = useDifficulty();
-  if (mode !== "master") return null;
   const [started, setStarted] = useState(false);
   const [currentQ, setCurrentQ] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);

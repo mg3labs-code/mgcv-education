@@ -10,7 +10,6 @@ interface Props {
 
 const JeeExtensionBlock = ({ content, onComplete }: Props) => {
   const { mode } = useDifficulty();
-  if (mode !== "master") return null;
   const [expanded, setExpanded] = useState(true);
 
   // Handle both direct content and nested structures
