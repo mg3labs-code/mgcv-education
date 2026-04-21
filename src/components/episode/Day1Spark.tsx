@@ -1,11 +1,13 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import { Sparkles, ArrowRight, CheckCircle2, Flame, Lock, BookOpen, Image as ImageIcon, HelpCircle } from "lucide-react";
+import { Sparkles, ArrowRight, CheckCircle2, Flame, Lock, Image as ImageIcon, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useEpisodeDay } from "@/contexts/EpisodeDayContext";
 import { friendlyLabels } from "@/lib/childFriendlyLabels";
 import CompanionVoiceInput from "@/components/student/CompanionVoiceInput";
+import { useSoundFx } from "@/hooks/useSoundFx";
+import TrapReveal from "@/components/episode/TrapReveal";
 import { toast } from "sonner";
 
 export interface QuickCheckQuestion {
@@ -49,6 +51,7 @@ const Day1Spark = ({
 }: Props) => {
   const navigate = useNavigate();
   const { setDayState, isSaving } = useEpisodeDay();
+  const { play } = useSoundFx();
   const [screen, setScreen] = useState<Screen>("hook");
   const [hookAnswer, setHookAnswer] = useState("");
   const [revealReady, setRevealReady] = useState(false);
@@ -85,10 +88,15 @@ const Day1Spark = ({
   const handleDetective = async (choice: boolean) => {
     const correct = choice === detectiveIsTrue;
     setDetective({ choice, correct });
+    play(correct ? "correct" : "wrong");
     if (!correct) {
       setShake(true);
       setTimeout(() => setShake(false), 400);
     }
+  };
+
+  const retryDetective = () => {
+    setDetective(null);
   };
 
   const advanceFromDetective = () => {
