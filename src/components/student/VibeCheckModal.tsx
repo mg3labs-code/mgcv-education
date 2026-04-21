@@ -181,6 +181,16 @@ const VibeCheckModal = () => {
     }, 550);
   };
 
+  const handleSkip = () => {
+    try {
+      window.localStorage.setItem("vibe_check_done", "1");
+      // Don't force a difficulty — leave whatever DifficultyContext already has
+    } catch {
+      /* ignore */
+    }
+    setOpen(false);
+  };
+
   const handleConfirm = async () => {
     if (!result) return;
     setSaving(true);
@@ -212,7 +222,7 @@ const VibeCheckModal = () => {
   if (result) {
     const meta = MODE_META[result];
     return (
-      <Dialog open={open} onOpenChange={() => { /* locked until confirm */ }}>
+      <Dialog open={open} onOpenChange={(o) => { if (!o) handleConfirm(); }}>
         <DialogContent
           className="sm:max-w-lg p-0 overflow-hidden border-0"
           style={{
@@ -365,9 +375,10 @@ const VibeCheckModal = () => {
   const previewMeta = MODE_META[activeMode];
 
   return (
-    <Dialog open={open} onOpenChange={() => { /* locked until done */ }}>
+    <Dialog open={open} onOpenChange={(o) => { if (!o) handleSkip(); }}>
       <DialogContent
         className="sm:max-w-xl p-0 overflow-hidden border-0"
+        aria-describedby={undefined}
         style={{
           background:
             "radial-gradient(ellipse at top, hsl(225 40% 15%) 0%, hsl(225 45% 8%) 60%, hsl(225 50% 5%) 100%)",
@@ -525,9 +536,18 @@ const VibeCheckModal = () => {
             })}
           </div>
 
-          <p className="text-center text-[11px] text-white/45 mt-5">
-            The game starts the moment you tap. 🎮
-          </p>
+          <div className="text-center mt-5 space-y-2">
+            <p className="text-[11px] text-white/45">
+              The game starts the moment you tap. 🎮
+            </p>
+            <button
+              type="button"
+              onClick={handleSkip}
+              className="text-[11px] text-white/55 hover:text-white/90 underline underline-offset-2 transition-colors"
+            >
+              Skip for now
+            </button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
