@@ -1375,6 +1375,12 @@ const DayGatedEpisode = ({
   const { mode } = useDifficulty();
   const { data: dbBlocks } = useEpisodeBlocks(chapterId, episodeId, "board");
 
+  const episodeKey = `${chapterId ?? "?"}::${episodeId ?? "?"}`;
+  const [showModeSelect, setShowModeSelect] = useState<boolean>(
+    () => !wasModeSelectShown(episodeKey),
+  );
+  const [dayProgress, setDayProgress] = useState<number>(0);
+
   if (isLoading) return <EpisodeLoadingTransition />;
 
   // Mode caps how many rich sections each Day can pull from the database.
