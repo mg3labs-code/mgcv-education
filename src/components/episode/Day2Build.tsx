@@ -128,13 +128,30 @@ const Day2Build = ({ episodeTitle, deepDiveText, deepDiveSections, detective1, d
           )}
 
           <div className="text-center pt-1">
-            <Button onClick={() => setScreen("explain")} size="lg" className="gap-1">
+            <Button onClick={() => setScreen(sortActivity ? "sort" : "explain")} size="lg" className="gap-1">
               Continue <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
-          <p className="text-center text-[11px] text-muted-foreground">Step 2 of 5</p>
+          <p className="text-center text-[11px] text-muted-foreground">Step 2 of {sortActivity ? 6 : 5}</p>
         </div>
       </div>
+    );
+  }
+
+  // Sort the Rebels (pairs) — optional
+  if (screen === "sort" && sortActivity) {
+    return (
+      <SortTheRebels
+        variant="pairs"
+        title={sortActivity.title}
+        subtitle={sortActivity.subtitle}
+        leftItems={sortActivity.leftItems}
+        rightItems={sortActivity.rightItems}
+        explainOnRight={sortActivity.explainOnRight}
+        explainOnWrong={sortActivity.explainOnWrong}
+        onComplete={() => setScreen("explain")}
+        stepLabel="Step 3 of 6"
+      />
     );
   }
 

@@ -51,7 +51,8 @@ const Day3Master = ({
   const [confettiOn, setConfettiOn] = useState(false);
 
   const hasMasterSections = !!masterSections && masterSections.length > 0;
-  const totalSteps = hasMasterSections ? 5 : 4;
+  const hasSort = !!sortActivity;
+  const totalSteps = 3 + (hasMasterSections ? 1 : 0) + (hasSort ? 1 : 0);
 
   useEffect(() => {
     if (screen === "growth") {
