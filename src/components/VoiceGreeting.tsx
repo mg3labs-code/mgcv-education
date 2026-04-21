@@ -17,7 +17,7 @@ import {
   CloudFog,
 } from "lucide-react";
 
-const GREETING_KEY = "voice-greeting-shown";
+const GREETING_KEY = "voice-greeting-shown-v3";
 
 // Warm, friendly voice — Lily (pFZP5JQG7iQjIQuC4Bku). Single voice channel.
 const WARM_VOICE_ID = "pFZP5JQG7iQjIQuC4Bku";
