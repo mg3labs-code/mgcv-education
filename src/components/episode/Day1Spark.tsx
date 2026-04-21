@@ -34,10 +34,14 @@ interface Props {
   detectiveStatement: string;
   detectiveIsTrue: boolean;
   detectiveExplain: string;
+  /** Optional: drag-drop "Sort the Rebels" activity (buckets variant) between story and detective. */
+  sortActivity?: SortBucketsActivity;
+  /** Optional: reports 0–1 progress through the day back to parent for XP bar. */
+  onProgress?: (progress: number) => void;
   onComplete?: () => void;
 }
 
-type Screen = "hook" | "reveal" | "story" | "detective" | "quickcheck" | "done";
+type Screen = "hook" | "reveal" | "story" | "sort" | "detective" | "quickcheck" | "done";
 
 const Day1Spark = ({
   episodeTitle,
@@ -49,6 +53,8 @@ const Day1Spark = ({
   detectiveStatement,
   detectiveIsTrue,
   detectiveExplain,
+  sortActivity,
+  onProgress,
   onComplete,
 }: Props) => {
   const navigate = useNavigate();
@@ -64,10 +70,20 @@ const Day1Spark = ({
   // total ordered steps for footer counter
   const steps: Screen[] = ["hook", "reveal"];
   if (storyNode) steps.push("story");
+  if (sortActivity) steps.push("sort");
   steps.push("detective");
   if (quickCheck) steps.push("quickcheck");
   const stepNumber = (s: Screen) => Math.max(1, steps.indexOf(s) + 1);
   const totalSteps = steps.length;
+
+  // Report sub-step progress upward for XP bar
+  useEffect(() => {
+    if (!onProgress) return;
+    const idx = steps.indexOf(screen);
+    const frac = idx < 0 ? 0 : Math.min(1, (idx + (screen === "done" ? 1 : 0.5)) / totalSteps);
+    onProgress(frac);
+     
+  }, [screen]);
 
   // Law 5 — silence is a feature: 3-second pause before "Continue" appears on Reveal
   useEffect(() => {
