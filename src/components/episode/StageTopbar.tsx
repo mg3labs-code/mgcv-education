@@ -1,5 +1,6 @@
 import { ChevronLeft, Flame, Volume2, VolumeX } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import { dayLabels, modeLabels } from "@/lib/childFriendlyLabels";
 import { useDifficulty } from "@/contexts/DifficultyContext";
 import { useEpisodeDay } from "@/contexts/EpisodeDayContext";
@@ -9,9 +10,18 @@ interface Props {
   episodeTitle: string;
   streakDays?: number;
   exitTo?: string;
+  /** 0–1 progress through the current day (sub-step granularity). Optional. */
+  dayProgress?: number;
 }
 
-const StageTopbar = ({ episodeTitle, streakDays = 0, exitTo }: Props) => {
+/**
+ * Episode stage topbar with animated XP bar.
+ *
+ * XP logic (deliberately simple so every screen contributes):
+ *   each full day = 33.33%. Current day adds up to another 33.33% based on `dayProgress`.
+ *   day1Done → 33%, +day2Done → 66%, +day3Done → 100%.
+ */
+const StageTopbar = ({ episodeTitle, streakDays = 0, exitTo, dayProgress = 0 }: Props) => {
   const navigate = useNavigate();
   const { mode } = useDifficulty();
   const { info } = useEpisodeDay();
@@ -20,11 +30,19 @@ const StageTopbar = ({ episodeTitle, streakDays = 0, exitTo }: Props) => {
   const dayInfo = dayLabels[day];
   const modeInfo = modeLabels[mode];
 
+  // XP calc
+  const doneDays =
+    (info.state.day1_completed_at ? 1 : 0) +
+    (info.state.day2_completed_at ? 1 : 0) +
+    (info.state.day3_completed_at ? 1 : 0);
+  const clamped = Math.max(0, Math.min(1, dayProgress));
+  const xpPct = Math.min(100, Math.round((doneDays + clamped) * 33.333));
+
   return (
     <header className="sticky top-0 z-40 backdrop-blur-md bg-background/85 border-b border-border">
-      <div className="max-w-3xl mx-auto px-3 sm:px-4 py-2.5 flex items-center gap-2">
+      <div className="max-w-3xl mx-auto px-3 sm:px-4 pt-2.5 pb-1.5 flex items-center gap-2">
         <button
-          onClick={() => navigate(exitTo || -1 as never)}
+          onClick={() => navigate(exitTo || (-1 as never))}
           className="h-9 w-9 rounded-lg flex items-center justify-center hover:bg-muted text-muted-foreground"
           aria-label="Back"
         >
@@ -69,6 +87,39 @@ const StageTopbar = ({ episodeTitle, streakDays = 0, exitTo }: Props) => {
         >
           <Flame className="h-3.5 w-3.5" />
           <span>{streakDays}</span>
+        </div>
+      </div>
+
+      {/* XP bar */}
+      <div className="max-w-3xl mx-auto px-3 sm:px-4 pb-2">
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+            XP
+          </span>
+          <div className="relative flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
+            <motion.div
+              initial={false}
+              animate={{ width: `${xpPct}%` }}
+              transition={{ type: "spring", stiffness: 120, damping: 20 }}
+              className="absolute inset-y-0 left-0 rounded-full"
+              style={{
+                background:
+                  "linear-gradient(90deg, hsl(160 70% 50%), hsl(215 80% 60%) 55%, hsl(285 75% 60%))",
+                boxShadow: "0 0 12px hsl(215 80% 60% / 0.35)",
+              }}
+            />
+            {/* Day markers */}
+            {[33.33, 66.66].map((mark) => (
+              <span
+                key={mark}
+                className="absolute top-1/2 -translate-y-1/2 h-2.5 w-[2px] bg-background/80 rounded"
+                style={{ left: `${mark}%` }}
+              />
+            ))}
+          </div>
+          <span className="text-[10px] font-bold text-foreground tabular-nums min-w-[2.5rem] text-right">
+            {xpPct}%
+          </span>
         </div>
       </div>
     </header>
