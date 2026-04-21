@@ -8,6 +8,8 @@ import { friendlyLabels } from "@/lib/childFriendlyLabels";
 import CompanionVoiceInput from "@/components/student/CompanionVoiceInput";
 import { useSoundFx } from "@/hooks/useSoundFx";
 import TrapReveal from "@/components/episode/TrapReveal";
+import SortTheRebels from "@/components/episode/SortTheRebels";
+import type { SortPairsActivity } from "@/data/dayPilotContent";
 import { toast } from "sonner";
 
 export interface DeepDiveSection {
@@ -24,11 +26,14 @@ interface Props {
   deepDiveSections?: DeepDiveSection[];
   detective1: { statement: string; isTrue: boolean; explain: string };
   detective2: { statement: string; isTrue: boolean; explain: string };
+  /** Optional drag-drop pairs activity between deep-dive and explain. */
+  sortActivity?: SortPairsActivity;
+  onProgress?: (progress: number) => void;
 }
 
-type Screen = "recall" | "deepdive" | "explain" | "det1" | "det2" | "done";
+type Screen = "recall" | "deepdive" | "sort" | "explain" | "det1" | "det2" | "done";
 
-const Day2Build = ({ episodeTitle, deepDiveText, deepDiveSections, detective1, detective2 }: Props) => {
+const Day2Build = ({ episodeTitle, deepDiveText, deepDiveSections, detective1, detective2, sortActivity, onProgress }: Props) => {
   const navigate = useNavigate();
   const { info, setDayState, isSaving } = useEpisodeDay();
   const { play } = useSoundFx();
@@ -123,13 +128,30 @@ const Day2Build = ({ episodeTitle, deepDiveText, deepDiveSections, detective1, d
           )}
 
           <div className="text-center pt-1">
-            <Button onClick={() => setScreen("explain")} size="lg" className="gap-1">
+            <Button onClick={() => setScreen(sortActivity ? "sort" : "explain")} size="lg" className="gap-1">
               Continue <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
-          <p className="text-center text-[11px] text-muted-foreground">Step 2 of 5</p>
+          <p className="text-center text-[11px] text-muted-foreground">Step 2 of {sortActivity ? 6 : 5}</p>
         </div>
       </div>
+    );
+  }
+
+  // Sort the Rebels (pairs) — optional
+  if (screen === "sort" && sortActivity) {
+    return (
+      <SortTheRebels
+        variant="pairs"
+        title={sortActivity.title}
+        subtitle={sortActivity.subtitle}
+        leftItems={sortActivity.leftItems}
+        rightItems={sortActivity.rightItems}
+        explainOnRight={sortActivity.explainOnRight}
+        explainOnWrong={sortActivity.explainOnWrong}
+        onComplete={() => setScreen("explain")}
+        stepLabel="Step 3 of 6"
+      />
     );
   }
 

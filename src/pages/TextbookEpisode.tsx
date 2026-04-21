@@ -44,6 +44,7 @@ import Day1Spark from "@/components/episode/Day1Spark";
 import Day2Build from "@/components/episode/Day2Build";
 import Day3Master from "@/components/episode/Day3Master";
 import DayLockedWall from "@/components/episode/DayLockedWall";
+import ModeSelectGameCard, { wasModeSelectShown } from "@/components/episode/ModeSelectGameCard";
 import { getPilotContent } from "@/data/dayPilotContent";
 
 const LANGUAGE_SUBJECTS = new Set(["Telugu", "Hindi"]);
@@ -1374,6 +1375,12 @@ const DayGatedEpisode = ({
   const { mode } = useDifficulty();
   const { data: dbBlocks } = useEpisodeBlocks(chapterId, episodeId, "board");
 
+  const episodeKey = `${chapterId ?? "?"}::${episodeId ?? "?"}`;
+  const [showModeSelect, setShowModeSelect] = useState<boolean>(
+    () => !wasModeSelectShown(episodeKey),
+  );
+  const [dayProgress, setDayProgress] = useState<number>(0);
+
   if (isLoading) return <EpisodeLoadingTransition />;
 
   // Mode caps how many rich sections each Day can pull from the database.
@@ -1439,8 +1446,10 @@ const DayGatedEpisode = ({
         proveItPrompt={pilot.day3.proveItPrompt}
         caseStudy={pilot.day3.caseStudy}
         growthGains={pilot.day3.growthGains}
+        sortActivity={pilot.day3.sort}
         nextEpisodeTitle={nextEpisodeTitle}
         onNextEpisode={onNextEpisode}
+        onProgress={setDayProgress}
       />
     );
   } else if (info.day2Done && info.day3Locked && info.day3UnlocksAt) {
@@ -1453,6 +1462,8 @@ const DayGatedEpisode = ({
         deepDiveSections={day2Sections}
         detective1={pilot.day2.detective1}
         detective2={pilot.day2.detective2}
+        sortActivity={pilot.day2.sort}
+        onProgress={setDayProgress}
       />
     );
   } else if (info.day1Done && info.day2Locked && info.day2UnlocksAt) {
@@ -1469,13 +1480,22 @@ const DayGatedEpisode = ({
         detectiveStatement={pilot.detective.statement}
         detectiveIsTrue={pilot.detective.isTrue}
         detectiveExplain={pilot.detective.explain}
+        sortActivity={pilot.day1Sort}
+        onProgress={setDayProgress}
       />
     );
   }
 
   return (
     <div className="min-h-screen bg-background">
-      <StageTopbar episodeTitle={episodeTitle} />
+      <StageTopbar episodeTitle={episodeTitle} dayProgress={dayProgress} />
+      {showModeSelect && (
+        <ModeSelectGameCard
+          episodeKey={episodeKey}
+          episodeTitle={episodeTitle}
+          onPicked={() => setShowModeSelect(false)}
+        />
+      )}
       {body}
     </div>
   );

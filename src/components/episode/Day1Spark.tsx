@@ -8,6 +8,8 @@ import { friendlyLabels } from "@/lib/childFriendlyLabels";
 import CompanionVoiceInput from "@/components/student/CompanionVoiceInput";
 import { useSoundFx } from "@/hooks/useSoundFx";
 import TrapReveal from "@/components/episode/TrapReveal";
+import SortTheRebels from "@/components/episode/SortTheRebels";
+import type { SortBucketsActivity } from "@/data/dayPilotContent";
 import { toast } from "sonner";
 
 export interface QuickCheckQuestion {
@@ -32,10 +34,14 @@ interface Props {
   detectiveStatement: string;
   detectiveIsTrue: boolean;
   detectiveExplain: string;
+  /** Optional: drag-drop "Sort the Rebels" activity (buckets variant) between story and detective. */
+  sortActivity?: SortBucketsActivity;
+  /** Optional: reports 0–1 progress through the day back to parent for XP bar. */
+  onProgress?: (progress: number) => void;
   onComplete?: () => void;
 }
 
-type Screen = "hook" | "reveal" | "story" | "detective" | "quickcheck" | "done";
+type Screen = "hook" | "reveal" | "story" | "sort" | "detective" | "quickcheck" | "done";
 
 const Day1Spark = ({
   episodeTitle,
@@ -47,6 +53,8 @@ const Day1Spark = ({
   detectiveStatement,
   detectiveIsTrue,
   detectiveExplain,
+  sortActivity,
+  onProgress,
   onComplete,
 }: Props) => {
   const navigate = useNavigate();
@@ -62,10 +70,20 @@ const Day1Spark = ({
   // total ordered steps for footer counter
   const steps: Screen[] = ["hook", "reveal"];
   if (storyNode) steps.push("story");
+  if (sortActivity) steps.push("sort");
   steps.push("detective");
   if (quickCheck) steps.push("quickcheck");
   const stepNumber = (s: Screen) => Math.max(1, steps.indexOf(s) + 1);
   const totalSteps = steps.length;
+
+  // Report sub-step progress upward for XP bar
+  useEffect(() => {
+    if (!onProgress) return;
+    const idx = steps.indexOf(screen);
+    const frac = idx < 0 ? 0 : Math.min(1, (idx + (screen === "done" ? 1 : 0.5)) / totalSteps);
+    onProgress(frac);
+     
+  }, [screen]);
 
   // Law 5 — silence is a feature: 3-second pause before "Continue" appears on Reveal
   useEffect(() => {
@@ -183,7 +201,7 @@ const Day1Spark = ({
           <div className="text-center min-h-[48px]">
             {revealReady ? (
               <Button
-                onClick={() => setScreen(storyNode ? "story" : "detective")}
+                onClick={() => setScreen(storyNode ? "story" : sortActivity ? "sort" : "detective")}
                 size="lg"
                 className="gap-1 animate-fade-in"
               >
@@ -220,13 +238,31 @@ const Day1Spark = ({
           </div>
 
           <div className="text-center pt-1">
-            <Button onClick={() => setScreen("detective")} size="lg" className="gap-1">
+            <Button onClick={() => setScreen(sortActivity ? "sort" : "detective")} size="lg" className="gap-1">
               Continue <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
           <p className="text-center text-[11px] text-muted-foreground">Step {stepNumber("story")} of {totalSteps}</p>
         </div>
       </div>
+    );
+  }
+
+  // ─── Screen 3.5 (optional): Sort the Rebels ─────────────────
+  if (screen === "sort" && sortActivity) {
+    return (
+      <SortTheRebels
+        variant="buckets"
+        title={sortActivity.title}
+        subtitle={sortActivity.subtitle}
+        buckets={sortActivity.buckets}
+        items={sortActivity.items}
+        explainOnRight={sortActivity.explainOnRight}
+        explainOnWrong={sortActivity.explainOnWrong}
+        onComplete={() => setScreen("detective")}
+        continueLabel="Continue"
+        stepLabel={`Step ${stepNumber("sort")} of ${totalSteps}`}
+      />
     );
   }
 

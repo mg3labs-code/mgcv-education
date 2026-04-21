@@ -7,6 +7,8 @@ import { useEpisodeDay } from "@/contexts/EpisodeDayContext";
 import { friendlyLabels } from "@/lib/childFriendlyLabels";
 import CompanionVoiceInput from "@/components/student/CompanionVoiceInput";
 import { useSoundFx } from "@/hooks/useSoundFx";
+import SortTheRebels from "@/components/episode/SortTheRebels";
+import type { SortOrderActivity } from "@/data/dayPilotContent";
 
 export interface MasterSection {
   title: string;
@@ -24,9 +26,12 @@ interface Props {
   growthGains: { label: string; emoji: string; pct: number }[];
   nextEpisodeTitle?: string;
   onNextEpisode?: () => void;
+  /** Optional drag-reorder activity before Prove-It. */
+  sortActivity?: SortOrderActivity;
+  onProgress?: (progress: number) => void;
 }
 
-type Screen = "why" | "deeper" | "prove" | "case" | "growth";
+type Screen = "why" | "deeper" | "sort" | "prove" | "case" | "growth";
 
 const Day3Master = ({
   episodeTitle,
@@ -37,6 +42,7 @@ const Day3Master = ({
   growthGains,
   nextEpisodeTitle,
   onNextEpisode,
+  sortActivity,
 }: Props) => {
   const navigate = useNavigate();
   const { setDayState, isSaving } = useEpisodeDay();
@@ -46,7 +52,8 @@ const Day3Master = ({
   const [confettiOn, setConfettiOn] = useState(false);
 
   const hasMasterSections = !!masterSections && masterSections.length > 0;
-  const totalSteps = hasMasterSections ? 5 : 4;
+  const hasSort = !!sortActivity;
+  const totalSteps = 3 + (hasMasterSections ? 1 : 0) + (hasSort ? 1 : 0);
 
   useEffect(() => {
     if (screen === "growth") {
@@ -70,7 +77,7 @@ const Day3Master = ({
             <p className="text-base text-foreground leading-relaxed whitespace-pre-line">{whyItWorks}</p>
           </div>
           <Button
-            onClick={() => setScreen(hasMasterSections ? "deeper" : "prove")}
+            onClick={() => setScreen(hasMasterSections ? "deeper" : hasSort ? "sort" : "prove")}
             size="lg"
             className="w-full gap-1"
           >
@@ -104,7 +111,7 @@ const Day3Master = ({
           </div>
 
           <div className="text-center pt-1">
-            <Button onClick={() => setScreen("prove")} size="lg" className="gap-1">
+            <Button onClick={() => setScreen(hasSort ? "sort" : "prove")} size="lg" className="gap-1">
               Continue <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
@@ -114,8 +121,24 @@ const Day3Master = ({
     );
   }
 
-  if (screen === "prove") {
+  if (screen === "sort" && hasSort && sortActivity) {
     const stepNum = hasMasterSections ? 3 : 2;
+    return (
+      <SortTheRebels
+        variant="order"
+        title={sortActivity.title}
+        subtitle={sortActivity.subtitle}
+        correctOrder={sortActivity.correctOrder}
+        explainOnRight={sortActivity.explainOnRight}
+        explainOnWrong={sortActivity.explainOnWrong}
+        onComplete={() => setScreen("prove")}
+        stepLabel={`Step ${stepNum} of ${totalSteps}`}
+      />
+    );
+  }
+
+  if (screen === "prove") {
+    const stepNum = 1 + (hasMasterSections ? 1 : 0) + (hasSort ? 1 : 0) + 1;
     return (
       <div className="min-h-[80vh] flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-lg space-y-5 animate-fade-in">
@@ -151,7 +174,7 @@ const Day3Master = ({
   }
 
   if (screen === "case") {
-    const stepNum = hasMasterSections ? 4 : 3;
+    const stepNum = totalSteps - 1;
     return (
       <div className="min-h-[80vh] flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-lg space-y-5 animate-fade-in">
