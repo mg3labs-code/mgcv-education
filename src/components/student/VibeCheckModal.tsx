@@ -181,6 +181,16 @@ const VibeCheckModal = () => {
     }, 550);
   };
 
+  const handleSkip = () => {
+    try {
+      window.localStorage.setItem("vibe_check_done", "1");
+      // Don't force a difficulty — leave whatever DifficultyContext already has
+    } catch {
+      /* ignore */
+    }
+    setOpen(false);
+  };
+
   const handleConfirm = async () => {
     if (!result) return;
     setSaving(true);
