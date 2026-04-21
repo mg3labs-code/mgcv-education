@@ -22,13 +22,20 @@ const VoiceGreeting = () => {
   const [show, setShow] = useState(false);
   const [greeting, setGreeting] = useState("");
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const hasStartedRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!user || !role) return;
 
     const todayKey = new Date().toISOString().split("T")[0];
+    const guardKey = `${user.id}:${todayKey}`;
+
+    // Prevent double-fire when auth state fires twice (onAuthStateChange + getSession)
+    if (hasStartedRef.current === guardKey) return;
+    hasStartedRef.current = guardKey;
+
     const stored = localStorage.getItem(GREETING_KEY);
-    if (stored === todayKey) return;
+    if (stored === guardKey) return;
 
     const loadAndGreet = async () => {
       const { data } = await supabase
