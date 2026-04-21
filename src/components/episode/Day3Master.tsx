@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useEpisodeDay } from "@/contexts/EpisodeDayContext";
 import { friendlyLabels } from "@/lib/childFriendlyLabels";
 import CompanionVoiceInput from "@/components/student/CompanionVoiceInput";
+import { useSoundFx } from "@/hooks/useSoundFx";
 
 export interface MasterSection {
   title: string;
@@ -39,6 +40,7 @@ const Day3Master = ({
 }: Props) => {
   const navigate = useNavigate();
   const { setDayState, isSaving } = useEpisodeDay();
+  const { play } = useSoundFx();
   const [screen, setScreen] = useState<Screen>("why");
   const [proveAnswer, setProveAnswer] = useState("");
   const [confettiOn, setConfettiOn] = useState(false);
@@ -49,10 +51,11 @@ const Day3Master = ({
   useEffect(() => {
     if (screen === "growth") {
       setConfettiOn(true);
+      play("victory");
       // persist completion
       setDayState({ day3_completed_at: new Date().toISOString() }).catch(() => {});
     }
-  }, [screen, setDayState]);
+  }, [screen, setDayState, play]);
 
   if (screen === "why") {
     return (
