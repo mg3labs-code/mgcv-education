@@ -352,11 +352,11 @@ const VoiceGreeting = () => {
           const audio = new Audio(url);
           audioRef.current = audio;
           audio.onended = () => {
-            setTimeout(() => setShow(false), 2200);
+            setTimeout(() => setShow(false), 6000);
             URL.revokeObjectURL(url);
           };
           audio.onerror = () => {
-            setTimeout(() => setShow(false), 5500);
+            setTimeout(() => setShow(false), 9000);
             URL.revokeObjectURL(url);
           };
           await audio.play();
@@ -367,7 +367,7 @@ const VoiceGreeting = () => {
       }
 
       // Visual-only fallback — no second voice
-      setTimeout(() => setShow(false), 6500);
+      setTimeout(() => setShow(false), 10000);
     };
 
     run();
