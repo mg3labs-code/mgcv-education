@@ -105,6 +105,7 @@ const Day1Spark = ({
   };
 
   const handleFinishDay1 = async () => {
+    play("victory");
     await setDayState({
       day1_completed_at: new Date().toISOString(),
       day1_detective_correct: detective?.correct ?? null,
@@ -264,21 +265,14 @@ const Day1Spark = ({
               </button>
             </div>
           ) : (
-            <div
-              className={`rounded-2xl border-2 p-5 space-y-3 ${
-                detective.correct
-                  ? "border-emerald-400 bg-emerald-50/60 dark:bg-emerald-950/30 animate-[pulse_0.6s_ease-out]"
-                  : "border-orange-400 bg-orange-50/60 dark:bg-orange-950/30"
-              }`}
-            >
-              <p className={`font-bold ${detective.correct ? "text-emerald-700 dark:text-emerald-400" : "text-orange-700 dark:text-orange-400"}`}>
-                {detective.correct ? "Nice thinking!" : "Interesting choice — here's why…"}
-              </p>
-              <p className="text-sm text-foreground leading-relaxed">{detectiveExplain}</p>
-              <Button onClick={advanceFromDetective} className="w-full gap-1" disabled={isSaving}>
-                {quickCheck ? "Continue" : "Finish Day 1"} <ArrowRight className="h-4 w-4" />
-              </Button>
-            </div>
+            <TrapReveal
+              isCorrect={detective.correct}
+              explain={detectiveExplain}
+              onRetry={retryDetective}
+              onContinue={advanceFromDetective}
+              continueLabel={quickCheck ? "Continue" : "Finish Day 1"}
+              disabled={isSaving}
+            />
           )}
 
           <p className="text-center text-[11px] text-muted-foreground">Step {stepNumber("detective")} of {totalSteps}</p>
@@ -318,7 +312,10 @@ const Day1Spark = ({
                   <button
                     key={i}
                     disabled={showFeedback}
-                    onClick={() => setQuickPick(i)}
+                    onClick={() => {
+                      setQuickPick(i);
+                      play(i === quickCheck.correctIndex ? "correct" : "wrong");
+                    }}
                     className={`text-left rounded-xl border-2 px-4 py-3 text-sm font-medium transition-all ${stateClasses}`}
                   >
                     <span className="inline-block w-6 text-muted-foreground">{String.fromCharCode(65 + i)}.</span>
