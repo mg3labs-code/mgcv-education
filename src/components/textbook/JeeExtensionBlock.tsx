@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { ChevronDown, ChevronUp, Sparkles } from "lucide-react";
 import type { JeeExtensionContent } from "@/data/textbookData";
+import { useDifficulty } from "@/contexts/DifficultyContext";
 
 interface Props {
   content: JeeExtensionContent;
@@ -8,12 +9,15 @@ interface Props {
 }
 
 const JeeExtensionBlock = ({ content, onComplete }: Props) => {
+  const { mode } = useDifficulty();
   const [expanded, setExpanded] = useState(true);
 
   // Handle both direct content and nested structures
   const sections = content?.sections || [];
   const advancedFormulas = content?.advancedFormulas || [];
   const proofSketch = content?.proofSketch || "";
+
+  if (mode !== "master") return null;
 
   return (
     <div className="space-y-4">

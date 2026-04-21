@@ -34,10 +34,17 @@ import SectionCelebration from "@/components/textbook/SectionCelebration";
 import SectionQuizGate from "@/components/textbook/SectionQuizGate";
 import EpisodeLoadingTransition from "@/components/textbook/EpisodeLoadingTransition";
 import SectionVoiceGuide from "@/components/textbook/SectionVoiceGuide";
-import { DifficultyProvider } from "@/contexts/DifficultyContext";
+import { DifficultyProvider, useDifficulty } from "@/contexts/DifficultyContext";
 import DifficultyToggle from "@/components/textbook/DifficultyToggle";
 import AdaptiveConceptBlock from "@/components/textbook/AdaptiveConceptBlock";
 import AdaptiveReasoningBlock from "@/components/textbook/AdaptiveReasoningBlock";
+import { EpisodeDayProvider, useEpisodeDay } from "@/contexts/EpisodeDayContext";
+import StageTopbar from "@/components/episode/StageTopbar";
+import Day1Spark from "@/components/episode/Day1Spark";
+import Day2Build from "@/components/episode/Day2Build";
+import Day3Master from "@/components/episode/Day3Master";
+import DayLockedWall from "@/components/episode/DayLockedWall";
+import { getPilotContent } from "@/data/dayPilotContent";
 
 const LANGUAGE_SUBJECTS = new Set(["Telugu", "Hindi"]);
 
@@ -610,6 +617,25 @@ const TextbookEpisode = () => {
           <Button variant="outline" onClick={() => navigate("/student/textbook")}>Back to Textbook</Button>
         </div>
       </div>
+    );
+  }
+
+  // ═══ 3-DAY UNLOCK GAME LOOP ═══
+  // Phase 1 pilot: only when hand-authored day content exists for this episode
+  // (currently Math Ch1 Ep1). For all other episodes the original reader runs.
+  const pilotContent = getPilotContent(chapterId, episodeId);
+  if (pilotContent) {
+    return (
+      <DifficultyProvider>
+        <EpisodeDayProvider chapterId={chapterId!} episodeId={episodeId!}>
+          <DayGatedEpisode
+            episodeTitle={episode.title}
+            pilot={pilotContent}
+            nextEpisodeTitle={nextEpisode?.title}
+            onNextEpisode={() => nextEpisode && navigate(`/student/textbook/${chapterId}/${nextEpisode.id}`)}
+          />
+        </EpisodeDayProvider>
+      </DifficultyProvider>
     );
   }
 
@@ -1324,6 +1350,89 @@ const TextbookEpisode = () => {
       {/* Modals */}
       <TutorialDefenseModal open={showDefense} onOpenChange={setShowDefense} topic={episode.title} episodeTitle={`${chapter.title} — ${episode.title}`} subject={chapter.title} chapterId={chapterId} episodeId={episodeId} />
       <FirstPrinciplesModal open={showFirstPrinciples} onOpenChange={setShowFirstPrinciples} topic={episode.title} episodeTitle={`${chapter.title} — ${episode.title}`} subject={chapter.title} chapterId={chapterId} episodeId={episodeId} />
+    </div>
+  );
+};
+
+// ─── Day-Gated Episode wrapper (3-Day Unlock pilot) ─────────────
+import type { DayPilotContent } from "@/data/dayPilotContent";
+
+const DayGatedEpisode = ({
+  episodeTitle,
+  pilot,
+  nextEpisodeTitle,
+  onNextEpisode,
+}: {
+  episodeTitle: string;
+  pilot: DayPilotContent;
+  nextEpisodeTitle?: string;
+  onNextEpisode?: () => void;
+}) => {
+  const { info, isLoading } = useEpisodeDay();
+
+  if (isLoading) return <EpisodeLoadingTransition />;
+
+  // Day 3 done → show growth recap (re-render Day3 final screen)
+  // Day 2 done, day 3 unlocked → Day 3 flow
+  // Day 2 done, day 3 locked → locked wall for Day 3
+  // Day 1 done, day 2 unlocked → Day 2 flow
+  // Day 1 done, day 2 locked → locked wall for Day 2
+  // else → Day 1 flow
+  let body: React.ReactNode;
+  if (info.day3Done) {
+    body = (
+      <Day3Master
+        episodeTitle={episodeTitle}
+        whyItWorks={pilot.day3.whyItWorks}
+        proveItPrompt={pilot.day3.proveItPrompt}
+        caseStudy={pilot.day3.caseStudy}
+        growthGains={pilot.day3.growthGains}
+        nextEpisodeTitle={nextEpisodeTitle}
+        onNextEpisode={onNextEpisode}
+      />
+    );
+  } else if (info.day2Done && !info.day3Locked) {
+    body = (
+      <Day3Master
+        episodeTitle={episodeTitle}
+        whyItWorks={pilot.day3.whyItWorks}
+        proveItPrompt={pilot.day3.proveItPrompt}
+        caseStudy={pilot.day3.caseStudy}
+        growthGains={pilot.day3.growthGains}
+        nextEpisodeTitle={nextEpisodeTitle}
+        onNextEpisode={onNextEpisode}
+      />
+    );
+  } else if (info.day2Done && info.day3Locked && info.day3UnlocksAt) {
+    body = <DayLockedWall day={3} unlocksAt={info.day3UnlocksAt} episodeTitle={episodeTitle} />;
+  } else if (info.day1Done && !info.day2Locked) {
+    body = (
+      <Day2Build
+        episodeTitle={episodeTitle}
+        deepDiveText={pilot.day2.deepDiveText}
+        detective1={pilot.day2.detective1}
+        detective2={pilot.day2.detective2}
+      />
+    );
+  } else if (info.day1Done && info.day2Locked && info.day2UnlocksAt) {
+    body = <DayLockedWall day={2} unlocksAt={info.day2UnlocksAt} episodeTitle={episodeTitle} />;
+  } else {
+    body = (
+      <Day1Spark
+        episodeTitle={episodeTitle}
+        hookQuestion={pilot.hookQuestion}
+        conceptText={pilot.conceptText}
+        detectiveStatement={pilot.detective.statement}
+        detectiveIsTrue={pilot.detective.isTrue}
+        detectiveExplain={pilot.detective.explain}
+      />
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <StageTopbar episodeTitle={episodeTitle} />
+      {body}
     </div>
   );
 };
