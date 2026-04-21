@@ -22,13 +22,20 @@ const VoiceGreeting = () => {
   const [show, setShow] = useState(false);
   const [greeting, setGreeting] = useState("");
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const hasStartedRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!user || !role) return;
 
     const todayKey = new Date().toISOString().split("T")[0];
+    const guardKey = `${user.id}:${todayKey}`;
+
+    // Prevent double-fire when auth state fires twice (onAuthStateChange + getSession)
+    if (hasStartedRef.current === guardKey) return;
+    hasStartedRef.current = guardKey;
+
     const stored = localStorage.getItem(GREETING_KEY);
-    if (stored === todayKey) return;
+    if (stored === guardKey) return;
 
     const loadAndGreet = async () => {
       const { data } = await supabase
@@ -41,9 +48,9 @@ const VoiceGreeting = () => {
       const text = getGreetingText(role, name);
       setGreeting(text);
       setShow(true);
-      localStorage.setItem(GREETING_KEY, todayKey);
+      localStorage.setItem(GREETING_KEY, guardKey);
 
-      // Use ElevenLabs warm voice via edge function
+      // Use ElevenLabs warm voice — single voice, no browser TTS fallback (avoids clash)
       try {
         const response = await fetch(
           `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-tts-stream`,
@@ -78,27 +85,11 @@ const VoiceGreeting = () => {
           return;
         }
       } catch (e) {
-        console.warn("ElevenLabs greeting TTS failed, falling back to browser:", e);
+        console.warn("ElevenLabs greeting TTS failed:", e);
       }
 
-      // Fallback: browser TTS
-      if ("speechSynthesis" in window) {
-        setTimeout(() => {
-          const utter = new SpeechSynthesisUtterance(text);
-          utter.rate = 0.9;
-          utter.pitch = 1.05;
-          utter.volume = 0.8;
-          const voices = speechSynthesis.getVoices();
-          const preferred = voices.find(v =>
-            v.name.includes("Google") && v.lang.startsWith("en")
-          ) || voices.find(v => v.lang.startsWith("en"));
-          if (preferred) utter.voice = preferred;
-          utter.onend = () => setTimeout(() => setShow(false), 2000);
-          speechSynthesis.speak(utter);
-        }, 500);
-      } else {
-        setTimeout(() => setShow(false), 5000);
-      }
+      // If TTS unavailable, just keep the visual banner briefly — no second voice
+      setTimeout(() => setShow(false), 6000);
     };
 
     loadAndGreet();
@@ -108,7 +99,6 @@ const VoiceGreeting = () => {
         audioRef.current.pause();
         audioRef.current = null;
       }
-      if ("speechSynthesis" in window) speechSynthesis.cancel();
     };
   }, [user, role]);
 
