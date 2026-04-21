@@ -222,7 +222,7 @@ const VibeCheckModal = () => {
   if (result) {
     const meta = MODE_META[result];
     return (
-      <Dialog open={open} onOpenChange={() => { /* locked until confirm */ }}>
+      <Dialog open={open} onOpenChange={(o) => { if (!o) handleConfirm(); }}>
         <DialogContent
           className="sm:max-w-lg p-0 overflow-hidden border-0"
           style={{
