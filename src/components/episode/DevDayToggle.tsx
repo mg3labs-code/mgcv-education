@@ -21,6 +21,18 @@ const DevDayToggle = () => {
     () => typeof window !== "undefined" && window.localStorage.getItem(STORAGE_KEY) === "1",
   );
 
+  // Detect URL-based bypass (?unlock=all) and toast it once on mount
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("unlock") === "all") {
+      toast.warning("Dev: 20h gate BYPASSED via URL", {
+        description: "?unlock=all is active for this session.",
+        duration: 4000,
+      });
+    }
+  }, []);
+
   // Track previous value so we only toast on actual user-initiated changes
   const isFirstRun = useRef(true);
 
