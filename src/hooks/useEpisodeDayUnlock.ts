@@ -83,7 +83,9 @@ export function useEpisodeDayUnlock(chapterId: string | undefined, episodeId: st
   const { user } = useAuth();
   const qc = useQueryClient();
   const [searchParams] = useSearchParams();
-  const demoOverride = searchParams.get("unlock") === "all";
+  const demoOverride =
+    searchParams.get("unlock") === "all" ||
+    (typeof window !== "undefined" && window.localStorage.getItem("dev-unlock-all-days") === "1");
 
   const queryKey = ["episode_day_state", user?.id, chapterId, episodeId];
 
