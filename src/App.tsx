@@ -9,7 +9,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import StudyCompanion from "./components/student/StudyCompanion";
 import CommandPalette from "./components/CommandPalette";
-import VoiceGreeting from "./components/VoiceGreeting";
+
 import VibeCheckModal from "./components/student/VibeCheckModal";
 import Index from "./pages/Index";
 
@@ -94,7 +94,6 @@ const App = () => (
             <CommandPalette />
             <CompanionWrapper />
             <VibeCheckWrapper />
-            <VoiceGreeting />
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 <Route path="/" element={<Index />} />
