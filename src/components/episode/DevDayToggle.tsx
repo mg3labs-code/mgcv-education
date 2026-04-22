@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Wrench, X, Unlock, Lock, FastForward, RotateCcw } from "lucide-react";
 import { useEpisodeDay } from "@/contexts/EpisodeDayContext";
 import { toast } from "sonner";
@@ -21,10 +21,49 @@ const DevDayToggle = () => {
     () => typeof window !== "undefined" && window.localStorage.getItem(STORAGE_KEY) === "1",
   );
 
+  // Detect URL-based bypass (?unlock=all) and toast it once on mount
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("unlock") === "all") {
+      toast.warning("Dev: 20h gate BYPASSED via URL", {
+        description: "?unlock=all is active for this session.",
+        duration: 4000,
+      });
+    }
+  }, []);
+
+  // Track previous value so we only toast on actual user-initiated changes
+  const isFirstRun = useRef(true);
+
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (unlockAll) window.localStorage.setItem(STORAGE_KEY, "1");
     else window.localStorage.removeItem(STORAGE_KEY);
+
+    if (isFirstRun.current) {
+      isFirstRun.current = false;
+      // Inform on initial mount so devs always know current state
+      if (unlockAll) {
+        toast.warning("Dev: 20h gate is BYPASSED", {
+          description: "All days are unlocked via localStorage flag.",
+          duration: 4000,
+        });
+      }
+      return;
+    }
+
+    if (unlockAll) {
+      toast.warning("Dev: 20h gate BYPASSED", {
+        description: "All 3 days are now unlocked for testing.",
+        duration: 3500,
+      });
+    } else {
+      toast.success("Dev: 20h gate ENFORCED", {
+        description: "Normal day-lock behavior restored.",
+        duration: 3500,
+      });
+    }
   }, [unlockAll]);
 
   if (import.meta.env.PROD) return null;
