@@ -41,6 +41,7 @@ import AdaptiveReasoningBlock from "@/components/textbook/AdaptiveReasoningBlock
 import { EpisodeDayProvider, useEpisodeDay } from "@/contexts/EpisodeDayContext";
 import StageTopbar from "@/components/episode/StageTopbar";
 import Day1Spark from "@/components/episode/Day1Spark";
+import DevDayToggle from "@/components/episode/DevDayToggle";
 import Day2Build from "@/components/episode/Day2Build";
 import Day3Master from "@/components/episode/Day3Master";
 import DayLockedWall from "@/components/episode/DayLockedWall";
