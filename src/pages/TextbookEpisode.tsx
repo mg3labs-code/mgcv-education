@@ -1486,6 +1486,7 @@ const DayGatedEpisode = ({
     <div className="min-h-screen bg-background">
       <StageTopbar episodeTitle={episodeTitle} dayProgress={dayProgress} />
       {body}
+      <DevDayToggle />
     </div>
   );
 };
