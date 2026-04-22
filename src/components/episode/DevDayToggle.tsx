@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Wrench, X, Unlock, Lock, FastForward, RotateCcw } from "lucide-react";
 import { useEpisodeDay } from "@/contexts/EpisodeDayContext";
 import { toast } from "sonner";
