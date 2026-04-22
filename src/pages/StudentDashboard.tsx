@@ -14,6 +14,7 @@ import InnerOSAnalytics from "@/components/student/InnerOSAnalytics";
 import { useVoiceGuide } from "@/hooks/useVoiceGuide";
 import ExamAlertBanner from "@/components/student/ExamAlertBanner";
 import { useDiscoveryToasts } from "@/hooks/useDiscoveryToasts";
+import DashboardGreeting from "@/components/DashboardGreeting";
 
 interface ScheduleItem {
   type: string;
@@ -574,12 +575,7 @@ const StudentDashboard = () => {
             <>
               {/* Greeting */}
               <FadeSlide>
-                <div style={{ marginBottom: 24 }}>
-                  <div style={{ fontFamily: "'Source Serif 4', serif", fontSize: 26, fontWeight: 700, color: "#1C1917" }}>
-                    Hi, {firstName}! 👋
-                  </div>
-                  <p style={{ fontSize: 14, color: "#78716C", margin: "4px 0 0" }}>{greeting}</p>
-                </div>
+                <DashboardGreeting firstName={firstName} subline={greeting} />
               </FadeSlide>
 
               {/* PHASE 4: Inner OS as hero */}
