@@ -46,6 +46,7 @@ const ExplorerModeDemo = lazy(() => import("./pages/ExplorerModeDemo"));
 const FallbackStrategiesDemo = lazy(() => import("./pages/FallbackStrategiesDemo"));
 const EliteIntegrationDemo = lazy(() => import("./pages/EliteIntegrationDemo"));
 const AdaptiveSystemHub = lazy(() => import("./pages/AdaptiveSystemHub"));
+const Demo2304 = lazy(() => import("./pages/Demo2304"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
@@ -112,6 +113,8 @@ const App = () => (
                 <Route path="/demo/elite-integration" element={<EliteIntegrationDemo />} />
                 <Route path="/demo" element={<AdaptiveSystemHub />} />
                 <Route path="/demo/adaptive-system" element={<AdaptiveSystemHub />} />
+                <Route path="/demo-2304" element={<Demo2304 />} />
+                <Route path="/demo-2304/:subject" element={<Demo2304 />} />
                 <Route path="/student" element={<ProtectedRoute><StudentDashboard /></ProtectedRoute>} />
                 <Route path="/student/episode/:id" element={<ProtectedRoute><LearningEpisode /></ProtectedRoute>} />
                 <Route path="/student/onboarding" element={<ProtectedRoute><StudentOnboarding /></ProtectedRoute>} />
