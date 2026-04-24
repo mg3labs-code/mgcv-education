@@ -21,7 +21,53 @@ import {
   DEMO_2304,
   type Subject,
   type DemoSubjectContent,
+  type DemoEpisode1,
+  type DemoEpisode2,
 } from "@/data/demo2304Content";
+
+// Flattened "view" objects used by inner Day components — combines subject
+// metadata with the chosen episode's content. Keeps the existing JSX (which
+// expects `c.day1`, `c.episodeTitle`, etc.) working without per-line refactors.
+type Ep1View = Pick<
+  DemoSubjectContent,
+  "subjectLabel" | "subjectEmoji" | "accent" | "chapterTitle"
+> &
+  Omit<DemoEpisode1, "kind">;
+
+type Ep2View = Pick<
+  DemoSubjectContent,
+  "subjectLabel" | "subjectEmoji" | "accent" | "chapterTitle"
+> &
+  Omit<DemoEpisode2, "kind">;
+
+const buildEp1View = (s: DemoSubjectContent): Ep1View => ({
+  subjectLabel: s.subjectLabel,
+  subjectEmoji: s.subjectEmoji,
+  accent: s.accent,
+  chapterTitle: s.chapterTitle,
+  episodeTitle: s.episodes.ep1.episodeTitle,
+  episodeSubtitle: s.episodes.ep1.episodeSubtitle,
+  estimatedMinutes: s.episodes.ep1.estimatedMinutes,
+  day1: s.episodes.ep1.day1,
+  day2: s.episodes.ep1.day2,
+  day3: s.episodes.ep1.day3,
+});
+
+const buildEp2View = (s: DemoSubjectContent): Ep2View | null =>
+  s.episodes.ep2
+    ? {
+        subjectLabel: s.subjectLabel,
+        subjectEmoji: s.subjectEmoji,
+        accent: s.accent,
+        chapterTitle: s.chapterTitle,
+        episodeTitle: s.episodes.ep2.episodeTitle,
+        episodeSubtitle: s.episodes.ep2.episodeSubtitle,
+        estimatedMinutes: s.episodes.ep2.estimatedMinutes,
+        day1: s.episodes.ep2.day1,
+        day2: s.episodes.ep2.day2,
+        day3: s.episodes.ep2.day3,
+      }
+    : null;
 import DemoBuddy, { type BuddyContext } from "@/components/demo/DemoBuddy";
 import DownloadCodeButton from "@/components/DownloadCodeButton";
 
