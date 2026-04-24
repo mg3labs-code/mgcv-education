@@ -23,6 +23,51 @@ import {
   type DemoSubjectContent,
 } from "@/data/demo2304Content";
 import DemoBuddy, { type BuddyContext } from "@/components/demo/DemoBuddy";
+import DownloadCodeButton from "@/components/DownloadCodeButton";
+
+// Raw source bundles for "Download code" buttons — used so other LLMs (Claude/GPT)
+// can read the EXACT UI source for verification & comparison without guessing.
+// Demo 2304 bundle (this page + its data + its voice buddy + its edge fn)
+import demo2304PageSrc from "./Demo2304.tsx?raw";
+import demo2304ContentSrc from "@/data/demo2304Content.ts?raw";
+import demoBuddySrc from "@/components/demo/DemoBuddy.tsx?raw";
+import demoBuddyEdgeSrc from "../../supabase/functions/demo-buddy-feedback/index.ts?raw";
+
+// Student Explorer/Builder/Mastery bundle (Episode 1 / Episode 2 live flow)
+import textbookEpisodeSrc from "./TextbookEpisode.tsx?raw";
+import day1SparkSrc from "@/components/episode/Day1Spark.tsx?raw";
+import day2BuildSrc from "@/components/episode/Day2Build.tsx?raw";
+import day3MasterSrc from "@/components/episode/Day3Master.tsx?raw";
+import stageTopbarSrc from "@/components/episode/StageTopbar.tsx?raw";
+import dayLockedWallSrc from "@/components/episode/DayLockedWall.tsx?raw";
+import devDayToggleSrc from "@/components/episode/DevDayToggle.tsx?raw";
+import dayPilotContentSrc from "@/data/dayPilotContent.ts?raw";
+import episodeBlocksSrc from "@/components/textbook/EpisodeBlocks.tsx?raw";
+import episodeDayContextSrc from "@/contexts/EpisodeDayContext.tsx?raw";
+import useEpisodeDayUnlockSrc from "@/hooks/useEpisodeDayUnlock.ts?raw";
+import useEpisodeProgressSrc from "@/hooks/useEpisodeProgress.ts?raw";
+
+const DEMO_2304_FILES = [
+  { path: "src/pages/Demo2304.tsx", content: demo2304PageSrc },
+  { path: "src/data/demo2304Content.ts", content: demo2304ContentSrc },
+  { path: "src/components/demo/DemoBuddy.tsx", content: demoBuddySrc },
+  { path: "supabase/functions/demo-buddy-feedback/index.ts", content: demoBuddyEdgeSrc },
+];
+
+const STUDENT_EBM_FILES = [
+  { path: "src/pages/TextbookEpisode.tsx", content: textbookEpisodeSrc },
+  { path: "src/components/episode/Day1Spark.tsx", content: day1SparkSrc },
+  { path: "src/components/episode/Day2Build.tsx", content: day2BuildSrc },
+  { path: "src/components/episode/Day3Master.tsx", content: day3MasterSrc },
+  { path: "src/components/episode/StageTopbar.tsx", content: stageTopbarSrc },
+  { path: "src/components/episode/DayLockedWall.tsx", content: dayLockedWallSrc },
+  { path: "src/components/episode/DevDayToggle.tsx", content: devDayToggleSrc },
+  { path: "src/data/dayPilotContent.ts", content: dayPilotContentSrc },
+  { path: "src/components/textbook/EpisodeBlocks.tsx", content: episodeBlocksSrc },
+  { path: "src/contexts/EpisodeDayContext.tsx", content: episodeDayContextSrc },
+  { path: "src/hooks/useEpisodeDayUnlock.ts", content: useEpisodeDayUnlockSrc },
+  { path: "src/hooks/useEpisodeProgress.ts", content: useEpisodeProgressSrc },
+];
 
 // ────────────────────────────────────────────────────────────────
 // Top progress bar (replaces "Step X of Y" labels)
