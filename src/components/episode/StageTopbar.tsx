@@ -25,14 +25,28 @@ interface Props {
  *   each full day = 33.33%. Current day adds up to another 33.33% based on `dayProgress`.
  *   day1Done → 33%, +day2Done → 66%, +day3Done → 100%.
  */
-const StageTopbar = ({ episodeTitle, streakDays = 0, exitTo, dayProgress = 0 }: Props) => {
+const StageTopbar = ({ episodeTitle, streakDays = 0, exitTo, dayProgress = 0, viewDay, onChangeDay }: Props) => {
   const navigate = useNavigate();
   const { mode } = useDifficulty();
   const { info } = useEpisodeDay();
   const { muted, toggleMuted } = useSoundFx();
-  const day = info.currentDay;
+  const day: DayNumber = (viewDay ?? info.currentDay) as DayNumber;
   const dayInfo = dayLabels[day];
   const modeInfo = modeLabels[mode];
+
+  // Per-day reachability for the switcher.
+  // A day is reachable if: (a) it's day 1, OR (b) the previous day is completed AND this day is not locked by the 20h gate.
+  // Demo override (?unlock=all) makes all days reachable.
+  const dayReachable: Record<DayNumber, boolean> = {
+    1: true,
+    2: info.demoOverride || (info.day1Done && !info.day2Locked) || info.day2Done || info.day3Done,
+    3: info.demoOverride || (info.day2Done && !info.day3Locked) || info.day3Done,
+  };
+  const dayDone: Record<DayNumber, boolean> = {
+    1: info.day1Done,
+    2: info.day2Done,
+    3: info.day3Done,
+  };
 
   // XP calc
   const doneDays =
