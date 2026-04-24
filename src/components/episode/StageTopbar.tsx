@@ -140,6 +140,42 @@ const StageTopbar = ({ episodeTitle, streakDays = 0, exitTo, dayProgress = 0, vi
           </span>
         </div>
       </div>
+
+      {/* Day switcher (Day 1 · 2 · 3) — students can revisit completed days or jump ahead if unlocked */}
+      <div className="max-w-3xl mx-auto px-3 sm:px-4 pb-2">
+        <div className="grid grid-cols-3 gap-1.5">
+          {([1, 2, 3] as DayNumber[]).map((d) => {
+            const reachable = dayReachable[d];
+            const done = dayDone[d];
+            const isActive = d === day;
+            const label = dayLabels[d].name;
+            return (
+              <button
+                key={d}
+                type="button"
+                onClick={() => onChangeDay?.(d)}
+                disabled={!onChangeDay}
+                aria-current={isActive ? "step" : undefined}
+                aria-label={`Day ${d} ${label}${!reachable ? " (locked)" : done ? " (completed)" : ""}`}
+                className={[
+                  "relative flex items-center justify-center gap-1.5 h-9 px-2 rounded-lg text-[11px] font-semibold transition-all",
+                  "border",
+                  isActive
+                    ? "border-primary bg-primary/10 text-primary shadow-sm"
+                    : reachable
+                      ? "border-border bg-muted/40 text-foreground hover:bg-muted/70"
+                      : "border-border bg-muted/20 text-muted-foreground cursor-not-allowed opacity-70",
+                ].join(" ")}
+              >
+                <span className="font-bold tabular-nums">D{d}</span>
+                <span className="hidden sm:inline truncate">{label}</span>
+                {done && <Check className="h-3 w-3 text-success" aria-hidden />}
+                {!reachable && !done && <Lock className="h-3 w-3" aria-hidden />}
+              </button>
+            );
+          })}
+        </div>
+      </div>
     </header>
   );
 };
