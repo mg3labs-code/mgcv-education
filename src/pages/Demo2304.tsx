@@ -1585,7 +1585,7 @@ const Demo2304 = () => {
           <div className="grid gap-2">
             <Link to="/demo-2304/math" className="rounded-xl border-2 border-emerald-300 bg-emerald-50/50 dark:bg-emerald-950/20 p-4 hover:scale-[1.02] transition-transform">
               <p className="font-bold text-foreground">🔢 Mathematics</p>
-              <p className="text-xs text-muted-foreground">Real Numbers</p>
+              <p className="text-xs text-muted-foreground">Real Numbers · Ep 1 + Ep 2</p>
             </Link>
             <Link to="/demo-2304/physics" className="rounded-xl border-2 border-sky-300 bg-sky-50/50 dark:bg-sky-950/20 p-4 hover:scale-[1.02] transition-transform">
               <p className="font-bold text-foreground">⚡ Physics</p>
