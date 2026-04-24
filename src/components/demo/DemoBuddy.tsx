@@ -332,16 +332,14 @@ const DemoBuddy = ({ context }: DemoBuddyProps) => {
       setTranscript("");
       setFeedback("");
       try {
-        const { data, error } = await supabase.functions.invoke("demo-buddy-feedback", {
-          body: {
-            mode: "narrate",
-            subject: ctx.subject,
-            questionText: ctx.question,
-            language: "bilingual",
-          },
-        });
-        if (error) throw error;
-        const text = data?.text || "Okay, take a look at this one. What do you think?";
+        // Speak the EXACT on-screen question (no LLM paraphrase / hallucination).
+        // Add a short warm hook + invitation so it feels like a real tutor.
+        const hooks = ["Okay, look at this one.", "Chinna question.", "Try this one with me."];
+        const invites = ["What do you think? Cheppu.", "Tell me your guess.", "Ardham aindha? Cheppu nee answer."];
+        const hook = hooks[Math.floor(Math.random() * hooks.length)];
+        const invite = invites[Math.floor(Math.random() * invites.length)];
+        const cleanQuestion = ctx.question.replace(/\s+/g, " ").trim();
+        const text = `${hook} ${cleanQuestion} ${invite}`;
         await speak(text);
       } catch (e) {
         console.error("[Buddy] narrate error", e);
