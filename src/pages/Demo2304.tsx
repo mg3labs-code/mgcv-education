@@ -860,6 +860,21 @@ const Demo2304 = () => {
               <p className="text-xs text-muted-foreground">Chemical Reactions</p>
             </Link>
           </div>
+          <div className="pt-4 border-t border-border space-y-2">
+            <p className="text-[11px] text-muted-foreground font-semibold uppercase tracking-wide">For LLM cross-review</p>
+            <div className="flex flex-col gap-2">
+              <DownloadCodeButton
+                files={STUDENT_EBM_FILES}
+                filename="student-explorer-builder-mastery-bundle.txt"
+                label="⬇ Student Explorer/Builder/Mastery (Ep 1 + Ep 2)"
+              />
+              <DownloadCodeButton
+                files={DEMO_2304_FILES}
+                filename="demo-2304-ui-bundle.txt"
+                label="⬇ Demo 2304 UI bundle"
+              />
+            </div>
+          </div>
         </div>
       </div>
     );
