@@ -338,14 +338,15 @@ const Day2Demo = ({
   c,
   day1Guess,
   onAdvance,
+  onContextChange,
 }: {
   c: DemoSubjectContent;
   day1Guess: string;
   onAdvance: () => void;
+  onContextChange: (ctx: BuddyContext | null) => void;
 }) => {
   const [screen, setScreen] = useState<Day2Screen>("recall");
   const [order, setOrder] = useState<number[]>(() => {
-    // Shuffle the build blocks into a wrong starting order
     const arr = c.day2.buildBlocks.map((_, i) => i);
     return [...arr].sort(() => Math.random() - 0.5);
   });
@@ -354,6 +355,33 @@ const Day2Demo = ({
 
   const screens: Day2Screen[] = ["recall", "deepdive", "build", "detective"];
   const progress = (screens.indexOf(screen) + 1) / (screens.length + 1);
+
+  useEffect(() => {
+    if (screen === "recall") {
+      onContextChange({
+        key: `${c.subjectLabel}-d2-recall`,
+        subject: c.subjectLabel,
+        question: c.day2.recallPrompt,
+        expectedHint: c.day2.deepDiveBody,
+      });
+    } else if (screen === "build") {
+      onContextChange({
+        key: `${c.subjectLabel}-d2-build`,
+        subject: c.subjectLabel,
+        question: `Explain the logical order of these steps in your own words: ${c.day2.buildBlocks.join(" / ")}`,
+        expectedHint: c.day2.buildExplain,
+      });
+    } else if (screen === "detective") {
+      onContextChange({
+        key: `${c.subjectLabel}-d2-detective`,
+        subject: c.subjectLabel,
+        question: `Believe or doubt: "${c.day2.detective.statement}"`,
+        expectedHint: `${c.day2.detective.isTrue ? "TRUE." : "FALSE."} ${c.day2.detective.explain}`,
+      });
+    } else {
+      onContextChange(null);
+    }
+  }, [screen, c, onContextChange]);
 
   const move = (idx: number, dir: -1 | 1) => {
     setOrder((prev) => {
@@ -551,12 +579,40 @@ const Day2Demo = ({
 // ────────────────────────────────────────────────────────────────
 type Day3Screen = "why" | "prove" | "case" | "growth";
 
-const Day3Demo = ({ c, onRestart }: { c: DemoSubjectContent; onRestart: () => void }) => {
+const Day3Demo = ({
+  c,
+  onRestart,
+  onContextChange,
+}: {
+  c: DemoSubjectContent;
+  onRestart: () => void;
+  onContextChange: (ctx: BuddyContext | null) => void;
+}) => {
   const [screen, setScreen] = useState<Day3Screen>("why");
   const [proveAnswer, setProveAnswer] = useState("");
 
   const screens: Day3Screen[] = ["why", "prove", "case", "growth"];
   const progress = (screens.indexOf(screen) + 1) / screens.length;
+
+  useEffect(() => {
+    if (screen === "prove") {
+      onContextChange({
+        key: `${c.subjectLabel}-d3-prove`,
+        subject: c.subjectLabel,
+        question: c.day3.proveItPrompt,
+        expectedHint: c.day3.whyItWorks,
+      });
+    } else if (screen === "case") {
+      onContextChange({
+        key: `${c.subjectLabel}-d3-case`,
+        subject: c.subjectLabel,
+        question: `Real-world challenge: ${c.day3.caseStudy}`,
+        expectedHint: c.day3.whyItWorks,
+      });
+    } else {
+      onContextChange(null);
+    }
+  }, [screen, c, onContextChange]);
 
   return (
     <div className="px-4 py-8 relative">
