@@ -364,15 +364,14 @@ const DemoBuddy = ({ context }: DemoBuddyProps) => {
         streamRef.current = stream;
         if (cancelledRef.current) return;
         started = true;
-        // Greet warmly, then narrate first question (if available)
-        await speak("Hi! I'm Buddy. I'm here with you — just talk naturally, sare?");
+        // Short greeting, then narrate the on-screen question (if any)
+        await speak("Hi! I'm Buddy. Let's learn together.");
         if (cancelledRef.current) return;
         if (context) {
           lastNarratedKey.current = context.key;
           await narrateQuestion(context);
-        } else {
-          await startListening();
         }
+        // If no context yet, the context-change effect will narrate as soon as it arrives.
       } catch (e) {
         console.warn("[Buddy] auto-start blocked", e);
         setPhase("blocked");
