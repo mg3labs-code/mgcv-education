@@ -1440,38 +1440,45 @@ const DayGatedEpisode = ({
   // Quick Look (cap=1) gets just one stretch section; Deep Dive gets 2; Full Story gets all
   const day3Sections = day3RichSections.slice(0, cap);
 
+  // Render body based on the day the student is currently *viewing* (testing-friendly).
+  // The 20h lock is still respected: if a future day is locked AND not yet completed,
+  // we show the LockedWall instead of the day body.
   let body: React.ReactNode;
-  if (info.day3Done || (info.day2Done && !info.day3Locked)) {
-    body = (
-      <Day3Master
-        episodeTitle={episodeTitle}
-        whyItWorks={pilot.day3.whyItWorks}
-        masterSections={day3Sections}
-        proveItPrompt={pilot.day3.proveItPrompt}
-        caseStudy={pilot.day3.caseStudy}
-        growthGains={pilot.day3.growthGains}
-        sortActivity={pilot.day3.sort}
-        nextEpisodeTitle={nextEpisodeTitle}
-        onNextEpisode={onNextEpisode}
-        onProgress={setDayProgress}
-      />
-    );
-  } else if (info.day2Done && info.day3Locked && info.day3UnlocksAt) {
-    body = <DayLockedWall day={3} unlocksAt={info.day3UnlocksAt} episodeTitle={episodeTitle} />;
-  } else if (info.day1Done && !info.day2Locked) {
-    body = (
-      <Day2Build
-        episodeTitle={episodeTitle}
-        deepDiveText={pilot.day2.deepDiveText}
-        deepDiveSections={day2Sections}
-        detective1={pilot.day2.detective1}
-        detective2={pilot.day2.detective2}
-        sortActivity={pilot.day2.sort}
-        onProgress={setDayProgress}
-      />
-    );
-  } else if (info.day1Done && info.day2Locked && info.day2UnlocksAt) {
-    body = <DayLockedWall day={2} unlocksAt={info.day2UnlocksAt} episodeTitle={episodeTitle} />;
+  if (viewDay === 3) {
+    if (!info.day3Done && info.day3Locked && info.day3UnlocksAt) {
+      body = <DayLockedWall day={3} unlocksAt={info.day3UnlocksAt} episodeTitle={episodeTitle} />;
+    } else {
+      body = (
+        <Day3Master
+          episodeTitle={episodeTitle}
+          whyItWorks={pilot.day3.whyItWorks}
+          masterSections={day3Sections}
+          proveItPrompt={pilot.day3.proveItPrompt}
+          caseStudy={pilot.day3.caseStudy}
+          growthGains={pilot.day3.growthGains}
+          sortActivity={pilot.day3.sort}
+          nextEpisodeTitle={nextEpisodeTitle}
+          onNextEpisode={onNextEpisode}
+          onProgress={setDayProgress}
+        />
+      );
+    }
+  } else if (viewDay === 2) {
+    if (!info.day2Done && info.day2Locked && info.day2UnlocksAt) {
+      body = <DayLockedWall day={2} unlocksAt={info.day2UnlocksAt} episodeTitle={episodeTitle} />;
+    } else {
+      body = (
+        <Day2Build
+          episodeTitle={episodeTitle}
+          deepDiveText={pilot.day2.deepDiveText}
+          deepDiveSections={day2Sections}
+          detective1={pilot.day2.detective1}
+          detective2={pilot.day2.detective2}
+          sortActivity={pilot.day2.sort}
+          onProgress={setDayProgress}
+        />
+      );
+    }
   } else {
     body = (
       <Day1Spark
@@ -1492,7 +1499,12 @@ const DayGatedEpisode = ({
 
   return (
     <div className="min-h-screen bg-background">
-      <StageTopbar episodeTitle={episodeTitle} dayProgress={dayProgress} />
+      <StageTopbar
+        episodeTitle={episodeTitle}
+        dayProgress={dayProgress}
+        viewDay={viewDay}
+        onChangeDay={(d) => setViewDay(d)}
+      />
       {body}
       <DevDayToggle />
     </div>
