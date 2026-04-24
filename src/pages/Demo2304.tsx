@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
   Sparkles,
@@ -22,6 +22,7 @@ import {
   type Subject,
   type DemoSubjectContent,
 } from "@/data/demo2304Content";
+import DemoBuddy, { type BuddyContext } from "@/components/demo/DemoBuddy";
 
 // ────────────────────────────────────────────────────────────────
 // Top progress bar (replaces "Step X of Y" labels)
