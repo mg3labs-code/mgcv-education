@@ -23,6 +23,51 @@ import {
   type DemoSubjectContent,
 } from "@/data/demo2304Content";
 import DemoBuddy, { type BuddyContext } from "@/components/demo/DemoBuddy";
+import DownloadCodeButton from "@/components/DownloadCodeButton";
+
+// Raw source bundles for "Download code" buttons — used so other LLMs (Claude/GPT)
+// can read the EXACT UI source for verification & comparison without guessing.
+// Demo 2304 bundle (this page + its data + its voice buddy + its edge fn)
+import demo2304PageSrc from "./Demo2304.tsx?raw";
+import demo2304ContentSrc from "@/data/demo2304Content.ts?raw";
+import demoBuddySrc from "@/components/demo/DemoBuddy.tsx?raw";
+import demoBuddyEdgeSrc from "../../supabase/functions/demo-buddy-feedback/index.ts?raw";
+
+// Student Explorer/Builder/Mastery bundle (Episode 1 / Episode 2 live flow)
+import textbookEpisodeSrc from "./TextbookEpisode.tsx?raw";
+import day1SparkSrc from "@/components/episode/Day1Spark.tsx?raw";
+import day2BuildSrc from "@/components/episode/Day2Build.tsx?raw";
+import day3MasterSrc from "@/components/episode/Day3Master.tsx?raw";
+import stageTopbarSrc from "@/components/episode/StageTopbar.tsx?raw";
+import dayLockedWallSrc from "@/components/episode/DayLockedWall.tsx?raw";
+import devDayToggleSrc from "@/components/episode/DevDayToggle.tsx?raw";
+import dayPilotContentSrc from "@/data/dayPilotContent.ts?raw";
+import episodeBlocksSrc from "@/components/textbook/EpisodeBlocks.tsx?raw";
+import episodeDayContextSrc from "@/contexts/EpisodeDayContext.tsx?raw";
+import useEpisodeDayUnlockSrc from "@/hooks/useEpisodeDayUnlock.ts?raw";
+import useEpisodeProgressSrc from "@/hooks/useEpisodeProgress.ts?raw";
+
+const DEMO_2304_FILES = [
+  { path: "src/pages/Demo2304.tsx", content: demo2304PageSrc },
+  { path: "src/data/demo2304Content.ts", content: demo2304ContentSrc },
+  { path: "src/components/demo/DemoBuddy.tsx", content: demoBuddySrc },
+  { path: "supabase/functions/demo-buddy-feedback/index.ts", content: demoBuddyEdgeSrc },
+];
+
+const STUDENT_EBM_FILES = [
+  { path: "src/pages/TextbookEpisode.tsx", content: textbookEpisodeSrc },
+  { path: "src/components/episode/Day1Spark.tsx", content: day1SparkSrc },
+  { path: "src/components/episode/Day2Build.tsx", content: day2BuildSrc },
+  { path: "src/components/episode/Day3Master.tsx", content: day3MasterSrc },
+  { path: "src/components/episode/StageTopbar.tsx", content: stageTopbarSrc },
+  { path: "src/components/episode/DayLockedWall.tsx", content: dayLockedWallSrc },
+  { path: "src/components/episode/DevDayToggle.tsx", content: devDayToggleSrc },
+  { path: "src/data/dayPilotContent.ts", content: dayPilotContentSrc },
+  { path: "src/components/textbook/EpisodeBlocks.tsx", content: episodeBlocksSrc },
+  { path: "src/contexts/EpisodeDayContext.tsx", content: episodeDayContextSrc },
+  { path: "src/hooks/useEpisodeDayUnlock.ts", content: useEpisodeDayUnlockSrc },
+  { path: "src/hooks/useEpisodeProgress.ts", content: useEpisodeProgressSrc },
+];
 
 // ────────────────────────────────────────────────────────────────
 // Top progress bar (replaces "Step X of Y" labels)
@@ -751,6 +796,18 @@ const Demo2304Page = ({ subject }: { subject: Subject }) => {
         <div className="max-w-3xl mx-auto mt-2">
           <DayStepper current={day} onJump={setDay} />
         </div>
+        <div className="max-w-3xl mx-auto mt-2 flex flex-wrap items-center justify-center gap-2">
+          <DownloadCodeButton
+            files={DEMO_2304_FILES}
+            filename={`demo-2304-${subject}-ui-bundle.txt`}
+            label="⬇ Download this demo's UI code"
+          />
+          <DownloadCodeButton
+            files={STUDENT_EBM_FILES}
+            filename="student-explorer-builder-mastery-bundle.txt"
+            label="⬇ Download student Explorer/Builder/Mastery code"
+          />
+        </div>
       </header>
 
       <main className="pb-16">
@@ -802,6 +859,21 @@ const Demo2304 = () => {
               <p className="font-bold text-foreground">⚗️ Chemistry</p>
               <p className="text-xs text-muted-foreground">Chemical Reactions</p>
             </Link>
+          </div>
+          <div className="pt-4 border-t border-border space-y-2">
+            <p className="text-[11px] text-muted-foreground font-semibold uppercase tracking-wide">For LLM cross-review</p>
+            <div className="flex flex-col gap-2">
+              <DownloadCodeButton
+                files={STUDENT_EBM_FILES}
+                filename="student-explorer-builder-mastery-bundle.txt"
+                label="⬇ Student Explorer/Builder/Mastery (Ep 1 + Ep 2)"
+              />
+              <DownloadCodeButton
+                files={DEMO_2304_FILES}
+                filename="demo-2304-ui-bundle.txt"
+                label="⬇ Demo 2304 UI bundle"
+              />
+            </div>
           </div>
         </div>
       </div>
