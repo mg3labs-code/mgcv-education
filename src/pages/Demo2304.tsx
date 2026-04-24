@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
   Sparkles,
@@ -22,6 +22,7 @@ import {
   type Subject,
   type DemoSubjectContent,
 } from "@/data/demo2304Content";
+import DemoBuddy, { type BuddyContext } from "@/components/demo/DemoBuddy";
 
 // ────────────────────────────────────────────────────────────────
 // Top progress bar (replaces "Step X of Y" labels)
@@ -123,9 +124,11 @@ type Day1Screen = "hook" | "reveal" | "detective" | "quickcheck" | "done";
 const Day1Demo = ({
   c,
   onAdvance,
+  onContextChange,
 }: {
   c: DemoSubjectContent;
   onAdvance: () => void;
+  onContextChange: (ctx: BuddyContext | null) => void;
 }) => {
   const [screen, setScreen] = useState<Day1Screen>("hook");
   const [hookAnswer, setHookAnswer] = useState("");
@@ -134,6 +137,33 @@ const Day1Demo = ({
 
   const order: Day1Screen[] = ["hook", "reveal", "detective", "quickcheck"];
   const progress = (order.indexOf(screen) + 1) / (order.length + 1);
+
+  useEffect(() => {
+    if (screen === "hook") {
+      onContextChange({
+        key: `${c.subjectLabel}-d1-hook`,
+        subject: c.subjectLabel,
+        question: c.day1.hookQuestion,
+        expectedHint: c.day1.conceptText,
+      });
+    } else if (screen === "detective") {
+      onContextChange({
+        key: `${c.subjectLabel}-d1-detective`,
+        subject: c.subjectLabel,
+        question: `Believe it or doubt it: "${c.day1.detective.statement}"`,
+        expectedHint: `${c.day1.detective.isTrue ? "It is TRUE." : "It is FALSE."} ${c.day1.detective.explain}`,
+      });
+    } else if (screen === "quickcheck") {
+      onContextChange({
+        key: `${c.subjectLabel}-d1-quickcheck`,
+        subject: c.subjectLabel,
+        question: `${c.day1.quickCheck.prompt} Options: ${c.day1.quickCheck.options.map((o, i) => `${String.fromCharCode(65 + i)}) ${o}`).join(", ")}`,
+        expectedHint: `Correct: ${c.day1.quickCheck.options[c.day1.quickCheck.correctIndex]}. ${c.day1.quickCheck.explain}`,
+      });
+    } else {
+      onContextChange(null);
+    }
+  }, [screen, c, onContextChange]);
 
   const submitHook = () => {
     if (hookAnswer.trim().split(/\s+/).filter(Boolean).length < 2) {
@@ -308,14 +338,15 @@ const Day2Demo = ({
   c,
   day1Guess,
   onAdvance,
+  onContextChange,
 }: {
   c: DemoSubjectContent;
   day1Guess: string;
   onAdvance: () => void;
+  onContextChange: (ctx: BuddyContext | null) => void;
 }) => {
   const [screen, setScreen] = useState<Day2Screen>("recall");
   const [order, setOrder] = useState<number[]>(() => {
-    // Shuffle the build blocks into a wrong starting order
     const arr = c.day2.buildBlocks.map((_, i) => i);
     return [...arr].sort(() => Math.random() - 0.5);
   });
@@ -324,6 +355,33 @@ const Day2Demo = ({
 
   const screens: Day2Screen[] = ["recall", "deepdive", "build", "detective"];
   const progress = (screens.indexOf(screen) + 1) / (screens.length + 1);
+
+  useEffect(() => {
+    if (screen === "recall") {
+      onContextChange({
+        key: `${c.subjectLabel}-d2-recall`,
+        subject: c.subjectLabel,
+        question: c.day2.recallPrompt,
+        expectedHint: c.day2.deepDiveBody,
+      });
+    } else if (screen === "build") {
+      onContextChange({
+        key: `${c.subjectLabel}-d2-build`,
+        subject: c.subjectLabel,
+        question: `Explain the logical order of these steps in your own words: ${c.day2.buildBlocks.join(" / ")}`,
+        expectedHint: c.day2.buildExplain,
+      });
+    } else if (screen === "detective") {
+      onContextChange({
+        key: `${c.subjectLabel}-d2-detective`,
+        subject: c.subjectLabel,
+        question: `Believe or doubt: "${c.day2.detective.statement}"`,
+        expectedHint: `${c.day2.detective.isTrue ? "TRUE." : "FALSE."} ${c.day2.detective.explain}`,
+      });
+    } else {
+      onContextChange(null);
+    }
+  }, [screen, c, onContextChange]);
 
   const move = (idx: number, dir: -1 | 1) => {
     setOrder((prev) => {
@@ -521,12 +579,40 @@ const Day2Demo = ({
 // ────────────────────────────────────────────────────────────────
 type Day3Screen = "why" | "prove" | "case" | "growth";
 
-const Day3Demo = ({ c, onRestart }: { c: DemoSubjectContent; onRestart: () => void }) => {
+const Day3Demo = ({
+  c,
+  onRestart,
+  onContextChange,
+}: {
+  c: DemoSubjectContent;
+  onRestart: () => void;
+  onContextChange: (ctx: BuddyContext | null) => void;
+}) => {
   const [screen, setScreen] = useState<Day3Screen>("why");
   const [proveAnswer, setProveAnswer] = useState("");
 
   const screens: Day3Screen[] = ["why", "prove", "case", "growth"];
   const progress = (screens.indexOf(screen) + 1) / screens.length;
+
+  useEffect(() => {
+    if (screen === "prove") {
+      onContextChange({
+        key: `${c.subjectLabel}-d3-prove`,
+        subject: c.subjectLabel,
+        question: c.day3.proveItPrompt,
+        expectedHint: c.day3.whyItWorks,
+      });
+    } else if (screen === "case") {
+      onContextChange({
+        key: `${c.subjectLabel}-d3-case`,
+        subject: c.subjectLabel,
+        question: `Real-world challenge: ${c.day3.caseStudy}`,
+        expectedHint: c.day3.whyItWorks,
+      });
+    } else {
+      onContextChange(null);
+    }
+  }, [screen, c, onContextChange]);
 
   return (
     <div className="px-4 py-8 relative">
@@ -636,6 +722,12 @@ const Demo2304Page = ({ subject }: { subject: Subject }) => {
   const c = DEMO_2304[subject];
   const [day, setDay] = useState<1 | 2 | 3>(1);
   const [hookAnswer] = useState<string>(""); // not persisted — demo replays Day 2 with empty quote
+  const [buddyContext, setBuddyContext] = useState<BuddyContext | null>(null);
+
+  // Reset Buddy context when day changes (each Day component will set its own)
+  useEffect(() => {
+    setBuddyContext(null);
+  }, [day]);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -662,14 +754,24 @@ const Demo2304Page = ({ subject }: { subject: Subject }) => {
       </header>
 
       <main className="pb-16">
-        {day === 1 && <Day1Demo c={c} onAdvance={() => setDay(2)} />}
-        {day === 2 && <Day2Demo c={c} day1Guess={hookAnswer || `(your Day-1 answer would appear here)`} onAdvance={() => setDay(3)} />}
-        {day === 3 && <Day3Demo c={c} onRestart={() => setDay(1)} />}
+        {day === 1 && <Day1Demo c={c} onAdvance={() => setDay(2)} onContextChange={setBuddyContext} />}
+        {day === 2 && (
+          <Day2Demo
+            c={c}
+            day1Guess={hookAnswer || `(your Day-1 answer would appear here)`}
+            onAdvance={() => setDay(3)}
+            onContextChange={setBuddyContext}
+          />
+        )}
+        {day === 3 && <Day3Demo c={c} onRestart={() => setDay(1)} onContextChange={setBuddyContext} />}
       </main>
 
       <footer className="border-t border-border py-4 text-center text-[11px] text-muted-foreground">
         Demo 2304 · Standalone preview · Not connected to the live student progress system.
       </footer>
+
+      {/* Floating live voice companion — bilingual Telugu/English warm conversation */}
+      <DemoBuddy context={buddyContext} />
     </div>
   );
 };
