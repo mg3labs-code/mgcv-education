@@ -796,6 +796,18 @@ const Demo2304Page = ({ subject }: { subject: Subject }) => {
         <div className="max-w-3xl mx-auto mt-2">
           <DayStepper current={day} onJump={setDay} />
         </div>
+        <div className="max-w-3xl mx-auto mt-2 flex flex-wrap items-center justify-center gap-2">
+          <DownloadCodeButton
+            files={DEMO_2304_FILES}
+            filename={`demo-2304-${subject}-ui-bundle.txt`}
+            label="⬇ Download this demo's UI code"
+          />
+          <DownloadCodeButton
+            files={STUDENT_EBM_FILES}
+            filename="student-explorer-builder-mastery-bundle.txt"
+            label="⬇ Download student Explorer/Builder/Mastery code"
+          />
+        </div>
       </header>
 
       <main className="pb-16">
