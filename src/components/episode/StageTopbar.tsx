@@ -1,7 +1,7 @@
-import { ChevronLeft, Flame, Volume2, VolumeX } from "lucide-react";
+import { ChevronLeft, Flame, Volume2, VolumeX, Lock, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { dayLabels, modeLabels } from "@/lib/childFriendlyLabels";
+import { dayLabels, modeLabels, type DayNumber } from "@/lib/childFriendlyLabels";
 import { useDifficulty } from "@/contexts/DifficultyContext";
 import { useEpisodeDay } from "@/contexts/EpisodeDayContext";
 import { useSoundFx } from "@/hooks/useSoundFx";
@@ -12,6 +12,10 @@ interface Props {
   exitTo?: string;
   /** 0–1 progress through the current day (sub-step granularity). Optional. */
   dayProgress?: number;
+  /** Day currently being viewed (may differ from info.currentDay if user navigated back). */
+  viewDay?: DayNumber;
+  /** Callback when student picks a different day in the switcher. */
+  onChangeDay?: (day: DayNumber) => void;
 }
 
 /**
