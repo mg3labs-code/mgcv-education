@@ -124,9 +124,11 @@ type Day1Screen = "hook" | "reveal" | "detective" | "quickcheck" | "done";
 const Day1Demo = ({
   c,
   onAdvance,
+  onContextChange,
 }: {
   c: DemoSubjectContent;
   onAdvance: () => void;
+  onContextChange: (ctx: BuddyContext | null) => void;
 }) => {
   const [screen, setScreen] = useState<Day1Screen>("hook");
   const [hookAnswer, setHookAnswer] = useState("");
@@ -135,6 +137,33 @@ const Day1Demo = ({
 
   const order: Day1Screen[] = ["hook", "reveal", "detective", "quickcheck"];
   const progress = (order.indexOf(screen) + 1) / (order.length + 1);
+
+  useEffect(() => {
+    if (screen === "hook") {
+      onContextChange({
+        key: `${c.subjectLabel}-d1-hook`,
+        subject: c.subjectLabel,
+        question: c.day1.hookQuestion,
+        expectedHint: c.day1.conceptText,
+      });
+    } else if (screen === "detective") {
+      onContextChange({
+        key: `${c.subjectLabel}-d1-detective`,
+        subject: c.subjectLabel,
+        question: `Believe it or doubt it: "${c.day1.detective.statement}"`,
+        expectedHint: `${c.day1.detective.isTrue ? "It is TRUE." : "It is FALSE."} ${c.day1.detective.explain}`,
+      });
+    } else if (screen === "quickcheck") {
+      onContextChange({
+        key: `${c.subjectLabel}-d1-quickcheck`,
+        subject: c.subjectLabel,
+        question: `${c.day1.quickCheck.prompt} Options: ${c.day1.quickCheck.options.map((o, i) => `${String.fromCharCode(65 + i)}) ${o}`).join(", ")}`,
+        expectedHint: `Correct: ${c.day1.quickCheck.options[c.day1.quickCheck.correctIndex]}. ${c.day1.quickCheck.explain}`,
+      });
+    } else {
+      onContextChange(null);
+    }
+  }, [screen, c, onContextChange]);
 
   const submitHook = () => {
     if (hookAnswer.trim().split(/\s+/).filter(Boolean).length < 2) {
