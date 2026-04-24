@@ -217,7 +217,7 @@ const Day1Demo = ({
   onAdvance,
   onContextChange,
 }: {
-  c: DemoSubjectContent;
+  c: Ep1View;
   onAdvance: () => void;
   onContextChange: (ctx: BuddyContext | null) => void;
 }) => {
@@ -431,7 +431,7 @@ const Day2Demo = ({
   onAdvance,
   onContextChange,
 }: {
-  c: DemoSubjectContent;
+  c: Ep1View;
   day1Guess: string;
   onAdvance: () => void;
   onContextChange: (ctx: BuddyContext | null) => void;
@@ -675,7 +675,7 @@ const Day3Demo = ({
   onRestart,
   onContextChange,
 }: {
-  c: DemoSubjectContent;
+  c: Ep1View;
   onRestart: () => void;
   onContextChange: (ctx: BuddyContext | null) => void;
 }) => {
