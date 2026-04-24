@@ -1377,6 +1377,13 @@ const DayGatedEpisode = ({
 
   const episodeKey = `${chapterId ?? "?"}::${episodeId ?? "?"}`;
   const [dayProgress, setDayProgress] = useState<number>(0);
+  // viewDay: which day the student is currently looking at (may differ from info.currentDay
+  // when they go back to revisit a completed day or jump ahead via the topbar switcher).
+  // Defaults to info.currentDay and re-syncs whenever currentDay changes (e.g. after completing a day).
+  const [viewDay, setViewDay] = useState<1 | 2 | 3>(info.currentDay);
+  useEffect(() => {
+    setViewDay(info.currentDay);
+  }, [info.currentDay]);
 
   if (isLoading) return <EpisodeLoadingTransition />;
 
