@@ -722,6 +722,12 @@ const Demo2304Page = ({ subject }: { subject: Subject }) => {
   const c = DEMO_2304[subject];
   const [day, setDay] = useState<1 | 2 | 3>(1);
   const [hookAnswer] = useState<string>(""); // not persisted — demo replays Day 2 with empty quote
+  const [buddyContext, setBuddyContext] = useState<BuddyContext | null>(null);
+
+  // Reset Buddy context when day changes (each Day component will set its own)
+  useEffect(() => {
+    setBuddyContext(null);
+  }, [day]);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -748,14 +754,24 @@ const Demo2304Page = ({ subject }: { subject: Subject }) => {
       </header>
 
       <main className="pb-16">
-        {day === 1 && <Day1Demo c={c} onAdvance={() => setDay(2)} />}
-        {day === 2 && <Day2Demo c={c} day1Guess={hookAnswer || `(your Day-1 answer would appear here)`} onAdvance={() => setDay(3)} />}
-        {day === 3 && <Day3Demo c={c} onRestart={() => setDay(1)} />}
+        {day === 1 && <Day1Demo c={c} onAdvance={() => setDay(2)} onContextChange={setBuddyContext} />}
+        {day === 2 && (
+          <Day2Demo
+            c={c}
+            day1Guess={hookAnswer || `(your Day-1 answer would appear here)`}
+            onAdvance={() => setDay(3)}
+            onContextChange={setBuddyContext}
+          />
+        )}
+        {day === 3 && <Day3Demo c={c} onRestart={() => setDay(1)} onContextChange={setBuddyContext} />}
       </main>
 
       <footer className="border-t border-border py-4 text-center text-[11px] text-muted-foreground">
         Demo 2304 · Standalone preview · Not connected to the live student progress system.
       </footer>
+
+      {/* Floating live voice companion — bilingual Telugu/English warm conversation */}
+      <DemoBuddy context={buddyContext} />
     </div>
   );
 };
