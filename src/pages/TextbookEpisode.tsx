@@ -1372,7 +1372,6 @@ const DayGatedEpisode = ({
 }) => {
   const { chapterId, episodeId } = useParams();
   const { info, isLoading } = useEpisodeDay();
-  const { mode } = useDifficulty();
   const { data: dbBlocks } = useEpisodeBlocks(chapterId, episodeId, "board");
 
   const episodeKey = `${chapterId ?? "?"}::${episodeId ?? "?"}`;
@@ -1387,9 +1386,8 @@ const DayGatedEpisode = ({
 
   if (isLoading) return <EpisodeLoadingTransition />;
 
-  // Mode caps how many rich sections each Day can pull from the database.
-  // Quick Look = 1 section · Deep Dive = 2 · Full Story = all
-  const cap = mode === "explorer" ? 1 : mode === "builder" ? 2 : 99;
+  // Pilot is intentionally fixed-depth: keep richer textbook/practice sections outside this flow.
+  const cap = 1;
 
   const blocksByType = (type: string) =>
     (dbBlocks ?? []).filter((b) => b.type === type);
