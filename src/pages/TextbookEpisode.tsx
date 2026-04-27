@@ -106,6 +106,13 @@ const pilotPractice2Labels: Record<string, string> = {
   "bio-ch1": "Biology · Nutrition",
 };
 
+const pilotPractice2Episode1Ids: Record<string, string> = {
+  ch1: "ch1-ep1",
+  "phy-ch1": "phy-ch1-ep1",
+  "chem-ch1": "chem-ch1-ep1",
+  "bio-ch1": "bio-ch1-ep1",
+};
+
 const phases = [
   { id: "understand", label: "🔍 Discover & Explore", shortLabel: "UNDERSTAND", color: "#0D9488", subtitle: "Core concept + interactive activity + practice", blockSet: UNDERSTAND_BLOCKS },
   { id: "prove", label: "🎯 Test Yourself", shortLabel: "PROVE", color: "#3B82F6", subtitle: "Quick recall + explain in own words + quiz", blockSet: PROVE_BLOCKS },
@@ -659,7 +666,7 @@ const TextbookEpisode = () => {
 
   if (isPilotPractice2) {
     const pilot2Src = chapterId ? pilotPractice2Episode1Html[chapterId] : undefined;
-    const isEpisodeOne = currentEpisodeIndex === 0 || episode.number === 1;
+    const isEpisodeOne = !!chapterId && pilotPractice2Episode1Ids[chapterId] === episodeId;
 
     if (!pilot2Src || !isEpisodeOne) {
       return (
