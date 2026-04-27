@@ -169,14 +169,16 @@ export function useEpisodeDayUnlock(chapterId: string | undefined, episodeId: st
       const { error } = await supabase
         .from("episode_progress")
         .upsert(
-          {
-            user_id: user.id,
-            chapter_id: chapterId,
-            episode_id: episodeId,
-            layer_scores: mergedScores,
-            completion_pct: pct,
-            completed_at: pct === 100 ? new Date().toISOString() : null,
-          },
+          [
+            {
+              user_id: user.id,
+              chapter_id: chapterId,
+              episode_id: episodeId,
+              layer_scores: mergedScores,
+              completion_pct: pct,
+              completed_at: pct === 100 ? new Date().toISOString() : null,
+            },
+          ],
           { onConflict: "user_id,chapter_id,episode_id" },
         );
       if (error) throw error;
