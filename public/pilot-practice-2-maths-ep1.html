@@ -689,6 +689,23 @@ p, .info-box, .question-card, .assumption-item, .values-thread .vt-body, .next-c
   .domain-grid { grid-template-columns: repeat(2, 1fr); }
   .header h1 { font-size: 32px; }
 }
+
+/* Final no-overflow mobile guard */
+html, body { width: 100%; max-width: 100%; overflow-x: hidden; }
+* { max-width: 100%; }
+.container { width: 100%; overflow-x: hidden; }
+.info-box, .formula, .question-card, .assumption-item, .values-thread, .defense-card, .silence-card, .next-card { overflow-wrap: anywhere; word-break: normal; }
+textarea { max-width: 100%; }
+@media (max-width: 600px) {
+  body { padding: 0; }
+  .container { max-width: none; }
+  .header, .inner-os-banner, .layer, .footer { padding-left: 18px; padding-right: 18px; }
+  .header h1 { font-size: 34px; line-height: 1.08; }
+  .badge, .os-pill, .dimension-tag { white-space: normal; }
+  .domain-grid, .next-grid { grid-template-columns: 1fr; }
+  .formula { font-size: 18px; line-height: 1.55; }
+}
+
 </style>
 </head>
 <body>
