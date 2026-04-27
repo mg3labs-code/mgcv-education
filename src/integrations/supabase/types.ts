@@ -1163,6 +1163,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      recalculate_retention_predictions: { Args: never; Returns: number }
       teacher_manages_class: {
         Args: { _class_name: string; _teacher_id: string }
         Returns: boolean
