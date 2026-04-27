@@ -6,7 +6,7 @@ const ActionSchema = z.enum([
   "create_assignment", "get_assignments", "get_assignment_detail",
   "submit_answer", "get_submissions", "get_submission_detail",
   "grade_answer", "retry_evaluation", "finalize_submission",
-  "publish_assignment", "delete_assignment",
+  "publish_assignment", "delete_assignment", "upload_answer", "teacher_grade", "teacher_finalize",
 ]);
 const BaseBodySchema = z.object({
   action: ActionSchema,
