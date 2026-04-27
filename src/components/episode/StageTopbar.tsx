@@ -1,8 +1,7 @@
 import { ChevronLeft, Flame, Volume2, VolumeX, Lock, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { dayLabels, modeLabels, type DayNumber } from "@/lib/childFriendlyLabels";
-import { useDifficulty } from "@/contexts/DifficultyContext";
+import { dayLabels, type DayNumber } from "@/lib/childFriendlyLabels";
 import { useEpisodeDay } from "@/contexts/EpisodeDayContext";
 import { useSoundFx } from "@/hooks/useSoundFx";
 
@@ -27,12 +26,10 @@ interface Props {
  */
 const StageTopbar = ({ episodeTitle, streakDays = 0, exitTo, dayProgress = 0, viewDay, onChangeDay }: Props) => {
   const navigate = useNavigate();
-  const { mode } = useDifficulty();
   const { info } = useEpisodeDay();
   const { muted, toggleMuted } = useSoundFx();
   const day: DayNumber = (viewDay ?? info.currentDay) as DayNumber;
   const dayInfo = dayLabels[day];
-  const modeInfo = modeLabels[mode];
 
   // Per-day reachability for the switcher.
   // A day is reachable if: (a) it's day 1, OR (b) the previous day is completed AND this day is not locked by the 20h gate.
@@ -69,23 +66,9 @@ const StageTopbar = ({ episodeTitle, streakDays = 0, exitTo, dayProgress = 0, vi
 
         <div className="flex-1 min-w-0">
           <p className="text-[11px] uppercase tracking-wide text-muted-foreground font-semibold leading-none">
-            Day {day} of 3 · {dayInfo.name}
+            Pilot Practice · Day {day} of 3 · {dayInfo.name}
           </p>
           <p className="text-sm font-bold text-foreground truncate leading-tight mt-0.5">{episodeTitle}</p>
-        </div>
-
-        {/* Mode indicator pill */}
-        <div
-          className="hidden sm:flex items-center gap-1.5 h-8 px-2.5 rounded-full text-[11px] font-semibold"
-          style={{
-            background: `${modeInfo.tint}15`,
-            color: modeInfo.tint,
-            border: `1px solid ${modeInfo.tint}40`,
-          }}
-          title={`${modeInfo.name} mode`}
-        >
-          <span>{modeInfo.emoji}</span>
-          <span>{modeInfo.name}</span>
         </div>
 
         {/* Sound toggle */}
