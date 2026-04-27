@@ -34,9 +34,13 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const { data: userData, error: userErr } = await supabaseAdmin.auth.getUser(token);
+    const serviceRoleToken = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+    const isInternalServiceCall = token === serviceRoleToken;
+    const { data: userData, error: userErr } = isInternalServiceCall
+      ? { data: { user: null }, error: null }
+      : await supabaseAdmin.auth.getUser(token);
     const caller = userData?.user;
-    if (userErr || !caller) return unauthorized("Invalid token");
+    if (!isInternalServiceCall && (userErr || !caller)) return unauthorized("Invalid token");
 
     const raw = await req.json();
     const parsed = BodySchema.safeParse(raw);
@@ -72,7 +76,7 @@ serve(async (req) => {
     // --- AUTHZ: caller must own the answer (student) or own the assignment (teacher) ---
     const ownerStudentId = (answer as any).student_id as string | undefined;
     const ownerTeacherId = (answer as any).submission?.assignment?.teacher_id as string | undefined;
-    const isOwner = caller.id === ownerStudentId || caller.id === ownerTeacherId;
+    const isOwner = isInternalServiceCall || caller?.id === ownerStudentId || caller?.id === ownerTeacherId;
     if (!isOwner) return unauthorized("Forbidden");
 
     // Mark as processing
