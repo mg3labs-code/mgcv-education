@@ -64,7 +64,7 @@ const ApplicationBlock = ({ content }: { content: ApplicationContent }) => {
 
       {/* Submit / Feedback */}
       {feedback ? (
-        <ExampleCard title="AI Feedback" defaultOpen={true}>
+        <ExampleCard title="Answer feedback" defaultOpen={true}>
           <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 mb-2">
             <CheckCircle2 className="h-4 w-4" />
             <span className="text-sm font-bold">Great effort!</span>
@@ -73,8 +73,8 @@ const ApplicationBlock = ({ content }: { content: ApplicationContent }) => {
           <Button variant="ghost" size="sm" onClick={() => setFeedback(null)} className="mt-2"><RotateCcw className="h-3 w-3 mr-1" /> Try again</Button>
         </ExampleCard>
       ) : canSubmit ? (
-        <Button onClick={handleSubmit} disabled={loading} size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2">
-          {loading ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Evaluating...</> : <><Send className="h-3.5 w-3.5" /> Submit for Feedback</>}
+        <Button onClick={handleSubmit} disabled={loading} size="sm" className="min-w-[132px] bg-primary hover:bg-primary/90 text-primary-foreground gap-2">
+          {loading ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Checking...</> : <><Send className="h-3.5 w-3.5" /> Check my answer</>}
         </Button>
       ) : null}
 
