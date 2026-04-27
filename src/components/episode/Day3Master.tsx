@@ -70,7 +70,7 @@ const Day3Master = ({
         <div className="w-full max-w-lg space-y-5 animate-fade-in">
           <div className="text-center space-y-2">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/10 text-purple-700 dark:text-purple-400 text-[11px] font-bold uppercase tracking-wide">
-              <Sparkles className="h-3 w-3" /> Why does this REALLY work?
+              <Sparkles className="h-3 w-3" /> Quick Read
             </div>
           </div>
           <div className="rounded-2xl border-2 border-purple-300 dark:border-purple-700 bg-card p-5">
@@ -144,9 +144,9 @@ const Day3Master = ({
         <div className="w-full max-w-lg space-y-5 animate-fade-in">
           <div className="text-center space-y-2">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/10 text-purple-700 dark:text-purple-400 text-[11px] font-bold uppercase tracking-wide">
-              <GraduationCap className="h-3 w-3" /> {friendlyLabels.prove}
+              <GraduationCap className="h-3 w-3" /> Teach a Younger Student
             </div>
-            <p className="text-sm text-muted-foreground">Defend your understanding in your own words.</p>
+            <p className="text-sm text-muted-foreground">Use your own voice or words.</p>
           </div>
           <div className="rounded-2xl border-2 border-purple-300 dark:border-purple-700 bg-card p-5 space-y-3">
             <p className="text-base font-medium text-foreground">{proveItPrompt}</p>
@@ -180,7 +180,7 @@ const Day3Master = ({
         <div className="w-full max-w-lg space-y-5 animate-fade-in">
           <div className="text-center space-y-2">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/10 text-purple-700 dark:text-purple-400 text-[11px] font-bold uppercase tracking-wide">
-              Real World Challenge
+              Your Call
             </div>
           </div>
           <div className="rounded-2xl border-2 border-purple-300 dark:border-purple-700 bg-card p-5">
@@ -227,11 +227,11 @@ const Day3Master = ({
           <p className="text-sm text-muted-foreground">{episodeTitle}</p>
         </div>
         <div className="rounded-2xl border-2 border-purple-300 dark:border-purple-700 bg-card p-5">
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-5 gap-2">
             {growthGains.map((g) => (
               <div key={g.label} className="text-center">
                 <div className="text-2xl mb-1">{g.emoji}</div>
-                <div className="text-xs text-muted-foreground font-medium">{g.label}</div>
+                <div className="text-[10px] text-muted-foreground font-medium leading-tight">{g.label}</div>
                 <div className="text-base font-bold text-emerald-600 dark:text-emerald-400">+{g.pct}%</div>
               </div>
             ))}
