@@ -72,7 +72,7 @@ body {
   margin-bottom: 14px;
 }
 .header h1 {
-  font-family: 'Fraunces', serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 42px;
   font-weight: 700;
   line-height: 1.1;
@@ -169,7 +169,7 @@ body {
   margin-bottom: 4px;
 }
 .layer-title {
-  font-family: 'Fraunces', serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 26px;
   font-weight: 700;
   color: var(--ink);
@@ -196,7 +196,7 @@ body {
 
 .formula {
   text-align: center;
-  font-family: 'Fraunces', serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 20px;
   font-weight: 700;
   color: var(--forest);
@@ -274,7 +274,10 @@ textarea:focus {
   color: var(--leaf);
   font-family: 'DM Sans', sans-serif;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.25;
+  white-space: normal;
   cursor: pointer;
   transition: all 0.2s;
   flex-shrink: 0;
@@ -301,7 +304,7 @@ textarea:focus {
 .voice-status {
   font-size: 12px;
   color: var(--stone);
-  font-style: italic;
+  font-style: normal;
   transition: all 0.2s;
 }
 .voice-status.active {
@@ -312,7 +315,7 @@ textarea:focus {
 .voice-unsupported {
   font-size: 11px;
   color: var(--stone);
-  font-style: italic;
+  font-style: normal;
 }
 @keyframes pulse-border {
   0%, 100% { box-shadow: 0 0 0 0 rgba(224,85,85,0.3); }
@@ -337,10 +340,10 @@ textarea:focus {
   background: radial-gradient(circle at 70% 30%, rgba(232,197,71,0.12), transparent 60%);
 }
 .silence-card h3 {
-  font-family: 'Fraunces', serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 22px;
-  font-weight: 300;
-  font-style: italic;
+  font-weight: 600;
+  font-style: normal;
   margin-bottom: 10px;
   position: relative;
 }
@@ -374,7 +377,7 @@ textarea:focus {
 #silence-countdown {
   display: none;
   font-size: 32px;
-  font-family: 'Fraunces', serif;
+  font-family: 'DM Sans', sans-serif;
   color: var(--sun);
   margin-top: 16px;
   position: relative;
@@ -452,7 +455,7 @@ textarea:focus {
   text-align: center;
 }
 .defense-card h4 {
-  font-family: 'Fraunces', serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 18px;
   color: var(--forest);
   margin-bottom: 6px;
@@ -466,7 +469,7 @@ textarea:focus {
 .ethics-note {
   font-size: 11px;
   color: var(--stone);
-  font-style: italic;
+  font-style: normal;
   margin-top: 10px;
 }
 
@@ -475,14 +478,19 @@ textarea:focus {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 24px;
+  justify-content: center;
+  min-height: 42px;
+  padding: 11px 22px;
   background: var(--forest);
   color: white;
   border: none;
-  border-radius: 50px;
+  border-radius: 10px;
   font-family: 'DM Sans', sans-serif;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.25;
+  white-space: normal;
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -529,7 +537,7 @@ textarea:focus {
   color: white;
 }
 .footer-title {
-  font-family: 'Fraunces', serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 28px;
   font-weight: 700;
   margin-bottom: 6px;
@@ -700,6 +708,14 @@ textarea { max-width: 100%; }
   body { padding: 0; }
   .container { max-width: none; }
   .header, .inner-os-banner, .layer, .footer { padding-left: 18px; padding-right: 18px; }
+  .layer { padding-top: 30px; padding-bottom: 30px; }
+  .layer-header { align-items: flex-start; gap: 12px; }
+  .layer-icon { width: 42px; height: 42px; min-width: 42px; }
+  .question-card, .info-box, .silence-card, .os-tracker { padding: 16px; }
+  .voice-row { gap: 8px; }
+  .voice-status { text-align: center; }
+  .os-dim { width: 100%; }
+  .os-bar-track { width: 100%; }
   .header h1 { font-size: 34px; line-height: 1.08; }
   .badge, .os-pill, .dimension-tag { white-space: normal; }
   .domain-grid, .next-grid { grid-template-columns: 1fr; }
@@ -899,7 +915,7 @@ textarea { max-width: 100%; }
 <!-- Values thread mid-episode — Gap #4 Fix -->
 <div class="values-thread">
 <div class="vt-icon">🤝</div>
-<div class="vt-body"><strong>Life lesson:</strong> The oxygen you breathe may come from plants far away. This shows that living things depend on each other.</div>
+<div class="vt-body"><strong>Life lesson:</strong> A small break in the path can stop the whole circuit. Small details matter.</div>
 </div>
 </div>
 <!-- LAYER 6: APPLICATIONS -->
@@ -913,19 +929,19 @@ textarea { max-width: 100%; }
 </div>
 </div>
 <div class="info-box">
-      🌱 <strong>Farming:</strong> More carbon dioxide in greenhouses can help some crops grow better.<br/>
-      ⚡ <strong>Clean energy:</strong> Scientists are trying to copy photosynthesis to make clean fuel.<br/>
-      🏭 <strong>Factories:</strong> Algae can help remove carbon dioxide from factory air.<br/>
-      🚀 <strong>Space travel:</strong> Plants may help astronauts get food and oxygen.
+      💡 <strong>Homes:</strong> Circuits help lights, fans, and chargers work safely.<br/>
+      🚗 <strong>Vehicles:</strong> Electric vehicles need controlled current.<br/>
+      🔋 <strong>Batteries:</strong> Circuits help store and use electrical energy.<br/>
+      🛠️ <strong>Repair:</strong> Knowing circuits helps find loose wires and broken switches.
     </div>
 <div class="question-card">
 <div class="prompt">🔬 Case question: Solve a real problem</div>
 <p style="font-size:13px;color:var(--stone);margin-bottom:12px;line-height:1.6;">
 <span data-field="case">A classroom bulb is not glowing. The battery is new. What will you check first: wire, switch, bulb, or connection?</span>
 </p>
-<textarea id="v-l6" placeholder="Write or speak: check light, water, air, heat, soil, and leaf health." style="min-height:100px;"></textarea>
+<textarea id="v-l6" placeholder="Write or speak: check the wire, switch, bulb, battery, and connections." style="min-height:100px;"></textarea>
 <div class="voice-row">
-<button class="voice-btn" onclick="toggleVoice('v-l6', this)"><span class="mic-dot"></span>Speak your investigation</button>
+<button class="voice-btn" onclick="toggleVoice('v-l6', this)"><span class="mic-dot"></span>Speak your answer</button>
 <span class="voice-status" id="s-v-l6">Tap mic to speak</span>
 </div>
 <div class="hint">💡 There can be more than one answer. Show your thinking step by step.</div>
@@ -949,12 +965,12 @@ textarea { max-width: 100%; }
 <div class="question-card">
 <div class="prompt">📝 Long answer question</div>
 <p style="font-size:15px;font-weight:600;color:var(--ink);margin-bottom:8px;line-height:1.5;"><span data-field="essay">Why is a complete circuit necessary for electric current?</span></p>
-<p style="font-size:13px;color:var(--stone);margin-bottom:14px;line-height:1.6;">Write 8–10 lines. Think about food, oxygen, energy, climate, and forests. Use your own words.</p>
+<p style="font-size:13px;color:var(--stone);margin-bottom:14px;line-height:1.6;">Write 8–10 lines. Think about battery, wire, switch, bulb, and a closed path. Use your own words.</p>
 <textarea id="v-l7" placeholder="Write or speak your answer. Start with your main point, then explain why." style="min-height:160px;"></textarea>
 <div class="voice-row" style="margin-top:10px;">
 <button class="voice-btn" onclick="toggleVoice('v-l7', this)"><span class="mic-dot"></span>Speak your answer</button>
 <span class="voice-status" id="s-v-l7">Tap mic to speak</span>
-<button class="btn btn-ghost" style="margin-left:auto;">🎤 Record voice answer</button>
+<button class="btn btn-ghost" style="margin-left:auto;">Speak answer</button>
 </div>
 </div>
 <!-- Final silence — Gap #2 Fix -->
@@ -1004,7 +1020,7 @@ textarea { max-width: 100%; }
 <div class="next-card-icon">🎓</div>
 <div class="next-card-title">Answer check</div>
 <div class="next-card-desc">A few private questions to check your understanding.</div>
-<button class="btn" style="margin-top:14px;font-size:13px;padding:10px 20px;">Start (5 min)</button>
+<button class="btn" style="margin-top:14px;font-size:13px;padding:10px 20px;">Start practice</button>
 </div>
 <div class="next-card">
 <div class="next-card-icon">💡</div>
@@ -1020,7 +1036,7 @@ textarea { max-width: 100%; }
 </div>
 </div>
 <div class="continue-row">
-<button class="btn" style="font-size:16px;padding:14px 36px;">Continue →</button>
+<button class="btn" style="font-size:16px;padding:14px 36px;">Continue</button>
 </div>
 </div>
 </div>

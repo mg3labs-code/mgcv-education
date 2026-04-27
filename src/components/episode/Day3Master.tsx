@@ -210,9 +210,9 @@ const Day3Master = ({
                 onTranscript={(t) => setProveAnswer((p) => (p ? `${p} ${t}` : t).trim())}
                 showLabel
               />
-              <Button onClick={handleScoreProve} disabled={!proveAnswer.trim() || isScoring || !!scoreResult}>
+              <Button onClick={handleScoreProve} disabled={!proveAnswer.trim() || isScoring || !!scoreResult} className="min-w-[132px] gap-2">
                 {isScoring ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : null}
-                {isScoring ? "Scoring..." : "Score my answer"}
+                {isScoring ? "Checking..." : "Check my answer"}
               </Button>
             </div>
           </div>
@@ -220,7 +220,7 @@ const Day3Master = ({
             <div className="rounded-2xl border-2 border-primary/25 bg-primary/5 p-4 space-y-3 animate-fade-in">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Quality score</p>
+                  <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Answer check</p>
                   <p className="text-sm font-semibold text-foreground">{scoreResult.band}</p>
                 </div>
                 <div className="text-2xl font-bold text-primary tabular-nums">{scoreResult.score}%</div>

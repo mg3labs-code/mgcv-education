@@ -195,12 +195,12 @@ const VoiceExplainWidget = ({ topic, prompt, guidePoints, onTranscript }: VoiceE
         </div>
       )}
 
-      {/* AI Feedback */}
+      {/* Answer feedback */}
       {feedback && (
         <div className="rounded-xl border-2 border-primary/20 bg-primary/5 p-5 space-y-4">
           <div className="flex items-center justify-between">
             <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-primary" /> AI Feedback
+              <Sparkles className="h-4 w-4 text-primary" /> Answer feedback
             </h4>
             <div className="flex items-center gap-2">
               <span className="text-2xl">{feedback.emoji}</span>

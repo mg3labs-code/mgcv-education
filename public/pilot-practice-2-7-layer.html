@@ -71,7 +71,7 @@ body {
   margin-bottom: 14px;
 }
 .header h1 {
-  font-family: 'Fraunces', serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 42px;
   font-weight: 700;
   line-height: 1.1;
@@ -168,7 +168,7 @@ body {
   margin-bottom: 4px;
 }
 .layer-title {
-  font-family: 'Fraunces', serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 26px;
   font-weight: 700;
   color: var(--ink);
@@ -195,7 +195,7 @@ body {
 
 .formula {
   text-align: center;
-  font-family: 'Fraunces', serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 20px;
   font-weight: 700;
   color: var(--forest);
@@ -273,7 +273,10 @@ textarea:focus {
   color: var(--leaf);
   font-family: 'DM Sans', sans-serif;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.25;
+  white-space: normal;
   cursor: pointer;
   transition: all 0.2s;
   flex-shrink: 0;
@@ -300,7 +303,7 @@ textarea:focus {
 .voice-status {
   font-size: 12px;
   color: var(--stone);
-  font-style: italic;
+  font-style: normal;
   transition: all 0.2s;
 }
 .voice-status.active {
@@ -311,7 +314,7 @@ textarea:focus {
 .voice-unsupported {
   font-size: 11px;
   color: var(--stone);
-  font-style: italic;
+  font-style: normal;
 }
 @keyframes pulse-border {
   0%, 100% { box-shadow: 0 0 0 0 rgba(224,85,85,0.3); }
@@ -336,10 +339,10 @@ textarea:focus {
   background: radial-gradient(circle at 70% 30%, rgba(232,197,71,0.12), transparent 60%);
 }
 .silence-card h3 {
-  font-family: 'Fraunces', serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 22px;
-  font-weight: 300;
-  font-style: italic;
+  font-weight: 600;
+  font-style: normal;
   margin-bottom: 10px;
   position: relative;
 }
@@ -373,7 +376,7 @@ textarea:focus {
 #silence-countdown {
   display: none;
   font-size: 32px;
-  font-family: 'Fraunces', serif;
+  font-family: 'DM Sans', sans-serif;
   color: var(--sun);
   margin-top: 16px;
   position: relative;
@@ -451,7 +454,7 @@ textarea:focus {
   text-align: center;
 }
 .defense-card h4 {
-  font-family: 'Fraunces', serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 18px;
   color: var(--forest);
   margin-bottom: 6px;
@@ -465,7 +468,7 @@ textarea:focus {
 .ethics-note {
   font-size: 11px;
   color: var(--stone);
-  font-style: italic;
+  font-style: normal;
   margin-top: 10px;
 }
 
@@ -474,14 +477,19 @@ textarea:focus {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 24px;
+  justify-content: center;
+  min-height: 42px;
+  padding: 11px 22px;
   background: var(--forest);
   color: white;
   border: none;
-  border-radius: 50px;
+  border-radius: 10px;
   font-family: 'DM Sans', sans-serif;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.25;
+  white-space: normal;
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -528,7 +536,7 @@ textarea:focus {
   color: white;
 }
 .footer-title {
-  font-family: 'Fraunces', serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 28px;
   font-weight: 700;
   margin-bottom: 6px;
@@ -684,10 +692,24 @@ p, .info-box, .question-card, .assumption-item, .values-thread .vt-body, .next-c
 }
 
 @media (max-width: 600px) {
-  .header, .inner-os-banner, .layer, .footer { padding-left: 22px; padding-right: 22px; }
-  .domain-grid { grid-template-columns: repeat(2, 1fr); }
-  .header h1 { font-size: 32px; }
+  .header, .inner-os-banner, .layer, .footer { padding-left: 18px; padding-right: 18px; }
+  .layer { padding-top: 30px; padding-bottom: 30px; }
+  .layer-header { align-items: flex-start; gap: 12px; }
+  .layer-icon { width: 42px; height: 42px; min-width: 42px; }
+  .question-card, .info-box, .silence-card, .os-tracker { padding: 16px; }
+  .domain-grid, .next-grid { grid-template-columns: 1fr; }
+  .voice-row { gap: 8px; }
+  .voice-status { text-align: center; }
+  .os-dim { width: 100%; }
+  .os-bar-track { width: 100%; }
+  .header h1 { font-size: 34px; line-height: 1.08; }
 }
+/* Final no-overflow mobile guard */
+html, body { width: 100%; max-width: 100%; overflow-x: hidden; }
+* { max-width: 100%; }
+.container { width: 100%; overflow-x: hidden; }
+.info-box, .formula, .question-card, .assumption-item, .values-thread, .defense-card, .silence-card, .next-card { overflow-wrap: anywhere; word-break: normal; }
+textarea { max-width: 100%; }
 </style>
 </head>
 <body>
@@ -922,7 +944,7 @@ p, .info-box, .question-card, .assumption-item, .values-thread .vt-body, .next-c
       </p>
       <textarea id="v-l6" style="min-height:100px;" placeholder="Write or speak: check light, water, air, heat, soil, and leaf health."></textarea>
       <div class="voice-row">
-        <button class="voice-btn" onclick="toggleVoice('v-l6', this)"><span class="mic-dot"></span>Speak your investigation</button>
+        <button class="voice-btn" onclick="toggleVoice('v-l6', this)"><span class="mic-dot"></span>Speak your answer</button>
         <span class="voice-status" id="s-v-l6">Tap mic to speak</span>
       </div>
       <div class="hint">💡 There can be more than one answer. Show your thinking step by step.</div>
@@ -953,7 +975,7 @@ p, .info-box, .question-card, .assumption-item, .values-thread .vt-body, .next-c
       <div class="voice-row" style="margin-top:10px;">
         <button class="voice-btn" onclick="toggleVoice('v-l7', this)"><span class="mic-dot"></span>Speak your answer</button>
         <span class="voice-status" id="s-v-l7">Tap mic to speak</span>
-        <button class="btn btn-ghost" style="margin-left:auto;">🎤 Record voice answer</button>
+        <button class="btn btn-ghost" style="margin-left:auto;">Speak answer</button>
       </div>
     </div>
 
@@ -1007,7 +1029,7 @@ p, .info-box, .question-card, .assumption-item, .values-thread .vt-body, .next-c
         <div class="next-card-icon">🎓</div>
         <div class="next-card-title">Answer check</div>
         <div class="next-card-desc">A few private questions to check your understanding.</div>
-        <button class="btn" style="margin-top:14px;font-size:13px;padding:10px 20px;">Start (5 min)</button>
+        <button class="btn" style="margin-top:14px;font-size:13px;padding:10px 20px;">Start practice</button>
       </div>
       <div class="next-card">
         <div class="next-card-icon">💡</div>
@@ -1024,7 +1046,7 @@ p, .info-box, .question-card, .assumption-item, .values-thread .vt-body, .next-c
     </div>
 
     <div class="continue-row">
-      <button class="btn" style="font-size:16px;padding:14px 36px;">Continue →</button>
+      <button class="btn" style="font-size:16px;padding:14px 36px;">Continue</button>
     </div>
   </div>
 
