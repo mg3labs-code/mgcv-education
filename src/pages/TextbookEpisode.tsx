@@ -644,10 +644,17 @@ const TextbookEpisode = () => {
   }
 
   if (isPilotPractice2) {
+    const pilot2Params = new URLSearchParams({
+      chapter: chapterId ?? "",
+      episode: episodeId ?? "",
+      topic: episode.title,
+      subject: chapter.title,
+    });
+
     return (
       <iframe
         title="Pilot Practice 2 · 7-layer lesson"
-        src="/pilot-practice-2-7-layer.html"
+        src={`/pilot-practice-2-7-layer.html?${pilot2Params.toString()}`}
         className="fixed inset-0 z-50 h-screen w-screen border-0 bg-background"
       />
     );

@@ -84,12 +84,12 @@ const FullTextbookView = ({ blocks = [], chapterTitle, episodeTitle }: FullTextb
   }
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="max-w-3xl mx-auto px-1 sm:px-0">
       {/* Header */}
       {(chapterTitle || episodeTitle) && (
         <div className="mb-6">
           {chapterTitle && <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{chapterTitle}</p>}
-          {episodeTitle && <h1 className="text-xl font-bold text-foreground mt-1" style={{ fontFamily: "'Source Serif 4', serif" }}>{episodeTitle}</h1>}
+          {episodeTitle && <h1 className="text-2xl sm:text-3xl font-bold text-foreground mt-1 leading-tight" style={{ fontFamily: "'Source Serif 4', serif" }}>{episodeTitle}</h1>}
         </div>
       )}
 
@@ -102,7 +102,7 @@ const FullTextbookView = ({ blocks = [], chapterTitle, episodeTitle }: FullTextb
             <button
               key={i}
               onClick={() => scrollTo(i)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all hover:shadow-sm ${
+              className={`flex min-w-[7.5rem] items-center justify-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium border transition-all hover:shadow-sm ${
                 isActive
                   ? "border-primary bg-primary/10 text-primary shadow-sm scale-105"
                   : "border-border/60 text-muted-foreground hover:border-primary/40"
@@ -116,7 +116,7 @@ const FullTextbookView = ({ blocks = [], chapterTitle, episodeTitle }: FullTextb
       </div>
 
       {/* Content sections — continuous scroll */}
-      <div className="space-y-10">
+      <div className="space-y-12">
         {blocks.map((block, i) => {
           const meta = layerMeta[block.type] || defaultMeta;
           return (
@@ -134,7 +134,7 @@ const FullTextbookView = ({ blocks = [], chapterTitle, episodeTitle }: FullTextb
                   </span>
                 )}
                 <div className="flex-1">
-                  <h2 className="text-lg font-bold text-foreground" style={{ fontFamily: "'Source Serif 4', serif" }}>
+                  <h2 className="text-xl sm:text-2xl font-bold text-foreground leading-tight" style={{ fontFamily: "'Source Serif 4', serif" }}>
                     {block.icon} {block.title}
                   </h2>
                   <p className="text-xs text-muted-foreground italic">{blockSubtitles[block.type] || ""}</p>
@@ -142,8 +142,8 @@ const FullTextbookView = ({ blocks = [], chapterTitle, episodeTitle }: FullTextb
               </div>
 
               {/* Block content with colored left border */}
-              <div className={`bg-card rounded-2xl border-l-4 ${meta.border} shadow-sm border border-border/30`}>
-                <div className="p-4 md:p-6">
+              <div className={`bg-card rounded-xl border-l-4 ${meta.border} shadow-sm border border-border/30`}>
+                <div className="p-5 md:p-7 text-base leading-7">
                   {renderBlock(block)}
                 </div>
               </div>
