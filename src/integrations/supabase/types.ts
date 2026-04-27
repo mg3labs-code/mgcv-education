@@ -563,6 +563,57 @@ export type Database = {
         }
         Relationships: []
       }
+      retention_predictions: {
+        Row: {
+          chapter_id: string
+          concept_key: string
+          concept_label: string
+          confidence: number
+          episode_id: string
+          generated_at: string
+          id: string
+          predicted_for_date: string
+          recommended_action: string
+          risk_level: string
+          risk_score: number
+          signals: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          chapter_id: string
+          concept_key: string
+          concept_label: string
+          confidence?: number
+          episode_id: string
+          generated_at?: string
+          id?: string
+          predicted_for_date?: string
+          recommended_action?: string
+          risk_level?: string
+          risk_score?: number
+          signals?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          chapter_id?: string
+          concept_key?: string
+          concept_label?: string
+          confidence?: number
+          episode_id?: string
+          generated_at?: string
+          id?: string
+          predicted_for_date?: string
+          recommended_action?: string
+          risk_level?: string
+          risk_score?: number
+          signals?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       student_answers: {
         Row: {
           ai_confidence: number | null
