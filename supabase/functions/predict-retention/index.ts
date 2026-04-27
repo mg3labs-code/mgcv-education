@@ -9,6 +9,7 @@ const corsHeaders = {
 };
 
 const BodySchema = z.object({
+  action: z.enum(["predict", "benchmark"]).default("predict"),
   chapterId: z.string().min(1).max(200).optional(),
   episodeId: z.string().min(1).max(200).optional(),
   conceptKey: z.string().min(1).max(200).optional(),
@@ -30,6 +31,14 @@ type Prediction = {
   signals: Record<string, unknown>;
   recommended_action: string;
   predicted_for_date: string;
+};
+
+type BenchmarkRow = {
+  student_id: string;
+  risk_score: number;
+  completion_pct: number;
+  explain_average: number;
+  day1_detective_correct: boolean;
 };
 
 function json(data: unknown, status = 200) {
@@ -117,6 +126,12 @@ function buildPrediction(input: {
     recommended_action,
     predicted_for_date: nextWeekDate(),
   };
+}
+
+function percentile(value: number, values: number[]) {
+  if (!values.length) return null;
+  const belowOrEqual = values.filter((v) => v <= value).length;
+  return clamp((belowOrEqual / values.length) * 100);
 }
 
 serve(async (req) => {
