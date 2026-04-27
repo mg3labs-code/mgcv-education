@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<title>Electric Current and Circuits - 7 Layer Student Lesson</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,700;1,300&amp;family=DM+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --forest: #1a3d2b;
+  --leaf: #2d7a4f;
+  --moss: #4a9e6a;
+  --sun: #e8c547;
+  --sky: #a8d8ea;
+  --soil: #8b6343;
+  --petal: #f4a261;
+  --cream: #faf8f2;
+  --ink: #1c1c1c;
+  --mist: #e8ede6;
+  --stone: #6b7a6a;
+  --glow: rgba(232,197,71,0.15);
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--cream);
+  color: var(--ink);
+  padding: 24px 16px;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+/* HEADER */
+.header {
+  background: var(--forest);
+  color: white;
+  border-radius: 20px 20px 0 0;
+  padding: 36px 40px 28px;
+  position: relative;
+  overflow: hidden;
+}
+.header::before {
+  content: '';
+  position: absolute;
+  top: -40px; right: -40px;
+  width: 200px; height: 200px;
+  border-radius: 50%;
+  background: rgba(45,122,79,0.3);
+}
+.header::after {
+  content: '';
+  position: absolute;
+  bottom: -20px; left: 60px;
+  width: 120px; height: 120px;
+  border-radius: 50%;
+  background: rgba(232,197,71,0.1);
+}
+.badge {
+  display: inline-block;
+  background: var(--leaf);
+  color: white;
+  padding: 5px 14px;
+  border-radius: 50px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  margin-bottom: 14px;
+}
+.header h1 {
+  font-family: 'Fraunces', serif;
+  font-size: 42px;
+  font-weight: 700;
+  line-height: 1.1;
+  margin-bottom: 8px;
+  position: relative;
+}
+.header .meta {
+  font-size: 13px;
+  opacity: 0.75;
+  position: relative;
+}
+
+/* INNER OS BANNER — Gap #1 Fix */
+.inner-os-banner {
+  background: var(--forest);
+  border-top: 1px solid rgba(255,255,255,0.1);
+  padding: 16px 40px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.inner-os-banner .label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--sun);
+  text-transform: uppercase;
+  margin-right: 4px;
+}
+.os-pill {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.7);
+  padding: 4px 12px;
+  border-radius: 50px;
+  font-size: 11px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+.os-pill.active {
+  background: var(--sun);
+  color: var(--forest);
+  border-color: var(--sun);
+  font-weight: 700;
+}
+
+/* LAYERS */
+.layer {
+  background: white;
+  border-left: 1px solid var(--mist);
+  border-right: 1px solid var(--mist);
+  padding: 36px 40px;
+  border-bottom: 2px solid var(--mist);
+  position: relative;
+  transition: all 0.3s;
+}
+.layer:hover {
+  background: #fdfdfb;
+}
+
+/* Layer dimension tag — Gap #1 Fix */
+.dimension-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--mist);
+  border-radius: 50px;
+  padding: 4px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--stone);
+  margin-bottom: 16px;
+  letter-spacing: 0.3px;
+}
+.dimension-tag .dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--moss);
+}
+
+.layer-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+.layer-num {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: var(--stone);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.layer-title {
+  font-family: 'Fraunces', serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.2;
+}
+.layer-icon {
+  width: 48px; height: 48px;
+  border-radius: 14px;
+  background: var(--forest);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.info-box {
+  background: var(--mist);
+  border-left: 3px solid var(--leaf);
+  padding: 18px 20px;
+  border-radius: 0 10px 10px 0;
+  margin: 16px 0;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.formula {
+  text-align: center;
+  font-family: 'Fraunces', serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--forest);
+  padding: 16px;
+  background: var(--mist);
+  border-radius: 10px;
+  margin: 16px 0;
+  letter-spacing: 0.5px;
+}
+
+.question-card {
+  background: var(--cream);
+  border: 1.5px solid var(--mist);
+  border-radius: 14px;
+  padding: 22px;
+  margin: 14px 0;
+  transition: border-color 0.2s;
+}
+.question-card:focus-within {
+  border-color: var(--moss);
+  box-shadow: 0 4px 20px rgba(45,122,79,0.08);
+}
+.prompt {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--leaf);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 12px 14px;
+  border: 1.5px solid var(--mist);
+  border-radius: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: var(--ink);
+  background: white;
+  resize: vertical;
+  transition: border-color 0.2s;
+  line-height: 1.6;
+}
+textarea:focus {
+  outline: none;
+  border-color: var(--moss);
+}
+.hint {
+  background: #edf6f0;
+  border-left: 3px solid var(--moss);
+  padding: 10px 14px;
+  border-radius: 0 8px 8px 0;
+  font-size: 13px;
+  color: var(--forest);
+  margin-top: 10px;
+}
+
+/* VOICE INPUT */
+.voice-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+.voice-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 18px;
+  border-radius: 50px;
+  border: 1.5px solid var(--moss);
+  background: white;
+  color: var(--leaf);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.voice-btn:hover {
+  background: #edf6f0;
+  border-color: var(--leaf);
+}
+.voice-btn.recording {
+  background: #fff0f0;
+  border-color: #e05555;
+  color: #c03030;
+  animation: pulse-border 1.2s infinite;
+}
+.voice-btn .mic-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--moss);
+  transition: background 0.2s;
+}
+.voice-btn.recording .mic-dot {
+  background: #e05555;
+}
+.voice-status {
+  font-size: 12px;
+  color: var(--stone);
+  font-style: italic;
+  transition: all 0.2s;
+}
+.voice-status.active {
+  color: #c03030;
+  font-style: normal;
+  font-weight: 600;
+}
+.voice-unsupported {
+  font-size: 11px;
+  color: var(--stone);
+  font-style: italic;
+}
+@keyframes pulse-border {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(224,85,85,0.3); }
+  50% { box-shadow: 0 0 0 6px rgba(224,85,85,0); }
+}
+
+/* SILENCE LAYER — Gap #2 Fix */
+.silence-card {
+  background: var(--forest);
+  color: white;
+  border-radius: 16px;
+  padding: 28px 30px;
+  margin: 20px 0;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.silence-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: radial-gradient(circle at 70% 30%, rgba(232,197,71,0.12), transparent 60%);
+}
+.silence-card h3 {
+  font-family: 'Fraunces', serif;
+  font-size: 22px;
+  font-weight: 300;
+  font-style: italic;
+  margin-bottom: 10px;
+  position: relative;
+}
+.silence-card p {
+  font-size: 13px;
+  opacity: 0.75;
+  line-height: 1.6;
+  position: relative;
+  max-width: 480px;
+  margin: 0 auto 16px;
+}
+.silence-timer {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--sun);
+  color: var(--forest);
+  padding: 10px 22px;
+  border-radius: 50px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+  position: relative;
+}
+.silence-timer:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(232,197,71,0.4);
+}
+#silence-countdown {
+  display: none;
+  font-size: 32px;
+  font-family: 'Fraunces', serif;
+  color: var(--sun);
+  margin-top: 16px;
+  position: relative;
+}
+
+/* CONNECTIONS (curiosity cards) */
+.domain-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 16px 0;
+}
+.domain-card {
+  background: var(--cream);
+  border: 1.5px solid var(--mist);
+  border-radius: 12px;
+  padding: 16px 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.25s;
+  position: relative;
+  overflow: hidden;
+}
+.domain-card::after {
+  content: 'Explore →';
+  position: absolute;
+  bottom: 6px;
+  left: 0; right: 0;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--leaf);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.domain-card:hover {
+  border-color: var(--moss);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(45,122,79,0.1);
+}
+.domain-card:hover::after { opacity: 1; }
+.domain-card:hover .domain-q { opacity: 1; }
+.domain-icon { font-size: 26px; margin-bottom: 6px; }
+.domain-label { font-size: 12px; font-weight: 600; color: var(--stone); }
+.domain-q {
+  font-size: 11px;
+  color: var(--leaf);
+  margin-top: 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+  line-height: 1.4;
+}
+
+/* VALUES THREAD — Gap #4 Fix */
+.values-thread {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #fff8ec;
+  border: 1.5px solid #f0d9a0;
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin: 16px 0;
+}
+.values-thread .vt-icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
+.values-thread .vt-body { font-size: 13px; line-height: 1.65; color: var(--ink); }
+.values-thread .vt-body strong { color: var(--soil); }
+
+/* TUTORIAL DEFENSE */
+.defense-card {
+  background: var(--cream);
+  border: 1.5px dashed var(--moss);
+  border-radius: 14px;
+  padding: 22px;
+  margin: 14px 0;
+  text-align: center;
+}
+.defense-card h4 {
+  font-family: 'Fraunces', serif;
+  font-size: 18px;
+  color: var(--forest);
+  margin-bottom: 6px;
+}
+.defense-card p {
+  font-size: 13px;
+  color: var(--stone);
+  margin-bottom: 16px;
+  line-height: 1.6;
+}
+.ethics-note {
+  font-size: 11px;
+  color: var(--stone);
+  font-style: italic;
+  margin-top: 10px;
+}
+
+/* BUTTONS */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: var(--forest);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn:hover {
+  background: var(--leaf);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(26,61,43,0.25);
+}
+.btn-ghost {
+  background: transparent;
+  color: var(--forest);
+  border: 1.5px solid var(--forest);
+}
+.btn-ghost:hover {
+  background: var(--forest);
+  color: white;
+}
+
+/* ASSUMPTION CARDS */
+.assumption-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 16px 0;
+}
+.assumption-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: var(--cream);
+  border-radius: 10px;
+  padding: 14px 16px;
+  border: 1.5px solid var(--mist);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.assumption-item .check { font-size: 18px; flex-shrink: 0; }
+
+/* GROWTH FOOTER */
+.footer {
+  background: var(--forest);
+  border-radius: 0 0 20px 20px;
+  padding: 40px;
+  color: white;
+}
+.footer-title {
+  font-family: 'Fraunces', serif;
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.footer-sub {
+  font-size: 13px;
+  opacity: 0.65;
+  margin-bottom: 30px;
+}
+.next-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 30px;
+}
+.next-card {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 14px;
+  padding: 22px;
+  cursor: pointer;
+  transition: all 0.25s;
+}
+.next-card:hover {
+  background: rgba(255,255,255,0.12);
+  transform: translateY(-3px);
+}
+.next-card-icon { font-size: 32px; margin-bottom: 10px; }
+.next-card-title {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+.next-card-desc {
+  font-size: 12px;
+  opacity: 0.65;
+  line-height: 1.5;
+}
+
+/* OS TRACKER */
+.os-tracker {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 14px;
+  padding: 22px;
+  margin-bottom: 24px;
+}
+.os-tracker-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--sun);
+  margin-bottom: 16px;
+}
+.os-dims {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.os-dim {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.os-dim-label {
+  font-size: 12px;
+  font-weight: 600;
+  width: 160px;
+  opacity: 0.8;
+}
+.os-bar-track {
+  flex: 1;
+  height: 6px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.os-bar-fill {
+  height: 100%;
+  background: var(--sun);
+  border-radius: 3px;
+  transition: width 1s ease;
+}
+.os-dim-pct {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--sun);
+  width: 36px;
+  text-align: right;
+}
+
+.continue-row {
+  text-align: center;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Layer accent colors */
+.layer[data-layer="1"] .layer-icon { background: var(--forest); }
+.layer[data-layer="2"] .layer-icon { background: #1a5c3a; }
+.layer[data-layer="3"] .layer-icon { background: #b87a1a; }
+.layer[data-layer="4"] .layer-icon { background: #1a5577; }
+.layer[data-layer="5"] .layer-icon { background: #3a6b3a; }
+.layer[data-layer="6"] .layer-icon { background: #7a4f1a; }
+.layer[data-layer="7"] .layer-icon { background: var(--forest); }
+
+
+/* Simple student reading mode */
+p, .info-box, .question-card, .assumption-item, .values-thread .vt-body, .next-card-desc { font-size: 15px; line-height: 1.85; }
+.layer { padding-top: 44px; padding-bottom: 44px; }
+.layer-title { font-size: 28px; }
+.prompt { font-size: 15px; line-height: 1.55; }
+textarea { font-size: 15px; min-height: 96px; }
+.domain-card { cursor: default; }
+.domain-card::after { content: ''; }
+
+
+/* Mobile-first clean reading layout */
+body { padding: 0; }
+.container { max-width: 920px; }
+.header { border-radius: 0; padding: 34px 26px 24px; }
+.header h1 { font-size: clamp(32px, 6vw, 48px); letter-spacing: 0; }
+.inner-os-banner { padding: 14px 26px; gap: 8px; }
+.layer { padding: 34px 26px; border-left: 0; border-right: 0; }
+.layer-header { gap: 14px; margin-bottom: 18px; }
+.layer-icon { width: 44px; height: 44px; border-radius: 12px; }
+.layer-title { font-size: clamp(24px, 4.8vw, 34px); letter-spacing: 0; }
+p, .info-box, .question-card, .assumption-item, .values-thread .vt-body, .next-card-desc { font-size: 16px; line-height: 1.85; }
+.info-box, .question-card, .values-thread, .defense-card, .silence-card { margin: 18px 0; }
+.question-card { padding: 20px; }
+.domain-grid { grid-template-columns: 1fr; gap: 12px; }
+.domain-card { text-align: left; display: grid; grid-template-columns: 36px 1fr; column-gap: 10px; align-items: start; }
+.domain-icon { grid-row: span 2; margin: 0; }
+.domain-q { opacity: 1; }
+.voice-row { align-items: stretch; flex-direction: column; }
+.voice-btn, .btn { justify-content: center; width: 100%; }
+.footer { border-radius: 0; padding: 34px 26px; }
+.os-dim { align-items: flex-start; flex-direction: column; gap: 6px; }
+.os-dim-label, .os-dim-pct { width: auto; }
+@media (min-width: 760px) {
+  body { padding: 24px 16px; }
+  .header { border-radius: 20px 20px 0 0; padding: 42px 46px 32px; }
+  .inner-os-banner { padding-left: 46px; padding-right: 46px; }
+  .layer { padding: 48px 54px; border-left: 1px solid var(--mist); border-right: 1px solid var(--mist); }
+  .domain-grid { grid-template-columns: repeat(2, 1fr); }
+  .voice-row { align-items: center; flex-direction: row; }
+  .voice-btn, .btn { width: auto; }
+  .footer { border-radius: 0 0 20px 20px; padding: 46px 54px; }
+  .os-dim { align-items: center; flex-direction: row; }
+  .os-dim-label { width: 160px; }
+  .os-dim-pct { width: 36px; }
+}
+
+@media (max-width: 600px) {
+  .header, .inner-os-banner, .layer, .footer { padding-left: 22px; padding-right: 22px; }
+  .domain-grid { grid-template-columns: repeat(2, 1fr); }
+  .header h1 { font-size: 32px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+<!-- HEADER -->
+<div class="header">
+<div class="badge">7-Layer Student Lesson</div>
+<h1>Electric Current and Circuits</h1>
+<p class="meta">Physics · Electricity · Episode 1 · Read slowly · 20 min</p>
+</div>
+<!-- INNER OS BANNER — Gap #1: Makes the 5 dimensions visible upfront -->
+<div class="inner-os-banner">
+<span class="label">Today this helps →</span>
+<span class="os-pill active">🧠 Think clearly</span>
+<span class="os-pill active">🔍 Notice ideas</span>
+<span class="os-pill active">🎯 Focus</span>
+<span class="os-pill">⚡ Keep going</span>
+<span class="os-pill active">❤️ Care</span>
+</div>
+<!-- LAYER 1: DEFINITION -->
+<div class="layer" data-layer="1">
+<div class="dimension-tag"><span class="dot"></span>Clear idea</div>
+<div class="layer-header">
+<div class="layer-icon">🎯</div>
+<div>
+<div class="layer-num">Layer 1</div>
+<h2 class="layer-title">What it means</h2>
+</div>
+</div>
+<p style="font-size:15px;line-height:1.75;margin-bottom:16px;">
+<span data-field="meaning">Electric current is the flow of electric charge. A circuit is a complete path that allows current to flow.</span>
+</p>
+<div class="info-box">
+<strong>💡 Word meaning:</strong> <span data-field="word">Circuit means a closed path.</span><br/>
+<strong>📅 Scientist:</strong> <span data-field="scientist">Many scientists helped build this idea, including Volta, Ampere, and Ohm.</span><br/>
+<strong>⭐ Why it matters:</strong> <span data-field="why">Electric circuits run lights, fans, phones, computers, and machines.</span>
+</div>
+<!-- Values thread seeded early — Gap #4 Fix -->
+<div class="values-thread">
+<div class="vt-icon">🌿</div>
+<div class="vt-body"><strong>Life lesson:</strong> <span data-field="life">Current flows only when the path is complete. Focus also works like that: broken attention stops flow.</span></div>
+</div>
+</div>
+<!-- LAYER 2: MECHANISM -->
+<div class="layer" data-layer="2">
+<div class="dimension-tag"><span class="dot"></span>Step by step</div>
+<div class="layer-header">
+<div class="layer-icon">🔬</div>
+<div>
+<div class="layer-num">Layer 2</div>
+<h2 class="layer-title">How it works</h2>
+</div>
+</div>
+<div class="info-box">
+<strong>Step 1:</strong> <span data-field="step1">A cell or battery pushes charges through a wire.</span><br/><br/>
+<strong>Step 2:</strong> <span data-field="step2">If the path is closed, current flows and the bulb can glow. If the path is open, current stops.</span>
+</div>
+<div class="formula" data-field="formula">Complete path + source = current flow</div>
+</div>
+<!-- LAYER 3: REASONING -->
+<div class="layer" data-layer="3">
+<div class="dimension-tag"><span class="dot"></span>Think why</div>
+<div class="layer-header">
+<div class="layer-icon">🧠</div>
+<div>
+<div class="layer-num">Layer 3</div>
+<h2 class="layer-title">Why it happens</h2>
+</div>
+</div>
+<p style="font-size:14px;color:var(--stone);margin-bottom:16px;line-height:1.6;">
+      Do not rush. First try to explain the idea in your own words. It is okay if your first answer is not perfect.
+    </p>
+<div class="question-card">
+<div class="prompt">💭 <span data-field="q1">Why does a bulb not glow in an open circuit?</span></div>
+<textarea id="v-l3-1" placeholder="Write or speak your answer."></textarea>
+<div class="voice-row">
+<button class="voice-btn" onclick="toggleVoice('v-l3-1', this)"><span class="mic-dot"></span>Speak your answer</button>
+<span class="voice-status" id="s-v-l3-1">Tap mic to speak</span>
+</div>
+<div class="hint">💡 <span data-field="h1">Think about whether charges have a complete path.</span></div>
+</div>
+<div class="question-card">
+<div class="prompt">💭 <span data-field="q2">Why do we need a battery or cell?</span></div>
+<textarea id="v-l3-2" placeholder="Write or speak your answer."></textarea>
+<div class="voice-row">
+<button class="voice-btn" onclick="toggleVoice('v-l3-2', this)"><span class="mic-dot"></span>Speak your answer</button>
+<span class="voice-status" id="s-v-l3-2">Tap mic to speak</span>
+</div>
+<div class="hint">💡 <span data-field="h2">Think about what pushes charges.</span></div>
+</div>
+<div class="info-box">
+<strong>Clear answer:</strong> <span data-field="clear">A circuit needs a source and a closed path. If any part is broken, current cannot complete its journey.</span>
+</div>
+<!-- Silence pause after reasoning — Gap #2 Fix -->
+<div class="silence-card">
+<h3>Pause before the next part.</h3>
+<p>Take a short break. Let the idea settle in your mind before moving ahead.</p>
+<button class="silence-timer" onclick="startSilence(120)">⏸ Begin 2-minute pause</button>
+<div id="silence-countdown"></div>
+</div>
+</div>
+<!-- LAYER 4: ASSUMPTIONS -->
+<div class="layer" data-layer="4">
+<div class="dimension-tag"><span class="dot"></span>Check hidden ideas</div>
+<div class="layer-header">
+<div class="layer-icon">🤔</div>
+<div>
+<div class="layer-num">Layer 4</div>
+<h2 class="layer-title">Hidden ideas</h2>
+</div>
+</div>
+<p style="font-size:14px;color:var(--stone);margin-bottom:16px;line-height:1.6;">
+      Some ideas are hidden inside every explanation. Good students learn to notice them.
+    </p>
+<div class="assumption-list">
+<div class="assumption-item">
+<span class="check">🔍</span>
+<span data-field="hidden0"><strong>Hidden idea:</strong> Wires create electricity → Check: wires only provide a path.</span>
+</div>
+<div class="assumption-item">
+<span class="check">🔍</span>
+<span data-field="hidden1"><strong>Hidden idea:</strong> Current is used up by a bulb → Check: energy changes form, but current flows around the circuit.</span>
+</div>
+<div class="assumption-item">
+<span class="check">🔍</span>
+<span data-field="hidden2"><strong>Hidden idea:</strong> A switch gives electricity → Check: a switch only opens or closes the path.</span>
+</div>
+</div>
+<div class="defense-card">
+<h4>🎓 Answer check</h4>
+<p>A tutor can ask a few questions to help you find what you understood and what needs more practice.</p>
+<button class="btn">Start answer check</button>
+<!-- Ethics guardrail — Gap #5 Fix -->
+<p class="ethics-note">This is private. Your answers are not shown to other students.</p>
+</div>
+</div>
+<!-- LAYER 5: CONNECTIONS -->
+<div class="layer" data-layer="5">
+<div class="dimension-tag"><span class="dot"></span>Connect ideas</div>
+<div class="layer-header">
+<div class="layer-icon">🌐</div>
+<div>
+<div class="layer-num">Layer 5</div>
+<h2 class="layer-title">Where else we see it</h2>
+</div>
+</div>
+<!-- Curiosity-first framing — Gap #3 Fix -->
+<p style="font-size:14px;line-height:1.7;margin-bottom:16px;">
+      Real understanding means seeing the same idea in many places. Pick the question that feels most interesting to you.
+    </p>
+<div class="domain-grid">
+<div class="domain-card">
+<div class="domain-icon">🧬</div>
+<div class="domain-label">Biology</div>
+<div class="domain-q">How is current like water flow?</div>
+</div>
+<div class="domain-card">
+<div class="domain-icon">⚡</div>
+<div class="domain-label">Physics</div>
+<div class="domain-q">How does resistance slow current?</div>
+</div>
+<div class="domain-card">
+<div class="domain-icon">🧪</div>
+<div class="domain-label">Chemistry</div>
+<div class="domain-q">Why do metals conduct electricity?</div>
+</div>
+<div class="domain-card">
+<div class="domain-icon">📊</div>
+<div class="domain-label">Mathematics</div>
+<div class="domain-q">Where do we use switches at home?</div>
+</div>
+<div class="domain-card">
+<div class="domain-icon">🏛️</div>
+<div class="domain-label">History</div>
+<div class="domain-q">How did electricity change human life?</div>
+</div>
+<div class="domain-card">
+<div class="domain-icon">❤️</div>
+<div class="domain-label">Ethics</div>
+<div class="domain-q">Why is electrical safety important?</div>
+</div>
+</div>
+<div class="question-card">
+<div class="prompt">🌱 Which connection surprised you most? Why?</div>
+<textarea id="v-l5" placeholder="Write or speak your answer. Use simple words."></textarea>
+<div class="voice-row">
+<button class="voice-btn" onclick="toggleVoice('v-l5', this)"><span class="mic-dot"></span>Speak your answer</button>
+<span class="voice-status" id="s-v-l5">Tap mic to speak</span>
+</div>
+</div>
+<!-- Values thread mid-episode — Gap #4 Fix -->
+<div class="values-thread">
+<div class="vt-icon">🤝</div>
+<div class="vt-body"><strong>Life lesson:</strong> The oxygen you breathe may come from plants far away. This shows that living things depend on each other.</div>
+</div>
+</div>
+<!-- LAYER 6: APPLICATIONS -->
+<div class="layer" data-layer="6">
+<div class="dimension-tag"><span class="dot"></span>Use the idea</div>
+<div class="layer-header">
+<div class="layer-icon">🚀</div>
+<div>
+<div class="layer-num">Layer 6</div>
+<h2 class="layer-title">How we use it</h2>
+</div>
+</div>
+<div class="info-box">
+      🌱 <strong>Farming:</strong> More carbon dioxide in greenhouses can help some crops grow better.<br/>
+      ⚡ <strong>Clean energy:</strong> Scientists are trying to copy photosynthesis to make clean fuel.<br/>
+      🏭 <strong>Factories:</strong> Algae can help remove carbon dioxide from factory air.<br/>
+      🚀 <strong>Space travel:</strong> Plants may help astronauts get food and oxygen.
+    </div>
+<div class="question-card">
+<div class="prompt">🔬 Case question: Solve a real problem</div>
+<p style="font-size:13px;color:var(--stone);margin-bottom:12px;line-height:1.6;">
+<span data-field="case">A classroom bulb is not glowing. The battery is new. What will you check first: wire, switch, bulb, or connection?</span>
+</p>
+<textarea id="v-l6" placeholder="Write or speak: check light, water, air, heat, soil, and leaf health." style="min-height:100px;"></textarea>
+<div class="voice-row">
+<button class="voice-btn" onclick="toggleVoice('v-l6', this)"><span class="mic-dot"></span>Speak your investigation</button>
+<span class="voice-status" id="s-v-l6">Tap mic to speak</span>
+</div>
+<div class="hint">💡 There can be more than one answer. Show your thinking step by step.</div>
+</div>
+</div>
+<!-- LAYER 7: IMPLICATIONS -->
+<div class="layer" data-layer="7">
+<div class="dimension-tag"><span class="dot"></span>Think about life</div>
+<div class="layer-header">
+<div class="layer-icon">🌟</div>
+<div>
+<div class="layer-num">Layer 7</div>
+<h2 class="layer-title">Why it matters</h2>
+</div>
+</div>
+<div class="info-box">
+<strong>🌍 World:</strong> <span data-field="world">Electric circuits power modern life.</span><br/><br/>
+<strong>🔮 Future:</strong> <span data-field="future">Electric vehicles, robots, and renewable energy all need circuits.</span><br/><br/>
+<strong>💭 Big thought:</strong> <span data-field="big">A tiny controlled flow of charge can light a whole room.</span>
+</div>
+<div class="question-card">
+<div class="prompt">📝 Long answer question</div>
+<p style="font-size:15px;font-weight:600;color:var(--ink);margin-bottom:8px;line-height:1.5;"><span data-field="essay">Why is a complete circuit necessary for electric current?</span></p>
+<p style="font-size:13px;color:var(--stone);margin-bottom:14px;line-height:1.6;">Write 8–10 lines. Think about food, oxygen, energy, climate, and forests. Use your own words.</p>
+<textarea id="v-l7" placeholder="Write or speak your answer. Start with your main point, then explain why." style="min-height:160px;"></textarea>
+<div class="voice-row" style="margin-top:10px;">
+<button class="voice-btn" onclick="toggleVoice('v-l7', this)"><span class="mic-dot"></span>Speak your answer</button>
+<span class="voice-status" id="s-v-l7">Tap mic to speak</span>
+<button class="btn btn-ghost" style="margin-left:auto;">🎤 Record voice answer</button>
+</div>
+</div>
+<!-- Final silence — Gap #2 Fix -->
+<div class="silence-card" style="margin-top:20px;">
+<h3>Pause for one minute.</h3>
+<p>You learned an important idea. Pause for a moment before moving on.</p>
+<button class="silence-timer" onclick="startSilence(60)">⏸ Begin 1-minute pause</button>
+<div id="silence-countdown-2"></div>
+</div>
+</div>
+<!-- FOOTER / GROWTH -->
+<div class="footer">
+<div class="os-tracker">
+<div class="os-tracker-title">⚙️ Your growth in this lesson</div>
+<div class="os-dims">
+<div class="os-dim">
+<div class="os-dim-label">🎯 Focus Engine</div>
+<div class="os-bar-track"><div class="os-bar-fill" style="width:72%"></div></div>
+<div class="os-dim-pct">+72%</div>
+</div>
+<div class="os-dim">
+<div class="os-dim-label">🧠 Think clearly &amp; Why it happens</div>
+<div class="os-bar-track"><div class="os-bar-fill" style="width:85%"></div></div>
+<div class="os-dim-pct">+85%</div>
+</div>
+<div class="os-dim">
+<div class="os-dim-label">🔍 Notice ideas &amp; Awareness</div>
+<div class="os-bar-track"><div class="os-bar-fill" style="width:60%"></div></div>
+<div class="os-dim-pct">+60%</div>
+</div>
+<div class="os-dim">
+<div class="os-dim-label">⚡ Keep going &amp; Consistency</div>
+<div class="os-bar-track"><div class="os-bar-fill" style="width:50%"></div></div>
+<div class="os-dim-pct">+50%</div>
+</div>
+<div class="os-dim">
+<div class="os-dim-label">❤️ Care &amp; Character</div>
+<div class="os-bar-track"><div class="os-bar-fill" style="width:78%"></div></div>
+<div class="os-dim-pct">+78%</div>
+</div>
+</div>
+</div>
+<h2 class="footer-title">Lesson complete.</h2>
+<p class="footer-sub">Good work. Choose what you want to do next.</p>
+<div class="next-grid">
+<div class="next-card">
+<div class="next-card-icon">🎓</div>
+<div class="next-card-title">Answer check</div>
+<div class="next-card-desc">A few private questions to check your understanding.</div>
+<button class="btn" style="margin-top:14px;font-size:13px;padding:10px 20px;">Start (5 min)</button>
+</div>
+<div class="next-card">
+<div class="next-card-icon">💡</div>
+<div class="next-card-title">Break it down</div>
+<div class="next-card-desc">Explain the idea in very simple words.</div>
+<button class="btn" style="margin-top:14px;font-size:13px;padding:10px 20px;">Practice more</button>
+</div>
+<div class="next-card">
+<div class="next-card-icon">📊</div>
+<div class="next-card-title">My progress</div>
+<div class="next-card-desc">See how your learning is improving over time.</div>
+<button class="btn btn-ghost" style="margin-top:14px;font-size:13px;padding:10px 20px;border-color:rgba(255,255,255,0.4);color:white;">View Dashboard</button>
+</div>
+</div>
+<div class="continue-row">
+<button class="btn" style="font-size:16px;padding:14px 36px;">Continue →</button>
+</div>
+</div>
+</div>
+
+</body>
+</html>
