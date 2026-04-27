@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { GraduationCap, ArrowRight, Sparkles, Trophy, Compass, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -64,13 +64,15 @@ const Day3Master = ({
   const [scoreResult, setScoreResult] = useState<PilotExplainScore | null>(info.state.day3_explain_score);
   const [isScoring, setIsScoring] = useState(false);
   const [confettiOn, setConfettiOn] = useState(false);
+  const completionSavedRef = useRef(false);
 
   const hasMasterSections = !!masterSections && masterSections.length > 0;
   const hasSort = !!sortActivity;
   const totalSteps = 3 + (hasMasterSections ? 1 : 0) + (hasSort ? 1 : 0);
 
   useEffect(() => {
-    if (screen === "growth") {
+    if (screen === "growth" && !completionSavedRef.current) {
+      completionSavedRef.current = true;
       setConfettiOn(true);
       play("victory");
       // persist completion
