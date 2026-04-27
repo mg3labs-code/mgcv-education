@@ -215,7 +215,9 @@ const chapterOneTopicByChapterId: Record<string, { topic: string; anchorIdea: st
 
 export const dayPilotContent: Record<string, DayPilotContent> = {
   ...chapterOnePilots,
-  "ch1::ch1-ep1": {
+  "ch1::ch1-ep2": makeChapterPilot("Euclid's Division Lemma", "Euclid's Division Lemma breaks a number into divisor, quotient, and remainder."),
+  "ch1::ch1-ep3": makeChapterPilot("prime factorization", "Prime factorization shows every whole number as a unique product of primes."),
+  "ch1::ch1-ep1": withConceptMeta({
     hookQuestion: "Why do we need so many different kinds of numbers?",
     conceptText:
       "Numbers come in families. Counting numbers help us count things we can see. Then we needed 0 for nothing. Then we needed negative numbers for opposites like debt or below zero. Each new family was added when the old numbers could not solve a real problem.",
@@ -321,7 +323,7 @@ export const dayPilotContent: Record<string, DayPilotContent> = {
           "Nearly! Real order: count → zero → negatives → fractions → irrationals. Each new number came because the old ones couldn't describe something real (nothing, debt, sharing, diagonal of a square).",
       },
     },
-  },
+  }, "real numbers"),
 };
 
 export function getPilotContent(chapterId?: string, episodeId?: string): DayPilotContent | null {
