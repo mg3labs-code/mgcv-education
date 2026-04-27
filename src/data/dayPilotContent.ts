@@ -169,6 +169,18 @@ const chapterOnePilots: Record<string, DayPilotContent> = {
   "chem-ch1::chem-ch1-ep1": makeChapterPilot("chemical reactions", "A chemical reaction means old substances rearrange to form new substances."),
 };
 
+const chapterOneTopicByChapterId: Record<string, { topic: string; anchorIdea: string }> = {
+  ch1: { topic: "real numbers", anchorIdea: "Real numbers help us describe counting, zero, negatives, fractions, and measurements." },
+  "sci-ch1": { topic: "chemical reactions", anchorIdea: "A chemical reaction means substances change into new substances." },
+  "personality-development": { topic: "personality development", anchorIdea: "Personality grows through attitude, choices, effort, and reflection." },
+  "india-relief-features": { topic: "India's relief features", anchorIdea: "Relief features affect climate, rivers, travel, and human life." },
+  danaseelamu: { topic: "దానశీలము", anchorIdea: "A poem becomes clearer when we first catch its central feeling and value." },
+  "baraste-badal": { topic: "बरसते बादल", anchorIdea: "A poem becomes clearer when we first notice its image, feeling, and message." },
+  "bio-ch1": { topic: "nutrition", anchorIdea: "Nutrition is how living things get and use food for energy and growth." },
+  "phy-ch1": { topic: "electricity", anchorIdea: "Electricity becomes useful when current has a complete path to flow." },
+  "chem-ch1": { topic: "chemical reactions", anchorIdea: "A chemical reaction means old substances rearrange to form new substances." },
+};
+
 export const dayPilotContent: Record<string, DayPilotContent> = {
   ...chapterOnePilots,
   "ch1::ch1-ep1": {
@@ -282,5 +294,8 @@ export const dayPilotContent: Record<string, DayPilotContent> = {
 
 export function getPilotContent(chapterId?: string, episodeId?: string): DayPilotContent | null {
   if (!chapterId || !episodeId) return null;
-  return dayPilotContent[`${chapterId}::${episodeId}`] ?? null;
+  const exactPilot = dayPilotContent[`${chapterId}::${episodeId}`];
+  if (exactPilot) return exactPilot;
+  const chapterPilot = chapterOneTopicByChapterId[chapterId];
+  return chapterPilot ? makeChapterPilot(chapterPilot.topic, chapterPilot.anchorIdea) : null;
 }
