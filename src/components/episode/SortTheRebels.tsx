@@ -418,7 +418,7 @@ const SortTheRebels = (props: Props) => {
             explain={explainOnWrong}
             onRetry={handleRetry}
             onContinue={onComplete}
-            continueLabel={continueLabel ?? "Continue anyway"}
+            continueLabel={continueLabel ?? "Continue"}
           />
         )}
 
