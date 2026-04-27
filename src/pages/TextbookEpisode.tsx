@@ -116,6 +116,8 @@ const TextbookEpisode = () => {
   const { chapterId, episodeId } = useParams();
   const [searchParams] = useSearchParams();
   const layerParam = searchParams.get("layer");
+  const modeParam = searchParams.get("mode");
+  const forceFullReader = modeParam === "content" || modeParam === "full" || modeParam === "practice" || modeParam === "legacy";
   const navigate = useNavigate();
   const { user } = useAuth();
   const [showDefense, setShowDefense] = useState(false);
@@ -624,7 +626,7 @@ const TextbookEpisode = () => {
   // ═══ 3-DAY UNLOCK GAME LOOP ═══
   // Pilot runs only when Chapter 1 pilot content can be resolved for this episode.
   // Missing pilot content automatically falls through to the existing full practice reader.
-  const pilotContent = getPilotContent(chapterId, episodeId);
+  const pilotContent = forceFullReader ? null : getPilotContent(chapterId, episodeId);
   if (pilotContent) {
     return (
       <DifficultyProvider>
