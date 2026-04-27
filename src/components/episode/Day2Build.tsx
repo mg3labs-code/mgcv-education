@@ -1,15 +1,17 @@
 import { useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import { Brain, ArrowRight, CheckCircle2, Flame, Lock, Layers } from "lucide-react";
+import { Brain, ArrowRight, CheckCircle2, Flame, Lock, Layers, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useEpisodeDay } from "@/contexts/EpisodeDayContext";
+import { supabase } from "@/integrations/supabase/client";
 import { friendlyLabels } from "@/lib/childFriendlyLabels";
 import CompanionVoiceInput from "@/components/student/CompanionVoiceInput";
 import { useSoundFx } from "@/hooks/useSoundFx";
 import TrapReveal from "@/components/episode/TrapReveal";
 import SortTheRebels from "@/components/episode/SortTheRebels";
 import type { SortPairsActivity } from "@/data/dayPilotContent";
+import type { PilotExplainScore } from "@/hooks/useEpisodeDayUnlock";
 import { toast } from "sonner";
 
 export interface DeepDiveSection {
@@ -41,6 +43,8 @@ const Day2Build = ({ episodeTitle, deepDiveText, deepDiveSections, detective1, d
 
   const [screen, setScreen] = useState<Screen>("recall");
   const [explanation, setExplanation] = useState("");
+  const [scoreResult, setScoreResult] = useState<PilotExplainScore | null>(info.state.day2_explain_score);
+  const [isScoring, setIsScoring] = useState(false);
   const [det1, setDet1] = useState<boolean | null>(null);
   const [det2, setDet2] = useState<boolean | null>(null);
 
@@ -49,8 +53,27 @@ const Day2Build = ({ episodeTitle, deepDiveText, deepDiveSections, detective1, d
       toast.error("Try at least a sentence — your words matter!");
       return;
     }
-    await setDayState({ day2_explanation: explanation.trim() });
-    setScreen("det1");
+    setIsScoring(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("pilot-explain-score", {
+        body: {
+          episodeTitle,
+          day: 2,
+          prompt: "Explain why negative numbers were needed.",
+          answer: explanation.trim(),
+        },
+      });
+      if (error) throw error;
+      const result = data as PilotExplainScore;
+      setScoreResult(result);
+      await setDayState({ day2_explanation: explanation.trim(), day2_explain_score: result });
+    } catch {
+      toast.error("Scoring paused — your answer is saved, and you can continue.");
+      await setDayState({ day2_explanation: explanation.trim() });
+      setScreen("det1");
+    } finally {
+      setIsScoring(false);
+    }
   };
 
   const handleFinishDay2 = async () => {
@@ -178,11 +201,28 @@ const Day2Build = ({ episodeTitle, deepDiveText, deepDiveSections, detective1, d
                 onTranscript={(t) => setExplanation((p) => (p ? `${p} ${t}` : t).trim())}
                 showLabel
               />
-              <Button onClick={handleSubmitExplanation} disabled={!explanation.trim() || isSaving}>
-                Continue <ArrowRight className="h-4 w-4 ml-1" />
+              <Button onClick={handleSubmitExplanation} disabled={!explanation.trim() || isSaving || isScoring || !!scoreResult}>
+                {isScoring ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : null}
+                {isScoring ? "Scoring..." : "Score my answer"}
               </Button>
             </div>
           </div>
+          {scoreResult && (
+            <div className="rounded-2xl border-2 border-primary/25 bg-primary/5 p-4 space-y-3 animate-fade-in">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Quality score</p>
+                  <p className="text-sm font-semibold text-foreground">{scoreResult.band}</p>
+                </div>
+                <div className="text-2xl font-bold text-primary tabular-nums">{scoreResult.score}%</div>
+              </div>
+              <p className="text-sm text-foreground/85 leading-relaxed">{scoreResult.feedback}</p>
+              <p className="text-xs text-muted-foreground">Next: {scoreResult.next_step}</p>
+              <Button onClick={() => setScreen("det1")} className="w-full gap-1">
+                Continue <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
           <p className="text-center text-[11px] text-muted-foreground">Step 3 of 5</p>
         </div>
       </div>

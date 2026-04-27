@@ -1,14 +1,16 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import { GraduationCap, ArrowRight, Sparkles, Trophy, Compass } from "lucide-react";
+import { GraduationCap, ArrowRight, Sparkles, Trophy, Compass, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useEpisodeDay } from "@/contexts/EpisodeDayContext";
+import { supabase } from "@/integrations/supabase/client";
 import { friendlyLabels } from "@/lib/childFriendlyLabels";
 import CompanionVoiceInput from "@/components/student/CompanionVoiceInput";
 import { useSoundFx } from "@/hooks/useSoundFx";
 import SortTheRebels from "@/components/episode/SortTheRebels";
 import type { SortOrderActivity } from "@/data/dayPilotContent";
+import type { PilotExplainScore } from "@/hooks/useEpisodeDayUnlock";
 
 export interface MasterSection {
   title: string;
@@ -45,10 +47,12 @@ const Day3Master = ({
   sortActivity,
 }: Props) => {
   const navigate = useNavigate();
-  const { setDayState, isSaving } = useEpisodeDay();
+  const { info, setDayState, isSaving } = useEpisodeDay();
   const { play } = useSoundFx();
   const [screen, setScreen] = useState<Screen>("why");
   const [proveAnswer, setProveAnswer] = useState("");
+  const [scoreResult, setScoreResult] = useState<PilotExplainScore | null>(info.state.day3_explain_score);
+  const [isScoring, setIsScoring] = useState(false);
   const [confettiOn, setConfettiOn] = useState(false);
 
   const hasMasterSections = !!masterSections && masterSections.length > 0;
@@ -63,6 +67,31 @@ const Day3Master = ({
       setDayState({ day3_completed_at: new Date().toISOString() }).catch(() => {});
     }
   }, [screen, setDayState, play]);
+
+  const handleScoreProve = async () => {
+    const trimmed = proveAnswer.trim();
+    if (!trimmed) return;
+    setIsScoring(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("pilot-explain-score", {
+        body: {
+          episodeTitle,
+          day: 3,
+          prompt: proveItPrompt,
+          answer: trimmed,
+        },
+      });
+      if (error) throw error;
+      const result = data as PilotExplainScore;
+      setScoreResult(result);
+      await setDayState({ day3_prove_answer: trimmed, day3_explain_score: result });
+    } catch {
+      await setDayState({ day3_prove_answer: trimmed });
+      setScreen("case");
+    } finally {
+      setIsScoring(false);
+    }
+  };
 
   if (screen === "why") {
     return (
@@ -162,11 +191,28 @@ const Day3Master = ({
                 onTranscript={(t) => setProveAnswer((p) => (p ? `${p} ${t}` : t).trim())}
                 showLabel
               />
-              <Button onClick={() => setScreen("case")} disabled={!proveAnswer.trim()}>
-                Continue <ArrowRight className="h-4 w-4 ml-1" />
+              <Button onClick={handleScoreProve} disabled={!proveAnswer.trim() || isScoring || !!scoreResult}>
+                {isScoring ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : null}
+                {isScoring ? "Scoring..." : "Score my answer"}
               </Button>
             </div>
           </div>
+          {scoreResult && (
+            <div className="rounded-2xl border-2 border-primary/25 bg-primary/5 p-4 space-y-3 animate-fade-in">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Quality score</p>
+                  <p className="text-sm font-semibold text-foreground">{scoreResult.band}</p>
+                </div>
+                <div className="text-2xl font-bold text-primary tabular-nums">{scoreResult.score}%</div>
+              </div>
+              <p className="text-sm text-foreground/85 leading-relaxed">{scoreResult.feedback}</p>
+              <p className="text-xs text-muted-foreground">Next: {scoreResult.next_step}</p>
+              <Button onClick={() => setScreen("case")} className="w-full gap-1">
+                Continue <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
           <p className="text-center text-[11px] text-muted-foreground">Step {stepNum} of {totalSteps}</p>
         </div>
       </div>
