@@ -93,6 +93,7 @@ const UNDERSTAND_BLOCKS = new Set(["concept", "activity", "exercise"]);
 const PROVE_BLOCKS = new Set(["recall", "explain", "assessment"]);
 const MASTER_BLOCKS = new Set(["reasoning", "assumptions", "connections", "application", "implications"]);
 const JEE_BLOCKS = new Set(["jee_problems", "jee_extension", "jee_speed_drill"]);
+const PILOT_2_LAYER_ORDER = ["concept", "activity", "reasoning", "assumptions", "connections", "application", "implications"];
 
 const phases = [
   { id: "understand", label: "🔍 Discover & Explore", shortLabel: "UNDERSTAND", color: "#0D9488", subtitle: "Core concept + interactive activity + practice", blockSet: UNDERSTAND_BLOCKS },
@@ -646,6 +647,8 @@ const TextbookEpisode = () => {
   }
 
   if (isPilotPractice2) {
+    const pilot2Blocks = PILOT_2_LAYER_ORDER.flatMap((type) => allBlocks.filter((block) => block.type === type));
+    const lessonBlocks = pilot2Blocks.length > 0 ? pilot2Blocks : allBlocks;
     const breadcrumbs = [
       { label: "Dashboard", href: "/student" },
       { label: "Textbook", href: "/student/textbook" },
@@ -660,7 +663,7 @@ const TextbookEpisode = () => {
             <div className="min-w-0">
               <p className="text-xs font-semibold uppercase text-muted-foreground">Pilot Practice 2 · 7-layer lesson</p>
               <h1 className="text-lg font-bold text-foreground truncate">{episode.title}</h1>
-              <p className="text-sm text-muted-foreground">Structured lesson view with all available textbook layers.</p>
+              <p className="text-sm text-muted-foreground">Definition, mechanism, reasoning, assumptions, connections, application, and implications.</p>
             </div>
             <div className="flex flex-wrap gap-2">
               {getPilotContent(chapterId, episodeId) && (
@@ -673,7 +676,7 @@ const TextbookEpisode = () => {
               </Button>
             </div>
           </div>
-          <FullTextbookView blocks={allBlocks} chapterTitle={chapter.title} episodeTitle={episode.title} />
+          <FullTextbookView blocks={lessonBlocks} chapterTitle={chapter.title} episodeTitle={episode.title} />
         </div>
       </PageLayout>
     );
