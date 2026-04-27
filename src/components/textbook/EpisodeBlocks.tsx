@@ -45,7 +45,7 @@ const SubmitEvaluate = ({ answer, prompt, topic, onComplete, minWords = 3 }: {
       <div className="rounded-xl border-2 border-emerald-300 dark:border-emerald-700 bg-emerald-50/60 dark:bg-emerald-950/20 p-4 space-y-2">
         <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400">
           <CheckCircle2 className="h-4 w-4" />
-          <span className="text-sm font-bold">AI Feedback</span>
+          <span className="text-sm font-bold">Answer feedback</span>
         </div>
         <p className="text-sm text-foreground leading-relaxed whitespace-pre-line">{feedback}</p>
         <Button variant="ghost" size="sm" onClick={() => setFeedback(null)} className="mt-1">
@@ -60,12 +60,12 @@ const SubmitEvaluate = ({ answer, prompt, topic, onComplete, minWords = 3 }: {
       onClick={handleSubmit}
       disabled={!canSubmit || loading}
       size="sm"
-      className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
+      className="min-w-[132px] bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
     >
       {loading ? (
-        <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Evaluating...</>
+        <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Checking...</>
       ) : (
-        <><Send className="h-3.5 w-3.5" /> Submit for Feedback</>
+        <><Send className="h-3.5 w-3.5" /> Check my answer</>
       )}
     </Button>
   );
