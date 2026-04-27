@@ -78,7 +78,7 @@ const ComprehensionCheck = ({ sectionTitle, onPass, onSkip, isFirstVisit, onResu
           <span style={{ fontSize: 14, fontWeight: 700, color: "#059669" }}>Great understanding!</span>
         </div>
         <p style={{ fontSize: 13, color: "#44403C", lineHeight: 1.6 }}>{feedback}</p>
-        <Button size="sm" onClick={onPass} className="mt-3 bg-emerald-600 hover:bg-emerald-700 text-white">
+        <Button size="sm" onClick={onPass} className="mt-3 bg-primary hover:bg-primary/90 text-primary-foreground">
           Continue →
         </Button>
       </div>
@@ -97,7 +97,7 @@ const ComprehensionCheck = ({ sectionTitle, onPass, onSkip, isFirstVisit, onResu
           <span style={{ fontSize: 14, fontWeight: 700, color: "#D97706" }}>Let's review once more</span>
         </div>
         <p style={{ fontSize: 13, color: "#44403C", lineHeight: 1.6, marginBottom: 12 }}>{feedback}</p>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <Button size="sm" variant="outline" onClick={() => { setResult(null); setText(""); }}>
             <RotateCcw className="h-3 w-3 mr-1" /> Try again
           </Button>
@@ -142,7 +142,7 @@ const ComprehensionCheck = ({ sectionTitle, onPass, onSkip, isFirstVisit, onResu
           />
         </div>
       </div>
-      <div className="flex items-center justify-between mt-2">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mt-2">
         <span style={{ fontSize: 11, color: "#A8A29E" }}>{wordCount} words</span>
         <div className="flex gap-2">
           <Button size="sm" variant="ghost" onClick={handleSkip} className="text-muted-foreground text-xs">
@@ -152,10 +152,10 @@ const ComprehensionCheck = ({ sectionTitle, onPass, onSkip, isFirstVisit, onResu
             size="sm"
             onClick={handleSubmit}
             disabled={wordCount < 3 || loading}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5"
+            className="min-w-[132px] bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5"
           >
             {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
-            {loading ? "Checking..." : "Check"}
+            {loading ? "Checking..." : "Check my answer"}
           </Button>
         </div>
       </div>
