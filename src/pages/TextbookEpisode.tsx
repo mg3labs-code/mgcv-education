@@ -1426,9 +1426,6 @@ const DayGatedEpisode = ({
 
   if (isLoading) return <EpisodeLoadingTransition />;
 
-  // Pilot is intentionally fixed-depth: keep richer textbook/practice sections outside this flow.
-  const cap = 1;
-
   const blocksByType = (type: string) =>
     (dbBlocks ?? []).filter((b) => b.type === type);
 
@@ -1439,7 +1436,7 @@ const DayGatedEpisode = ({
   ) : undefined;
   const day1StoryTitle = day1VisualBlock?.title ?? undefined;
 
-  // ─── Day 2 deep-dive sections: reasoning + connections + application ──
+  // ─── Day 2 quick deep-dive: one compact rich section; full 7-layer lesson lives in Pilot Practice 2 ──
   const day2RichSections: { title: string; node: React.ReactNode }[] = [];
   for (const b of blocksByType("reasoning")) {
     day2RichSections.push({
@@ -1459,7 +1456,7 @@ const DayGatedEpisode = ({
       node: <ApplicationBlock content={b.content as ApplicationContent} />,
     });
   }
-  const day2Sections = day2RichSections.slice(0, cap);
+  const day2Sections = day2RichSections.slice(0, 1);
 
   // ─── Day 3 master sections: assumptions + implications (Full Story shows both) ──
   const day3RichSections: { title: string; node: React.ReactNode }[] = [];
@@ -1475,8 +1472,7 @@ const DayGatedEpisode = ({
       node: <ImplicationsBlock content={b.content as ImplicationsContent} />,
     });
   }
-  // Quick Look (cap=1) gets just one stretch section; Deep Dive gets 2; Full Story gets all
-  const day3Sections = day3RichSections.slice(0, cap);
+  const day3Sections = day3RichSections.slice(0, 1);
 
   const canViewDay2 = info.demoOverride || info.day1Done || info.day2Done || info.day3Done;
   const canViewDay3 = info.demoOverride || info.day2Done || info.day3Done;
@@ -1549,6 +1545,7 @@ const DayGatedEpisode = ({
     <div className="min-h-screen bg-background">
       <StageTopbar
         episodeTitle={episodeTitle}
+        pilotPractice2To={chapterId && episodeId ? `/student/textbook/${chapterId}/${episodeId}?mode=pilot2` : undefined}
         fullReaderTo={chapterId && episodeId ? `/student/textbook/${chapterId}/${episodeId}?mode=full` : undefined}
         dayProgress={dayProgress}
         viewDay={viewDay}
