@@ -92,6 +92,13 @@ const PROVE_BLOCKS = new Set(["recall", "explain", "assessment"]);
 const MASTER_BLOCKS = new Set(["reasoning", "assumptions", "connections", "application", "implications"]);
 const JEE_BLOCKS = new Set(["jee_problems", "jee_extension", "jee_speed_drill"]);
 
+const pilotPractice2Episode1Html: Record<string, string> = {
+  ch1: "/pilot-practice-2-maths-ep1.html",
+  "phy-ch1": "/pilot-practice-2-physics-ep1.html",
+  "chem-ch1": "/pilot-practice-2-chemistry-ep1.html",
+  "bio-ch1": "/pilot-practice-2-biology-ep1.html",
+};
+
 const phases = [
   { id: "understand", label: "🔍 Discover & Explore", shortLabel: "UNDERSTAND", color: "#0D9488", subtitle: "Core concept + interactive activity + practice", blockSet: UNDERSTAND_BLOCKS },
   { id: "prove", label: "🎯 Test Yourself", shortLabel: "PROVE", color: "#3B82F6", subtitle: "Quick recall + explain in own words + quiz", blockSet: PROVE_BLOCKS },
@@ -644,17 +651,14 @@ const TextbookEpisode = () => {
   }
 
   if (isPilotPractice2) {
-    const pilot2Params = new URLSearchParams({
-      chapter: chapterId ?? "",
-      episode: episodeId ?? "",
-      topic: episode.title,
-      subject: chapter.title,
-    });
+    const pilot2Src = currentEpisodeIndex === 0 && chapterId
+      ? pilotPractice2Episode1Html[chapterId] ?? "/pilot-practice-2-maths-ep1.html"
+      : "/pilot-practice-2-maths-ep1.html";
 
     return (
       <iframe
         title="Pilot Practice 2 · 7-layer lesson"
-        src={`/pilot-practice-2-7-layer.html?${pilot2Params.toString()}`}
+        src={pilot2Src}
         className="fixed inset-0 z-50 h-screen w-screen border-0 bg-background"
       />
     );
