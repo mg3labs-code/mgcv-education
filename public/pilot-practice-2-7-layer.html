@@ -646,6 +646,43 @@ textarea { font-size: 15px; min-height: 96px; }
 .domain-card { cursor: default; }
 .domain-card::after { content: ''; }
 
+
+/* Mobile-first clean reading layout */
+body { padding: 0; }
+.container { max-width: 920px; }
+.header { border-radius: 0; padding: 34px 26px 24px; }
+.header h1 { font-size: clamp(32px, 6vw, 48px); letter-spacing: 0; }
+.inner-os-banner { padding: 14px 26px; gap: 8px; }
+.layer { padding: 34px 26px; border-left: 0; border-right: 0; }
+.layer-header { gap: 14px; margin-bottom: 18px; }
+.layer-icon { width: 44px; height: 44px; border-radius: 12px; }
+.layer-title { font-size: clamp(24px, 4.8vw, 34px); letter-spacing: 0; }
+p, .info-box, .question-card, .assumption-item, .values-thread .vt-body, .next-card-desc { font-size: 16px; line-height: 1.85; }
+.info-box, .question-card, .values-thread, .defense-card, .silence-card { margin: 18px 0; }
+.question-card { padding: 20px; }
+.domain-grid { grid-template-columns: 1fr; gap: 12px; }
+.domain-card { text-align: left; display: grid; grid-template-columns: 36px 1fr; column-gap: 10px; align-items: start; }
+.domain-icon { grid-row: span 2; margin: 0; }
+.domain-q { opacity: 1; }
+.voice-row { align-items: stretch; flex-direction: column; }
+.voice-btn, .btn { justify-content: center; width: 100%; }
+.footer { border-radius: 0; padding: 34px 26px; }
+.os-dim { align-items: flex-start; flex-direction: column; gap: 6px; }
+.os-dim-label, .os-dim-pct { width: auto; }
+@media (min-width: 760px) {
+  body { padding: 24px 16px; }
+  .header { border-radius: 20px 20px 0 0; padding: 42px 46px 32px; }
+  .inner-os-banner { padding-left: 46px; padding-right: 46px; }
+  .layer { padding: 48px 54px; border-left: 1px solid var(--mist); border-right: 1px solid var(--mist); }
+  .domain-grid { grid-template-columns: repeat(2, 1fr); }
+  .voice-row { align-items: center; flex-direction: row; }
+  .voice-btn, .btn { width: auto; }
+  .footer { border-radius: 0 0 20px 20px; padding: 46px 54px; }
+  .os-dim { align-items: center; flex-direction: row; }
+  .os-dim-label { width: 160px; }
+  .os-dim-pct { width: 36px; }
+}
+
 @media (max-width: 600px) {
   .header, .inner-os-banner, .layer, .footer { padding-left: 22px; padding-right: 22px; }
   .domain-grid { grid-template-columns: repeat(2, 1fr); }
@@ -684,17 +721,17 @@ textarea { font-size: 15px; min-height: 96px; }
       </div>
     </div>
     <p style="font-size:15px;line-height:1.75;margin-bottom:16px;">
-      Photosynthesis is how green plants use sunlight to make their own food. They use carbon dioxide from air and water from soil to make glucose, a simple sugar.
+      <span data-field="meaning">Photosynthesis is how green plants use sunlight to make their own food. They use carbon dioxide from air and water from soil to make glucose, a simple sugar.</span>
     </p>
     <div class="info-box">
-      <strong>💡 Word meaning:</strong> Photo means light. Synthesis means putting together.<br>
-      <strong>📅 Scientist:</strong> Jan Ingenhousz, 1779<br>
-      <strong>⭐ Why it matters:</strong> It gives food to plants and oxygen to living things.
+      <strong>💡 Word meaning:</strong> <span data-field="word">Photo means light. Synthesis means putting together.</span><br>
+      <strong>📅 Scientist:</strong> <span data-field="scientist">Jan Ingenhousz, 1779</span><br>
+      <strong>⭐ Why it matters:</strong> <span data-field="why">It gives food to plants and oxygen to living things.</span>
     </div>
     <!-- Values thread seeded early — Gap #4 Fix -->
     <div class="values-thread">
       <div class="vt-icon">🌿</div>
-      <div class="vt-body"><strong>Life lesson:</strong> Plants help us quietly every day. This reminds us that small, unseen work can be very important.</div>
+      <div class="vt-body"><strong>Life lesson:</strong> <span data-field="life">Plants help us quietly every day. This reminds us that small, unseen work can be very important.</span></div>
     </div>
   </div>
 
@@ -709,10 +746,10 @@ textarea { font-size: 15px; min-height: 96px; }
       </div>
     </div>
     <div class="info-box">
-      <strong>Step 1 — Sunlight step:</strong> Sunlight helps the leaf split water. Oxygen is released.<br><br>
-      <strong>Step 2 — Food-making step:</strong> The plant uses carbon dioxide to make glucose, its food.
+      <strong>Step 1:</strong> <span data-field="step1">Sunlight helps the leaf split water. Oxygen is released.</span><br><br>
+      <strong>Step 2:</strong> <span data-field="step2">The plant uses carbon dioxide to make glucose, its food.</span>
     </div>
-    <div class="formula">6CO₂ + 6H₂O + Light → C₆H₁₂O₆ + 6O₂</div>
+    <div class="formula" data-field="formula">6CO₂ + 6H₂O + Light → C₆H₁₂O₆ + 6O₂</div>
   </div>
 
   <!-- LAYER 3: REASONING -->
@@ -730,27 +767,27 @@ textarea { font-size: 15px; min-height: 96px; }
     </p>
 
     <div class="question-card">
-      <div class="prompt">💭 Why do plants need sunlight?</div>
+      <div class="prompt">💭 <span data-field="q1">Why do plants need sunlight?</span></div>
       <textarea id="v-l3-1" placeholder="Write or speak your answer. What happens without sunlight?"></textarea>
       <div class="voice-row">
         <button class="voice-btn" onclick="toggleVoice('v-l3-1', this)"><span class="mic-dot"></span>Speak your answer</button>
         <span class="voice-status" id="s-v-l3-1">Tap mic to speak</span>
       </div>
-      <div class="hint">💡 Think: where does the energy in plant food come from?</div>
+      <div class="hint">💡 <span data-field="h1">Think: where does the energy in plant food come from?</span></div>
     </div>
 
     <div class="question-card">
-      <div class="prompt">💭 Why can’t animals make food like plants?</div>
+      <div class="prompt">💭 <span data-field="q2">Why can’t animals make food like plants?</span></div>
       <textarea id="v-l3-2" placeholder="Speak or type your answer..."></textarea>
       <div class="voice-row">
         <button class="voice-btn" onclick="toggleVoice('v-l3-2', this)"><span class="mic-dot"></span>Speak your answer</button>
         <span class="voice-status" id="s-v-l3-2">Tap mic to speak</span>
       </div>
-      <div class="hint">💡 Think: what do plant cells have that animal cells do not have?</div>
+      <div class="hint">💡 <span data-field="h2">Think: what do plant cells have that animal cells do not have?</span></div>
     </div>
 
     <div class="info-box">
-      <strong>Clear answer:</strong> Sunlight gives the energy needed for the process. Plants have chloroplasts, which catch light. Animals do not have chloroplasts. The oxygen comes when water is split.
+      <strong>Clear answer:</strong> <span data-field="clear">Sunlight gives the energy needed for the process. Plants have chloroplasts, which catch light. Animals do not have chloroplasts. The oxygen comes when water is split.</span>
     </div>
 
     <!-- Silence pause after reasoning — Gap #2 Fix -->
@@ -778,15 +815,15 @@ textarea { font-size: 15px; min-height: 96px; }
     <div class="assumption-list">
       <div class="assumption-item">
         <span class="check">🔍</span>
-        <span><strong>Hidden idea:</strong> Chlorophyll is essential → <em>Check:</em> Some bacteria use bacteriorhodopsin instead — a completely different pigment system.</span>
+        <span data-field="hidden0"><strong>Hidden idea:</strong> Most plants use chlorophyll. But some tiny living things use other ways to catch light.</span>
       </div>
       <div class="assumption-item">
         <span class="check">🔍</span>
-        <span><strong>Hidden idea:</strong> Sunlight is the only energy source → <em>Check:</em> Artificial grow lights work. The plant only "cares" about photon wavelength, not origin.</span>
+        <span data-field="hidden1"><strong>Hidden idea:</strong> Plants need the right kind of light. It can come from the Sun or from grow lights.</span>
       </div>
       <div class="assumption-item">
         <span class="check">🔍</span>
-        <span><strong>Hidden idea:</strong> Oxygen is always released → <em>Check:</em> Anoxygenic photosynthesis (in purple sulfur bacteria) uses H₂S, not water, and releases no O₂.</span>
+        <span data-field="hidden2"><strong>Hidden idea:</strong> Most school examples release oxygen. But a few bacteria do a different process and do not release oxygen.</span>
       </div>
     </div>
 
@@ -881,7 +918,7 @@ textarea { font-size: 15px; min-height: 96px; }
     <div class="question-card">
       <div class="prompt">🔬 Case question: Solve a real problem</div>
       <p style="font-size:13px;color:var(--stone);margin-bottom:12px;line-height:1.6;">
-        A village is growing less crop than before. Rain is normal, but the weather is hotter. What would you check first? Light, water, soil, leaves, or carbon dioxide?
+        <span data-field="case">A village is growing less crop than before. Rain is normal, but the weather is hotter. What would you check first? Light, water, soil, leaves, or carbon dioxide?</span>
       </p>
       <textarea id="v-l6" style="min-height:100px;" placeholder="Write or speak: check light, water, air, heat, soil, and leaf health."></textarea>
       <div class="voice-row">
@@ -903,14 +940,14 @@ textarea { font-size: 15px; min-height: 96px; }
       </div>
     </div>
     <div class="info-box">
-      <strong>🌍 World:</strong> If photosynthesis stopped, plants would not make food or oxygen. Food chains would break.<br><br>
-      <strong>🔮 Future:</strong> Scientists are trying to make artificial leaves. This may help clean energy and space travel.<br><br>
-      <strong>💭 Big thought:</strong> Plants turn sunlight into food. That simple idea supports almost all life on Earth.
+      <strong>🌍 World:</strong> <span data-field="world">If photosynthesis stopped, plants would not make food or oxygen. Food chains would break.</span><br><br>
+      <strong>🔮 Future:</strong> <span data-field="future">Scientists are trying to make artificial leaves. This may help clean energy and space travel.</span><br><br>
+      <strong>💭 Big thought:</strong> <span data-field="big">Plants turn sunlight into food. That simple idea supports almost all life on Earth.</span>
     </div>
 
     <div class="question-card">
       <div class="prompt">📝 Long answer question</div>
-      <p style="font-size:15px;font-weight:600;color:var(--ink);margin-bottom:8px;line-height:1.5;">How much does human life depend on photosynthesis?</p>
+      <p style="font-size:15px;font-weight:600;color:var(--ink);margin-bottom:8px;line-height:1.5;"><span data-field="essay">How much does human life depend on photosynthesis?</span></p>
       <p style="font-size:13px;color:var(--stone);margin-bottom:14px;line-height:1.6;">Write 8–10 lines. Think about food, oxygen, energy, climate, and forests. Use your own words.</p>
       <textarea id="v-l7" style="min-height:160px;" placeholder="Write or speak your answer. Start with your main point, then explain why."></textarea>
       <div class="voice-row" style="margin-top:10px;">
@@ -1022,6 +1059,66 @@ function startSilence(seconds) {
   }
   tick();
 }
+
+
+const lessonBank = {
+  'ch1::ch1-ep1': {
+    title: 'Real Numbers', subject: 'Mathematics', meta: 'Math · Real Numbers · Episode 1 · Read slowly · 20 min',
+    meaning: 'Real numbers are all the numbers we use on the number line. They include counting numbers, zero, negative numbers, fractions, decimals, rational numbers, and irrational numbers.',
+    word: 'Real means the number has a place on the number line.', scientist: 'Built by many mathematicians over time.', why: 'Real numbers help us measure, compare, calculate, and solve daily problems.',
+    life: 'Numbers look simple, but each new number family was created to solve a real problem. Good thinking grows step by step.',
+    step1: 'Start with natural numbers: 1, 2, 3, ... These help us count.', step2: 'Add 0, negatives, fractions, decimals, and irrational numbers. Together they form real numbers.', formula: 'Natural → Whole → Integers → Rational + Irrational = Real Numbers',
+    q1: 'Why was zero needed?', q1ph: 'Write or speak: what problem does zero solve?', h1: 'Think about showing nothing, empty space, or no value.',
+    q2: 'Why do we need negative numbers?', q2ph: 'Write or speak your answer.', h2: 'Think about debt, temperature below zero, or direction.',
+    clear: 'Each new type of number solves a problem the older numbers could not solve. Zero shows nothing. Negative numbers show values below zero. Fractions and decimals show parts. Irrational numbers show values that cannot be written as simple fractions.',
+    hidden: ['Every number must be a counting number → Check: 0, −3, 1/2, and √2 are not counting numbers.', 'Every decimal ends quickly → Check: some decimals repeat or never end.', 'Fractions and decimals are different ideas → Check: many decimals can be written as fractions.'],
+    connections: ['How are numbers used in money?', 'How are numbers used in distance and speed?', 'How are number lines used in graphs?', 'Where do negative numbers appear in daily life?', 'Why did humans invent new number types?', 'How do fair measurements help people?'],
+    caseText: 'A shopkeeper has profit, loss, debt, and discount values. Which number types will help record everything correctly?',
+    world: 'Without real numbers, measurement, science, money, maps, and technology would be very hard.', future: 'Computers, engineering, AI, and space science all use real numbers.', big: 'Numbers are a language for patterns in the world.', essay: 'Why do we need many types of numbers, not only counting numbers?'
+  },
+  'phy-ch1::phy-ch1-ep1': {
+    title: 'Electric Current and Circuits', subject: 'Physics', meta: 'Physics · Electricity · Episode 1 · Read slowly · 20 min',
+    meaning: 'Electric current is the flow of electric charge. A circuit is a complete path that allows current to flow.', word: 'Circuit means a closed path.', scientist: 'Many scientists helped build this idea, including Volta, Ampere, and Ohm.', why: 'Electric circuits run lights, fans, phones, computers, and machines.', life: 'Current flows only when the path is complete. Focus also works like that: broken attention stops flow.',
+    step1: 'A cell or battery pushes charges through a wire.', step2: 'If the path is closed, current flows and the bulb can glow. If the path is open, current stops.', formula: 'Complete path + source = current flow',
+    q1: 'Why does a bulb not glow in an open circuit?', q1ph: 'Write or speak your answer.', h1: 'Think about whether charges have a complete path.', q2: 'Why do we need a battery or cell?', q2ph: 'Write or speak your answer.', h2: 'Think about what pushes charges.', clear: 'A circuit needs a source and a closed path. If any part is broken, current cannot complete its journey.',
+    hidden: ['Wires create electricity → Check: wires only provide a path.', 'Current is used up by a bulb → Check: energy changes form, but current flows around the circuit.', 'A switch gives electricity → Check: a switch only opens or closes the path.'],
+    connections: ['How is current like water flow?', 'How does resistance slow current?', 'Why do metals conduct electricity?', 'Where do we use switches at home?', 'How did electricity change human life?', 'Why is electrical safety important?'],
+    caseText: 'A classroom bulb is not glowing. The battery is new. What will you check first: wire, switch, bulb, or connection?', world: 'Electric circuits power modern life.', future: 'Electric vehicles, robots, and renewable energy all need circuits.', big: 'A tiny controlled flow of charge can light a whole room.', essay: 'Why is a complete circuit necessary for electric current?'
+  },
+  'chem-ch1::chem-ch1-ep1': {
+    title: 'Chemical Reactions', subject: 'Chemistry', meta: 'Chemistry · Chemical Reactions · Episode 1 · Read slowly · 20 min',
+    meaning: 'A chemical reaction is a change where new substances are formed.', word: 'Reaction means substances interact and change.', scientist: 'Lavoisier helped explain that matter is conserved in reactions.', why: 'Cooking, rusting, burning, digestion, and medicines all involve chemical reactions.', life: 'Real change is not just appearance. In chemistry and in learning, deep change creates something new.',
+    step1: 'Reactants are the starting substances.', step2: 'Atoms rearrange and form products, which are new substances.', formula: 'Reactants → Products',
+    q1: 'How do we know a chemical reaction happened?', q1ph: 'Write or speak signs you can observe.', h1: 'Think about gas, heat, light, smell, or color change.', q2: 'Why are products different from reactants?', q2ph: 'Write or speak your answer.', h2: 'Think about atoms rearranging.', clear: 'In a chemical reaction, atoms are not destroyed. They rearrange to make new substances with new properties.',
+    hidden: ['Every change is chemical → Check: melting ice is physical, not chemical.', 'Atoms disappear in a reaction → Check: atoms rearrange; they are conserved.', 'A reaction always needs fire → Check: many reactions happen without fire.'],
+    connections: ['How is digestion a chemical reaction?', 'How does heat affect reaction speed?', 'Why does iron rust?', 'How do medicines work in the body?', 'How did chemistry change industry?', 'How can reactions harm or help the environment?'],
+    caseText: 'A student mixes two liquids and sees bubbles and heat. What evidence suggests a chemical reaction?', world: 'Chemical reactions support life, food, medicine, and materials.', future: 'Green chemistry aims to make useful products with less pollution.', big: 'Matter changes form, but atoms keep their count.', essay: 'Why are chemical reactions important in daily life?'
+  },
+  'bio-ch1::bio-ch1-ep1': {
+    title: 'Nutrition', subject: 'Biology', meta: 'Biology · Nutrition · Episode 1 · Read slowly · 20 min',
+    meaning: 'Nutrition is how living things get food and use it for energy, growth, repair, and health.', word: 'Nutrition means taking in and using food.', scientist: 'Many biologists and doctors built our understanding of food and health.', why: 'Nutrition explains how organisms survive and why balanced food matters.', life: 'Your body and your mind both need the right inputs. What you take in shapes what you can do.', step1: 'Organisms take in food or make food.', step2: 'Food is broken down and used for energy, growth, and repair.', formula: 'Food → Energy + Growth + Repair', q1: 'Why do living things need food?', q1ph: 'Write or speak your answer.', h1: 'Think about energy, growth, and repair.', q2: 'How is plant nutrition different from animal nutrition?', q2ph: 'Write or speak your answer.', h2: 'Think about making food versus eating food.', clear: 'Plants usually make their own food by photosynthesis. Animals get food from plants or other animals. Both need nutrition to live.', hidden: ['Food is needed only for energy → Check: food also helps growth and repair.', 'All organisms eat in the same way → Check: plants and animals get food differently.', 'More food always means better health → Check: balance matters.'], connections: ['How is nutrition linked to digestion?', 'How does energy move through food chains?', 'Which nutrients build the body?', 'How does food affect school focus?', 'How did farming change nutrition?', 'Why is fair access to food important?'], caseText: 'A student feels tired often. What nutrition-related causes would you check first?', world: 'Nutrition affects health, learning, farming, and society.', future: 'Better nutrition science can reduce disease and hunger.', big: 'Food is not just something we eat; it becomes part of the body.', essay: 'Why is nutrition important for living things?'
+  }
+};
+const fallbackByPrefix = {
+  'ch1': lessonBank['ch1::ch1-ep1'], 'phy-ch1': lessonBank['phy-ch1::phy-ch1-ep1'], 'chem-ch1': lessonBank['chem-ch1::chem-ch1-ep1'], 'bio-ch1': lessonBank['bio-ch1::bio-ch1-ep1']
+};
+function applyLessonData() {
+  const params = new URLSearchParams(location.search);
+  const key = `${params.get('chapter') || ''}::${params.get('episode') || ''}`;
+  const data = lessonBank[key] || fallbackByPrefix[params.get('chapter') || ''] || lessonBank['ch1::ch1-ep1'];
+  document.title = `${data.title} - 7 Layer Student Lesson`;
+  document.querySelector('.header h1').textContent = data.title;
+  document.querySelector('.header .meta').textContent = data.meta;
+  const set = (sel, value) => { const el = document.querySelector(sel); if (el) el.textContent = value; };
+  set('[data-field="meaning"]', data.meaning); set('[data-field="word"]', data.word); set('[data-field="scientist"]', data.scientist); set('[data-field="why"]', data.why); set('[data-field="life"]', data.life);
+  set('[data-field="step1"]', data.step1); set('[data-field="step2"]', data.step2); set('[data-field="formula"]', data.formula);
+  set('[data-field="q1"]', data.q1); set('[data-field="h1"]', data.h1); set('[data-field="q2"]', data.q2); set('[data-field="h2"]', data.h2); set('[data-field="clear"]', data.clear);
+  const areas = document.querySelectorAll('textarea'); if (areas[0]) areas[0].placeholder = data.q1ph; if (areas[1]) areas[1].placeholder = data.q2ph;
+  document.querySelectorAll('[data-field^="hidden"]').forEach((el, i) => el.innerHTML = `<strong>Hidden idea:</strong> ${data.hidden[i] || data.hidden[0]}`);
+  document.querySelectorAll('.domain-q').forEach((el, i) => el.textContent = data.connections[i] || data.connections[0]);
+  set('[data-field="case"]', data.caseText); set('[data-field="world"]', data.world); set('[data-field="future"]', data.future); set('[data-field="big"]', data.big); set('[data-field="essay"]', data.essay);
+}
+applyLessonData();
 
 // ── VOICE ENGINE ──────────────────────────────────────────
 const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
