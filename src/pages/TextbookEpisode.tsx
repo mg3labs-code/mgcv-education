@@ -622,8 +622,8 @@ const TextbookEpisode = () => {
   }
 
   // ═══ 3-DAY UNLOCK GAME LOOP ═══
-  // Phase 1 pilot: only when hand-authored day content exists for this episode
-  // (currently Math Ch1 Ep1). For all other episodes the original reader runs.
+  // Pilot runs only when Chapter 1 pilot content can be resolved for this episode.
+  // Missing pilot content automatically falls through to the existing full practice reader.
   const pilotContent = getPilotContent(chapterId, episodeId);
   if (pilotContent) {
     return (
