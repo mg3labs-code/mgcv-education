@@ -53,6 +53,8 @@ export interface SortOrderActivity {
 export type SortActivity = SortBucketsActivity | SortPairsActivity | SortOrderActivity;
 
 export interface DayPilotContent {
+  conceptKey?: string;
+  conceptLabel?: string;
   hookQuestion: string;
   conceptText: string;
   detective: { statement: string; isTrue: boolean; explain: string };
@@ -90,7 +92,21 @@ const innerOSGains = [
   { label: "Values", emoji: "🌱", pct: 2 },
 ];
 
+const toConceptKey = (value: string) =>
+  value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "") || "chapter-1-concept";
+
+const withConceptMeta = (pilot: DayPilotContent, topic: string): DayPilotContent => ({
+  conceptKey: pilot.conceptKey ?? toConceptKey(topic),
+  conceptLabel: pilot.conceptLabel ?? topic,
+  ...pilot,
+});
+
 const makeChapterPilot = (topic: string, anchorIdea: string): DayPilotContent => ({
+  conceptKey: toConceptKey(topic),
+  conceptLabel: topic,
   hookQuestion: `What is the first thing you notice about ${topic}?`,
   conceptText: `${topic} becomes easier when we find the main idea first. Today, do not try to memorize everything. Notice the key idea, connect it to one example, and check one common misunderstanding.`,
   detective: {
