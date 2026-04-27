@@ -140,7 +140,7 @@ const Day1Spark = ({
           <div className="text-center space-y-2">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-bold uppercase tracking-wide">
               <Sparkles className="h-3 w-3" />
-              {friendlyLabels.hookQuestion}
+              First Guess
             </div>
             <h1 className="text-2xl font-bold text-foreground leading-tight">{hookQuestion}</h1>
             <p className="text-sm text-muted-foreground">No right answer. Just your honest first thought.</p>
@@ -193,7 +193,7 @@ const Day1Spark = ({
           <div className="rounded-2xl border-2 border-primary/30 bg-card p-5 space-y-3">
             <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wide">
               <Sparkles className="h-3 w-3" />
-              Here's the idea
+              Quick Read
             </div>
             <p className="text-base text-foreground leading-relaxed">{conceptText}</p>
           </div>
@@ -274,7 +274,7 @@ const Day1Spark = ({
         <div className={`w-full max-w-lg space-y-5 animate-fade-in ${shake ? "animate-[shake_0.4s_ease-in-out]" : ""}`}>
           <div className="text-center space-y-2">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 text-[11px] font-bold uppercase tracking-wide">
-              {friendlyLabels.detective}
+              Spot the Trap
             </div>
             <p className="text-sm text-muted-foreground">Read it once. Trust your gut.</p>
           </div>
@@ -327,7 +327,7 @@ const Day1Spark = ({
           <div className="text-center space-y-2">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-400 text-[11px] font-bold uppercase tracking-wide">
               <HelpCircle className="h-3 w-3" />
-              Quick check
+              Tiny Exam Check
             </div>
             <p className="text-sm text-muted-foreground">One quick question — no pressure.</p>
           </div>
@@ -393,15 +393,18 @@ const Day1Spark = ({
         </div>
 
         <div className="space-y-1.5">
-          <h1 className="text-2xl font-bold text-foreground">Day 1 Complete!</h1>
+          <h1 className="text-2xl font-bold text-foreground">What You Built Today</h1>
           <p className="text-sm text-muted-foreground">{episodeTitle}</p>
         </div>
 
         <div className="rounded-2xl border border-border bg-card p-5 space-y-3">
           <div className="flex items-center justify-center gap-2 text-orange-600 dark:text-orange-400 font-bold">
             <Flame className="h-5 w-5" />
-            <span>Streak +1</span>
+            <span>You can classify number families.</span>
           </div>
+          <p className="text-sm text-foreground/80 leading-relaxed">
+            You learned why natural numbers, whole numbers, and integers exist — and how to catch the zero trap.
+          </p>
           <div className="flex items-center justify-center gap-2 text-muted-foreground text-sm">
             <Lock className="h-4 w-4" />
             <span>Day 2 unlocks tomorrow</span>

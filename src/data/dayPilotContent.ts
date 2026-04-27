@@ -86,7 +86,7 @@ export const dayPilotContent: Record<string, DayPilotContent> = {
   "ch1::ch1-ep1": {
     hookQuestion: "Why do we need so many different kinds of numbers?",
     conceptText:
-      "Numbers come in families. Counting numbers (1, 2, 3…) help us count things we can see. Then someone asked: what about nothing? That gave us 0 — and the family grew. Later, what about the opposite of 5? That gave us −5. Each new number was invented to answer a question the old numbers couldn't.",
+      "Numbers come in families. Counting numbers help us count things we can see. Then we needed 0 for nothing. Then we needed negative numbers for opposites like debt or below zero. Each new family was added when the old numbers could not solve a real problem.",
     detective: {
       statement: "Zero is a counting number.",
       isTrue: false,
@@ -102,8 +102,8 @@ export const dayPilotContent: Record<string, DayPilotContent> = {
     },
     day1Sort: {
       variant: "buckets",
-      title: "Which family does each number belong to?",
-      subtitle: "Drag each rebel into its smallest family.",
+      title: "Build the Families",
+      subtitle: "Drag each number into its smallest family.",
       buckets: [
         { id: "natural", label: "Natural (1, 2, 3…)", emoji: "🌱", tint: "hsl(160 70% 45%)" },
         { id: "whole", label: "Whole (adds 0)", emoji: "⚪", tint: "hsl(200 70% 50%)" },
@@ -123,7 +123,7 @@ export const dayPilotContent: Record<string, DayPilotContent> = {
     },
     day2: {
       deepDiveText:
-        "Think of numbers like Indian Railways adding new routes.\n\nFirst there were just trains for big cities (counting numbers — 1, 2, 3). Then they added a station called Zero for 'no train here yet'. Then they built lines going the other direction (negative numbers — −1, −2, −3).\n\nEach new track was added because people needed it. Numbers grew the same way — each family was invented to solve a real problem.",
+        "Number systems grow like routes on a map. Counting numbers came first. Zero was added for 'nothing'. Negative numbers were added for opposites like debt. Fractions were added for sharing. Each new family solved a problem the older family could not solve.",
       detective1: {
         statement: "Every whole number is a natural number.",
         isTrue: false,
@@ -138,7 +138,7 @@ export const dayPilotContent: Record<string, DayPilotContent> = {
       },
       sort: {
         variant: "pairs",
-        title: "Match each real-life need with the number it invented",
+        title: "Match Need to Number",
         subtitle: "Drag each cause to the number family that solved it.",
         leftItems: [
           { id: "c1", label: "Counting goats in a field", matchId: "e1" },
@@ -160,15 +160,17 @@ export const dayPilotContent: Record<string, DayPilotContent> = {
     },
     day3: {
       whyItWorks:
-        "From first principles: a number system grows when reality forces it to.\n\nYou can't count −3 cows. But you CAN owe ₹3 — that's a debt, the opposite of having ₹3. Negatives were invented because the world has opposites.\n\nThis is how all of mathematics grows: someone notices the old rules can't describe something real, and invents a new rule that does.",
+        "A number system grows when reality forces it to. You cannot count −3 cows, but you can owe ₹3. That is why negative numbers exist. Math grows when old rules cannot describe something real, so people build a better rule.",
       proveItPrompt:
         "Imagine you're explaining to a younger cousin why we need negative numbers. What real-life situation would you use to convince them?",
       caseStudy:
-        "A cricket team's net run rate can be negative. Suppose India scores 250 in 50 overs but lets the opponent chase it in 40 overs — the run-rate difference is negative.\n\nWithout negative numbers, we couldn't even talk about who is BEHIND in the tournament. The number system makes the standings possible.",
+        "A cricket team's net run rate can be negative. Without negative numbers, we could not clearly show who is behind in a tournament. Your call: where else do negative numbers help us show a real situation clearly?",
       growthGains: [
-        { label: "Clarity", emoji: "👁️", pct: 4 },
+        { label: "Attention", emoji: "👁️", pct: 4 },
         { label: "Thinking", emoji: "🧠", pct: 5 },
-        { label: "Character", emoji: "🌱", pct: 2 },
+        { label: "Resilience", emoji: "🛡️", pct: 3 },
+        { label: "Momentum", emoji: "⚡", pct: 4 },
+        { label: "Values", emoji: "🌱", pct: 2 },
       ],
       sort: {
         variant: "order",
