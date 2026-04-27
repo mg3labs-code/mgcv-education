@@ -274,7 +274,10 @@ textarea:focus {
   color: var(--leaf);
   font-family: 'DM Sans', sans-serif;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.25;
+  white-space: normal;
   cursor: pointer;
   transition: all 0.2s;
   flex-shrink: 0;
@@ -475,14 +478,19 @@ textarea:focus {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 24px;
+  justify-content: center;
+  min-height: 42px;
+  padding: 11px 22px;
   background: var(--forest);
   color: white;
   border: none;
-  border-radius: 50px;
+  border-radius: 10px;
   font-family: 'DM Sans', sans-serif;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.25;
+  white-space: normal;
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -700,6 +708,14 @@ textarea { max-width: 100%; }
   body { padding: 0; }
   .container { max-width: none; }
   .header, .inner-os-banner, .layer, .footer { padding-left: 18px; padding-right: 18px; }
+  .layer { padding-top: 30px; padding-bottom: 30px; }
+  .layer-header { align-items: flex-start; gap: 12px; }
+  .layer-icon { width: 42px; height: 42px; min-width: 42px; }
+  .question-card, .info-box, .silence-card, .os-tracker { padding: 16px; }
+  .voice-row { gap: 8px; }
+  .voice-status { text-align: center; }
+  .os-dim { width: 100%; }
+  .os-bar-track { width: 100%; }
   .header h1 { font-size: 34px; line-height: 1.08; }
   .badge, .os-pill, .dimension-tag { white-space: normal; }
   .domain-grid, .next-grid { grid-template-columns: 1fr; }
@@ -899,7 +915,7 @@ textarea { max-width: 100%; }
 <!-- Values thread mid-episode — Gap #4 Fix -->
 <div class="values-thread">
 <div class="vt-icon">🤝</div>
-<div class="vt-body"><strong>Life lesson:</strong> The oxygen you breathe may come from plants far away. This shows that living things depend on each other.</div>
+<div class="vt-body"><strong>Life lesson:</strong> Numbers look simple, but each new number family was created to solve a real problem. Good thinking grows step by step.</div>
 </div>
 </div>
 <!-- LAYER 6: APPLICATIONS -->
@@ -913,19 +929,19 @@ textarea { max-width: 100%; }
 </div>
 </div>
 <div class="info-box">
-      🌱 <strong>Farming:</strong> More carbon dioxide in greenhouses can help some crops grow better.<br/>
-      ⚡ <strong>Clean energy:</strong> Scientists are trying to copy photosynthesis to make clean fuel.<br/>
-      🏭 <strong>Factories:</strong> Algae can help remove carbon dioxide from factory air.<br/>
-      🚀 <strong>Space travel:</strong> Plants may help astronauts get food and oxygen.
+      💰 <strong>Money:</strong> Integers help record profit, loss, debt, and savings.<br/>
+      📏 <strong>Measurement:</strong> Decimals and fractions help measure length, weight, and time.<br/>
+      🗺️ <strong>Maps:</strong> Positive and negative numbers show directions and height.<br/>
+      💻 <strong>Technology:</strong> Computers use numbers to calculate, draw, and predict.
     </div>
 <div class="question-card">
 <div class="prompt">🔬 Case question: Solve a real problem</div>
 <p style="font-size:13px;color:var(--stone);margin-bottom:12px;line-height:1.6;">
 <span data-field="case">A shopkeeper has profit, loss, debt, and discount values. Which number types will help record everything correctly?</span>
 </p>
-<textarea id="v-l6" placeholder="Write or speak: check light, water, air, heat, soil, and leaf health." style="min-height:100px;"></textarea>
+<textarea id="v-l6" placeholder="Write or speak: profit/loss, debt, discount, fractions, decimals, or negative values." style="min-height:100px;"></textarea>
 <div class="voice-row">
-<button class="voice-btn" onclick="toggleVoice('v-l6', this)"><span class="mic-dot"></span>Speak your investigation</button>
+<button class="voice-btn" onclick="toggleVoice('v-l6', this)"><span class="mic-dot"></span>Speak your answer</button>
 <span class="voice-status" id="s-v-l6">Tap mic to speak</span>
 </div>
 <div class="hint">💡 There can be more than one answer. Show your thinking step by step.</div>
@@ -949,12 +965,12 @@ textarea { max-width: 100%; }
 <div class="question-card">
 <div class="prompt">📝 Long answer question</div>
 <p style="font-size:15px;font-weight:600;color:var(--ink);margin-bottom:8px;line-height:1.5;"><span data-field="essay">Why do we need many types of numbers, not only counting numbers?</span></p>
-<p style="font-size:13px;color:var(--stone);margin-bottom:14px;line-height:1.6;">Write 8–10 lines. Think about food, oxygen, energy, climate, and forests. Use your own words.</p>
+<p style="font-size:13px;color:var(--stone);margin-bottom:14px;line-height:1.6;">Write 8–10 lines. Think about money, measurement, temperature, maps, and computers. Use your own words.</p>
 <textarea id="v-l7" placeholder="Write or speak your answer. Start with your main point, then explain why." style="min-height:160px;"></textarea>
 <div class="voice-row" style="margin-top:10px;">
 <button class="voice-btn" onclick="toggleVoice('v-l7', this)"><span class="mic-dot"></span>Speak your answer</button>
 <span class="voice-status" id="s-v-l7">Tap mic to speak</span>
-<button class="btn btn-ghost" style="margin-left:auto;">🎤 Record voice answer</button>
+<button class="btn btn-ghost" style="margin-left:auto;">Speak answer</button>
 </div>
 </div>
 <!-- Final silence — Gap #2 Fix -->
@@ -1004,7 +1020,7 @@ textarea { max-width: 100%; }
 <div class="next-card-icon">🎓</div>
 <div class="next-card-title">Answer check</div>
 <div class="next-card-desc">A few private questions to check your understanding.</div>
-<button class="btn" style="margin-top:14px;font-size:13px;padding:10px 20px;">Start (5 min)</button>
+<button class="btn" style="margin-top:14px;font-size:13px;padding:10px 20px;">Start practice</button>
 </div>
 <div class="next-card">
 <div class="next-card-icon">💡</div>
@@ -1020,7 +1036,7 @@ textarea { max-width: 100%; }
 </div>
 </div>
 <div class="continue-row">
-<button class="btn" style="font-size:16px;padding:14px 36px;">Continue →</button>
+<button class="btn" style="font-size:16px;padding:14px 36px;">Continue</button>
 </div>
 </div>
 </div>
