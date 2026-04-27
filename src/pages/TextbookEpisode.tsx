@@ -99,6 +99,13 @@ const pilotPractice2Episode1Html: Record<string, string> = {
   "bio-ch1": "/pilot-practice-2-biology-ep1.html",
 };
 
+const pilotPractice2Labels: Record<string, string> = {
+  ch1: "Mathematics · Real Numbers",
+  "phy-ch1": "Physics · Electric Current and Circuits",
+  "chem-ch1": "Chemistry · Chemical Reactions",
+  "bio-ch1": "Biology · Nutrition",
+};
+
 const phases = [
   { id: "understand", label: "🔍 Discover & Explore", shortLabel: "UNDERSTAND", color: "#0D9488", subtitle: "Core concept + interactive activity + practice", blockSet: UNDERSTAND_BLOCKS },
   { id: "prove", label: "🎯 Test Yourself", shortLabel: "PROVE", color: "#3B82F6", subtitle: "Quick recall + explain in own words + quiz", blockSet: PROVE_BLOCKS },
@@ -651,13 +658,28 @@ const TextbookEpisode = () => {
   }
 
   if (isPilotPractice2) {
-    const pilot2Src = currentEpisodeIndex === 0 && chapterId
-      ? pilotPractice2Episode1Html[chapterId] ?? "/pilot-practice-2-maths-ep1.html"
-      : "/pilot-practice-2-maths-ep1.html";
+    const pilot2Src = chapterId ? pilotPractice2Episode1Html[chapterId] : undefined;
+    const isEpisodeOne = currentEpisodeIndex === 0 || episode.number === 1;
+
+    if (!pilot2Src || !isEpisodeOne) {
+      return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background px-4">
+          <div className="max-w-md rounded-xl border border-border bg-card p-6 text-center shadow-sm">
+            <h1 className="text-xl font-bold text-foreground">7-layer lesson not matched</h1>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">
+              This page is protected from showing the wrong subject. Open Episode 1 for Mathematics, Physics, Chemistry, or Biology.
+            </p>
+            <Button className="mt-5" onClick={() => navigate(`/student/textbook/${chapterId}`)}>
+              Back to chapter
+            </Button>
+          </div>
+        </div>
+      );
+    }
 
     return (
       <iframe
-        title="Pilot Practice 2 · 7-layer lesson"
+        title={`Pilot Practice 2 · ${pilotPractice2Labels[chapterId ?? ""] ?? "7-layer lesson"}`}
         src={pilot2Src}
         className="fixed inset-0 z-50 h-screen w-screen border-0 bg-background"
       />
