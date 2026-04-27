@@ -1,8 +1,8 @@
 /**
  * Day-1/2/3 hand-authored content for Chapter 1 pilots.
  *
- * Keyed by `${chapterId}::${episodeId}`. If a key is not present,
- * the day gate is bypassed and the original reader renders.
+ * Exact pilots are keyed by `${chapterId}::${episodeId}`.
+ * Chapter-level fallback covers supported Chapter 1 episodes; unsupported content falls back to the original reader.
  *
  * Keep copy short, simple, and warm — Class 7 reading level.
  */
