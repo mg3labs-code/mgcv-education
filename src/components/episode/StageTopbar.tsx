@@ -78,7 +78,7 @@ const StageTopbar = ({ episodeTitle, streakDays = 0, exitTo, pilotPractice2To, f
             onClick={() => navigate(pilotPractice2To)}
             className="hidden sm:inline-flex h-8 items-center px-2.5 rounded-full bg-accent/10 text-accent border border-accent/20 text-[11px] font-bold hover:bg-accent/15 transition-colors"
           >
-            Pilot Practice 2
+            7-layer lesson
           </button>
         )}
 
