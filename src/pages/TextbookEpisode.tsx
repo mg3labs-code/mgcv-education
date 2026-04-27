@@ -1456,6 +1456,10 @@ const DayGatedEpisode = ({
       body = (
         <Day3Master
           episodeTitle={episodeTitle}
+          chapterId={chapterId ?? ""}
+          episodeId={episodeId ?? ""}
+          conceptKey={pilot.conceptKey}
+          conceptLabel={pilot.conceptLabel}
           whyItWorks={pilot.day3.whyItWorks}
           masterSections={day3Sections}
           proveItPrompt={pilot.day3.proveItPrompt}
