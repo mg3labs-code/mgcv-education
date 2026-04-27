@@ -1,4 +1,3 @@
-import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { z } from "https://esm.sh/zod@3.23.8";
 
 const BodySchema = z.object({

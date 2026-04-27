@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import { GraduationCap, ArrowRight, Sparkles, Trophy, Compass, Loader2 } from "lucide-react";
+import { GraduationCap, ArrowRight, Sparkles, Trophy, Compass, Loader2, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useEpisodeDay } from "@/contexts/EpisodeDayContext";
@@ -11,7 +11,7 @@ import { useSoundFx } from "@/hooks/useSoundFx";
 import SortTheRebels from "@/components/episode/SortTheRebels";
 import type { SortOrderActivity } from "@/data/dayPilotContent";
 import type { PilotExplainScore } from "@/hooks/useEpisodeDayUnlock";
-import { useGenerateRetentionPrediction } from "@/hooks/useRetentionPredictions";
+import { useGenerateRetentionPrediction, usePeerBenchmark } from "@/hooks/useRetentionPredictions";
 
 export interface MasterSection {
   title: string;
@@ -58,6 +58,7 @@ const Day3Master = ({
   const navigate = useNavigate();
   const { info, setDayState, isSaving } = useEpisodeDay();
   const retentionPrediction = useGenerateRetentionPrediction();
+  const peerBenchmark = usePeerBenchmark();
   const { play } = useSoundFx();
   const [screen, setScreen] = useState<Screen>("why");
   const [proveAnswer, setProveAnswer] = useState("");
@@ -69,6 +70,10 @@ const Day3Master = ({
   const hasMasterSections = !!masterSections && masterSections.length > 0;
   const hasSort = !!sortActivity;
   const totalSteps = 3 + (hasMasterSections ? 1 : 0) + (hasSort ? 1 : 0);
+
+  const handlePeerBenchmark = () => {
+    peerBenchmark.mutate({ chapterId, episodeId, conceptKey, conceptLabel });
+  };
 
   useEffect(() => {
     if (screen === "growth" && !completionSavedRef.current) {
@@ -298,6 +303,34 @@ const Day3Master = ({
           </div>
         </div>
         <p className="text-base font-medium text-foreground italic">"You can explain this to anyone now."</p>
+        <div className="rounded-2xl border border-border bg-card p-4 space-y-3 text-left">
+          <Button variant="outline" onClick={handlePeerBenchmark} disabled={peerBenchmark.isPending} className="w-full gap-2">
+            {peerBenchmark.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <BarChart3 className="h-4 w-4" />}
+            Compare with class pattern
+          </Button>
+          {peerBenchmark.data?.benchmark && (
+            <div className="grid grid-cols-3 gap-2 text-center animate-fade-in">
+              <div className="rounded-xl bg-muted/50 p-2">
+                <p className="text-[10px] text-muted-foreground">Risk</p>
+                <p className="text-lg font-bold text-foreground">{peerBenchmark.data.benchmark.student.risk_score}%</p>
+                <p className="text-[10px] text-muted-foreground">Class {peerBenchmark.data.benchmark.distribution.avg_risk_score}%</p>
+              </div>
+              <div className="rounded-xl bg-muted/50 p-2">
+                <p className="text-[10px] text-muted-foreground">Explain</p>
+                <p className="text-lg font-bold text-foreground">{peerBenchmark.data.benchmark.student.explain_average}%</p>
+                <p className="text-[10px] text-muted-foreground">Class {peerBenchmark.data.benchmark.distribution.avg_explain_score}%</p>
+              </div>
+              <div className="rounded-xl bg-muted/50 p-2">
+                <p className="text-[10px] text-muted-foreground">Done</p>
+                <p className="text-lg font-bold text-foreground">{peerBenchmark.data.benchmark.student.completion_pct}%</p>
+                <p className="text-[10px] text-muted-foreground">{peerBenchmark.data.benchmark.sample_size} students</p>
+              </div>
+            </div>
+          )}
+          {peerBenchmark.data?.error && (
+            <p className="text-xs text-muted-foreground text-center">{peerBenchmark.data.error}</p>
+          )}
+        </div>
         {nextEpisodeTitle && (
           <Button
             onClick={() => (onNextEpisode ? onNextEpisode() : navigate("/student/dashboard"))}
