@@ -9,6 +9,7 @@ interface Props {
   episodeTitle: string;
   streakDays?: number;
   exitTo?: string;
+  fullReaderTo?: string;
   /** 0–1 progress through the current day (sub-step granularity). Optional. */
   dayProgress?: number;
   /** Day currently being viewed (may differ from info.currentDay if user navigated back). */
@@ -24,7 +25,7 @@ interface Props {
  *   each full day = 33.33%. Current day adds up to another 33.33% based on `dayProgress`.
  *   day1Done → 33%, +day2Done → 66%, +day3Done → 100%.
  */
-const StageTopbar = ({ episodeTitle, streakDays = 0, exitTo, dayProgress = 0, viewDay, onChangeDay }: Props) => {
+const StageTopbar = ({ episodeTitle, streakDays = 0, exitTo, fullReaderTo, dayProgress = 0, viewDay, onChangeDay }: Props) => {
   const navigate = useNavigate();
   const { info } = useEpisodeDay();
   const { muted, toggleMuted } = useSoundFx();
@@ -72,6 +73,15 @@ const StageTopbar = ({ episodeTitle, streakDays = 0, exitTo, dayProgress = 0, vi
         </div>
 
         {/* Sound toggle */}
+        {fullReaderTo && (
+          <button
+            onClick={() => navigate(fullReaderTo)}
+            className="hidden sm:inline-flex h-8 items-center px-2.5 rounded-full bg-primary/10 text-primary border border-primary/20 text-[11px] font-bold hover:bg-primary/15 transition-colors"
+          >
+            Full practice
+          </button>
+        )}
+
         <button
           onClick={toggleMuted}
           className="h-8 w-8 rounded-full flex items-center justify-center hover:bg-muted text-muted-foreground transition-colors"
