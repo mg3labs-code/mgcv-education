@@ -11,6 +11,7 @@ import { useSoundFx } from "@/hooks/useSoundFx";
 import SortTheRebels from "@/components/episode/SortTheRebels";
 import type { SortOrderActivity } from "@/data/dayPilotContent";
 import type { PilotExplainScore } from "@/hooks/useEpisodeDayUnlock";
+import { useGenerateRetentionPrediction } from "@/hooks/useRetentionPredictions";
 
 export interface MasterSection {
   title: string;
@@ -20,6 +21,10 @@ export interface MasterSection {
 
 interface Props {
   episodeTitle: string;
+  chapterId: string;
+  episodeId: string;
+  conceptKey?: string;
+  conceptLabel?: string;
   whyItWorks: string;
   /** Optional rich sections (Assumptions, Implications, etc.) shown right after Why-It-Works, before Prove-It. */
   masterSections?: MasterSection[];
@@ -37,6 +42,10 @@ type Screen = "why" | "deeper" | "sort" | "prove" | "case" | "growth";
 
 const Day3Master = ({
   episodeTitle,
+  chapterId,
+  episodeId,
+  conceptKey,
+  conceptLabel,
   whyItWorks,
   masterSections,
   proveItPrompt,
@@ -48,6 +57,7 @@ const Day3Master = ({
 }: Props) => {
   const navigate = useNavigate();
   const { info, setDayState, isSaving } = useEpisodeDay();
+  const retentionPrediction = useGenerateRetentionPrediction();
   const { play } = useSoundFx();
   const [screen, setScreen] = useState<Screen>("why");
   const [proveAnswer, setProveAnswer] = useState("");
@@ -64,9 +74,11 @@ const Day3Master = ({
       setConfettiOn(true);
       play("victory");
       // persist completion
-      setDayState({ day3_completed_at: new Date().toISOString() }).catch(() => {});
+      setDayState({ day3_completed_at: new Date().toISOString() })
+        .then(() => retentionPrediction.mutateAsync({ chapterId, episodeId, conceptKey, conceptLabel }))
+        .catch(() => {});
     }
-  }, [screen, setDayState, play]);
+  }, [chapterId, conceptKey, conceptLabel, episodeId, retentionPrediction, screen, setDayState, play]);
 
   const handleScoreProve = async () => {
     const trimmed = proveAnswer.trim();
