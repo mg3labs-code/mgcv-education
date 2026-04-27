@@ -46,6 +46,8 @@ import Day2Build from "@/components/episode/Day2Build";
 import Day3Master from "@/components/episode/Day3Master";
 import DayLockedWall from "@/components/episode/DayLockedWall";
 import { getPilotContent } from "@/data/dayPilotContent";
+import FullTextbookView from "@/components/textbook/FullTextbookView";
+import PageLayout from "@/components/PageLayout";
 
 const LANGUAGE_SUBJECTS = new Set(["Telugu", "Hindi"]);
 
@@ -117,7 +119,8 @@ const TextbookEpisode = () => {
   const [searchParams] = useSearchParams();
   const layerParam = searchParams.get("layer");
   const modeParam = searchParams.get("mode");
-  const forceFullReader = modeParam === "content" || modeParam === "full" || modeParam === "practice" || modeParam === "legacy";
+  const isPilotPractice2 = modeParam === "pilot2" || modeParam === "seven-layer" || modeParam === "lesson";
+  const forceFullReader = isPilotPractice2 || modeParam === "content" || modeParam === "full" || modeParam === "practice" || modeParam === "legacy";
   const navigate = useNavigate();
   const { user } = useAuth();
   const [showDefense, setShowDefense] = useState(false);
@@ -639,6 +642,40 @@ const TextbookEpisode = () => {
           />
         </EpisodeDayProvider>
       </DifficultyProvider>
+    );
+  }
+
+  if (isPilotPractice2) {
+    const breadcrumbs = [
+      { label: "Dashboard", href: "/student" },
+      { label: "Textbook", href: "/student/textbook" },
+      { label: chapter.title, href: `/student/textbook/${chapterId}` },
+      { label: "Pilot Practice 2" },
+    ];
+
+    return (
+      <PageLayout role="student" breadcrumbItems={breadcrumbs}>
+        <div className="max-w-4xl mx-auto space-y-4">
+          <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase text-muted-foreground">Pilot Practice 2 · 7-layer lesson</p>
+              <h1 className="text-lg font-bold text-foreground truncate">{episode.title}</h1>
+              <p className="text-sm text-muted-foreground">Structured lesson view with all available textbook layers.</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {getPilotContent(chapterId, episodeId) && (
+                <Button variant="outline" size="sm" onClick={() => navigate(`/student/textbook/${chapterId}/${episodeId}`)}>
+                  Pilot practice
+                </Button>
+              )}
+              <Button variant="outline" size="sm" onClick={() => navigate(`/student/textbook/${chapterId}/${episodeId}?mode=full`)}>
+                Full practice
+              </Button>
+            </div>
+          </div>
+          <FullTextbookView blocks={allBlocks} chapterTitle={chapter.title} episodeTitle={episode.title} />
+        </div>
+      </PageLayout>
     );
   }
 
