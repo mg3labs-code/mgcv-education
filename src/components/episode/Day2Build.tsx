@@ -106,7 +106,7 @@ const Day2Build = ({ episodeTitle, deepDiveText, deepDiveSections, detective1, d
         <div className="w-full max-w-2xl space-y-4 animate-fade-in">
           <div className="text-center space-y-2">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/15 text-blue-700 dark:text-blue-400 text-[11px] font-bold uppercase tracking-wide">
-              <Layers className="h-3 w-3" /> Let's go deeper
+              <Layers className="h-3 w-3" /> Quick Read
             </div>
           </div>
 
@@ -161,8 +161,8 @@ const Day2Build = ({ episodeTitle, deepDiveText, deepDiveSections, detective1, d
       <div className="min-h-[80vh] flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-lg space-y-5 animate-fade-in">
           <div className="text-center space-y-2">
-            <h2 className="text-xl font-bold text-foreground">Explain it in your own words</h2>
-            <p className="text-sm text-muted-foreground">If you can teach it, you truly know it.</p>
+            <h2 className="text-xl font-bold text-foreground">Explain It Your Way</h2>
+            <p className="text-sm text-muted-foreground">Why were negative numbers needed?</p>
           </div>
           <div className="rounded-2xl border-2 border-blue-300 dark:border-blue-700 bg-card p-4 space-y-3">
             <Textarea
@@ -202,7 +202,7 @@ const Day2Build = ({ episodeTitle, deepDiveText, deepDiveSections, detective1, d
         <div className="w-full max-w-lg space-y-5 animate-fade-in">
           <div className="text-center space-y-2">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 text-[11px] font-bold uppercase tracking-wide">
-              {friendlyLabels.detective}
+              Spot the Mistake
             </div>
           </div>
           <div className="rounded-2xl border-2 border-border bg-card p-6">
@@ -253,11 +253,14 @@ const Day2Build = ({ episodeTitle, deepDiveText, deepDiveSections, detective1, d
           </span>
         </div>
         <div className="space-y-1.5">
-          <h1 className="text-2xl font-bold text-foreground">Day 2 Complete!</h1>
+          <h1 className="text-2xl font-bold text-foreground">What Changed in Your Thinking</h1>
           <p className="text-sm text-muted-foreground">{episodeTitle}</p>
         </div>
         <div className="rounded-2xl border border-border bg-card p-5 space-y-3">
-          <div className="flex items-center justify-center gap-2 text-muted-foreground text-sm">
+          <p className="text-sm text-foreground/80 leading-relaxed">
+            You can now explain why number families grow and catch common mistakes instead of only choosing answers.
+          </p>
+          <div className="flex items-center justify-center gap-2 text-muted-foreground text-sm border-t border-border pt-3">
             <Lock className="h-4 w-4" /> Day 3 unlocks tomorrow
           </div>
           <p className="text-sm text-foreground/80 italic leading-relaxed pt-2 border-t border-border">
