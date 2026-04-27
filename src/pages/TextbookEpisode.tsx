@@ -1512,6 +1512,7 @@ const DayGatedEpisode = ({
     <div className="min-h-screen bg-background">
       <StageTopbar
         episodeTitle={episodeTitle}
+        fullReaderTo={chapterId && episodeId ? `/student/textbook/${chapterId}/${episodeId}?mode=full` : undefined}
         dayProgress={dayProgress}
         viewDay={viewDay}
         onChangeDay={(d) => setViewDay(d)}
