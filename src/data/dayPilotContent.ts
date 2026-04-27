@@ -176,13 +176,29 @@ const makeChapterPilot = (topic: string, anchorIdea: string): DayPilotContent =>
 
 const chapterOnePilots: Record<string, DayPilotContent> = {
   "sci-ch1::sci-ch1-ep1": makeChapterPilot("chemical reactions", "A chemical reaction means substances change into new substances."),
+  "sci-ch1::sci-ch1-ep2": makeChapterPilot("chemical equations", "A chemical equation uses symbols and formulas to show a reaction clearly."),
+  "sci-ch1::sci-ch1-ep3": makeChapterPilot("types of chemical reactions", "Reaction types help us classify what changes during a chemical reaction."),
   "personality-development::attitude-is-altitude": makeChapterPilot("Attitude is Altitude", "Attitude shapes how a person responds to challenges."),
+  "personality-development::every-success-story": makeChapterPilot("Every Success Story", "Success stories show how choices, effort, and support shape growth."),
+  "personality-development::i-will-do-it": makeChapterPilot("I Will Do It", "Strong determination turns a difficult goal into steady action."),
   "india-relief-features::the-great-himalayas": makeChapterPilot("the Great Himalayas", "Relief features affect climate, rivers, travel, and human life."),
+  "india-relief-features::peninsular-plateau-coastal-plains": makeChapterPilot("plateaus and coastal plains", "Plateaus and coastal plains shape farming, minerals, transport, and settlement."),
+  "india-relief-features::islands-deserts-river-plains": makeChapterPilot("islands, deserts, and river plains", "Landforms influence water, soil, climate, and where people live."),
   "danaseelamu::danaseelamu-padya-parichayam": makeChapterPilot("దానశీలము", "A poem becomes clearer when we first catch its central feeling and value."),
+  "danaseelamu::danaseelamu-padya-vishleshanam": makeChapterPilot("దానశీలము భావ విశ్లేషణ", "Poem analysis means noticing feeling, message, and how lines create meaning."),
+  "danaseelamu::danaseelamu-bhava-vistaranam": makeChapterPilot("దానశీలము భావ విస్తరణ", "Expanding a poem's idea helps connect its value to real life."),
   "baraste-badal::baraste-badal-kavita-parichay": makeChapterPilot("बरसते बादल", "A poem becomes clearer when we first notice its image, feeling, and message."),
+  "baraste-badal::baraste-badal-bhav-vishleshan": makeChapterPilot("बरसते बादल भाव विश्लेषण", "Poem analysis means finding the feeling and message behind the images."),
+  "baraste-badal::baraste-badal-bhasha-shilp": makeChapterPilot("बरसते बादल भाषा और शिल्प", "Language and style show how a poet makes images feel alive."),
   "bio-ch1::bio-ch1-ep1": makeChapterPilot("nutrition", "Nutrition is how living things get and use food for energy and growth."),
+  "bio-ch1::bio-ch1-ep2": makeChapterPilot("photosynthesis", "Photosynthesis is how green plants use sunlight to make food."),
+  "bio-ch1::bio-ch1-ep3": makeChapterPilot("human digestion", "Digestion breaks food into smaller parts the body can use."),
   "phy-ch1::phy-ch1-ep1": makeChapterPilot("electric current and circuits", "A circuit gives electric current a complete path to flow."),
+  "phy-ch1::phy-ch1-ep2": makeChapterPilot("Ohm's Law", "Ohm's Law connects voltage, current, and resistance in a circuit."),
+  "phy-ch1::phy-ch1-ep3": makeChapterPilot("resistance and resistivity", "Resistance explains how strongly a material opposes electric current."),
   "chem-ch1::chem-ch1-ep1": makeChapterPilot("chemical reactions", "A chemical reaction means old substances rearrange to form new substances."),
+  "chem-ch1::chem-ch1-ep2": makeChapterPilot("balancing chemical equations", "Balanced equations show that atoms are conserved in a reaction."),
+  "chem-ch1::chem-ch1-ep3": makeChapterPilot("types of reactions", "Reaction types help classify how substances combine, break, or exchange parts."),
 };
 
 const chapterOneTopicByChapterId: Record<string, { topic: string; anchorIdea: string }> = {
