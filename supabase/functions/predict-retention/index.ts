@@ -162,6 +162,81 @@ serve(async (req) => {
       if (!isTeacher && !isAdmin) return json({ error: "Only teachers can generate predictions for another student." }, 403);
     }
 
+    if (parsed.data.action === "benchmark") {
+      if (!parsed.data.chapterId || !parsed.data.episodeId) {
+        return json({ error: "Chapter and episode are required for peer benchmarks." }, 400);
+      }
+
+      const { data: profile } = await supabaseAdmin
+        .from("profiles")
+        .select("class_name")
+        .eq("user_id", targetUserId)
+        .maybeSingle();
+      const className = profile?.class_name;
+      if (!className) return json({ benchmark: null, error: "Class benchmark is not available yet." }, 200);
+
+      const { data: classProfiles } = await supabaseAdmin
+        .from("profiles")
+        .select("user_id")
+        .eq("class_name", className);
+      const classUserIds = (classProfiles ?? []).map((p) => p.user_id).filter(Boolean);
+      if (classUserIds.length < 2) return json({ benchmark: null, error: "Need more class data for a benchmark." }, 200);
+
+      const { data: progressRows, error: benchError } = await supabaseAdmin
+        .from("episode_progress")
+        .select("user_id, layer_scores, completion_pct")
+        .in("user_id", classUserIds)
+        .eq("chapter_id", parsed.data.chapterId)
+        .eq("episode_id", parsed.data.episodeId);
+      if (benchError) return json({ error: "Could not read class pilot signals." }, 500);
+
+      const rows: BenchmarkRow[] = (progressRows ?? []).map((row) => {
+        const layerScores = asRecord(row.layer_scores);
+        const prediction = buildPrediction({
+          userId: row.user_id,
+          chapterId: parsed.data.chapterId!,
+          episodeId: parsed.data.episodeId!,
+          conceptKey: parsed.data.conceptKey ?? parsed.data.episodeId!,
+          conceptLabel: parsed.data.conceptLabel ?? parsed.data.episodeId!.replace(/-/g, " "),
+          layerScores,
+        });
+        const signals = prediction.signals as Record<string, unknown>;
+        return {
+          student_id: row.user_id,
+          risk_score: prediction.risk_score,
+          completion_pct: Number(signals.completion_pct ?? row.completion_pct ?? 0),
+          explain_average: Number(signals.explain_average ?? 55),
+          day1_detective_correct: signals.day1_detective_correct === true,
+        };
+      });
+
+      const student = rows.find((r) => r.student_id === targetUserId);
+      if (!student) return json({ benchmark: null, error: "Student pilot signal is not available yet." }, 200);
+      const riskValues = rows.map((r) => r.risk_score);
+      const explainValues = rows.map((r) => r.explain_average);
+      const completionValues = rows.map((r) => r.completion_pct);
+      return json({
+        benchmark: {
+          class_name: className,
+          concept_key: parsed.data.conceptKey ?? parsed.data.episodeId,
+          concept_label: parsed.data.conceptLabel ?? parsed.data.episodeId.replace(/-/g, " "),
+          sample_size: rows.length,
+          student,
+          distribution: {
+            avg_risk_score: clamp(riskValues.reduce((a, b) => a + b, 0) / riskValues.length),
+            avg_explain_score: clamp(explainValues.reduce((a, b) => a + b, 0) / explainValues.length),
+            avg_completion_pct: clamp(completionValues.reduce((a, b) => a + b, 0) / completionValues.length),
+            detective_accuracy_pct: clamp((rows.filter((r) => r.day1_detective_correct).length / rows.length) * 100),
+          },
+          percentile: {
+            risk: percentile(student.risk_score, riskValues),
+            explain: percentile(student.explain_average, explainValues),
+            completion: percentile(student.completion_pct, completionValues),
+          },
+        },
+      });
+    }
+
     let progressQuery = supabaseAdmin
       .from("episode_progress")
       .select("user_id, chapter_id, episode_id, layer_scores, completed_at")
