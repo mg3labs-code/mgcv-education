@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Photosynthesis - 7-Layer Oxford/Harvard Method</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,700;1,300&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --forest: #1a3d2b;
+  --leaf: #2d7a4f;
+  --moss: #4a9e6a;
+  --sun: #e8c547;
+  --sky: #a8d8ea;
+  --soil: #8b6343;
+  --petal: #f4a261;
+  --cream: #faf8f2;
+  --ink: #1c1c1c;
+  --mist: #e8ede6;
+  --stone: #6b7a6a;
+  --glow: rgba(232,197,71,0.15);
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--cream);
+  color: var(--ink);
+  padding: 24px 16px;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+/* HEADER */
+.header {
+  background: var(--forest);
+  color: white;
+  border-radius: 20px 20px 0 0;
+  padding: 36px 40px 28px;
+  position: relative;
+  overflow: hidden;
+}
+.header::before {
+  content: '';
+  position: absolute;
+  top: -40px; right: -40px;
+  width: 200px; height: 200px;
+  border-radius: 50%;
+  background: rgba(45,122,79,0.3);
+}
+.header::after {
+  content: '';
+  position: absolute;
+  bottom: -20px; left: 60px;
+  width: 120px; height: 120px;
+  border-radius: 50%;
+  background: rgba(232,197,71,0.1);
+}
+.badge {
+  display: inline-block;
+  background: var(--leaf);
+  color: white;
+  padding: 5px 14px;
+  border-radius: 50px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  margin-bottom: 14px;
+}
+.header h1 {
+  font-family: 'Fraunces', serif;
+  font-size: 42px;
+  font-weight: 700;
+  line-height: 1.1;
+  margin-bottom: 8px;
+  position: relative;
+}
+.header .meta {
+  font-size: 13px;
+  opacity: 0.75;
+  position: relative;
+}
+
+/* INNER OS BANNER — Gap #1 Fix */
+.inner-os-banner {
+  background: var(--forest);
+  border-top: 1px solid rgba(255,255,255,0.1);
+  padding: 16px 40px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.inner-os-banner .label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--sun);
+  text-transform: uppercase;
+  margin-right: 4px;
+}
+.os-pill {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.7);
+  padding: 4px 12px;
+  border-radius: 50px;
+  font-size: 11px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+.os-pill.active {
+  background: var(--sun);
+  color: var(--forest);
+  border-color: var(--sun);
+  font-weight: 700;
+}
+
+/* LAYERS */
+.layer {
+  background: white;
+  border-left: 1px solid var(--mist);
+  border-right: 1px solid var(--mist);
+  padding: 36px 40px;
+  border-bottom: 2px solid var(--mist);
+  position: relative;
+  transition: all 0.3s;
+}
+.layer:hover {
+  background: #fdfdfb;
+}
+
+/* Layer dimension tag — Gap #1 Fix */
+.dimension-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--mist);
+  border-radius: 50px;
+  padding: 4px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--stone);
+  margin-bottom: 16px;
+  letter-spacing: 0.3px;
+}
+.dimension-tag .dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--moss);
+}
+
+.layer-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+.layer-num {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: var(--stone);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.layer-title {
+  font-family: 'Fraunces', serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.2;
+}
+.layer-icon {
+  width: 48px; height: 48px;
+  border-radius: 14px;
+  background: var(--forest);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.info-box {
+  background: var(--mist);
+  border-left: 3px solid var(--leaf);
+  padding: 18px 20px;
+  border-radius: 0 10px 10px 0;
+  margin: 16px 0;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.formula {
+  text-align: center;
+  font-family: 'Fraunces', serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--forest);
+  padding: 16px;
+  background: var(--mist);
+  border-radius: 10px;
+  margin: 16px 0;
+  letter-spacing: 0.5px;
+}
+
+.question-card {
+  background: var(--cream);
+  border: 1.5px solid var(--mist);
+  border-radius: 14px;
+  padding: 22px;
+  margin: 14px 0;
+  transition: border-color 0.2s;
+}
+.question-card:focus-within {
+  border-color: var(--moss);
+  box-shadow: 0 4px 20px rgba(45,122,79,0.08);
+}
+.prompt {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--leaf);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 12px 14px;
+  border: 1.5px solid var(--mist);
+  border-radius: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: var(--ink);
+  background: white;
+  resize: vertical;
+  transition: border-color 0.2s;
+  line-height: 1.6;
+}
+textarea:focus {
+  outline: none;
+  border-color: var(--moss);
+}
+.hint {
+  background: #edf6f0;
+  border-left: 3px solid var(--moss);
+  padding: 10px 14px;
+  border-radius: 0 8px 8px 0;
+  font-size: 13px;
+  color: var(--forest);
+  margin-top: 10px;
+}
+
+/* VOICE INPUT */
+.voice-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+.voice-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 18px;
+  border-radius: 50px;
+  border: 1.5px solid var(--moss);
+  background: white;
+  color: var(--leaf);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.voice-btn:hover {
+  background: #edf6f0;
+  border-color: var(--leaf);
+}
+.voice-btn.recording {
+  background: #fff0f0;
+  border-color: #e05555;
+  color: #c03030;
+  animation: pulse-border 1.2s infinite;
+}
+.voice-btn .mic-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--moss);
+  transition: background 0.2s;
+}
+.voice-btn.recording .mic-dot {
+  background: #e05555;
+}
+.voice-status {
+  font-size: 12px;
+  color: var(--stone);
+  font-style: italic;
+  transition: all 0.2s;
+}
+.voice-status.active {
+  color: #c03030;
+  font-style: normal;
+  font-weight: 600;
+}
+.voice-unsupported {
+  font-size: 11px;
+  color: var(--stone);
+  font-style: italic;
+}
+@keyframes pulse-border {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(224,85,85,0.3); }
+  50% { box-shadow: 0 0 0 6px rgba(224,85,85,0); }
+}
+
+/* SILENCE LAYER — Gap #2 Fix */
+.silence-card {
+  background: var(--forest);
+  color: white;
+  border-radius: 16px;
+  padding: 28px 30px;
+  margin: 20px 0;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.silence-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: radial-gradient(circle at 70% 30%, rgba(232,197,71,0.12), transparent 60%);
+}
+.silence-card h3 {
+  font-family: 'Fraunces', serif;
+  font-size: 22px;
+  font-weight: 300;
+  font-style: italic;
+  margin-bottom: 10px;
+  position: relative;
+}
+.silence-card p {
+  font-size: 13px;
+  opacity: 0.75;
+  line-height: 1.6;
+  position: relative;
+  max-width: 480px;
+  margin: 0 auto 16px;
+}
+.silence-timer {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--sun);
+  color: var(--forest);
+  padding: 10px 22px;
+  border-radius: 50px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+  position: relative;
+}
+.silence-timer:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(232,197,71,0.4);
+}
+#silence-countdown {
+  display: none;
+  font-size: 32px;
+  font-family: 'Fraunces', serif;
+  color: var(--sun);
+  margin-top: 16px;
+  position: relative;
+}
+
+/* CONNECTIONS (curiosity cards) */
+.domain-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 16px 0;
+}
+.domain-card {
+  background: var(--cream);
+  border: 1.5px solid var(--mist);
+  border-radius: 12px;
+  padding: 16px 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.25s;
+  position: relative;
+  overflow: hidden;
+}
+.domain-card::after {
+  content: 'Explore →';
+  position: absolute;
+  bottom: 6px;
+  left: 0; right: 0;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--leaf);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.domain-card:hover {
+  border-color: var(--moss);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(45,122,79,0.1);
+}
+.domain-card:hover::after { opacity: 1; }
+.domain-card:hover .domain-q { opacity: 1; }
+.domain-icon { font-size: 26px; margin-bottom: 6px; }
+.domain-label { font-size: 12px; font-weight: 600; color: var(--stone); }
+.domain-q {
+  font-size: 11px;
+  color: var(--leaf);
+  margin-top: 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+  line-height: 1.4;
+}
+
+/* VALUES THREAD — Gap #4 Fix */
+.values-thread {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #fff8ec;
+  border: 1.5px solid #f0d9a0;
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin: 16px 0;
+}
+.values-thread .vt-icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
+.values-thread .vt-body { font-size: 13px; line-height: 1.65; color: var(--ink); }
+.values-thread .vt-body strong { color: var(--soil); }
+
+/* TUTORIAL DEFENSE */
+.defense-card {
+  background: var(--cream);
+  border: 1.5px dashed var(--moss);
+  border-radius: 14px;
+  padding: 22px;
+  margin: 14px 0;
+  text-align: center;
+}
+.defense-card h4 {
+  font-family: 'Fraunces', serif;
+  font-size: 18px;
+  color: var(--forest);
+  margin-bottom: 6px;
+}
+.defense-card p {
+  font-size: 13px;
+  color: var(--stone);
+  margin-bottom: 16px;
+  line-height: 1.6;
+}
+.ethics-note {
+  font-size: 11px;
+  color: var(--stone);
+  font-style: italic;
+  margin-top: 10px;
+}
+
+/* BUTTONS */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: var(--forest);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn:hover {
+  background: var(--leaf);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(26,61,43,0.25);
+}
+.btn-ghost {
+  background: transparent;
+  color: var(--forest);
+  border: 1.5px solid var(--forest);
+}
+.btn-ghost:hover {
+  background: var(--forest);
+  color: white;
+}
+
+/* ASSUMPTION CARDS */
+.assumption-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 16px 0;
+}
+.assumption-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: var(--cream);
+  border-radius: 10px;
+  padding: 14px 16px;
+  border: 1.5px solid var(--mist);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.assumption-item .check { font-size: 18px; flex-shrink: 0; }
+
+/* GROWTH FOOTER */
+.footer {
+  background: var(--forest);
+  border-radius: 0 0 20px 20px;
+  padding: 40px;
+  color: white;
+}
+.footer-title {
+  font-family: 'Fraunces', serif;
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.footer-sub {
+  font-size: 13px;
+  opacity: 0.65;
+  margin-bottom: 30px;
+}
+.next-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 30px;
+}
+.next-card {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 14px;
+  padding: 22px;
+  cursor: pointer;
+  transition: all 0.25s;
+}
+.next-card:hover {
+  background: rgba(255,255,255,0.12);
+  transform: translateY(-3px);
+}
+.next-card-icon { font-size: 32px; margin-bottom: 10px; }
+.next-card-title {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+.next-card-desc {
+  font-size: 12px;
+  opacity: 0.65;
+  line-height: 1.5;
+}
+
+/* OS TRACKER */
+.os-tracker {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 14px;
+  padding: 22px;
+  margin-bottom: 24px;
+}
+.os-tracker-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--sun);
+  margin-bottom: 16px;
+}
+.os-dims {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.os-dim {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.os-dim-label {
+  font-size: 12px;
+  font-weight: 600;
+  width: 160px;
+  opacity: 0.8;
+}
+.os-bar-track {
+  flex: 1;
+  height: 6px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.os-bar-fill {
+  height: 100%;
+  background: var(--sun);
+  border-radius: 3px;
+  transition: width 1s ease;
+}
+.os-dim-pct {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--sun);
+  width: 36px;
+  text-align: right;
+}
+
+.continue-row {
+  text-align: center;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Layer accent colors */
+.layer[data-layer="1"] .layer-icon { background: var(--forest); }
+.layer[data-layer="2"] .layer-icon { background: #1a5c3a; }
+.layer[data-layer="3"] .layer-icon { background: #b87a1a; }
+.layer[data-layer="4"] .layer-icon { background: #1a5577; }
+.layer[data-layer="5"] .layer-icon { background: #3a6b3a; }
+.layer[data-layer="6"] .layer-icon { background: #7a4f1a; }
+.layer[data-layer="7"] .layer-icon { background: var(--forest); }
+
+@media (max-width: 600px) {
+  .header, .inner-os-banner, .layer, .footer { padding-left: 22px; padding-right: 22px; }
+  .domain-grid { grid-template-columns: repeat(2, 1fr); }
+  .header h1 { font-size: 32px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="badge">🎓 Oxford · Harvard · Cambridge · MGCV Inner OS</div>
+    <h1>Photosynthesis</h1>
+    <p class="meta">Chapter 5: Life Processes &nbsp;·&nbsp; Episode 2 of 6 &nbsp;·&nbsp; 20–25 min</p>
+  </div>
+
+  <!-- INNER OS BANNER — Gap #1: Makes the 5 dimensions visible upfront -->
+  <div class="inner-os-banner">
+    <span class="label">This episode builds →</span>
+    <span class="os-pill active">🧠 Thinking</span>
+    <span class="os-pill active">🔍 Reflection</span>
+    <span class="os-pill active">🎯 Attention</span>
+    <span class="os-pill">⚡ Momentum</span>
+    <span class="os-pill active">❤️ Values</span>
+  </div>
+
+  <!-- LAYER 1: DEFINITION -->
+  <div class="layer" data-layer="1">
+    <div class="dimension-tag"><span class="dot"></span>Thinking Engine · Mental Clarity</div>
+    <div class="layer-header">
+      <div class="layer-icon">🎯</div>
+      <div>
+        <div class="layer-num">Layer 1</div>
+        <h2 class="layer-title">Definition</h2>
+      </div>
+    </div>
+    <p style="font-size:15px;line-height:1.75;margin-bottom:16px;">
+      Photosynthesis is the biochemical process by which plants, algae, and some bacteria convert light energy into chemical energy stored in glucose molecules.
+    </p>
+    <div class="info-box">
+      <strong>💡 Etymology:</strong> Photo (light) + Synthesis (putting together)<br>
+      <strong>📅 Discovered:</strong> Jan Ingenhousz, 1779<br>
+      <strong>⭐ Why It Matters:</strong> Foundation of all food chains on Earth; produces ~70% of Earth's oxygen
+    </div>
+    <!-- Values thread seeded early — Gap #4 Fix -->
+    <div class="values-thread">
+      <div class="vt-icon">🌿</div>
+      <div class="vt-body"><strong>Character thread:</strong> Every time you breathe, you depend on a plant that lived and worked quietly, without recognition. What does that teach us about the value of unseen effort?</div>
+    </div>
+  </div>
+
+  <!-- LAYER 2: MECHANISM -->
+  <div class="layer" data-layer="2">
+    <div class="dimension-tag"><span class="dot"></span>Thinking Engine · Cause-Effect Reasoning</div>
+    <div class="layer-header">
+      <div class="layer-icon">🔬</div>
+      <div>
+        <div class="layer-num">Layer 2</div>
+        <h2 class="layer-title">Mechanism</h2>
+      </div>
+    </div>
+    <div class="info-box">
+      <strong>Stage 1 — Light Reactions:</strong> Light energy splits water → produces ATP + NADPH + releases O₂<br><br>
+      <strong>Stage 2 — Calvin Cycle:</strong> ATP + NADPH used to fix CO₂ → produces glucose (C₆H₁₂O₆)
+    </div>
+    <div class="formula">6CO₂ + 6H₂O + Light → C₆H₁₂O₆ + 6O₂</div>
+  </div>
+
+  <!-- LAYER 3: REASONING -->
+  <div class="layer" data-layer="3">
+    <div class="dimension-tag"><span class="dot"></span>Thinking Engine · Reasoning & Resilience</div>
+    <div class="layer-header">
+      <div class="layer-icon">🧠</div>
+      <div>
+        <div class="layer-num">Layer 3</div>
+        <h2 class="layer-title">Reasoning</h2>
+      </div>
+    </div>
+    <p style="font-size:14px;color:var(--stone);margin-bottom:16px;line-height:1.6;">
+      Don't look for the "right" answer yet. Focus on <em>your</em> thinking process. Struggle is part of learning.
+    </p>
+
+    <div class="question-card">
+      <div class="prompt">💭 Why do plants need light energy specifically?</div>
+      <textarea id="v-l3-1" placeholder="Speak or type your reasoning... What would happen without it?"></textarea>
+      <div class="voice-row">
+        <button class="voice-btn" onclick="toggleVoice('v-l3-1', this)"><span class="mic-dot"></span>Speak your answer</button>
+        <span class="voice-status" id="s-v-l3-1">Tap mic to speak</span>
+      </div>
+      <div class="hint">💡 Consider: where does the energy in glucose actually come from?</div>
+    </div>
+
+    <div class="question-card">
+      <div class="prompt">💭 Why can't animals perform photosynthesis?</div>
+      <textarea id="v-l3-2" placeholder="Speak or type your answer..."></textarea>
+      <div class="voice-row">
+        <button class="voice-btn" onclick="toggleVoice('v-l3-2', this)"><span class="mic-dot"></span>Speak your answer</button>
+        <span class="voice-status" id="s-v-l3-2">Tap mic to speak</span>
+      </div>
+      <div class="hint">💡 Consider: what structures are present in plant cells but absent in animal cells?</div>
+    </div>
+
+    <div class="info-box">
+      <strong>Expert reasoning:</strong> Light provides the activation energy to break H–O bonds in water. Animals lack chloroplasts — the specialized organelles that capture light and house the reaction centers. Oxygen is a byproduct of splitting water, not a byproduct of CO₂ fixation.
+    </div>
+
+    <!-- Silence pause after reasoning — Gap #2 Fix -->
+    <div class="silence-card">
+      <h3>Pause. Don't rush to the next layer.</h3>
+      <p>The mind needs stillness to integrate ideas. Take 2 minutes away from the screen. Look out a window. Let what you just reasoned settle.</p>
+      <button class="silence-timer" onclick="startSilence(120)">⏸ Begin 2-Minute Pause</button>
+      <div id="silence-countdown"></div>
+    </div>
+  </div>
+
+  <!-- LAYER 4: ASSUMPTIONS -->
+  <div class="layer" data-layer="4">
+    <div class="dimension-tag"><span class="dot"></span>Thinking Engine · Judgment & Clarity</div>
+    <div class="layer-header">
+      <div class="layer-icon">🤔</div>
+      <div>
+        <div class="layer-num">Layer 4</div>
+        <h2 class="layer-title">Assumptions</h2>
+      </div>
+    </div>
+    <p style="font-size:14px;color:var(--stone);margin-bottom:16px;line-height:1.6;">
+      Every explanation you've read about photosynthesis rests on hidden assumptions. A trained thinker questions these.
+    </p>
+    <div class="assumption-list">
+      <div class="assumption-item">
+        <span class="check">🔍</span>
+        <span><strong>Assumption:</strong> Chlorophyll is essential → <em>Reality check:</em> Some bacteria use bacteriorhodopsin instead — a completely different pigment system.</span>
+      </div>
+      <div class="assumption-item">
+        <span class="check">🔍</span>
+        <span><strong>Assumption:</strong> Sunlight is the only energy source → <em>Reality check:</em> Artificial grow lights work. The plant only "cares" about photon wavelength, not origin.</span>
+      </div>
+      <div class="assumption-item">
+        <span class="check">🔍</span>
+        <span><strong>Assumption:</strong> Oxygen is always released → <em>Reality check:</em> Anoxygenic photosynthesis (in purple sulfur bacteria) uses H₂S, not water, and releases no O₂.</span>
+      </div>
+    </div>
+
+    <div class="defense-card">
+      <h4>🎓 Oxford Tutorial Defense</h4>
+      <p>An AI tutor will challenge your understanding through 3–5 rounds of questioning — not to test you, but to help you see where your thinking is strong and where it needs work.</p>
+      <button class="btn">Begin Tutorial Defense (5 min)</button>
+      <!-- Ethics guardrail — Gap #5 Fix -->
+      <p class="ethics-note">This is a private conversation. No score is shown publicly. No comparison with peers. Only you see your responses.</p>
+    </div>
+  </div>
+
+  <!-- LAYER 5: CONNECTIONS -->
+  <div class="layer" data-layer="5">
+    <div class="dimension-tag"><span class="dot"></span>Attention Engine · Adaptive Thinking</div>
+    <div class="layer-header">
+      <div class="layer-icon">🌐</div>
+      <div>
+        <div class="layer-num">Layer 5</div>
+        <h2 class="layer-title">Connections</h2>
+      </div>
+    </div>
+    <!-- Curiosity-first framing — Gap #3 Fix -->
+    <p style="font-size:14px;line-height:1.7;margin-bottom:16px;">
+      Real understanding means seeing how this concept lives in other parts of the world. Don't ask <em>"Which domain should I click?"</em> — ask <em>"What question pulls me most right now?"</em>
+    </p>
+    <div class="domain-grid">
+      <div class="domain-card">
+        <div class="domain-icon">🧬</div>
+        <div class="domain-label">Biology</div>
+        <div class="domain-q">How is respiration photosynthesis run backwards?</div>
+      </div>
+      <div class="domain-card">
+        <div class="domain-icon">⚡</div>
+        <div class="domain-label">Physics</div>
+        <div class="domain-q">How do quantum effects move energy without loss?</div>
+      </div>
+      <div class="domain-card">
+        <div class="domain-icon">🧪</div>
+        <div class="domain-label">Chemistry</div>
+        <div class="domain-q">Why is this a redox reaction at its core?</div>
+      </div>
+      <div class="domain-card">
+        <div class="domain-icon">📊</div>
+        <div class="domain-label">Mathematics</div>
+        <div class="domain-q">What does the rate of photosynthesis curve reveal?</div>
+      </div>
+      <div class="domain-card">
+        <div class="domain-icon">🏛️</div>
+        <div class="domain-label">History</div>
+        <div class="domain-q">How did this discovery change how we grow food?</div>
+      </div>
+      <div class="domain-card">
+        <div class="domain-icon">❤️</div>
+        <div class="domain-label">Ethics</div>
+        <div class="domain-q">If we destroy forests, whose oxygen are we taking?</div>
+      </div>
+    </div>
+    <div class="question-card">
+      <div class="prompt">🌱 Which connection surprised you most — and why?</div>
+      <textarea id="v-l5" placeholder="Speak or type here. Follow your curiosity. There's no wrong answer."></textarea>
+      <div class="voice-row">
+        <button class="voice-btn" onclick="toggleVoice('v-l5', this)"><span class="mic-dot"></span>Speak your answer</button>
+        <span class="voice-status" id="s-v-l5">Tap mic to speak</span>
+      </div>
+    </div>
+
+    <!-- Values thread mid-episode — Gap #4 Fix -->
+    <div class="values-thread">
+      <div class="vt-icon">🤝</div>
+      <div class="vt-body"><strong>Character thread:</strong> The oxygen in your lungs right now was produced by a forest you've never seen, in a country you may never visit. Knowledge of photosynthesis is also knowledge of interdependence. Does that change how you think about deforestation?</div>
+    </div>
+  </div>
+
+  <!-- LAYER 6: APPLICATIONS -->
+  <div class="layer" data-layer="6">
+    <div class="dimension-tag"><span class="dot"></span>Momentum Engine · Judgment Under Uncertainty</div>
+    <div class="layer-header">
+      <div class="layer-icon">🚀</div>
+      <div>
+        <div class="layer-num">Layer 6</div>
+        <h2 class="layer-title">Applications</h2>
+      </div>
+    </div>
+    <div class="info-box">
+      🌱 <strong>Agriculture:</strong> CO₂ enrichment in greenhouses raises crop yields by 20–30%<br>
+      ⚡ <strong>Energy:</strong> Artificial photosynthesis research targets clean hydrogen fuel<br>
+      🏭 <strong>Industry:</strong> Bioreactors with algae for carbon capture at industrial scale<br>
+      🚀 <strong>Space:</strong> Closed-loop life support systems for Mars missions rely on it
+    </div>
+
+    <div class="question-card">
+      <div class="prompt">🔬 Harvard Case Study: Solve a real problem</div>
+      <p style="font-size:13px;color:var(--stone);margin-bottom:12px;line-height:1.6;">
+        A district's crop yields have fallen 30% over three years. Rainfall is normal. Temperature is slightly higher. Using your understanding of photosynthesis, what would you investigate? What interventions would you try?
+      </p>
+      <textarea id="v-l6" style="min-height:100px;" placeholder="Speak or type: Think through light, CO₂, water, temperature, soil, leaf health..."></textarea>
+      <div class="voice-row">
+        <button class="voice-btn" onclick="toggleVoice('v-l6', this)"><span class="mic-dot"></span>Speak your investigation</button>
+        <span class="voice-status" id="s-v-l6">Tap mic to speak</span>
+      </div>
+      <div class="hint">💡 No single answer exists. What matters is your reasoning chain — how you connect cause to effect.</div>
+    </div>
+  </div>
+
+  <!-- LAYER 7: IMPLICATIONS -->
+  <div class="layer" data-layer="7">
+    <div class="dimension-tag"><span class="dot"></span>Values & Character Engine · Long-Term Reflection</div>
+    <div class="layer-header">
+      <div class="layer-icon">🌟</div>
+      <div>
+        <div class="layer-num">Layer 7</div>
+        <h2 class="layer-title">Implications</h2>
+      </div>
+    </div>
+    <div class="info-box">
+      <strong>🌍 Global:</strong> If photosynthesis stopped globally, all complex life would collapse within months — oxygen depleted, food chains broken, atmospheric CO₂ unregulated.<br><br>
+      <strong>🔮 Future:</strong> Scientists are working on "artificial leaf" technology targeting 10% efficiency vs. nature's ~1%. Mars colonisation depends on this breakthrough.<br><br>
+      <strong>💭 Philosophical:</strong> Plants convert light into matter, into life. Energy is the currency of existence. Are they, in some sense, alive in ways we don't yet fully understand?
+    </div>
+
+    <div class="question-card">
+      <div class="prompt">📝 Oxford Essay Question</div>
+      <p style="font-size:15px;font-weight:600;color:var(--ink);margin-bottom:8px;line-height:1.5;">"To what extent is human civilization dependent on photosynthesis?"</p>
+      <p style="font-size:13px;color:var(--stone);margin-bottom:14px;line-height:1.6;">200 words minimum. Consider: food, oxygen, energy, materials, climate, culture. Write your own argument — not a summary.</p>
+      <textarea id="v-l7" style="min-height:160px;" placeholder="Speak or type. Begin with your position. Then build your argument. Surprise yourself."></textarea>
+      <div class="voice-row" style="margin-top:10px;">
+        <button class="voice-btn" onclick="toggleVoice('v-l7', this)"><span class="mic-dot"></span>Speak your essay</button>
+        <span class="voice-status" id="s-v-l7">Tap mic to dictate</span>
+        <button class="btn btn-ghost" style="margin-left:auto;">🎤 Record Voice Essay</button>
+      </div>
+    </div>
+
+    <!-- Final silence — Gap #2 Fix -->
+    <div class="silence-card" style="margin-top:20px;">
+      <h3>Close your eyes for one minute.</h3>
+      <p>You've just thought deeply about one of the most fundamental processes in nature. Before checking your phone or moving on — sit with what you now know.</p>
+      <button class="silence-timer" onclick="startSilence(60)">⏸ Begin 1-Minute Stillness</button>
+      <div id="silence-countdown-2"></div>
+    </div>
+  </div>
+
+  <!-- FOOTER / GROWTH -->
+  <div class="footer">
+    <div class="os-tracker">
+      <div class="os-tracker-title">⚙️ Your Inner OS — Progress This Episode</div>
+      <div class="os-dims">
+        <div class="os-dim">
+          <div class="os-dim-label">🎯 Attention Engine</div>
+          <div class="os-bar-track"><div class="os-bar-fill" style="width:72%"></div></div>
+          <div class="os-dim-pct">+72%</div>
+        </div>
+        <div class="os-dim">
+          <div class="os-dim-label">🧠 Thinking & Reasoning</div>
+          <div class="os-bar-track"><div class="os-bar-fill" style="width:85%"></div></div>
+          <div class="os-dim-pct">+85%</div>
+        </div>
+        <div class="os-dim">
+          <div class="os-dim-label">🔍 Reflection & Awareness</div>
+          <div class="os-bar-track"><div class="os-bar-fill" style="width:60%"></div></div>
+          <div class="os-dim-pct">+60%</div>
+        </div>
+        <div class="os-dim">
+          <div class="os-dim-label">⚡ Momentum & Consistency</div>
+          <div class="os-bar-track"><div class="os-bar-fill" style="width:50%"></div></div>
+          <div class="os-dim-pct">+50%</div>
+        </div>
+        <div class="os-dim">
+          <div class="os-dim-label">❤️ Values & Character</div>
+          <div class="os-bar-track"><div class="os-bar-fill" style="width:78%"></div></div>
+          <div class="os-dim-pct">+78%</div>
+        </div>
+      </div>
+    </div>
+
+    <h2 class="footer-title">Episode Complete.</h2>
+    <p class="footer-sub">Your thinking has deepened. Here's where to go next — choose what pulls you, not what seems "right".</p>
+
+    <div class="next-grid">
+      <div class="next-card">
+        <div class="next-card-icon">🎓</div>
+        <div class="next-card-title">Tutorial Defense</div>
+        <div class="next-card-desc">3–5 rounds of Oxford-style questioning. Private. No scores shown to others.</div>
+        <button class="btn" style="margin-top:14px;font-size:13px;padding:10px 20px;">Start (5 min)</button>
+      </div>
+      <div class="next-card">
+        <div class="next-card-icon">💡</div>
+        <div class="next-card-title">First Principles</div>
+        <div class="next-card-desc">Break down and rebuild the concept using the Feynman Technique — explain it like you're teaching a 10-year-old.</div>
+        <button class="btn" style="margin-top:14px;font-size:13px;padding:10px 20px;">Deep Dive (10 min)</button>
+      </div>
+      <div class="next-card">
+        <div class="next-card-icon">📊</div>
+        <div class="next-card-title">My Growth Dashboard</div>
+        <div class="next-card-desc">See your Inner OS trajectory across all 5 dimensions over time. Growth, not grades.</div>
+        <button class="btn btn-ghost" style="margin-top:14px;font-size:13px;padding:10px 20px;border-color:rgba(255,255,255,0.4);color:white;">View Dashboard</button>
+      </div>
+    </div>
+
+    <div class="continue-row">
+      <button class="btn" style="font-size:16px;padding:14px 36px;">Continue to Episode 3 →</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function startSilence(seconds) {
+  // Find the right countdown element based on context
+  const btn = event.target;
+  const card = btn.closest('.silence-card');
+  const countdown = card.querySelector('[id^="silence-countdown"]');
+
+  btn.style.display = 'none';
+  countdown.style.display = 'block';
+
+  let remaining = seconds;
+
+  function tick() {
+    const m = Math.floor(remaining / 60);
+    const s = remaining % 60;
+    const display = m > 0 ? `${m}:${s.toString().padStart(2,'0')}` : `${s}`;
+    countdown.textContent = display;
+
+    if (remaining <= 0) {
+      countdown.textContent = '✓ Welcome back.';
+      countdown.style.fontSize = '18px';
+      countdown.style.fontFamily = "'DM Sans', sans-serif";
+      return;
+    }
+    remaining--;
+    setTimeout(tick, 1000);
+  }
+  tick();
+}
+
+// ── VOICE ENGINE ──────────────────────────────────────────
+const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+let activeRec = null;
+let activeBtn = null;
+
+function toggleVoice(textareaId, btn) {
+  // If already recording this field, stop it
+  if (activeRec && activeBtn === btn) {
+    activeRec.stop();
+    return;
+  }
+
+  // If recording a different field, stop that first
+  if (activeRec) {
+    activeRec.stop();
+  }
+
+  if (!SpeechRec) {
+    const statusEl = document.getElementById('s-' + textareaId);
+    if (statusEl) {
+      statusEl.textContent = 'Voice not supported in this browser — use Chrome';
+      statusEl.classList.add('active');
+    }
+    return;
+  }
+
+  const textarea = document.getElementById(textareaId);
+  const statusEl = document.getElementById('s-' + textareaId);
+
+  const rec = new SpeechRec();
+  rec.continuous = true;
+  rec.interimResults = true;
+  rec.lang = 'en-IN'; // Indian English — better for your students
+
+  let finalTranscript = textarea.value;
+  let interimTranscript = '';
+
+  rec.onstart = () => {
+    activeRec = rec;
+    activeBtn = btn;
+    btn.classList.add('recording');
+    btn.querySelector('.mic-dot').style.background = '#e05555';
+    // Change button text
+    const textNode = btn.childNodes[btn.childNodes.length - 1];
+    if (textNode && textNode.nodeType === 3) textNode.textContent = 'Tap to stop';
+    if (statusEl) { statusEl.textContent = '● Recording... speak now'; statusEl.classList.add('active'); }
+  };
+
+  rec.onresult = (e) => {
+    interimTranscript = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const t = e.results[i][0].transcript;
+      if (e.results[i].isFinal) {
+        finalTranscript += (finalTranscript ? ' ' : '') + t;
+        interimTranscript = '';
+      } else {
+        interimTranscript = t;
+      }
+    }
+    textarea.value = finalTranscript + (interimTranscript ? ' ' + interimTranscript : '');
+    // Auto-grow textarea
+    textarea.style.height = 'auto';
+    textarea.style.height = textarea.scrollHeight + 'px';
+  };
+
+  rec.onerror = (e) => {
+    if (statusEl) {
+      statusEl.textContent = e.error === 'not-allowed'
+        ? 'Mic blocked — allow mic access in browser settings'
+        : 'Error: ' + e.error;
+      statusEl.classList.add('active');
+    }
+    resetBtn(btn, textareaId);
+  };
+
+  rec.onend = () => {
+    activeRec = null;
+    activeBtn = null;
+    resetBtn(btn, textareaId);
+    if (statusEl && !statusEl.textContent.includes('blocked')) {
+      statusEl.textContent = textarea.value.trim()
+        ? '✓ Got it — edit text above if needed'
+        : 'Tap mic to speak';
+      statusEl.classList.remove('active');
+    }
+  };
+
+  rec.start();
+}
+
+function resetBtn(btn, textareaId) {
+  btn.classList.remove('recording');
+  const dot = btn.querySelector('.mic-dot');
+  if (dot) dot.style.background = '';
+  const textNode = btn.childNodes[btn.childNodes.length - 1];
+  if (textNode && textNode.nodeType === 3) textNode.textContent = 'Speak your answer';
+}
+// ──────────────────────────────────────────────────────────
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.querySelectorAll('.os-bar-fill').forEach(bar => {
+        const w = bar.style.width;
+        bar.style.width = '0%';
+        setTimeout(() => bar.style.width = w, 100);
+      });
+      observer.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.3 });
+
+document.querySelectorAll('.os-tracker').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
