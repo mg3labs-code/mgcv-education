@@ -1,8 +1,8 @@
 /**
  * Day-1/2/3 hand-authored content for Chapter 1 pilots.
  *
- * Keyed by `${chapterId}::${episodeId}`. If a key is not present,
- * the day gate is bypassed and the original reader renders.
+ * Exact pilots are keyed by `${chapterId}::${episodeId}`.
+ * Chapter-level fallback covers supported Chapter 1 episodes; unsupported content falls back to the original reader.
  *
  * Keep copy short, simple, and warm — Class 7 reading level.
  */
@@ -53,6 +53,8 @@ export interface SortOrderActivity {
 export type SortActivity = SortBucketsActivity | SortPairsActivity | SortOrderActivity;
 
 export interface DayPilotContent {
+  conceptKey?: string;
+  conceptLabel?: string;
   hookQuestion: string;
   conceptText: string;
   detective: { statement: string; isTrue: boolean; explain: string };
@@ -90,7 +92,21 @@ const innerOSGains = [
   { label: "Values", emoji: "🌱", pct: 2 },
 ];
 
+const toConceptKey = (value: string) =>
+  value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "") || "chapter-1-concept";
+
+const withConceptMeta = (pilot: DayPilotContent, topic: string): DayPilotContent => ({
+  conceptKey: pilot.conceptKey ?? toConceptKey(topic),
+  conceptLabel: pilot.conceptLabel ?? topic,
+  ...pilot,
+});
+
 const makeChapterPilot = (topic: string, anchorIdea: string): DayPilotContent => ({
+  conceptKey: toConceptKey(topic),
+  conceptLabel: topic,
   hookQuestion: `What is the first thing you notice about ${topic}?`,
   conceptText: `${topic} becomes easier when we find the main idea first. Today, do not try to memorize everything. Notice the key idea, connect it to one example, and check one common misunderstanding.`,
   detective: {
@@ -160,13 +176,29 @@ const makeChapterPilot = (topic: string, anchorIdea: string): DayPilotContent =>
 
 const chapterOnePilots: Record<string, DayPilotContent> = {
   "sci-ch1::sci-ch1-ep1": makeChapterPilot("chemical reactions", "A chemical reaction means substances change into new substances."),
+  "sci-ch1::sci-ch1-ep2": makeChapterPilot("chemical equations", "A chemical equation uses symbols and formulas to show a reaction clearly."),
+  "sci-ch1::sci-ch1-ep3": makeChapterPilot("types of chemical reactions", "Reaction types help us classify what changes during a chemical reaction."),
   "personality-development::attitude-is-altitude": makeChapterPilot("Attitude is Altitude", "Attitude shapes how a person responds to challenges."),
+  "personality-development::every-success-story": makeChapterPilot("Every Success Story", "Success stories show how choices, effort, and support shape growth."),
+  "personality-development::i-will-do-it": makeChapterPilot("I Will Do It", "Strong determination turns a difficult goal into steady action."),
   "india-relief-features::the-great-himalayas": makeChapterPilot("the Great Himalayas", "Relief features affect climate, rivers, travel, and human life."),
+  "india-relief-features::peninsular-plateau-coastal-plains": makeChapterPilot("plateaus and coastal plains", "Plateaus and coastal plains shape farming, minerals, transport, and settlement."),
+  "india-relief-features::islands-deserts-river-plains": makeChapterPilot("islands, deserts, and river plains", "Landforms influence water, soil, climate, and where people live."),
   "danaseelamu::danaseelamu-padya-parichayam": makeChapterPilot("దానశీలము", "A poem becomes clearer when we first catch its central feeling and value."),
+  "danaseelamu::danaseelamu-padya-vishleshanam": makeChapterPilot("దానశీలము భావ విశ్లేషణ", "Poem analysis means noticing feeling, message, and how lines create meaning."),
+  "danaseelamu::danaseelamu-bhava-vistaranam": makeChapterPilot("దానశీలము భావ విస్తరణ", "Expanding a poem's idea helps connect its value to real life."),
   "baraste-badal::baraste-badal-kavita-parichay": makeChapterPilot("बरसते बादल", "A poem becomes clearer when we first notice its image, feeling, and message."),
+  "baraste-badal::baraste-badal-bhav-vishleshan": makeChapterPilot("बरसते बादल भाव विश्लेषण", "Poem analysis means finding the feeling and message behind the images."),
+  "baraste-badal::baraste-badal-bhasha-shilp": makeChapterPilot("बरसते बादल भाषा और शिल्प", "Language and style show how a poet makes images feel alive."),
   "bio-ch1::bio-ch1-ep1": makeChapterPilot("nutrition", "Nutrition is how living things get and use food for energy and growth."),
+  "bio-ch1::bio-ch1-ep2": makeChapterPilot("photosynthesis", "Photosynthesis is how green plants use sunlight to make food."),
+  "bio-ch1::bio-ch1-ep3": makeChapterPilot("human digestion", "Digestion breaks food into smaller parts the body can use."),
   "phy-ch1::phy-ch1-ep1": makeChapterPilot("electric current and circuits", "A circuit gives electric current a complete path to flow."),
+  "phy-ch1::phy-ch1-ep2": makeChapterPilot("Ohm's Law", "Ohm's Law connects voltage, current, and resistance in a circuit."),
+  "phy-ch1::phy-ch1-ep3": makeChapterPilot("resistance and resistivity", "Resistance explains how strongly a material opposes electric current."),
   "chem-ch1::chem-ch1-ep1": makeChapterPilot("chemical reactions", "A chemical reaction means old substances rearrange to form new substances."),
+  "chem-ch1::chem-ch1-ep2": makeChapterPilot("balancing chemical equations", "Balanced equations show that atoms are conserved in a reaction."),
+  "chem-ch1::chem-ch1-ep3": makeChapterPilot("types of reactions", "Reaction types help classify how substances combine, break, or exchange parts."),
 };
 
 const chapterOneTopicByChapterId: Record<string, { topic: string; anchorIdea: string }> = {
@@ -183,7 +215,9 @@ const chapterOneTopicByChapterId: Record<string, { topic: string; anchorIdea: st
 
 export const dayPilotContent: Record<string, DayPilotContent> = {
   ...chapterOnePilots,
-  "ch1::ch1-ep1": {
+  "ch1::ch1-ep2": makeChapterPilot("Euclid's Division Lemma", "Euclid's Division Lemma breaks a number into divisor, quotient, and remainder."),
+  "ch1::ch1-ep3": makeChapterPilot("prime factorization", "Prime factorization shows every whole number as a unique product of primes."),
+  "ch1::ch1-ep1": withConceptMeta({
     hookQuestion: "Why do we need so many different kinds of numbers?",
     conceptText:
       "Numbers come in families. Counting numbers help us count things we can see. Then we needed 0 for nothing. Then we needed negative numbers for opposites like debt or below zero. Each new family was added when the old numbers could not solve a real problem.",
@@ -289,7 +323,7 @@ export const dayPilotContent: Record<string, DayPilotContent> = {
           "Nearly! Real order: count → zero → negatives → fractions → irrationals. Each new number came because the old ones couldn't describe something real (nothing, debt, sharing, diagonal of a square).",
       },
     },
-  },
+  }, "real numbers"),
 };
 
 export function getPilotContent(chapterId?: string, episodeId?: string): DayPilotContent | null {
