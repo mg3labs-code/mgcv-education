@@ -13,6 +13,16 @@ export interface EpisodeDayState {
   day1_hook_answer: string | null;
   day1_detective_correct: boolean | null;
   day2_explanation: string | null;
+  day2_explain_score: PilotExplainScore | null;
+  day3_prove_answer: string | null;
+  day3_explain_score: PilotExplainScore | null;
+}
+
+export interface PilotExplainScore {
+  score: number;
+  band: string;
+  feedback: string;
+  next_step: string;
 }
 
 const EMPTY: EpisodeDayState = {
@@ -22,6 +32,9 @@ const EMPTY: EpisodeDayState = {
   day1_hook_answer: null,
   day1_detective_correct: null,
   day2_explanation: null,
+  day2_explain_score: null,
+  day3_prove_answer: null,
+  day3_explain_score: null,
 };
 
 export interface UnlockInfo {
@@ -103,6 +116,16 @@ export function useEpisodeDayUnlock(chapterId: string | undefined, episodeId: st
         .maybeSingle();
       if (error) return EMPTY;
       const scores = (data?.layer_scores ?? {}) as Record<string, unknown>;
+      const asScore = (value: unknown): PilotExplainScore | null => {
+        if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+        const v = value as Record<string, unknown>;
+        return {
+          score: typeof v.score === "number" ? v.score : 0,
+          band: typeof v.band === "string" ? v.band : "Needs review",
+          feedback: typeof v.feedback === "string" ? v.feedback : "Keep improving your explanation.",
+          next_step: typeof v.next_step === "string" ? v.next_step : "Add one clear example.",
+        };
+      };
       return {
         day1_completed_at: (scores.day1_completed_at as string) ?? null,
         day2_completed_at: (scores.day2_completed_at as string) ?? null,
@@ -113,6 +136,9 @@ export function useEpisodeDayUnlock(chapterId: string | undefined, episodeId: st
             ? (scores.day1_detective_correct as boolean)
             : null,
         day2_explanation: (scores.day2_explanation as string) ?? null,
+        day2_explain_score: asScore(scores.day2_explain_score),
+        day3_prove_answer: (scores.day3_prove_answer as string) ?? null,
+        day3_explain_score: asScore(scores.day3_explain_score),
       } as EpisodeDayState;
     },
     staleTime: 10_000,
