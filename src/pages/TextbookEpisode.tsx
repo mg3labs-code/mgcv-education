@@ -1389,11 +1389,30 @@ const DayGatedEpisode = ({
 
   if (isLoading) return <EpisodeLoadingTransition />;
 
-  // Pilot is intentionally fixed-depth: keep richer textbook/practice sections outside this flow.
-  const cap = 1;
-
   const blocksByType = (type: string) =>
     (dbBlocks ?? []).filter((b) => b.type === type);
+
+  const renderPilotLessonBlock = (block: ContentBlock): React.ReactNode => {
+    switch (block.type) {
+      case "concept": return <ConceptBlock content={block.content as ConceptContent} />;
+      case "activity": return <ActivityBlock content={block.content as ActivityContent} />;
+      case "recall": return <RecallBlock content={block.content as RecallContent} />;
+      case "explain": return <ExplainBlock content={block.content as ExplainContent} />;
+      case "assessment": return <AssessmentBlock content={block.content as AssessmentContent} />;
+      case "exercise": return <ExerciseBlock content={block.content as ExerciseContent} />;
+      case "reasoning": return <ReasoningBlock content={block.content as ReasoningContent} />;
+      case "assumptions": return <AssumptionsBlock content={block.content as AssumptionsContent} onStartDefense={() => {}} />;
+      case "connections": return <ConnectionsBlock content={block.content as ConnectionsContent} />;
+      case "application": return <ApplicationBlock content={block.content as ApplicationContent} />;
+      case "implications": return <ImplicationsBlock content={block.content as ImplicationsContent} />;
+      case "visual_aid": return <VisualAidBlock content={block.content as VisualAidContent} />;
+      case "bilingual_concept": return <BilingualConceptBlock content={block.content as any} subjectName="Telugu" />;
+      case "vocabulary": return <VocabularyCardBlock content={block.content as any} subjectName="Telugu" />;
+      case "grammar_pattern": return <GrammarPatternBlock content={block.content as any} />;
+      case "story_reading": return <StoryReadingBlock content={block.content as any} subjectName="Telugu" />;
+      default: return null;
+    }
+  };
 
   // ─── Day 1 story node: first visual_aid from the episode ──
   const day1VisualBlock = blocksByType("visual_aid")[0];
@@ -1402,27 +1421,15 @@ const DayGatedEpisode = ({
   ) : undefined;
   const day1StoryTitle = day1VisualBlock?.title ?? undefined;
 
-  // ─── Day 2 deep-dive sections: reasoning + connections + application ──
-  const day2RichSections: { title: string; node: React.ReactNode }[] = [];
-  for (const b of blocksByType("reasoning")) {
-    day2RichSections.push({
-      title: b.title || "Why does this work?",
-      node: <ReasoningBlock content={b.content as ReasoningContent} />,
-    });
-  }
-  for (const b of blocksByType("connections")) {
-    day2RichSections.push({
-      title: b.title || "Where else does this show up?",
-      node: <ConnectionsBlock content={b.content as ConnectionsContent} />,
-    });
-  }
-  for (const b of blocksByType("application")) {
-    day2RichSections.push({
-      title: b.title || "Real-world use",
-      node: <ApplicationBlock content={b.content as ApplicationContent} />,
-    });
-  }
-  const day2Sections = day2RichSections.slice(0, cap);
+  // ─── Day 2 Pilot 2: complete structured lesson blocks, in DB order ──
+  const day2Sections = (dbBlocks ?? [])
+    .filter((b) => !JEE_BLOCKS.has(b.type))
+    .map((b) => ({
+      title: b.title || blockLabels[b.type] || b.type,
+      type: b.type,
+      node: renderPilotLessonBlock(b),
+    }))
+    .filter((section) => section.node);
 
   // ─── Day 3 master sections: assumptions + implications (Full Story shows both) ──
   const day3RichSections: { title: string; node: React.ReactNode }[] = [];
@@ -1438,8 +1445,7 @@ const DayGatedEpisode = ({
       node: <ImplicationsBlock content={b.content as ImplicationsContent} />,
     });
   }
-  // Quick Look (cap=1) gets just one stretch section; Deep Dive gets 2; Full Story gets all
-  const day3Sections = day3RichSections.slice(0, cap);
+  const day3Sections = day3RichSections;
 
   const canViewDay2 = info.demoOverride || info.day1Done || info.day2Done || info.day3Done;
   const canViewDay3 = info.demoOverride || info.day2Done || info.day3Done;
