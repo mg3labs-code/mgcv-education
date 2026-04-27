@@ -16,7 +16,6 @@ import { toast } from "sonner";
 
 export interface DeepDiveSection {
   title: string;
-  type?: string;
   /** Pre-rendered React node from the actual textbook (e.g. <ReasoningBlock />, <ConnectionsBlock />). */
   node: ReactNode;
 }
@@ -130,27 +129,18 @@ const Day2Build = ({ episodeTitle, deepDiveText, deepDiveSections, detective1, d
         <div className="w-full max-w-2xl space-y-4 animate-fade-in">
           <div className="text-center space-y-2">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/15 text-blue-700 dark:text-blue-400 text-[11px] font-bold uppercase tracking-wide">
-              <Layers className="h-3 w-3" /> Pilot 2 · Full 7-Layer Lesson
+              <Layers className="h-3 w-3" /> Quick Read
             </div>
-            <p className="text-sm text-muted-foreground">Complete structured learning episode before practice.</p>
           </div>
 
           {hasRich ? (
-            <div className="space-y-5">
+            <div className="space-y-4">
               {deepDiveSections!.map((sec, i) => (
-                <div key={i} className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
-                  <div className="flex items-center gap-2 border-b border-border bg-muted/40 px-4 py-3">
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
-                      {i + 1}
-                    </span>
-                    <div className="min-w-0">
-                      <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
-                        {sec.type?.replace(/_/g, " ") || "lesson layer"}
-                      </p>
-                      <h3 className="truncate text-sm font-bold text-foreground">{sec.title}</h3>
-                    </div>
-                  </div>
-                  <div className="p-3 sm:p-4">{sec.node}</div>
+                <div key={i} className="rounded-2xl border-2 border-blue-200 dark:border-blue-800/60 bg-card p-3 sm:p-4 space-y-2">
+                  <h3 className="text-sm font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wide">
+                    {sec.title}
+                  </h3>
+                  {sec.node}
                 </div>
               ))}
             </div>
