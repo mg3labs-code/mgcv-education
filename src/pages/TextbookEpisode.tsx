@@ -622,8 +622,8 @@ const TextbookEpisode = () => {
   }
 
   // ═══ 3-DAY UNLOCK GAME LOOP ═══
-  // Phase 1 pilot: only when hand-authored day content exists for this episode
-  // (currently Math Ch1 Ep1). For all other episodes the original reader runs.
+  // Pilot runs only when Chapter 1 pilot content can be resolved for this episode.
+  // Missing pilot content automatically falls through to the existing full practice reader.
   const pilotContent = getPilotContent(chapterId, episodeId);
   if (pilotContent) {
     return (
@@ -1382,7 +1382,8 @@ const DayGatedEpisode = ({
   const [viewDay, setViewDay] = useState<1 | 2 | 3>(info.currentDay);
   useEffect(() => {
     setViewDay(info.currentDay);
-  }, [info.currentDay]);
+    setDayProgress(0);
+  }, [info.currentDay, episodeKey]);
 
   if (isLoading) return <EpisodeLoadingTransition />;
 
@@ -1438,11 +1439,17 @@ const DayGatedEpisode = ({
   // Quick Look (cap=1) gets just one stretch section; Deep Dive gets 2; Full Story gets all
   const day3Sections = day3RichSections.slice(0, cap);
 
-  // Render body based on the day the student is currently *viewing* (testing-friendly).
-  // The 20h lock is still respected: if a future day is locked AND not yet completed,
-  // we show the LockedWall instead of the day body.
+  const canViewDay2 = info.demoOverride || info.day1Done || info.day2Done || info.day3Done;
+  const canViewDay3 = info.demoOverride || info.day2Done || info.day3Done;
+  const lockedBySequence = (viewDay === 2 && !canViewDay2) || (viewDay === 3 && !canViewDay3);
+
+  // Render body based on the day the student is currently *viewing*.
+  // Sequence comes first (Day 1 → Day 2 → Day 3), then the per-day time gate.
   let body: React.ReactNode;
-  if (viewDay === 3) {
+  if (lockedBySequence) {
+    const requiredDay = viewDay === 2 ? 1 : 2;
+    body = <DayLockedWall day={viewDay} unlocksAt={null} episodeTitle={`Finish Day ${requiredDay} first · ${episodeTitle}`} />;
+  } else if (viewDay === 3) {
     if (!info.day3Done && info.day3Locked && info.day3UnlocksAt) {
       body = <DayLockedWall day={3} unlocksAt={info.day3UnlocksAt} episodeTitle={episodeTitle} />;
     } else {

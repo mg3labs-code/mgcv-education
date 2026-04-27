@@ -136,8 +136,8 @@ const StageTopbar = ({ episodeTitle, streakDays = 0, exitTo, dayProgress = 0, vi
               <button
                 key={d}
                 type="button"
-                onClick={() => onChangeDay?.(d)}
-                disabled={!onChangeDay}
+                onClick={() => reachable && onChangeDay?.(d)}
+                disabled={!onChangeDay || !reachable}
                 aria-current={isActive ? "step" : undefined}
                 aria-label={`Day ${d} ${label}${!reachable ? " (locked)" : done ? " (completed)" : ""}`}
                 className={[
