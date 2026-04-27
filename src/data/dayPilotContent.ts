@@ -330,6 +330,5 @@ export function getPilotContent(chapterId?: string, episodeId?: string): DayPilo
   if (!chapterId || !episodeId) return null;
   const exactPilot = dayPilotContent[`${chapterId}::${episodeId}`];
   if (exactPilot) return exactPilot;
-  const chapterPilot = chapterOneTopicByChapterId[chapterId];
-  return chapterPilot ? makeChapterPilot(chapterPilot.topic, chapterPilot.anchorIdea) : null;
+  return null;
 }
