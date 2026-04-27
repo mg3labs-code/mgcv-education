@@ -1,5 +1,5 @@
 /**
- * Day-1/2/3 hand-authored content for the Math Ch1 Ep1 pilot.
+ * Day-1/2/3 hand-authored content for Chapter 1 pilots.
  *
  * Keyed by `${chapterId}::${episodeId}`. If a key is not present,
  * the day gate is bypassed and the original reader renders.
@@ -82,7 +82,107 @@ export interface DayPilotContent {
   };
 }
 
+const innerOSGains = [
+  { label: "Attention", emoji: "👁️", pct: 4 },
+  { label: "Thinking", emoji: "🧠", pct: 5 },
+  { label: "Resilience", emoji: "🛡️", pct: 3 },
+  { label: "Momentum", emoji: "⚡", pct: 4 },
+  { label: "Values", emoji: "🌱", pct: 2 },
+];
+
+const makeChapterPilot = (topic: string, anchorIdea: string): DayPilotContent => ({
+  hookQuestion: `What is the first thing you notice about ${topic}?`,
+  conceptText: `${topic} becomes easier when we find the main idea first. Today, do not try to memorize everything. Notice the key idea, connect it to one example, and check one common misunderstanding.`,
+  detective: {
+    statement: `Understanding ${topic} means memorizing every line first.`,
+    isTrue: false,
+    explain: `Not first. Start with the main idea, then use details to support it. Memorizing without meaning is weak learning.`,
+  },
+  quickCheck: {
+    prompt: `What is the best first step when learning ${topic}?`,
+    options: ["Memorize all words", "Find the main idea", "Skip examples", "Only guess answers"],
+    correctIndex: 1,
+    explain: `Finding the main idea gives your brain a handle. After that, examples and facts become easier to place.`,
+  },
+  day2: {
+    deepDiveText: `${anchorIdea} A strong learner asks: what is happening, why does it happen, and what mistake might someone make here? That is deeper than only reading the paragraph once.`,
+    detective1: {
+      statement: `One example is enough to understand all of ${topic}.`,
+      isTrue: false,
+      explain: `One example helps, but you need the idea behind it. Otherwise a new example can confuse you.`,
+    },
+    detective2: {
+      statement: `Explaining ${topic} in your own words can reveal whether you really understood it.`,
+      isTrue: true,
+      explain: `Yes. Explain-back shows gaps quickly because your brain has to organize the idea, not just repeat it.`,
+    },
+    sort: {
+      variant: "pairs",
+      title: "Match Idea to Use",
+      subtitle: "Connect each learning move to what it helps you do.",
+      leftItems: [
+        { id: "c1", label: "Find the main idea", matchId: "e1" },
+        { id: "c2", label: "Use one example", matchId: "e2" },
+        { id: "c3", label: "Spot a mistake", matchId: "e3" },
+        { id: "c4", label: "Explain in your words", matchId: "e4" },
+      ],
+      rightItems: [
+        { id: "e1", label: "Know what the lesson is really about" },
+        { id: "e2", label: "Make the idea concrete" },
+        { id: "e3", label: "Avoid shallow understanding" },
+        { id: "e4", label: "Prove you can organize the idea" },
+      ],
+      explainOnRight: "Good. These are the moves strong learners use before heavy practice.",
+      explainOnWrong: "Try matching the move to its purpose: idea, example, mistake, explanation.",
+    },
+  },
+  day3: {
+    whyItWorks: `${topic} stays in memory when you rebuild it yourself. First you notice the idea. Then you test it with examples. Finally, you explain it clearly enough that someone else can understand it.`,
+    proveItPrompt: `Explain ${topic} to a younger student in simple words. Use one example.`,
+    caseStudy: `Your call: imagine a classmate misunderstood ${topic}. What would you say first to make the idea clear without confusing them?`,
+    growthGains: innerOSGains,
+    sort: {
+      variant: "order",
+      title: "Put the learning path in order",
+      subtitle: "Drag the steps into the best order for mastery.",
+      correctOrder: [
+        { id: "s1", label: "Notice the main idea" },
+        { id: "s2", label: "Connect one example" },
+        { id: "s3", label: "Spot a common mistake" },
+        { id: "s4", label: "Explain it in your own words" },
+        { id: "s5", label: "Use it in a new situation" },
+      ],
+      explainOnRight: "Exactly. This path turns reading into real understanding.",
+      explainOnWrong: "Close. Start with the idea, then example, mistake, explanation, and new use.",
+    },
+  },
+});
+
+const chapterOnePilots: Record<string, DayPilotContent> = {
+  "sci-ch1::sci-ch1-ep1": makeChapterPilot("chemical reactions", "A chemical reaction means substances change into new substances."),
+  "personality-development::attitude-is-altitude": makeChapterPilot("Attitude is Altitude", "Attitude shapes how a person responds to challenges."),
+  "india-relief-features::the-great-himalayas": makeChapterPilot("the Great Himalayas", "Relief features affect climate, rivers, travel, and human life."),
+  "danaseelamu::danaseelamu-padya-parichayam": makeChapterPilot("దానశీలము", "A poem becomes clearer when we first catch its central feeling and value."),
+  "baraste-badal::baraste-badal-kavita-parichay": makeChapterPilot("बरसते बादल", "A poem becomes clearer when we first notice its image, feeling, and message."),
+  "bio-ch1::bio-ch1-ep1": makeChapterPilot("nutrition", "Nutrition is how living things get and use food for energy and growth."),
+  "phy-ch1::phy-ch1-ep1": makeChapterPilot("electric current and circuits", "A circuit gives electric current a complete path to flow."),
+  "chem-ch1::chem-ch1-ep1": makeChapterPilot("chemical reactions", "A chemical reaction means old substances rearrange to form new substances."),
+};
+
+const chapterOneTopicByChapterId: Record<string, { topic: string; anchorIdea: string }> = {
+  ch1: { topic: "real numbers", anchorIdea: "Real numbers help us describe counting, zero, negatives, fractions, and measurements." },
+  "sci-ch1": { topic: "chemical reactions", anchorIdea: "A chemical reaction means substances change into new substances." },
+  "personality-development": { topic: "personality development", anchorIdea: "Personality grows through attitude, choices, effort, and reflection." },
+  "india-relief-features": { topic: "India's relief features", anchorIdea: "Relief features affect climate, rivers, travel, and human life." },
+  danaseelamu: { topic: "దానశీలము", anchorIdea: "A poem becomes clearer when we first catch its central feeling and value." },
+  "baraste-badal": { topic: "बरसते बादल", anchorIdea: "A poem becomes clearer when we first notice its image, feeling, and message." },
+  "bio-ch1": { topic: "nutrition", anchorIdea: "Nutrition is how living things get and use food for energy and growth." },
+  "phy-ch1": { topic: "electricity", anchorIdea: "Electricity becomes useful when current has a complete path to flow." },
+  "chem-ch1": { topic: "chemical reactions", anchorIdea: "A chemical reaction means old substances rearrange to form new substances." },
+};
+
 export const dayPilotContent: Record<string, DayPilotContent> = {
+  ...chapterOnePilots,
   "ch1::ch1-ep1": {
     hookQuestion: "Why do we need so many different kinds of numbers?",
     conceptText:
@@ -194,5 +294,8 @@ export const dayPilotContent: Record<string, DayPilotContent> = {
 
 export function getPilotContent(chapterId?: string, episodeId?: string): DayPilotContent | null {
   if (!chapterId || !episodeId) return null;
-  return dayPilotContent[`${chapterId}::${episodeId}`] ?? null;
+  const exactPilot = dayPilotContent[`${chapterId}::${episodeId}`];
+  if (exactPilot) return exactPilot;
+  const chapterPilot = chapterOneTopicByChapterId[chapterId];
+  return chapterPilot ? makeChapterPilot(chapterPilot.topic, chapterPilot.anchorIdea) : null;
 }
