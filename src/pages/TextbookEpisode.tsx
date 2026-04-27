@@ -46,6 +46,8 @@ import Day2Build from "@/components/episode/Day2Build";
 import Day3Master from "@/components/episode/Day3Master";
 import DayLockedWall from "@/components/episode/DayLockedWall";
 import { getPilotContent } from "@/data/dayPilotContent";
+import FullTextbookView from "@/components/textbook/FullTextbookView";
+import PageLayout from "@/components/PageLayout";
 
 const LANGUAGE_SUBJECTS = new Set(["Telugu", "Hindi"]);
 
@@ -117,7 +119,8 @@ const TextbookEpisode = () => {
   const [searchParams] = useSearchParams();
   const layerParam = searchParams.get("layer");
   const modeParam = searchParams.get("mode");
-  const forceFullReader = modeParam === "content" || modeParam === "full" || modeParam === "practice" || modeParam === "legacy";
+  const isPilotPractice2 = modeParam === "pilot2" || modeParam === "seven-layer" || modeParam === "lesson";
+  const forceFullReader = isPilotPractice2 || modeParam === "content" || modeParam === "full" || modeParam === "practice" || modeParam === "legacy";
   const navigate = useNavigate();
   const { user } = useAuth();
   const [showDefense, setShowDefense] = useState(false);
@@ -639,6 +642,40 @@ const TextbookEpisode = () => {
           />
         </EpisodeDayProvider>
       </DifficultyProvider>
+    );
+  }
+
+  if (isPilotPractice2) {
+    const breadcrumbs = [
+      { label: "Dashboard", href: "/student" },
+      { label: "Textbook", href: "/student/textbook" },
+      { label: chapter.title, href: `/student/textbook/${chapterId}` },
+      { label: "Pilot Practice 2" },
+    ];
+
+    return (
+      <PageLayout role="student" breadcrumbItems={breadcrumbs}>
+        <div className="max-w-4xl mx-auto space-y-4">
+          <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase text-muted-foreground">Pilot Practice 2 · 7-layer lesson</p>
+              <h1 className="text-lg font-bold text-foreground truncate">{episode.title}</h1>
+              <p className="text-sm text-muted-foreground">Structured lesson view with all available textbook layers.</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {getPilotContent(chapterId, episodeId) && (
+                <Button variant="outline" size="sm" onClick={() => navigate(`/student/textbook/${chapterId}/${episodeId}`)}>
+                  Pilot practice
+                </Button>
+              )}
+              <Button variant="outline" size="sm" onClick={() => navigate(`/student/textbook/${chapterId}/${episodeId}?mode=full`)}>
+                Full practice
+              </Button>
+            </div>
+          </div>
+          <FullTextbookView blocks={allBlocks} chapterTitle={chapter.title} episodeTitle={episode.title} />
+        </div>
+      </PageLayout>
     );
   }
 
@@ -1389,9 +1426,6 @@ const DayGatedEpisode = ({
 
   if (isLoading) return <EpisodeLoadingTransition />;
 
-  // Pilot is intentionally fixed-depth: keep richer textbook/practice sections outside this flow.
-  const cap = 1;
-
   const blocksByType = (type: string) =>
     (dbBlocks ?? []).filter((b) => b.type === type);
 
@@ -1402,7 +1436,7 @@ const DayGatedEpisode = ({
   ) : undefined;
   const day1StoryTitle = day1VisualBlock?.title ?? undefined;
 
-  // ─── Day 2 deep-dive sections: reasoning + connections + application ──
+  // ─── Day 2 quick deep-dive: one compact rich section; full 7-layer lesson lives in Pilot Practice 2 ──
   const day2RichSections: { title: string; node: React.ReactNode }[] = [];
   for (const b of blocksByType("reasoning")) {
     day2RichSections.push({
@@ -1422,7 +1456,7 @@ const DayGatedEpisode = ({
       node: <ApplicationBlock content={b.content as ApplicationContent} />,
     });
   }
-  const day2Sections = day2RichSections.slice(0, cap);
+  const day2Sections = day2RichSections.slice(0, 1);
 
   // ─── Day 3 master sections: assumptions + implications (Full Story shows both) ──
   const day3RichSections: { title: string; node: React.ReactNode }[] = [];
@@ -1438,8 +1472,7 @@ const DayGatedEpisode = ({
       node: <ImplicationsBlock content={b.content as ImplicationsContent} />,
     });
   }
-  // Quick Look (cap=1) gets just one stretch section; Deep Dive gets 2; Full Story gets all
-  const day3Sections = day3RichSections.slice(0, cap);
+  const day3Sections = day3RichSections.slice(0, 1);
 
   const canViewDay2 = info.demoOverride || info.day1Done || info.day2Done || info.day3Done;
   const canViewDay3 = info.demoOverride || info.day2Done || info.day3Done;
@@ -1512,6 +1545,7 @@ const DayGatedEpisode = ({
     <div className="min-h-screen bg-background">
       <StageTopbar
         episodeTitle={episodeTitle}
+        pilotPractice2To={chapterId && episodeId ? `/student/textbook/${chapterId}/${episodeId}?mode=pilot2` : undefined}
         fullReaderTo={chapterId && episodeId ? `/student/textbook/${chapterId}/${episodeId}?mode=full` : undefined}
         dayProgress={dayProgress}
         viewDay={viewDay}

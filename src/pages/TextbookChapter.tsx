@@ -2,7 +2,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import PageLayout from "@/components/PageLayout";
 import { useChapterEpisodes } from "@/hooks/useTextbookData";
 import { useUserEpisodeProgress, getEpisodeStatus, getChapterProgress } from "@/hooks/useEpisodeProgress";
-import { Play, Clock, Sparkles, CheckCircle2, PlayCircle } from "lucide-react";
+import { Play, Clock, Sparkles, CheckCircle2, PlayCircle, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { DetailSkeleton } from "@/components/PageSkeleton";
@@ -162,14 +162,25 @@ const TextbookChapter = () => {
                   </button>
                   <div className="shrink-0 flex items-center gap-2">
                     {hasPilot && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => navigate(`/student/textbook/${chapterId}/${episode.id}?mode=full`)}
-                      >
-                        Full practice
-                      </Button>
+                      <>
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          className="gap-1"
+                          onClick={() => navigate(`/student/textbook/${chapterId}/${episode.id}?mode=pilot2`)}
+                        >
+                          <Layers className="h-3.5 w-3.5" /> Pilot Practice 2
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => navigate(`/student/textbook/${chapterId}/${episode.id}?mode=full`)}
+                        >
+                          Full practice
+                        </Button>
+                      </>
                     )}
                     <button
                       type="button"
