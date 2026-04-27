@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/AuthContext";
 import type { DayNumber } from "@/lib/childFriendlyLabels";
 
@@ -162,7 +163,27 @@ export function useEpisodeDayUnlock(chapterId: string | undefined, episodeId: st
         existing?.layer_scores && typeof existing.layer_scores === "object" && !Array.isArray(existing.layer_scores)
           ? (existing.layer_scores as Record<string, unknown>)
           : {};
-      const mergedScores = { ...existingScores, ...next };
+      const scoreToJson = (score: PilotExplainScore | null): Json =>
+        score
+          ? {
+              score: score.score,
+              band: score.band,
+              feedback: score.feedback,
+              next_step: score.next_step,
+            }
+          : null;
+      const nextScores: Record<string, Json> = {
+        day1_completed_at: next.day1_completed_at,
+        day2_completed_at: next.day2_completed_at,
+        day3_completed_at: next.day3_completed_at,
+        day1_hook_answer: next.day1_hook_answer,
+        day1_detective_correct: next.day1_detective_correct,
+        day2_explanation: next.day2_explanation,
+        day2_explain_score: scoreToJson(next.day2_explain_score),
+        day3_prove_answer: next.day3_prove_answer,
+        day3_explain_score: scoreToJson(next.day3_explain_score),
+      };
+      const mergedScores: Json = { ...(existingScores as Record<string, Json>), ...nextScores };
       // completion_pct: 33 / 66 / 100 based on days done
       const daysDone = [next.day1_completed_at, next.day2_completed_at, next.day3_completed_at].filter(Boolean).length;
       const pct = daysDone === 0 ? 0 : daysDone === 1 ? 33 : daysDone === 2 ? 66 : 100;
