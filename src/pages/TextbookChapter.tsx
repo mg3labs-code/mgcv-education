@@ -115,7 +115,7 @@ const TextbookChapter = () => {
                   isDone ? "border-success/30" : isInProg ? "border-accent/40" : "hover:border-primary/30"
                 }`}
               >
-                <div className="flex items-center gap-4">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                   <div
                     className="h-11 w-11 rounded-full flex items-center justify-center text-white font-bold text-lg shrink-0 relative"
                     style={{ backgroundColor: chapter.color }}
@@ -160,22 +160,23 @@ const TextbookChapter = () => {
                       </div>
                     )}
                   </button>
-                  <div className="shrink-0 flex items-center gap-2">
+                  <div className="grid w-full grid-cols-1 gap-2 sm:w-auto sm:flex sm:shrink-0 sm:items-center">
                     {hasPilot && (
                       <>
                         <Button
                           type="button"
                           variant="secondary"
                           size="sm"
-                          className="gap-1"
+                          className="gap-1 justify-center"
                           onClick={() => navigate(`/student/textbook/${chapterId}/${episode.id}?mode=pilot2`)}
                         >
-                          <Layers className="h-3.5 w-3.5" /> Pilot Practice 2
+                          <Layers className="h-3.5 w-3.5" /> 7-layer lesson
                         </Button>
                         <Button
                           type="button"
                           variant="outline"
                           size="sm"
+                          className="justify-center"
                           onClick={() => navigate(`/student/textbook/${chapterId}/${episode.id}?mode=full`)}
                         >
                           Full practice
@@ -185,7 +186,7 @@ const TextbookChapter = () => {
                     <button
                       type="button"
                       onClick={() => navigate(`/student/textbook/${chapterId}/${episode.id}`)}
-                      className={`h-9 w-9 rounded-full flex items-center justify-center transition-colors ${
+                      className={`h-10 w-full rounded-lg sm:h-9 sm:w-9 sm:rounded-full flex items-center justify-center transition-colors ${
                         isDone ? "bg-success/10 text-success" : "bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white"
                       }`}
                     >
