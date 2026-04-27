@@ -113,7 +113,7 @@ const Day2Build = ({ episodeTitle, deepDiveText, deepDiveSections, detective1, d
           </p>
 
           <Button onClick={() => setScreen("deepdive")} size="lg" className="w-full gap-1">
-            Let's go deeper <ArrowRight className="h-4 w-4" />
+            Continue <ArrowRight className="h-4 w-4" />
           </Button>
           <p className="text-center text-[11px] text-muted-foreground">Step 1 of 5 · {episodeTitle}</p>
         </div>
@@ -201,9 +201,9 @@ const Day2Build = ({ episodeTitle, deepDiveText, deepDiveSections, detective1, d
                 onTranscript={(t) => setExplanation((p) => (p ? `${p} ${t}` : t).trim())}
                 showLabel
               />
-              <Button onClick={handleSubmitExplanation} disabled={!explanation.trim() || isSaving || isScoring || !!scoreResult}>
+              <Button onClick={handleSubmitExplanation} disabled={!explanation.trim() || isSaving || isScoring || !!scoreResult} className="min-w-[132px] gap-2">
                 {isScoring ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : null}
-                {isScoring ? "Scoring..." : "Score my answer"}
+                {isScoring ? "Checking..." : "Check my answer"}
               </Button>
             </div>
           </div>
@@ -211,7 +211,7 @@ const Day2Build = ({ episodeTitle, deepDiveText, deepDiveSections, detective1, d
             <div className="rounded-2xl border-2 border-primary/25 bg-primary/5 p-4 space-y-3 animate-fade-in">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Quality score</p>
+                  <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Answer check</p>
                   <p className="text-sm font-semibold text-foreground">{scoreResult.band}</p>
                 </div>
                 <div className="text-2xl font-bold text-primary tabular-nums">{scoreResult.score}%</div>
