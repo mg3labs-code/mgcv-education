@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Upload, Send, CheckCircle, Clock, AlertTriangle, Loader2, FileImage, FileText, X, ClipboardList } from "lucide-react";
 import EmptyState from "@/components/EmptyState";
+import CompanionVoiceInput from "@/components/student/CompanionVoiceInput";
 
 const ACCEPTED_TYPES = "image/jpeg,image/png,image/webp,application/pdf";
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -380,12 +381,24 @@ const StudentAssignments = () => {
                           <div className="flex-1 border-t border-muted-foreground/20" />
                         </div>
 
-                        <Textarea
-                          placeholder="Type your answer here..."
-                          value={answerText[q.id] || ""}
-                          onChange={(e) => setAnswerText((p) => ({ ...p, [q.id]: e.target.value }))}
-                          rows={4}
-                        />
+                        <div className="rounded-xl border border-border bg-background p-2">
+                          <Textarea
+                            placeholder="Type your answer here..."
+                            value={answerText[q.id] || ""}
+                            onChange={(e) => setAnswerText((p) => ({ ...p, [q.id]: e.target.value }))}
+                            rows={4}
+                            className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 resize-none"
+                          />
+                          <div className="flex items-center justify-between border-t border-border pt-2">
+                            <CompanionVoiceInput
+                              showLabel
+                              onTranscript={(text) =>
+                                setAnswerText((p) => ({ ...p, [q.id]: `${p[q.id] ? `${p[q.id]} ` : ""}${text}`.trim() }))
+                              }
+                            />
+                            <span className="text-xs text-muted-foreground">Speak or write, then submit</span>
+                          </div>
+                        </div>
                         <Button
                           size="sm"
                           disabled={(!answerText[q.id]?.trim() && !selectedFile) || uploadMutation.isPending}
