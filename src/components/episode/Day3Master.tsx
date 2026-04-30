@@ -63,6 +63,7 @@ const Day3Master = ({
   nextEpisodeTitle,
   onNextEpisode,
   sortActivity,
+  ladder,
 }: Props) => {
   const navigate = useNavigate();
   const { info, setDayState, isSaving } = useEpisodeDay();
