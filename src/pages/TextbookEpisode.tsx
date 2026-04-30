@@ -1517,6 +1517,13 @@ const DayGatedEpisode = ({
           sortActivity={pilot.day3.sort}
           nextEpisodeTitle={nextEpisodeTitle}
           onNextEpisode={onNextEpisode}
+          ladder={{
+            chapterId: chapterId ?? null,
+            episodeId: episodeId ?? null,
+            conceptKey: pilot.conceptKey ?? null,
+            subject: chapter?.title ?? null,
+            chapterSlug: chapter?.slug ?? chapterId ?? null,
+          }}
           onProgress={setDayProgress}
         />
       );
@@ -1533,6 +1540,13 @@ const DayGatedEpisode = ({
           detective1={pilot.day2.detective1}
           detective2={pilot.day2.detective2}
           sortActivity={pilot.day2.sort}
+          ladder={{
+            chapterId: chapterId ?? null,
+            episodeId: episodeId ?? null,
+            conceptKey: pilot.conceptKey ?? null,
+            subject: chapter?.title ?? null,
+            chapterSlug: chapter?.slug ?? chapterId ?? null,
+          }}
           onProgress={setDayProgress}
         />
       );
@@ -1550,6 +1564,13 @@ const DayGatedEpisode = ({
         detectiveIsTrue={pilot.detective.isTrue}
         detectiveExplain={pilot.detective.explain}
         sortActivity={pilot.day1Sort}
+        ladder={{
+          chapterId: chapterId ?? null,
+          episodeId: episodeId ?? null,
+          conceptKey: pilot.conceptKey ?? null,
+          subject: chapter?.title ?? null,
+          chapterSlug: chapter?.slug ?? chapterId ?? null,
+        }}
         onProgress={setDayProgress}
       />
     );
