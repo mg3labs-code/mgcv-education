@@ -9,6 +9,7 @@ import { friendlyLabels } from "@/lib/childFriendlyLabels";
 import CompanionVoiceInput from "@/components/student/CompanionVoiceInput";
 import { useSoundFx } from "@/hooks/useSoundFx";
 import SortTheRebels from "@/components/episode/SortTheRebels";
+import ConfidenceLadder from "@/components/episode/ConfidenceLadder";
 import type { SortOrderActivity } from "@/data/dayPilotContent";
 import type { PilotExplainScore } from "@/hooks/useEpisodeDayUnlock";
 import { useGenerateRetentionPrediction, usePeerBenchmark } from "@/hooks/useRetentionPredictions";
@@ -35,6 +36,14 @@ interface Props {
   onNextEpisode?: () => void;
   /** Optional drag-reorder activity before Prove-It. */
   sortActivity?: SortOrderActivity;
+  /** Optional Confidence Ladder context — renders an apply-rung warm-up above Why-It-Works. */
+  ladder?: {
+    chapterId?: string | null;
+    episodeId?: string | null;
+    conceptKey?: string | null;
+    subject?: string | null;
+    chapterSlug?: string | null;
+  };
   onProgress?: (progress: number) => void;
 }
 
