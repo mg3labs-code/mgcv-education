@@ -1527,8 +1527,8 @@ const DayGatedEpisode = ({
             chapterId: chapterId ?? null,
             episodeId: episodeId ?? null,
             conceptKey: pilot.conceptKey ?? null,
-            subject: chapter?.title ?? null,
-            chapterSlug: chapter?.slug ?? chapterId ?? null,
+            subject: subject ?? null,
+            chapterSlug: chapterSlug ?? chapterId ?? null,
           }}
           onProgress={setDayProgress}
         />
@@ -1550,8 +1550,8 @@ const DayGatedEpisode = ({
             chapterId: chapterId ?? null,
             episodeId: episodeId ?? null,
             conceptKey: pilot.conceptKey ?? null,
-            subject: chapter?.title ?? null,
-            chapterSlug: chapter?.slug ?? chapterId ?? null,
+            subject: subject ?? null,
+            chapterSlug: chapterSlug ?? chapterId ?? null,
           }}
           onProgress={setDayProgress}
         />
@@ -1574,8 +1574,8 @@ const DayGatedEpisode = ({
           chapterId: chapterId ?? null,
           episodeId: episodeId ?? null,
           conceptKey: pilot.conceptKey ?? null,
-          subject: chapter?.title ?? null,
-          chapterSlug: chapter?.slug ?? chapterId ?? null,
+          subject: subject ?? null,
+          chapterSlug: chapterSlug ?? chapterId ?? null,
         }}
         onProgress={setDayProgress}
       />
