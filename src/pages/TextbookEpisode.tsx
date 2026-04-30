@@ -656,6 +656,8 @@ const TextbookEpisode = () => {
           <DayGatedEpisode
             episodeTitle={episode.title}
             pilot={pilotContent}
+            subject={chapter?.title ?? null}
+            chapterSlug={chapterId ?? null}
             nextEpisodeTitle={nextEpisode?.title}
             onNextEpisode={() => nextEpisode && navigate(`/student/textbook/${chapterId}/${nextEpisode.id}`)}
           />
@@ -1415,11 +1417,15 @@ import type { DayPilotContent } from "@/data/dayPilotContent";
 const DayGatedEpisode = ({
   episodeTitle,
   pilot,
+  subject,
+  chapterSlug,
   nextEpisodeTitle,
   onNextEpisode,
 }: {
   episodeTitle: string;
   pilot: DayPilotContent;
+  subject?: string | null;
+  chapterSlug?: string | null;
   nextEpisodeTitle?: string;
   onNextEpisode?: () => void;
 }) => {
