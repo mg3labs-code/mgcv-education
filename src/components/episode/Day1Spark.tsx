@@ -9,6 +9,7 @@ import CompanionVoiceInput from "@/components/student/CompanionVoiceInput";
 import { useSoundFx } from "@/hooks/useSoundFx";
 import TrapReveal from "@/components/episode/TrapReveal";
 import SortTheRebels from "@/components/episode/SortTheRebels";
+import ConfidenceLadder from "@/components/episode/ConfidenceLadder";
 import type { SortBucketsActivity } from "@/data/dayPilotContent";
 import { toast } from "sonner";
 
@@ -36,6 +37,14 @@ interface Props {
   detectiveExplain: string;
   /** Optional: drag-drop "Sort the Rebels" activity (buckets variant) between story and detective. */
   sortActivity?: SortBucketsActivity;
+  /** Optional: Confidence Ladder context — when provided, renders a tiny warm-up rung above the hook. */
+  ladder?: {
+    chapterId?: string | null;
+    episodeId?: string | null;
+    conceptKey?: string | null;
+    subject?: string | null;
+    chapterSlug?: string | null;
+  };
   /** Optional: reports 0–1 progress through the day back to parent for XP bar. */
   onProgress?: (progress: number) => void;
   onComplete?: () => void;
@@ -54,6 +63,7 @@ const Day1Spark = ({
   detectiveIsTrue,
   detectiveExplain,
   sortActivity,
+  ladder,
   onProgress,
   onComplete,
 }: Props) => {
