@@ -10,6 +10,7 @@ import CompanionVoiceInput from "@/components/student/CompanionVoiceInput";
 import { useSoundFx } from "@/hooks/useSoundFx";
 import TrapReveal from "@/components/episode/TrapReveal";
 import SortTheRebels from "@/components/episode/SortTheRebels";
+import ConfidenceLadder from "@/components/episode/ConfidenceLadder";
 import type { SortPairsActivity } from "@/data/dayPilotContent";
 import type { PilotExplainScore } from "@/hooks/useEpisodeDayUnlock";
 import { toast } from "sonner";
@@ -30,12 +31,20 @@ interface Props {
   detective2: { statement: string; isTrue: boolean; explain: string };
   /** Optional drag-drop pairs activity between deep-dive and explain. */
   sortActivity?: SortPairsActivity;
+  /** Optional Confidence Ladder context — renders an explain-rung warm-up above recall. */
+  ladder?: {
+    chapterId?: string | null;
+    episodeId?: string | null;
+    conceptKey?: string | null;
+    subject?: string | null;
+    chapterSlug?: string | null;
+  };
   onProgress?: (progress: number) => void;
 }
 
 type Screen = "recall" | "deepdive" | "sort" | "explain" | "det1" | "det2" | "done";
 
-const Day2Build = ({ episodeTitle, deepDiveText, deepDiveSections, detective1, detective2, sortActivity, onProgress }: Props) => {
+const Day2Build = ({ episodeTitle, deepDiveText, deepDiveSections, detective1, detective2, sortActivity, ladder, onProgress }: Props) => {
   const navigate = useNavigate();
   const { info, setDayState, isSaving } = useEpisodeDay();
   const { play } = useSoundFx();
