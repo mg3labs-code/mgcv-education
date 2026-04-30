@@ -228,6 +228,57 @@ export type Database = {
         }
         Relationships: []
       }
+      concept_rungs: {
+        Row: {
+          chapter_id: string
+          concept_key: string
+          created_at: string
+          episode_id: string
+          id: string
+          region: string | null
+          rung_1: Json
+          rung_2: Json
+          rung_3: Json
+          rung_4: Json
+          rung_5: Json
+          source: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          chapter_id: string
+          concept_key: string
+          created_at?: string
+          episode_id: string
+          id?: string
+          region?: string | null
+          rung_1?: Json
+          rung_2?: Json
+          rung_3?: Json
+          rung_4?: Json
+          rung_5?: Json
+          source?: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          chapter_id?: string
+          concept_key?: string
+          created_at?: string
+          episode_id?: string
+          id?: string
+          region?: string | null
+          rung_1?: Json
+          rung_2?: Json
+          rung_3?: Json
+          rung_4?: Json
+          rung_5?: Json
+          source?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       content_blocks: {
         Row: {
           block_type: string
@@ -499,28 +550,34 @@ export type Database = {
       }
       profiles: {
         Row: {
+          city: string | null
           class_name: string | null
           created_at: string
           full_name: string
           id: string
+          region: string | null
           school_name: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          city?: string | null
           class_name?: string | null
           created_at?: string
           full_name?: string
           id?: string
+          region?: string | null
           school_name?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          city?: string | null
           class_name?: string | null
           created_at?: string
           full_name?: string
           id?: string
+          region?: string | null
           school_name?: string | null
           updated_at?: string
           user_id?: string
@@ -812,6 +869,45 @@ export type Database = {
           preferred_language?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      student_rung_state: {
+        Row: {
+          chapter_id: string
+          concept_key: string
+          created_at: string
+          current_rung: number
+          episode_id: string
+          id: string
+          last_signal: Json
+          updated_at: string
+          user_id: string
+          vibe_check_shown_today: boolean
+        }
+        Insert: {
+          chapter_id: string
+          concept_key: string
+          created_at?: string
+          current_rung?: number
+          episode_id: string
+          id?: string
+          last_signal?: Json
+          updated_at?: string
+          user_id: string
+          vibe_check_shown_today?: boolean
+        }
+        Update: {
+          chapter_id?: string
+          concept_key?: string
+          created_at?: string
+          current_rung?: number
+          episode_id?: string
+          id?: string
+          last_signal?: Json
+          updated_at?: string
+          user_id?: string
+          vibe_check_shown_today?: boolean
         }
         Relationships: []
       }

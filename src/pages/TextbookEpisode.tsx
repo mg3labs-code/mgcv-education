@@ -656,6 +656,8 @@ const TextbookEpisode = () => {
           <DayGatedEpisode
             episodeTitle={episode.title}
             pilot={pilotContent}
+            subject={chapter?.title ?? null}
+            chapterSlug={chapterId ?? null}
             nextEpisodeTitle={nextEpisode?.title}
             onNextEpisode={() => nextEpisode && navigate(`/student/textbook/${chapterId}/${nextEpisode.id}`)}
           />
@@ -1415,11 +1417,15 @@ import type { DayPilotContent } from "@/data/dayPilotContent";
 const DayGatedEpisode = ({
   episodeTitle,
   pilot,
+  subject,
+  chapterSlug,
   nextEpisodeTitle,
   onNextEpisode,
 }: {
   episodeTitle: string;
   pilot: DayPilotContent;
+  subject?: string | null;
+  chapterSlug?: string | null;
   nextEpisodeTitle?: string;
   onNextEpisode?: () => void;
 }) => {
@@ -1517,6 +1523,13 @@ const DayGatedEpisode = ({
           sortActivity={pilot.day3.sort}
           nextEpisodeTitle={nextEpisodeTitle}
           onNextEpisode={onNextEpisode}
+          ladder={{
+            chapterId: chapterId ?? null,
+            episodeId: episodeId ?? null,
+            conceptKey: pilot.conceptKey ?? null,
+            subject: subject ?? null,
+            chapterSlug: chapterSlug ?? chapterId ?? null,
+          }}
           onProgress={setDayProgress}
         />
       );
@@ -1533,6 +1546,13 @@ const DayGatedEpisode = ({
           detective1={pilot.day2.detective1}
           detective2={pilot.day2.detective2}
           sortActivity={pilot.day2.sort}
+          ladder={{
+            chapterId: chapterId ?? null,
+            episodeId: episodeId ?? null,
+            conceptKey: pilot.conceptKey ?? null,
+            subject: subject ?? null,
+            chapterSlug: chapterSlug ?? chapterId ?? null,
+          }}
           onProgress={setDayProgress}
         />
       );
@@ -1550,6 +1570,13 @@ const DayGatedEpisode = ({
         detectiveIsTrue={pilot.detective.isTrue}
         detectiveExplain={pilot.detective.explain}
         sortActivity={pilot.day1Sort}
+        ladder={{
+          chapterId: chapterId ?? null,
+          episodeId: episodeId ?? null,
+          conceptKey: pilot.conceptKey ?? null,
+          subject: subject ?? null,
+          chapterSlug: chapterSlug ?? chapterId ?? null,
+        }}
         onProgress={setDayProgress}
       />
     );

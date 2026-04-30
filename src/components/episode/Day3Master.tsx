@@ -9,6 +9,7 @@ import { friendlyLabels } from "@/lib/childFriendlyLabels";
 import CompanionVoiceInput from "@/components/student/CompanionVoiceInput";
 import { useSoundFx } from "@/hooks/useSoundFx";
 import SortTheRebels from "@/components/episode/SortTheRebels";
+import ConfidenceLadder from "@/components/episode/ConfidenceLadder";
 import type { SortOrderActivity } from "@/data/dayPilotContent";
 import type { PilotExplainScore } from "@/hooks/useEpisodeDayUnlock";
 import { useGenerateRetentionPrediction, usePeerBenchmark } from "@/hooks/useRetentionPredictions";
@@ -35,6 +36,14 @@ interface Props {
   onNextEpisode?: () => void;
   /** Optional drag-reorder activity before Prove-It. */
   sortActivity?: SortOrderActivity;
+  /** Optional Confidence Ladder context — renders an apply-rung warm-up above Why-It-Works. */
+  ladder?: {
+    chapterId?: string | null;
+    episodeId?: string | null;
+    conceptKey?: string | null;
+    subject?: string | null;
+    chapterSlug?: string | null;
+  };
   onProgress?: (progress: number) => void;
 }
 
@@ -54,6 +63,7 @@ const Day3Master = ({
   nextEpisodeTitle,
   onNextEpisode,
   sortActivity,
+  ladder,
 }: Props) => {
   const navigate = useNavigate();
   const { info, setDayState, isSaving } = useEpisodeDay();
@@ -116,6 +126,16 @@ const Day3Master = ({
     return (
       <div className="min-h-[80vh] flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-lg space-y-5 animate-fade-in">
+          {ladder && (
+            <ConfidenceLadder
+              day={3}
+              chapterId={ladder.chapterId}
+              episodeId={ladder.episodeId}
+              conceptKey={ladder.conceptKey}
+              subject={ladder.subject}
+              chapterSlug={ladder.chapterSlug}
+            />
+          )}
           <div className="text-center space-y-2">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/10 text-purple-700 dark:text-purple-400 text-[11px] font-bold uppercase tracking-wide">
               <Sparkles className="h-3 w-3" /> Quick Read

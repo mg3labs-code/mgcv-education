@@ -10,6 +10,7 @@ import CompanionVoiceInput from "@/components/student/CompanionVoiceInput";
 import { useSoundFx } from "@/hooks/useSoundFx";
 import TrapReveal from "@/components/episode/TrapReveal";
 import SortTheRebels from "@/components/episode/SortTheRebels";
+import ConfidenceLadder from "@/components/episode/ConfidenceLadder";
 import type { SortPairsActivity } from "@/data/dayPilotContent";
 import type { PilotExplainScore } from "@/hooks/useEpisodeDayUnlock";
 import { toast } from "sonner";
@@ -30,12 +31,20 @@ interface Props {
   detective2: { statement: string; isTrue: boolean; explain: string };
   /** Optional drag-drop pairs activity between deep-dive and explain. */
   sortActivity?: SortPairsActivity;
+  /** Optional Confidence Ladder context — renders an explain-rung warm-up above recall. */
+  ladder?: {
+    chapterId?: string | null;
+    episodeId?: string | null;
+    conceptKey?: string | null;
+    subject?: string | null;
+    chapterSlug?: string | null;
+  };
   onProgress?: (progress: number) => void;
 }
 
 type Screen = "recall" | "deepdive" | "sort" | "explain" | "det1" | "det2" | "done";
 
-const Day2Build = ({ episodeTitle, deepDiveText, deepDiveSections, detective1, detective2, sortActivity, onProgress }: Props) => {
+const Day2Build = ({ episodeTitle, deepDiveText, deepDiveSections, detective1, detective2, sortActivity, ladder, onProgress }: Props) => {
   const navigate = useNavigate();
   const { info, setDayState, isSaving } = useEpisodeDay();
   const { play } = useSoundFx();
@@ -95,6 +104,16 @@ const Day2Build = ({ episodeTitle, deepDiveText, deepDiveSections, detective1, d
     return (
       <div className="min-h-[80vh] flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-lg space-y-5 animate-fade-in">
+          {ladder && (
+            <ConfidenceLadder
+              day={2}
+              chapterId={ladder.chapterId}
+              episodeId={ladder.episodeId}
+              conceptKey={ladder.conceptKey}
+              subject={ladder.subject}
+              chapterSlug={ladder.chapterSlug}
+            />
+          )}
           <div className="text-center space-y-2">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-400 text-[11px] font-bold uppercase tracking-wide">
               <Brain className="h-3 w-3" /> Remember this?

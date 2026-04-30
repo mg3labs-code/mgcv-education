@@ -9,6 +9,7 @@ import CompanionVoiceInput from "@/components/student/CompanionVoiceInput";
 import { useSoundFx } from "@/hooks/useSoundFx";
 import TrapReveal from "@/components/episode/TrapReveal";
 import SortTheRebels from "@/components/episode/SortTheRebels";
+import ConfidenceLadder from "@/components/episode/ConfidenceLadder";
 import type { SortBucketsActivity } from "@/data/dayPilotContent";
 import { toast } from "sonner";
 
@@ -36,6 +37,14 @@ interface Props {
   detectiveExplain: string;
   /** Optional: drag-drop "Sort the Rebels" activity (buckets variant) between story and detective. */
   sortActivity?: SortBucketsActivity;
+  /** Optional: Confidence Ladder context — when provided, renders a tiny warm-up rung above the hook. */
+  ladder?: {
+    chapterId?: string | null;
+    episodeId?: string | null;
+    conceptKey?: string | null;
+    subject?: string | null;
+    chapterSlug?: string | null;
+  };
   /** Optional: reports 0–1 progress through the day back to parent for XP bar. */
   onProgress?: (progress: number) => void;
   onComplete?: () => void;
@@ -54,6 +63,7 @@ const Day1Spark = ({
   detectiveIsTrue,
   detectiveExplain,
   sortActivity,
+  ladder,
   onProgress,
   onComplete,
 }: Props) => {
@@ -137,6 +147,16 @@ const Day1Spark = ({
     return (
       <div className="min-h-[80vh] flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-lg space-y-6 animate-fade-in">
+          {ladder && (
+            <ConfidenceLadder
+              day={1}
+              chapterId={ladder.chapterId}
+              episodeId={ladder.episodeId}
+              conceptKey={ladder.conceptKey}
+              subject={ladder.subject}
+              chapterSlug={ladder.chapterSlug}
+            />
+          )}
           <div className="text-center space-y-2">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-bold uppercase tracking-wide">
               <Sparkles className="h-3 w-3" />
