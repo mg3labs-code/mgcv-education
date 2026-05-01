@@ -233,7 +233,17 @@ export function findAuthoredRungs(opts: {
   conceptKey?: string | null;
   chapterSlug?: string | null;
 }): ConceptRungSet | null {
-  const subj = (opts.subject ?? "").toLowerCase();
+  const rawSubject = (opts.subject ?? "").toLowerCase();
+  const chSlug = (opts.chapterSlug ?? "").toLowerCase();
+  const subj = rawSubject.includes("math") || chSlug === "ch1"
+    ? "maths"
+    : rawSubject.includes("phys") || chSlug.startsWith("phy-")
+      ? "physics"
+      : rawSubject.includes("chem") || chSlug.startsWith("chem-") || chSlug.startsWith("sci-")
+        ? "chemistry"
+        : rawSubject.includes("bio") || chSlug.startsWith("bio-")
+          ? "biology"
+          : rawSubject;
   const key = (opts.conceptKey ?? "").toLowerCase();
 
   // Exact concept match
@@ -243,7 +253,6 @@ export function findAuthoredRungs(opts: {
   if (exact) return exact;
 
   // Subject-level fallback for Chapter 1
-  const chSlug = (opts.chapterSlug ?? "").toLowerCase();
   if (chSlug.includes("chapter-1") || chSlug.includes("ch-1") || chSlug.endsWith("-1") || chSlug === "1") {
     const subjectMatch = CHAPTER_1_RUNGS.find((r) => r.subject.toLowerCase() === subj);
     if (subjectMatch) return subjectMatch;

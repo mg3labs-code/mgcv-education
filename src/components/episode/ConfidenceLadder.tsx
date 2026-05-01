@@ -42,6 +42,9 @@ const ConfidenceLadder = ({
   const [done, setDone] = useState(false);
   const [bonusOffered, setBonusOffered] = useState(false);
   const [showBonus, setShowBonus] = useState(false);
+  const [lastSignal, setLastSignal] = useState<Signal | null>(null);
+  const [lastVibe, setLastVibe] = useState<"easy" | "right" | "hard" | null>(null);
+  const [retryNonce, setRetryNonce] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -93,6 +96,7 @@ const ConfidenceLadder = ({
   if (done) return null;
 
   const handleSubmit = (signal: Signal) => {
+    setLastSignal(signal);
     // Light telemetry — fire-and-forget
     if (userId && chapterId && episodeId) {
       supabase.from("episode_interactions").insert({
@@ -111,15 +115,16 @@ const ConfidenceLadder = ({
   };
 
   const handleContinue = () => {
-    // Use the last submitted signal? We compute decision lazily here using a synthetic "good" signal.
-    // RungCard already revealed; for pacing decisions we trust the visible state — just climb.
-    const decision = pacing.decide({
-      timeSec: 10,
-      wrongAttempts: 0,
-      answerChanges: 0,
-      correct: true,
-    });
-    pacing.apply(decision);
+    const signal = lastSignal ?? { timeSec: 10, wrongAttempts: 0, answerChanges: 0, correct: true };
+    const decision = pacing.decide(signal);
+    pacing.apply(decision, signal);
+    setLastSignal(null);
+    if (decision === "repeat") {
+      setRetryNonce((n) => n + 1);
+      return;
+    }
+    if (decision === "vibecheck") return;
+
     // If we just finished the day's last normal rung, decide bonus offer (Day 1) or done
     if (isLastForDay) {
       if (day === 1 && !bonusOffered && pacing.currentRung < pacing.bonusMax) {
@@ -134,14 +139,45 @@ const ConfidenceLadder = ({
   return (
     <div className="mb-6 space-y-4">
       {pacing.shouldVibeCheck ? (
-        <VibeCheck onPick={(a) => pacing.resolveVibeCheck(a)} />
+        <VibeCheck
+          onPick={(answer) => {
+            const wasLastForDay = pacing.currentRung >= pacing.normalMax;
+            setLastVibe(answer);
+            const nextRung = pacing.resolveVibeCheck(answer);
+            if (userId && chapterId && episodeId) {
+              supabase.from("episode_interactions").insert({
+                user_id: userId,
+                chapter_id: chapterId,
+                episode_id: episodeId,
+                block_index: pacing.currentRung,
+                block_type: `rung_${pacing.currentRung}_vibe`,
+                comprehension_result: answer,
+                time_spent_seconds: 0,
+                wrong_attempts: 0,
+                answer_changes: 0,
+                correct_on_first_try: answer !== "hard",
+                completed_at: new Date().toISOString(),
+              }).then(() => {}, () => {});
+            }
+            if (answer !== "hard" && wasLastForDay && nextRung >= pacing.normalMax) {
+              if (day === 1 && !bonusOffered && nextRung < pacing.bonusMax) {
+                setBonusOffered(true);
+              } else {
+                setDone(true);
+                onComplete?.();
+              }
+            }
+          }}
+        />
       ) : (
         <RungCard
+          key={`${pacing.currentRung}-${retryNonce}-${lastVibe ?? "fresh"}`}
           rung={rung}
           eyebrow={eyebrow}
           onSubmit={handleSubmit}
           onContinue={handleContinue}
           continueLabel={isLastForDay && !bonusOffered ? "Continue" : "Next"}
+          vibeResponse={lastVibe}
         />
       )}
 

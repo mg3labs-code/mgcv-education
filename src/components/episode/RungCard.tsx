@@ -5,6 +5,14 @@ import { Textarea } from "@/components/ui/textarea";
 import type { Rung } from "@/data/conceptRungs";
 import type { Signal } from "@/hooks/useRungPacing";
 
+type VibeResponse = "easy" | "right" | "hard";
+
+const vibeCopy: Record<VibeResponse, { prefix: string; cta: string }> = {
+  easy: { prefix: "😌 You found the last one smooth — try this stretch.", cta: "Try the stretch" },
+  right: { prefix: "🙂 Good pace. Same idea, one step forward.", cta: "Take the next step" },
+  hard: { prefix: "😣 No rush. Let's make the same idea feel safer.", cta: "Try a softer one" },
+};
+
 interface Props {
   rung: Rung;
   /** Optional small label like "Warm-up" / "One more" — shown above the prompt. */
@@ -13,13 +21,14 @@ interface Props {
   /** Render the next CTA (e.g. "Continue") only after the reveal is shown. */
   onContinue?: () => void;
   continueLabel?: string;
+  vibeResponse?: VibeResponse | null;
 }
 
 /**
  * Renders any rung type. Tracks behavior signals invisibly:
  * timing, wrong attempts, answer changes.
  */
-const RungCard = ({ rung, eyebrow, onSubmit, onContinue, continueLabel = "Continue" }: Props) => {
+const RungCard = ({ rung, eyebrow, onSubmit, onContinue, continueLabel = "Continue", vibeResponse }: Props) => {
   const startRef = useRef<number>(Date.now());
   const [picked, setPicked] = useState<number | null>(null);
   const [text, setText] = useState("");
@@ -27,6 +36,7 @@ const RungCard = ({ rung, eyebrow, onSubmit, onContinue, continueLabel = "Contin
   const [answerChanges, setAnswerChanges] = useState(0);
   const [revealed, setRevealed] = useState(false);
   const [wasCorrect, setWasCorrect] = useState(false);
+  const [nudge, setNudge] = useState<string | null>(null);
 
   useEffect(() => {
     startRef.current = Date.now();
@@ -36,16 +46,20 @@ const RungCard = ({ rung, eyebrow, onSubmit, onContinue, continueLabel = "Contin
     setAnswerChanges(0);
     setRevealed(false);
     setWasCorrect(false);
+    setNudge(null);
   }, [rung.prompt]);
 
-  const isChoice = rung.type === "yesno" || rung.type === "mcq";
-  const isText = rung.type === "shortText" || rung.type === "openText";
+  const options = rung.options?.length ? rung.options : rung.type === "yesno" ? ["Yes", "No"] : undefined;
+  const isChoice = rung.type === "yesno" || (rung.type === "mcq" && !!options?.length);
+  const isText = rung.type === "shortText" || rung.type === "openText" || (rung.type === "mcq" && !options?.length);
+  const personalized = vibeResponse ? vibeCopy[vibeResponse] : null;
 
   const handlePick = (idx: number) => {
     if (revealed) return;
     if (picked !== null && picked !== idx) {
       setAnswerChanges((c) => c + 1);
     }
+    setNudge(null);
     setPicked(idx);
   };
 
@@ -59,13 +73,17 @@ const RungCard = ({ rung, eyebrow, onSubmit, onContinue, continueLabel = "Contin
         // For choice questions: let them try again, only reveal on second wrong or correct.
         if (wrongAttempts === 0) {
           setPicked(null);
+          setNudge("Not that one. Pick once more — now you know what to watch for.");
           return;
         }
       }
     } else if (isText) {
       // open/short text: no objective correct/wrong, treat as "engaged" if reasonable length
       correct = text.trim().split(/\s+/).filter(Boolean).length >= 3;
-      if (!correct) return; // nudge them to write more, no submit yet
+      if (!correct) {
+        setNudge("Add a few more words — even a simple guess is enough.");
+        return;
+      }
     }
     setWasCorrect(correct);
     setRevealed(true);
@@ -82,13 +100,14 @@ const RungCard = ({ rung, eyebrow, onSubmit, onContinue, continueLabel = "Contin
         </div>
       )}
       <h3 className="text-lg sm:text-xl font-semibold leading-snug text-foreground">
+        {personalized && <span className="mb-2 block text-sm font-medium text-muted-foreground">{personalized.prefix}</span>}
         {rung.prompt}
       </h3>
 
       {/* Choice answers */}
-      {isChoice && rung.options && (
+      {isChoice && options && (
         <div className="mt-5 grid gap-2.5 sm:grid-cols-2">
-          {rung.options.map((opt, idx) => {
+          {options.map((opt, idx) => {
             const isPicked = picked === idx;
             const isCorrectShow = revealed && rung.correctIndex === idx;
             const isWrongShow = revealed && isPicked && rung.correctIndex !== undefined && rung.correctIndex !== idx;
@@ -127,7 +146,10 @@ const RungCard = ({ rung, eyebrow, onSubmit, onContinue, continueLabel = "Contin
 
       {/* Submit / reveal */}
       {!revealed && (
-        <div className="mt-5 flex justify-end">
+        <div className="mt-5 flex flex-col items-end gap-2">
+          <p className="min-h-5 text-right text-xs text-muted-foreground">
+            {nudge ?? (!canSubmit ? (isChoice ? "Pick one option first." : "Type your thought first.") : "")}
+          </p>
           <Button onClick={handleSubmit} disabled={!canSubmit} size="lg" className="rounded-full">
             Check my answer <ArrowRight className="ml-1 h-4 w-4" />
           </Button>
@@ -147,7 +169,7 @@ const RungCard = ({ rung, eyebrow, onSubmit, onContinue, continueLabel = "Contin
       {revealed && onContinue && (
         <div className="mt-5 flex justify-end">
           <Button onClick={onContinue} size="lg" className="rounded-full">
-            {continueLabel} <ArrowRight className="ml-1 h-4 w-4" />
+            {personalized?.cta ?? continueLabel} <ArrowRight className="ml-1 h-4 w-4" />
           </Button>
         </div>
       )}
