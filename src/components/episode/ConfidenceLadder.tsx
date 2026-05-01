@@ -44,6 +44,7 @@ const ConfidenceLadder = ({
   const [showBonus, setShowBonus] = useState(false);
   const [lastSignal, setLastSignal] = useState<Signal | null>(null);
   const [lastVibe, setLastVibe] = useState<"easy" | "right" | "hard" | null>(null);
+  const [retryNonce, setRetryNonce] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -118,7 +119,11 @@ const ConfidenceLadder = ({
     const decision = pacing.decide(signal);
     pacing.apply(decision, signal);
     setLastSignal(null);
-    if (decision === "vibecheck" || decision === "repeat") return;
+    if (decision === "repeat") {
+      setRetryNonce((n) => n + 1);
+      return;
+    }
+    if (decision === "vibecheck") return;
 
     // If we just finished the day's last normal rung, decide bonus offer (Day 1) or done
     if (isLastForDay) {
@@ -138,6 +143,21 @@ const ConfidenceLadder = ({
           onPick={(answer) => {
             setLastVibe(answer);
             const nextRung = pacing.resolveVibeCheck(answer);
+            if (userId && chapterId && episodeId) {
+              supabase.from("episode_interactions").insert({
+                user_id: userId,
+                chapter_id: chapterId,
+                episode_id: episodeId,
+                block_index: pacing.currentRung,
+                block_type: `rung_${pacing.currentRung}_vibe`,
+                comprehension_result: answer,
+                time_spent_seconds: 0,
+                wrong_attempts: 0,
+                answer_changes: 0,
+                correct_on_first_try: answer !== "hard",
+                completed_at: new Date().toISOString(),
+              }).then(() => {}, () => {});
+            }
             if (answer !== "hard" && nextRung >= pacing.normalMax) {
               if (day === 1 && !bonusOffered && nextRung < pacing.bonusMax) {
                 setBonusOffered(true);
@@ -150,6 +170,7 @@ const ConfidenceLadder = ({
         />
       ) : (
         <RungCard
+          key={`${pacing.currentRung}-${retryNonce}-${lastVibe ?? "fresh"}`}
           rung={rung}
           eyebrow={eyebrow}
           onSubmit={handleSubmit}
