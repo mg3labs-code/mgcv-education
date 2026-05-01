@@ -10,9 +10,19 @@ export type Signal = {
   answerChanges: number;
   /** Whether final answer was correct. */
   correct: boolean;
+  /** Exact optional vibe-check response, saved for pacing review. */
+  vibeResponse?: "easy" | "right" | "hard";
+  vibeEmoji?: string;
+  vibeLabel?: string;
 };
 
 export type PacingDecision = "climb" | "repeat" | "vibecheck";
+
+const VIBE_META: Record<"easy" | "right" | "hard", { emoji: string; label: string }> = {
+  easy: { emoji: "😌", label: "Too easy" },
+  right: { emoji: "🙂", label: "Just right" },
+  hard: { emoji: "😣", label: "Felt hard" },
+};
 
 interface Args {
   userId?: string | null;
@@ -148,12 +158,26 @@ export function useRungPacing({ userId, chapterId, episodeId, conceptKey, day }:
     (answer: "easy" | "right" | "hard") => {
       setShouldVibeCheck(false);
       setVibeShown(true);
+      const meta = VIBE_META[answer];
       let next = currentRung;
       if (answer === "easy") next = Math.min(currentRung + 1, normalMax);
       if (answer === "hard") next = currentRung; // repeat with softer angle
       if (answer === "right") next = Math.min(currentRung + 1, normalMax);
       setCurrentRung(next);
-      persist(next, { timeSec: 0, wrongAttempts: 0, answerChanges: 0, correct: true }, true);
+      persist(
+        next,
+        {
+          timeSec: 0,
+          wrongAttempts: 0,
+          answerChanges: 0,
+          correct: answer !== "hard",
+          vibeResponse: answer,
+          vibeEmoji: meta.emoji,
+          vibeLabel: meta.label,
+        },
+        true,
+      );
+      return next;
     },
     [currentRung, normalMax, persist],
   );
