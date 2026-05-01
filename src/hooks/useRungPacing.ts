@@ -150,7 +150,7 @@ export function useRungPacing({ userId, chapterId, episodeId, conceptKey, day }:
       persist(next, signal ?? null, vibeShown);
       return next;
     },
-    [currentRung, normalMax, persist, vibeShown],
+    [bonusMax, currentRung, normalMax, persist, vibeShown],
   );
 
   /** Resolve the vibe-check answer. */
