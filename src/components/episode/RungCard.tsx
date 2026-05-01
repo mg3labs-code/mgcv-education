@@ -5,6 +5,14 @@ import { Textarea } from "@/components/ui/textarea";
 import type { Rung } from "@/data/conceptRungs";
 import type { Signal } from "@/hooks/useRungPacing";
 
+type VibeResponse = "easy" | "right" | "hard";
+
+const vibeCopy: Record<VibeResponse, { prefix: string; cta: string }> = {
+  easy: { prefix: "😌 You found the last one smooth — try this stretch.", cta: "Try the stretch" },
+  right: { prefix: "🙂 Good pace. Same idea, one step forward.", cta: "Take the next step" },
+  hard: { prefix: "😣 No rush. Let's make the same idea feel safer.", cta: "Try a softer one" },
+};
+
 interface Props {
   rung: Rung;
   /** Optional small label like "Warm-up" / "One more" — shown above the prompt. */
@@ -13,13 +21,14 @@ interface Props {
   /** Render the next CTA (e.g. "Continue") only after the reveal is shown. */
   onContinue?: () => void;
   continueLabel?: string;
+  vibeResponse?: VibeResponse | null;
 }
 
 /**
  * Renders any rung type. Tracks behavior signals invisibly:
  * timing, wrong attempts, answer changes.
  */
-const RungCard = ({ rung, eyebrow, onSubmit, onContinue, continueLabel = "Continue" }: Props) => {
+const RungCard = ({ rung, eyebrow, onSubmit, onContinue, continueLabel = "Continue", vibeResponse }: Props) => {
   const startRef = useRef<number>(Date.now());
   const [picked, setPicked] = useState<number | null>(null);
   const [text, setText] = useState("");
@@ -40,6 +49,7 @@ const RungCard = ({ rung, eyebrow, onSubmit, onContinue, continueLabel = "Contin
 
   const isChoice = rung.type === "yesno" || rung.type === "mcq";
   const isText = rung.type === "shortText" || rung.type === "openText";
+  const personalized = vibeResponse ? vibeCopy[vibeResponse] : null;
 
   const handlePick = (idx: number) => {
     if (revealed) return;
@@ -82,6 +92,7 @@ const RungCard = ({ rung, eyebrow, onSubmit, onContinue, continueLabel = "Contin
         </div>
       )}
       <h3 className="text-lg sm:text-xl font-semibold leading-snug text-foreground">
+        {personalized && <span className="mb-2 block text-sm font-medium text-muted-foreground">{personalized.prefix}</span>}
         {rung.prompt}
       </h3>
 
@@ -147,7 +158,7 @@ const RungCard = ({ rung, eyebrow, onSubmit, onContinue, continueLabel = "Contin
       {revealed && onContinue && (
         <div className="mt-5 flex justify-end">
           <Button onClick={onContinue} size="lg" className="rounded-full">
-            {continueLabel} <ArrowRight className="ml-1 h-4 w-4" />
+            {personalized?.cta ?? continueLabel} <ArrowRight className="ml-1 h-4 w-4" />
           </Button>
         </div>
       )}
