@@ -47,8 +47,9 @@ const RungCard = ({ rung, eyebrow, onSubmit, onContinue, continueLabel = "Contin
     setWasCorrect(false);
   }, [rung.prompt]);
 
-  const isChoice = rung.type === "yesno" || rung.type === "mcq";
-  const isText = rung.type === "shortText" || rung.type === "openText";
+  const options = rung.options?.length ? rung.options : rung.type === "yesno" ? ["Yes", "No"] : undefined;
+  const isChoice = rung.type === "yesno" || (rung.type === "mcq" && !!options?.length);
+  const isText = rung.type === "shortText" || rung.type === "openText" || (rung.type === "mcq" && !options?.length);
   const personalized = vibeResponse ? vibeCopy[vibeResponse] : null;
 
   const handlePick = (idx: number) => {
@@ -97,9 +98,9 @@ const RungCard = ({ rung, eyebrow, onSubmit, onContinue, continueLabel = "Contin
       </h3>
 
       {/* Choice answers */}
-      {isChoice && rung.options && (
+      {isChoice && options && (
         <div className="mt-5 grid gap-2.5 sm:grid-cols-2">
-          {rung.options.map((opt, idx) => {
+          {options.map((opt, idx) => {
             const isPicked = picked === idx;
             const isCorrectShow = revealed && rung.correctIndex === idx;
             const isWrongShow = revealed && isPicked && rung.correctIndex !== undefined && rung.correctIndex !== idx;
