@@ -36,6 +36,7 @@ const RungCard = ({ rung, eyebrow, onSubmit, onContinue, continueLabel = "Contin
   const [answerChanges, setAnswerChanges] = useState(0);
   const [revealed, setRevealed] = useState(false);
   const [wasCorrect, setWasCorrect] = useState(false);
+  const [nudge, setNudge] = useState<string | null>(null);
 
   useEffect(() => {
     startRef.current = Date.now();
@@ -45,6 +46,7 @@ const RungCard = ({ rung, eyebrow, onSubmit, onContinue, continueLabel = "Contin
     setAnswerChanges(0);
     setRevealed(false);
     setWasCorrect(false);
+    setNudge(null);
   }, [rung.prompt]);
 
   const options = rung.options?.length ? rung.options : rung.type === "yesno" ? ["Yes", "No"] : undefined;
@@ -57,6 +59,7 @@ const RungCard = ({ rung, eyebrow, onSubmit, onContinue, continueLabel = "Contin
     if (picked !== null && picked !== idx) {
       setAnswerChanges((c) => c + 1);
     }
+    setNudge(null);
     setPicked(idx);
   };
 
@@ -70,13 +73,17 @@ const RungCard = ({ rung, eyebrow, onSubmit, onContinue, continueLabel = "Contin
         // For choice questions: let them try again, only reveal on second wrong or correct.
         if (wrongAttempts === 0) {
           setPicked(null);
+          setNudge("Not that one. Pick once more — now you know what to watch for.");
           return;
         }
       }
     } else if (isText) {
       // open/short text: no objective correct/wrong, treat as "engaged" if reasonable length
       correct = text.trim().split(/\s+/).filter(Boolean).length >= 3;
-      if (!correct) return; // nudge them to write more, no submit yet
+      if (!correct) {
+        setNudge("Add a few more words — even a simple guess is enough.");
+        return;
+      }
     }
     setWasCorrect(correct);
     setRevealed(true);
@@ -139,7 +146,10 @@ const RungCard = ({ rung, eyebrow, onSubmit, onContinue, continueLabel = "Contin
 
       {/* Submit / reveal */}
       {!revealed && (
-        <div className="mt-5 flex justify-end">
+        <div className="mt-5 flex flex-col items-end gap-2">
+          <p className="min-h-5 text-right text-xs text-muted-foreground">
+            {nudge ?? (!canSubmit ? (isChoice ? "Pick one option first." : "Type your thought first.") : "")}
+          </p>
           <Button onClick={handleSubmit} disabled={!canSubmit} size="lg" className="rounded-full">
             Check my answer <ArrowRight className="ml-1 h-4 w-4" />
           </Button>
