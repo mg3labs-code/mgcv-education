@@ -139,7 +139,7 @@ export function useRungPacing({ userId, chapterId, episodeId, conceptKey, day }:
     (decision: PacingDecision, signal?: Signal) => {
       let next = currentRung;
       if (decision === "climb") {
-        next = Math.min(currentRung + 1, normalMax);
+        next = Math.min(currentRung + 1, currentRung > normalMax ? bonusMax : normalMax);
       }
       // 'repeat' keeps the rung
       if (decision === "vibecheck") {
