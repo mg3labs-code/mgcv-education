@@ -134,7 +134,20 @@ const ConfidenceLadder = ({
   return (
     <div className="mb-6 space-y-4">
       {pacing.shouldVibeCheck ? (
-        <VibeCheck onPick={(a) => pacing.resolveVibeCheck(a)} />
+        <VibeCheck
+          onPick={(answer) => {
+            setLastVibe(answer);
+            const nextRung = pacing.resolveVibeCheck(answer);
+            if (answer !== "hard" && nextRung >= pacing.normalMax) {
+              if (day === 1 && !bonusOffered && nextRung < pacing.bonusMax) {
+                setBonusOffered(true);
+              } else {
+                setDone(true);
+                onComplete?.();
+              }
+            }
+          }}
+        />
       ) : (
         <RungCard
           rung={rung}
@@ -142,6 +155,7 @@ const ConfidenceLadder = ({
           onSubmit={handleSubmit}
           onContinue={handleContinue}
           continueLabel={isLastForDay && !bonusOffered ? "Continue" : "Next"}
+          vibeResponse={lastVibe}
         />
       )}
 
