@@ -141,6 +141,7 @@ const ConfidenceLadder = ({
       {pacing.shouldVibeCheck ? (
         <VibeCheck
           onPick={(answer) => {
+            const wasLastForDay = pacing.currentRung >= pacing.normalMax;
             setLastVibe(answer);
             const nextRung = pacing.resolveVibeCheck(answer);
             if (userId && chapterId && episodeId) {
@@ -158,7 +159,7 @@ const ConfidenceLadder = ({
                 completed_at: new Date().toISOString(),
               }).then(() => {}, () => {});
             }
-            if (answer !== "hard" && nextRung >= pacing.normalMax) {
+            if (answer !== "hard" && wasLastForDay && nextRung >= pacing.normalMax) {
               if (day === 1 && !bonusOffered && nextRung < pacing.bonusMax) {
                 setBonusOffered(true);
               } else {
