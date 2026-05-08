@@ -9,6 +9,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import StudyCompanion from "./components/student/StudyCompanion";
 import CommandPalette from "./components/CommandPalette";
+import InstallBanner from "./components/InstallBanner";
 
 import VibeCheckModal from "./components/student/VibeCheckModal";
 import Index from "./pages/Index";
