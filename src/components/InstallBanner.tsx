@@ -45,9 +45,9 @@ export default function InstallBanner() {
           <Download className="h-5 w-5 text-primary" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-semibold text-sm text-foreground">Install MGCV</p>
+          <p className="font-semibold text-sm text-foreground">Install MGCV Elite</p>
           <p className="text-xs text-muted-foreground truncate">
-            {isIOS ? "Add to Home Screen — opens like an app" : "Open like a real app, no Play Store needed"}
+            {isIOS ? "Add to Home Screen — opens like an app" : "One-tap install · Free · No Play Store"}
           </p>
         </div>
         {isIOS ? (
