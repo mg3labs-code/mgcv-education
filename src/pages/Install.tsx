@@ -1,4 +1,4 @@
-import { Helmet } from "react-helmet-async";
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Download, Share, Plus, Check, Smartphone, Zap, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
