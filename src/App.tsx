@@ -36,6 +36,7 @@ const TextbookLab = lazy(() => import("./pages/TextbookLab"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const AttractionDemo = lazy(() => import("./pages/AttractionDemo"));
 const TextbookReference = lazy(() => import("./pages/TextbookReference"));
+const Install = lazy(() => import("./pages/Install"));
 const AdaptiveComparison = lazy(() => import("./pages/AdaptiveComparison"));
 const ReasoningVisualDemo = lazy(() => import("./pages/ReasoningVisualDemo"));
 const DemoDesignA = lazy(() => import("./pages/DemoDesignA"));
