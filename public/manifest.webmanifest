@@ -1,13 +1,14 @@
 {
-  "name": "MGCV — AI Learning for Class 6-10",
-  "short_name": "MGCV",
-  "description": "India's smartest digital textbook with AI study companion.",
+  "name": "MGCV Elite Learning",
+  "short_name": "MGCV Elite",
+  "description": "India's most advanced AI learning platform for Class 6-10. 7-layer deep learning, AI study companion, exam mastery.",
   "start_url": "/student",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
   "theme_color": "#0F172A",
   "background_color": "#0F172A",
+  "categories": ["education", "productivity"],
   "icons": [
     { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
