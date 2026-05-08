@@ -9,6 +9,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import StudyCompanion from "./components/student/StudyCompanion";
 import CommandPalette from "./components/CommandPalette";
+import InstallBanner from "./components/InstallBanner";
 
 import VibeCheckModal from "./components/student/VibeCheckModal";
 import Index from "./pages/Index";
@@ -35,6 +36,7 @@ const TextbookLab = lazy(() => import("./pages/TextbookLab"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const AttractionDemo = lazy(() => import("./pages/AttractionDemo"));
 const TextbookReference = lazy(() => import("./pages/TextbookReference"));
+const Install = lazy(() => import("./pages/Install"));
 const AdaptiveComparison = lazy(() => import("./pages/AdaptiveComparison"));
 const ReasoningVisualDemo = lazy(() => import("./pages/ReasoningVisualDemo"));
 const DemoDesignA = lazy(() => import("./pages/DemoDesignA"));
@@ -95,10 +97,11 @@ const App = () => (
             <CommandPalette />
             <CompanionWrapper />
             <VibeCheckWrapper />
+            <InstallBanner />
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 <Route path="/" element={<Index />} />
-                
+                <Route path="/install" element={<Install />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/attraction-demo" element={<AttractionDemo />} />
                 <Route path="/textbook-reference/:chapterId/:episodeId" element={<TextbookReference />} />

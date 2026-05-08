@@ -1,156 +1,93 @@
-# Confidence Ladder — psychological progression for every student
+# Ship MGCV as an Installable PWA
 
-## The core idea (in one breath)
+Goal: anyone with the link `https://edu.mg3verse.com` can tap "Install" and MGCV lands on their home screen with its own icon, splash screen, and fullscreen view — exactly like a Play Store app, but no store, no review, no fee. Updates ship instantly.
 
-Every concept opens with something the student can answer correctly in under 10 seconds. The brace drops. Then the app walks them up a 5-rung ladder — recognize → notice → explain → defend → apply — pacing itself from how they're behaving. They never see rung numbers. They just feel "I'm getting it." Explorer / Builder / Master keeps working as the *depth* dial; the ladder is the *confidence angle* dial. Both run together.
+**Scope chosen:** Manifest-only install (no offline caching). Both a floating mobile install banner AND a dedicated `/install` landing page to share with schools and parents.
 
-## The 5 rungs (used internally, never shown to student)
+## What the user will experience
 
-```
-Rung 1  RECOGNIZE   "I already know this"        gimme, 10-sec yes
-Rung 2  NOTICE      "Wait, that's me too"        small surprise, one twist
-Rung 3  EXPLAIN     "I can say it in my words"   short produced answer
-Rung 4  DEFEND      "I can hold my ground"       one tricky case / contradiction
-Rung 5  APPLY       "I can use this somewhere new"  transfer to fresh scenario
-```
+**On Android (Chrome/Edge):**
+- Visit the link → small banner slides up: *"Install MGCV — open like an app"* → tap Install → icon on home screen.
+- Or visit `/install` page → big "Install MGCV" button → same flow.
 
-Mapping to existing days (per your "hybrid" answer):
+**On iOS (Safari):**
+- Browser doesn't expose a programmatic install prompt. The `/install` page will show a clean step-by-step: *"Tap Share → Add to Home Screen"* with screenshots/icons.
+- Banner on landing also detects iOS and shows the same hint.
 
-```
-Day 1 Spark    → Rung 1, then Rung 2
-                 If student is winning fast, ONE bonus Rung-3 card before finish.
-Day 2 Build    → Rung 3, then Rung 4
-Day 3 Master   → Rung 5
-```
+**Once installed (both platforms):**
+- Own app icon (MGCV branded)
+- Opens fullscreen, no browser chrome
+- Branded splash screen on launch
+- Feels indistinguishable from a Play Store app for the student
 
-Skippable bonus rung is silent — no popup, no "level up" — just one extra card titled "One more — see if this clicks" with a "Skip" link.
+## What we're NOT doing (deliberate)
 
-## How the app decides to climb (pacing engine)
+- No service worker, no offline caching → avoids the Lovable preview-breaking issues and stale-content bugs. Online-only is fine for an AI learning app anyway.
+- No Capacitor / Play Store wrapping yet → revisit after pilot stabilizes.
+- No push notifications yet → can add later.
 
-Behavior-first, vibe-check as backup.
+## Build steps
 
-**Behavior signals (already captured in `episode_interactions`)**
-- `time_spent_seconds` on the rung
-- `wrong_attempts`
-- `correct_on_first_try`
-- `answer_changes` (hesitation proxy)
+### 1. Web App Manifest (`public/manifest.webmanifest`)
+- `name`: "MGCV — AI Learning for Class 6-10"
+- `short_name`: "MGCV"
+- `start_url`: `/student` (so installed app drops students straight into their dashboard)
+- `display`: `standalone`
+- `theme_color` + `background_color`: pulled from existing dark-slate/cream theme tokens
+- `orientation`: `portrait`
+- `icons`: 192×192, 512×512, 512×512 maskable (generated from existing favicon/branding)
 
-**Auto-climb rule**
-- Correct, fast, no changes → climb to next rung
-- Correct but slow OR 1 wrong then correct → stay one beat, give a same-rung reinforcer, then climb
-- Wrong twice OR ambiguous (correct but very slow + multiple changes) → trigger vibe-check
+### 2. Icons & splash assets (`public/icons/`)
+- Generate MGCV-branded PNG icons at 192, 512, and 512-maskable sizes using imagegen, matching the teal-accent enterprise theme.
+- Apple touch icon (180×180) for iOS home screen.
 
-**Vibe-check (only when ambiguous)** — three taps, takes 2 seconds:
-- 😌 Too easy
-- 🙂 Just right
-- 😣 Felt hard
+### 3. `index.html` meta tags
+- `<link rel="manifest" href="/manifest.webmanifest">`
+- `<link rel="apple-touch-icon" ...>`
+- `<meta name="theme-color" ...>`
+- `<meta name="apple-mobile-web-app-capable" content="yes">`
+- `<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">`
+- `<meta name="apple-mobile-web-app-title" content="MGCV">`
 
-→ "Too easy" jumps a rung. "Just right" continues. "Felt hard" repeats with a softer angle (different clothing).
+### 4. Install hook (`src/hooks/useInstallPrompt.ts`)
+- Captures the `beforeinstallprompt` event on Android.
+- Detects iOS Safari (no event available there).
+- Detects "already installed" (standalone display mode) so we hide the prompt.
+- Exposes: `{ canInstall, isIOS, isInstalled, promptInstall() }`.
 
-The student sees the vibe-check at most once per day, and only when behavior is unclear.
+### 5. Floating install banner (`src/components/InstallBanner.tsx`)
+- Mobile-only, appears bottom of landing page after 5s.
+- Dismissible (remembers dismissal in localStorage for 7 days).
+- Android: "Install MGCV" button → triggers native prompt.
+- iOS: "Add to Home Screen" → opens iOS instruction sheet.
+- Hidden when already installed or on desktop.
 
-## Content: where each rung's text comes from
+### 6. Dedicated `/install` page (`src/pages/Install.tsx`)
+- Hero: "Get MGCV on your phone"
+- Big install button (Android) or step-by-step Share→Add to Home Screen card (iOS)
+- Auto-detects platform, shows the right flow
+- 3 trust badges: "No Play Store needed · Free · Updates instantly"
+- Screenshots of the app for credibility
+- Shareable link to give to schools/parents
+- Route added to `App.tsx` (public, no auth)
 
-Per your answer — **hand-authored Ch1 + AI fallback for the rest.**
+## Important caveats to communicate
 
-- Chapter 1 of every subject (Maths, Physics, Chemistry, Biology) gets hand-written Rung 1–5 openers stored in a new `concept_rungs` table. These are the showcase. Quality bar: a 9th-grader reads Rung 1 and smiles within 5 seconds.
-- All other chapters: a new edge function `generate-concept-rungs` calls Lovable AI (`google/gemini-2.5-flash`) the first time a concept is opened, generates all 5 rungs in one call, and caches them in `concept_rungs`. Subsequent students see cached output instantly.
-- Regeneration: a "Refresh examples" button in teacher view (later) — out of scope for this pass.
+1. **Install prompt only appears on the published domain** (`edu.mg3verse.com` or `mgcv-education.lovable.app`), not inside the Lovable editor preview. Browsers refuse to install PWAs from iframes.
+2. **iOS = manual install** (Apple restriction). The `/install` page handles this gracefully with a visual guide.
+3. **No offline support** by choice. App needs internet (which is fine — AI features need it anyway).
+4. **Updates are instant.** Push a fix in Lovable → click Publish → next time the user opens the installed app, they get the new version. No store review.
 
-## Geography: light touch only
+## Future option (not now)
 
-Per your answer — used only at Rung 1 and Rung 2.
+When the pilot stabilizes and you want a real Play Store listing, we wrap this same React app with Capacitor — zero rewrite, ~1 day of work + Android Studio on your laptop + $25 Google Play account. The PWA work above is not throwaway; it complements the native path.
 
-- Add optional `region` and `city` to `profiles` (collected in onboarding with a "Skip" option).
-- The Rung 1–2 generator/author uses the region as *flavor* (e.g., "Hyderabad metro" instead of "a metro train") when it fits. Rungs 3–5 stay universal.
-- If region is empty, fall back to universal Indian-student examples (your phone, your school bag, cricket).
+## Files to create / edit
 
-## What each "clothing" looks like (so you see it concretely)
-
-Concept: **Real Numbers / Irrational Numbers (Maths Class 10, Chapter 1)**
-
-```
-Rung 1  "Your phone battery shows 47%. Is 47 a whole number?"          [yes/no tap]
-Rung 2  "Your friend says √2 = 1.41. You divide 1.41 × 1.41.
-         Do you get exactly 2?"                                        [yes/no + reveal]
-Rung 3  "In your own words: why can't √2 be written as a/b?"           [1-line input]
-Rung 4  "A classmate insists 0.999... ≠ 1. What do you tell them?"     [short answer]
-Rung 5  "Design a 5-second test to check if a number a friend gives
-         you is rational or not."                                      [open prompt]
-```
-
-Concept: **Photosynthesis (Biology Class 10, Chapter 1)** — stakes clothing
-
-```
-Rung 1  "The plant on a windowsill needs ___ to make food."            [pick: sun/soil/wifi]
-Rung 2  "If you cover its leaves with foil for 3 days, what happens?"  [pick + reveal]
-Rung 3  "Explain to your younger cousin: where does the leaf's
-         green colour come from, and why does it matter?"              [short input]
-Rung 4  "A friend says 'plants eat soil.' Convince them otherwise
-         using one experiment they could do at home."                  [short input]
-Rung 5  "If Earth lost all chlorophyll tomorrow, list 3 things that
-         would break in 30 days."                                      [open input]
-```
-
-Notice: same concept, same 3 days, but the student is *climbing* not just consuming.
-
-## What changes in the codebase
-
-### Database (schema migration)
-- New table `concept_rungs`:
-  - `id`, `chapter_id (uuid)`, `episode_id (uuid)`, `concept_key text`, `subject text`
-  - `rung_1_jsonb`, `rung_2_jsonb`, `rung_3_jsonb`, `rung_4_jsonb`, `rung_5_jsonb` — each holds `{prompt, type, options?, answer?, clothing}`
-  - `source text` ('authored' | 'ai-generated')
-  - `region text NULL` (for Rung 1–2 region variants)
-  - `created_at`, `updated_at`
-  - RLS: anyone authenticated can read; only service_role can insert/update
-- New table `student_rung_state`:
-  - `id`, `user_id`, `chapter_id`, `episode_id`, `concept_key`
-  - `current_rung int`, `last_signal jsonb` (time, wrong_attempts, vibe-check answer)
-  - `updated_at`
-  - RLS: students manage own
-- `profiles`: add nullable `region text`, `city text`
-
-### Frontend
-- `src/data/concepts/` — TS files with hand-authored Chapter 1 rungs for all 4 subjects (seed data; also inserted into `concept_rungs` via migration).
-- `src/hooks/useConceptRungs.ts` — fetches/caches rungs for current concept; calls edge function on miss.
-- `src/hooks/useRungPacing.ts` — reads `episode_interactions`, decides next rung, returns `{currentRung, shouldVibeCheck, climb(), repeat()}`.
-- `src/components/episode/RungCard.tsx` — single component that renders any rung type (yes/no, MCQ, short-input, open-input). Replaces nothing; gets injected at the *top* of Day1Spark / Day2Build / Day3Master before the existing content.
-- `src/components/episode/VibeCheck.tsx` — 3-emoji tap row, only renders when `shouldVibeCheck` is true.
-- `src/components/onboarding/RegionStep.tsx` — optional region/city step in `StudentOnboarding`, with "Skip" link.
-- `Day1Spark.tsx`, `Day2Build.tsx`, `Day3Master.tsx` — each gets a small header section that mounts `RungCard` for the day's assigned rung(s); existing content stays untouched below.
-
-### Edge function
-- `supabase/functions/generate-concept-rungs/index.ts` — accepts `{chapter_id, episode_id, concept_key, subject, region?}`, calls Lovable AI to produce all 5 rungs in one structured JSON call, writes to `concept_rungs`, returns the row. Idempotent.
-
-### Existing systems — untouched
-- Explorer / Builder / Master mode select stays exactly as is.
-- All Pilot 1, Pilot 2, 7-layer HTML, textbook blocks, dashboards — unchanged.
-- The ladder is purely additive on top of existing days.
-
-## Telemetry (so we can see if it actually works)
-
-Logged into existing `episode_interactions` with new `block_type`s:
-- `rung_1_recognize` … `rung_5_apply`
-- `vibe_check`
-
-Teacher dashboard later can show: "What % of weak-tier students climbed past Rung 2 this week?" — but that's a follow-up.
-
-## Out of scope for this pass
-- Teacher-side "regenerate examples" button
-- Per-class rung tuning
-- Showing rung numbers/badges to students (we deliberately don't)
-- Localization beyond Rung 1–2 flavor
-- Authoring rungs for chapters beyond Ch1 (AI handles these on-demand)
-
-## What I will build, in order
-1. Migration: `concept_rungs`, `student_rung_state`, `profiles.region/city`
-2. Seed: hand-authored Ch1 rungs for Maths/Physics/Chemistry/Biology
-3. Edge function: `generate-concept-rungs`
-4. Hooks: `useConceptRungs`, `useRungPacing`
-5. UI: `RungCard`, `VibeCheck`, mount into Day1/Day2/Day3
-6. Onboarding: optional region/city step
-7. Smoke test: open a Ch1 episode, verify Rung 1 appears, climb works, vibe-check triggers on slow answer
-8. Smoke test: open a non-Ch1 episode, verify AI generates and caches
-
-Approve and I'll start with step 1.
+- create `public/manifest.webmanifest`
+- create `public/icons/icon-192.png`, `icon-512.png`, `icon-512-maskable.png`, `apple-touch-icon.png`
+- create `src/hooks/useInstallPrompt.ts`
+- create `src/components/InstallBanner.tsx`
+- create `src/pages/Install.tsx`
+- edit `index.html` (manifest link + apple meta tags + theme-color)
+- edit `src/App.tsx` (add `/install` route, mount `<InstallBanner />` on landing)
