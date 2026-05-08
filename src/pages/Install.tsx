@@ -22,15 +22,14 @@ export default function Install() {
     }
   };
 
+  useEffect(() => {
+    document.title = "Install MGCV — AI Learning App for Class 6-10";
+    const meta = document.querySelector('meta[name="description"]');
+    if (meta) meta.setAttribute("content", "Install MGCV on your phone in one tap. Works like a real app, no Play Store needed. Free for students.");
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/30">
-      <Helmet>
-        <title>Install MGCV — AI Learning App for Class 6-10</title>
-        <meta
-          name="description"
-          content="Install MGCV on your phone in one tap. Works like a real app, no Play Store needed. Free for students."
-        />
-      </Helmet>
 
       <header className="border-b border-border/50 bg-card/50 backdrop-blur-sm">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
