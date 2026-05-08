@@ -97,10 +97,11 @@ const App = () => (
             <CommandPalette />
             <CompanionWrapper />
             <VibeCheckWrapper />
+            <InstallBanner />
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 <Route path="/" element={<Index />} />
-                
+                <Route path="/install" element={<Install />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/attraction-demo" element={<AttractionDemo />} />
                 <Route path="/textbook-reference/:chapterId/:episodeId" element={<TextbookReference />} />
