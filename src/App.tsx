@@ -50,6 +50,7 @@ const EliteIntegrationDemo = lazy(() => import("./pages/EliteIntegrationDemo"));
 const AdaptiveSystemHub = lazy(() => import("./pages/AdaptiveSystemHub"));
 const Demo2304 = lazy(() => import("./pages/Demo2304"));
 const Demo2605 = lazy(() => import("./pages/Demo2605"));
+const PreviewBC = lazy(() => import("./pages/PreviewBC"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
