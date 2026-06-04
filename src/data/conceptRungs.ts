@@ -61,13 +61,14 @@ export const CHAPTER_1_RUNGS: ConceptRungSet[] = [
         clothing: "familiarity",
       },
       {
-        prompt: "IMD predicts the Kerala monsoon arrives ~June 1 every year, but the model actually says 31.4285714… May. Why does the headline get a clean date but the model keeps a never-ending decimal?",
+        prompt: "The scoreboard shows a team's Net Run Rate as +1.35. The full calculation actually gives 1.34782608695… Why does the broadcast show a clean number but the maths keeps a never-ending tail?",
         type: "mcq",
-        options: ["IMD rounds for headlines; the model keeps the real average", "The model is wrong", "Weather is random"],
+        options: ["Broadcast rounds for the screen; the real NRR keeps every digit", "The scoreboard is wrong", "Cricket maths is just random"],
         correctIndex: 0,
-        reveal: "Right. The average is sum ÷ count — most divisions don't terminate. Headlines round to 'June 1'; the maths keeps the full repeating tail. Same story behind every 'average rainfall', 'average temperature' you read.",
+        reveal: "Right. NRR is runs ÷ overs — one whole number divided by another. Most such divisions never end cleanly. TV rounds to +1.35; the qualifier table uses the full repeating tail. Same story behind every batting average, strike rate, economy you see.",
         clothing: "familiarity",
       },
+
       {
         prompt: "In your own words: why can't √2 be written as a simple fraction a/b?",
         type: "shortText",
