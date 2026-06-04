@@ -33,14 +33,9 @@ const StageTopbar = ({ episodeTitle, streakDays = 0, exitTo, pilotPractice2To, f
   const day: DayNumber = (viewDay ?? info.currentDay) as DayNumber;
   const dayInfo = dayLabels[day];
 
-  // Per-day reachability for the switcher.
-  // A day is reachable if: (a) it's day 1, OR (b) the previous day is completed AND this day is not locked by the 20h gate.
-  // Demo override (?unlock=all) makes all days reachable.
-  const dayReachable: Record<DayNumber, boolean> = {
-    1: true,
-    2: info.demoOverride || (info.day1Done && !info.day2Locked) || info.day2Done || info.day3Done,
-    3: info.demoOverride || (info.day2Done && !info.day3Locked) || info.day3Done,
-  };
+  // Open navigation: all three days are reachable from the topbar at any time.
+  // Completed days still get a green tick; un-completed never block.
+  const dayReachable: Record<DayNumber, boolean> = { 1: true, 2: true, 3: true };
   const dayDone: Record<DayNumber, boolean> = {
     1: info.day1Done,
     2: info.day2Done,
