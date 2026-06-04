@@ -1580,23 +1580,58 @@ const DayGatedEpisode = ({
         />
       );
     }
+  } else if (viewDay === 1 && hasInterestVariants && !interest) {
+    body = (
+      <div className="min-h-[80vh] flex items-center justify-center px-4 py-8">
+        <div className="w-full max-w-lg space-y-6 animate-fade-in">
+          <div className="text-center space-y-2">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-bold uppercase tracking-wide">
+              ✨ Before we start
+            </div>
+            <h1 className="text-2xl font-bold text-foreground leading-tight">
+              What sparks your curiosity most?
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Pick one — today's mystery will start from something you already love.
+            </p>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-3">
+            {PILOT_INTEREST_OPTIONS.map((opt) => (
+              <button
+                key={opt.tag}
+                type="button"
+                onClick={() => pickInterest(opt.tag)}
+                className="text-left rounded-2xl border-2 border-border bg-card hover:bg-accent hover:border-primary/40 transition-all p-4 min-h-[88px] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <div className="text-2xl mb-1" aria-hidden="true">{opt.emoji}</div>
+                <div className="font-bold text-foreground">{opt.label}</div>
+                <div className="text-xs text-muted-foreground mt-0.5">{opt.sub}</div>
+              </button>
+            ))}
+          </div>
+          <p className="text-center text-[11px] text-muted-foreground">
+            You can change this anytime — it only flavours the opening story.
+          </p>
+        </div>
+      </div>
+    );
   } else {
     body = (
       <Day1Spark
         episodeTitle={episodeTitle}
-        hookQuestion={pilot.hookQuestion}
-        conceptText={pilot.conceptText}
+        hookQuestion={activePilot.hookQuestion}
+        conceptText={activePilot.conceptText}
         storyNode={day1StoryNode}
         storyTitle={day1StoryTitle}
-        quickCheck={pilot.quickCheck}
-        detectiveStatement={pilot.detective.statement}
-        detectiveIsTrue={pilot.detective.isTrue}
-        detectiveExplain={pilot.detective.explain}
-        sortActivity={pilot.day1Sort}
+        quickCheck={activePilot.quickCheck}
+        detectiveStatement={activePilot.detective.statement}
+        detectiveIsTrue={activePilot.detective.isTrue}
+        detectiveExplain={activePilot.detective.explain}
+        sortActivity={activePilot.day1Sort}
         ladder={{
           chapterId: chapterId ?? null,
           episodeId: episodeId ?? null,
-          conceptKey: pilot.conceptKey ?? null,
+          conceptKey: activePilot.conceptKey ?? null,
           subject: subject ?? null,
           chapterSlug: chapterSlug ?? chapterId ?? null,
         }}
