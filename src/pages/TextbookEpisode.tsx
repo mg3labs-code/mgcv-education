@@ -1570,7 +1570,21 @@ const DayGatedEpisode = ({
   // can still soft-block, but per product direction we drop sequence-locks entirely.
   // Render body based on the day the student is currently *viewing*.
   let body: React.ReactNode;
-  if (viewDay === 3) {
+  // ─── CRICKET LENS · pixel-faithful 3-day arc port ──
+  // When the student's active interest is cricket on an episode that has
+  // interest-flavoured hooks, render the full ported HTML arc instead of the
+  // generic Day1Spark/Day2Build/Day3Master components.
+  if (hasInterestVariants && interest === "cricket" && interestList.length > 0 && curiosityAsked) {
+    body = (
+      <CricketArcLive
+        episodeTitle={episodeTitle}
+        chapterId={chapterId}
+        episodeId={episodeId}
+        conceptKey={pilot.conceptKey ?? episodeKey}
+        initialDay={viewDay}
+      />
+    );
+  } else if (viewDay === 3) {
     body = (
       <Day3Master
         episodeTitle={episodeTitle}
