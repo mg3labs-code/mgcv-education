@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Sora:wght@400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -622,4 +622,82 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* =====================================================
+   Curiosity Arc — scoped styles
+   Mirrors the uploaded design HTMLs:
+   - mobile-first 420-480px container
+   - Sora font, short-style vertical hook card
+   - choice chips, sort bins, true/false trap, day-done celebration
+   ===================================================== */
+.arc-shell { font-family: 'Sora', 'Inter', system-ui, sans-serif; }
+.arc-shell h1, .arc-shell h2, .arc-shell h3, .arc-shell h4,
+.arc-shell .arc-display { font-family: 'Sora', 'Inter', system-ui, sans-serif; letter-spacing: -0.01em; }
+
+.arc-shell .arc-tag {
+  font-size: 10px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; display: inline-flex; align-items: center; gap: 6px;
+}
+
+.arc-shell .arc-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 12px; border-radius: 999px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.3px;
+}
+
+/* Choice chip used inside hook MCQ */
+.arc-shell .arc-choice {
+  width: 100%; text-align: left;
+  padding: 11px 14px; border-radius: 12px;
+  font-size: 13px; font-weight: 600; line-height: 1.35;
+  background: rgba(255,255,255,0.10);
+  border: 1.5px solid rgba(255,255,255,0.25);
+  color: #fff; backdrop-filter: blur(4px);
+  transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+.arc-shell .arc-choice:hover:not(:disabled) { background: rgba(255,255,255,0.18); }
+.arc-shell .arc-choice.is-correct {
+  background: rgba(34,197,94,0.30); border-color: #22C55E; color: #DCFCE7;
+  animation: arc-pop 0.3s ease;
+}
+.arc-shell .arc-choice.is-wrong {
+  background: rgba(239,68,68,0.22); border-color: #EF4444; color: #FECACA;
+  animation: arc-shake 0.35s ease;
+}
+.arc-shell .arc-choice:disabled { cursor: default; }
+
+@keyframes arc-pop {
+  0%,100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+@keyframes arc-shake {
+  0%,100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+@keyframes arc-glow {
+  0%,100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
+  50% { box-shadow: 0 0 0 6px rgba(34,197,94,0.18); }
+}
+.arc-shell .arc-glow { animation: arc-glow 0.6s ease; }
+
+/* Sort bins */
+.arc-shell .arc-bin {
+  border: 1.5px dashed hsl(var(--border));
+  border-radius: 12px; padding: 10px; min-height: 72px;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+.arc-shell .arc-bin.is-correct { border-color: #22C55E; background: #F0FDF4; }
+.arc-shell .arc-bin.is-wrong { border-color: #EF4444; background: #FEF2F2; }
+
+/* Confetti for day-done celebration */
+@keyframes arc-confetti {
+  0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(120px) rotate(360deg); opacity: 0; }
+}
+.arc-confetti-piece {
+  position: absolute; width: 8px; height: 8px; border-radius: 2px;
+  animation: arc-confetti 1.6s ease forwards;
+}
+
 
