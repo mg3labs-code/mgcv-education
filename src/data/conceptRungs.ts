@@ -48,24 +48,24 @@ export const CHAPTER_1_RUNGS: ConceptRungSet[] = [
     subject: "Maths",
     regionVariants: {
       telangana: {
-        rung1: { prompt: "Your phone battery shows 47%. Is 47 a whole number?" },
+        rung1: { prompt: "A team flew to the World Cup semis without playing their last match — their Net Run Rate was 1.3478… (digits never ended). Is a number with a never-ending tail still a 'real' number?" },
       },
     },
     rungs: [
       {
-        prompt: "Your phone battery shows 47%. Is 47 a whole number?",
+        prompt: "A team flew to the World Cup semis without playing their last match — their Net Run Rate was 1.3478… (digits never ended). Is a number with a never-ending tail still a 'real' number?",
         type: "yesno",
-        options: ["Yes", "No"],
+        options: ["Yes — it's real", "No — endless = fake"],
         correctIndex: 0,
-        reveal: "Easy. Whole numbers are the counting numbers (and zero) — no fractions, no decimals.",
-        clothing: "familiarity",
+        reveal: "Yes. Every NRR, asking-rate, monsoon-onset average is integer ÷ integer — and most of them never terminate. The scoreboard truncates the tail, but the number sits on the real number line, exactly.",
+        clothing: "stakes",
       },
       {
-        prompt: "Your friend says √2 = 1.41. You multiply 1.41 × 1.41. Do you get exactly 2?",
-        type: "yesno",
-        options: ["Yes, exactly 2", "No, slightly off"],
-        correctIndex: 1,
-        reveal: "1.41 × 1.41 = 1.9881. Close, but not 2. √2 has digits that go on forever without repeating — that's what 'irrational' means.",
+        prompt: "IMD predicts the Kerala monsoon arrives ~June 1 every year, but the model actually says 31.4285714… May. Why does the headline get a clean date but the model keeps a never-ending decimal?",
+        type: "mcq",
+        options: ["IMD rounds for headlines; the model keeps the real average", "The model is wrong", "Weather is random"],
+        correctIndex: 0,
+        reveal: "Right. The average is sum ÷ count — most divisions don't terminate. Headlines round to 'June 1'; the maths keeps the full repeating tail. Same story behind every 'average rainfall', 'average temperature' you read.",
         clothing: "familiarity",
       },
       {
