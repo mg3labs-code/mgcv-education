@@ -1430,6 +1430,7 @@ const DayGatedEpisode = ({
   onNextEpisode?: () => void;
 }) => {
   const { chapterId, episodeId } = useParams();
+  const { user } = useAuth();
   const { info, isLoading } = useEpisodeDay();
   const { data: dbBlocks } = useEpisodeBlocks(chapterId, episodeId, "board");
 
