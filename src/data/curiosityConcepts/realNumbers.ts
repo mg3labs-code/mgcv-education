@@ -152,21 +152,21 @@ const hooks: HookVariant[] = [
   },
   {
     tag: "travel",
-    emoji: "🍛",
-    badgeLabel: "Food & travel",
-    headline: "Splitting a ₹250 dosa bill three ways.",
+    emoji: "🌧️",
+    badgeLabel: "Nature & travel",
+    headline: "The monsoon hits Kerala on June 1 — almost every year, for 150 years. How?",
     scene:
-      "Three friends, one plate, total ₹250. The calculator shows ₹83.3333333… per person.",
+      "IMD's official 'normal onset date' for the Kerala monsoon is June 1. But the model that predicts it doesn't spit out 'June 1'. It spits out things like 31.4 May ± 4 days, with rainfall averages like 2.74285714… cm/day per district.",
     noticed:
-      "Nobody actually pays that — someone pays ₹84 and the maths quietly leaks a paisa.",
+      "The date you read in the news is a whole number. The number the model actually uses is a decimal that refuses to end — and the difference between 'announce' and 'compute' is exactly the difference between rounded life and real maths.",
     mcq: {
-      question: "Why does ₹250 ÷ 3 never give a clean rupee answer?",
+      question: "Why do scientific averages like rainfall, temperature and onset dates almost never land on whole numbers?",
       choices: [
-        { label: "Calculator rounds badly 🧮", correct: false, feedback: "The calculator is honest. The number itself has no clean ending." },
-        { label: "3 doesn't divide 250 evenly 🔁", correct: true, feedback: "Right — and the leftover keeps repeating as .333… forever. Money pretends it ends; maths doesn't." },
-        { label: "Rupees can't be split 💸", correct: false, feedback: "₹250 ÷ 2 gives a clean ₹125. The problem is the number 3, not the rupee." },
+        { label: "Sensors are broken 📡", correct: false, feedback: "150 years of data from thousands of stations — same behaviour. It isn't the sensors." },
+        { label: "Averages are sums ÷ counts — most don't divide cleanly 🔁", correct: true, feedback: "Yes. Total rainfall ÷ number of days is integer ÷ integer — almost always a non-terminating decimal. News rounds it; science doesn't." },
+        { label: "Weather is random — no pattern exists 🎲", correct: false, feedback: "There's a strong pattern (that's why we can predict at all). The endless decimals come from division, not randomness." },
       ],
-      reveal: "Some divisions land. Some don't. 250 ÷ 3 falls into a repeating loop forever — your phone just truncates.",
+      reveal: "Every scientific average — rainfall, temperature, river flow, even your school's attendance % — is built from division. Most divisions don't terminate. The 'clean' number you see is a polite lie for headlines.",
     },
     guesses: [
       "₹250 ÷ 3 has an exact answer; the phone is rounding.",
