@@ -331,8 +331,7 @@ export default function CuriosityArc() {
             clearStep(step);
             update({ currentStep: nextStep });
           }}
-          nextLabel={canNext ? "Next" : "Locked"}
-          lockReason="Finish this step to unlock"
+          nextLabel="Next"
         />
       )}
     </div>
