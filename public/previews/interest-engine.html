@@ -1,0 +1,559 @@
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+.g{font-family:'Sora',var(--font-sans);max-width:480px;margin:0 auto;padding:8px 0 24px}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pop{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+@keyframes typing{0%{opacity:0}100%{opacity:1}}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.6;transform:scale(0.95)}}
+@keyframes reveal{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0% 0 0)}}
+
+.screen{display:none;animation:fadeUp 0.35s ease}
+.screen.on{display:block}
+
+/* WELCOME */
+.welcome-wrap{text-align:center;padding:24px 16px}
+.brand-line{font-size:10px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--color-text-tertiary);margin-bottom:20px}
+.welcome-icon{font-size:48px;margin-bottom:16px;display:block}
+.welcome-h{font-size:22px;font-weight:800;color:var(--color-text-primary);line-height:1.25;margin-bottom:8px}
+.welcome-h span{color:#F59E0B}
+.welcome-sub{font-size:13px;color:var(--color-text-secondary);line-height:1.7;margin-bottom:28px}
+
+/* INTEREST GRID */
+.interest-label{font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--color-text-tertiary);margin-bottom:12px;text-align:center}
+.interest-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px}
+.interest-card{border:1.5px solid var(--color-border-tertiary);border-radius:12px;padding:12px 6px;text-align:center;cursor:pointer;transition:all 0.18s;background:var(--color-background-primary)}
+.interest-card:hover{transform:translateY(-2px)}
+.interest-card.sel{transform:translateY(-2px);animation:pop 0.25s ease}
+.i-emoji{font-size:22px;margin-bottom:5px;display:block}
+.i-name{font-size:10px;font-weight:600;color:var(--color-text-secondary)}
+.interest-card.sel .i-name{font-weight:700}
+
+/* Interest colors */
+.ic-cricket.sel{border-color:#22C55E;background:#F0FDF4}
+.ic-cricket.sel .i-name{color:#15803D}
+.ic-food.sel{border-color:#F97316;background:#FFF7ED}
+.ic-food.sel .i-name{color:#C2410C}
+.ic-movies.sel{border-color:#8B5CF6;background:#F5F3FF}
+.ic-movies.sel .i-name{color:#6D28D9}
+.ic-gaming.sel{border-color:#3B82F6;background:#EFF6FF}
+.ic-gaming.sel .i-name{color:#1D4ED8}
+.ic-music.sel{border-color:#EC4899;background:#FDF2F8}
+.ic-music.sel .i-name{color:#BE185D}
+.ic-travel.sel{border-color:#14B8A6;background:#F0FDFA}
+.ic-travel.sel .i-name{color:#0F766E}
+.ic-tech.sel{border-color:#6366F1;background:#EEF2FF}
+.ic-tech.sel .i-name{color:#4338CA}
+.ic-science.sel{border-color:#F59E0B;background:#FFFBEB}
+.ic-science.sel .i-name{color:#B45309}
+
+.cta-btn{width:100%;padding:14px;border-radius:12px;border:none;font-size:15px;font-weight:700;cursor:pointer;font-family:'Sora',var(--font-sans);transition:all 0.15s;margin-top:4px;letter-spacing:0.3px;background:#1A1A2E;color:#fff}
+.cta-btn:hover{opacity:0.9}
+.cta-btn:disabled{opacity:0.35;cursor:not-allowed}
+.cta-btn.colored{background:linear-gradient(135deg,#F59E0B,#EF4444)}
+
+/* CONCEPT SELECT */
+.concept-intro{padding:12px 0 20px;text-align:center}
+.ci-welcome{font-size:18px;font-weight:700;color:var(--color-text-primary);margin-bottom:6px}
+.ci-sub{font-size:12px;color:var(--color-text-secondary);line-height:1.6}
+
+.concept-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.concept-card{border:0.5px solid var(--color-border-tertiary);border-radius:10px;padding:12px;cursor:pointer;background:var(--color-background-primary);transition:all 0.15s}
+.concept-card:hover{background:var(--color-background-secondary)}
+.concept-card.sel-c{border-color:#F59E0B;background:#FFFBEB}
+.cc-subject{font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--color-text-tertiary);margin-bottom:4px}
+.cc-name{font-size:13px;font-weight:700;color:var(--color-text-primary);margin-bottom:3px}
+.cc-hook{font-size:11px;color:#B45309;line-height:1.4;font-style:italic}
+
+/* HOOK REVEAL */
+.hook-screen{padding:4px 0}
+.hook-tag{font-size:9px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--color-text-tertiary);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.hook-tag::after{content:'';flex:1;height:0.5px;background:var(--color-border-tertiary)}
+
+.interest-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;margin-bottom:16px}
+
+.hook-card{border-radius:14px;overflow:hidden;margin-bottom:12px}
+.hook-top{padding:14px 16px 10px}
+.hook-puzzle{font-size:20px;font-weight:800;color:var(--color-text-primary);line-height:1.35;margin-bottom:8px}
+.hook-why{font-size:12px;color:var(--color-text-secondary);line-height:1.6;padding:10px 12px;border-radius:8px;margin-bottom:12px}
+
+.fact-strip{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px}
+.fact-chip{flex-shrink:0;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:600;border:0.5px solid var(--color-border-secondary)}
+
+.input-area{border:0.5px solid var(--color-border-secondary);border-radius:10px;padding:12px;background:var(--color-background-secondary);font-size:13px;color:var(--color-text-primary);font-family:'Sora',var(--font-sans);resize:none;width:100%;outline:none;line-height:1.6;min-height:72px}
+.input-area:focus{border-color:#F59E0B}
+.voice-row{display:flex;gap:8px;margin-top:8px;align-items:center}
+.voice-btn{display:flex;align-items:center;gap:5px;padding:7px 12px;border-radius:8px;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);font-size:11px;font-weight:500;color:var(--color-text-secondary);cursor:pointer;font-family:'Sora',var(--font-sans)}
+.rdot{width:7px;height:7px;border-radius:50%;background:#EF4444;animation:pulse 1.5s infinite}
+
+/* CONCEPT REVEAL */
+.reveal-card{border-radius:12px;padding:14px 16px;margin-bottom:10px;animation:fadeUp 0.4s ease}
+.reveal-label{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
+.reveal-text{font-size:13px;color:var(--color-text-primary);line-height:1.7}
+.reveal-connection{border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12px;line-height:1.6;font-weight:500}
+
+.your-thought{border-left:3px solid #F59E0B;padding:8px 12px;border-radius:0 8px 8px 0;background:var(--color-background-secondary);margin-bottom:10px}
+.yt-label{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#B45309;margin-bottom:3px}
+.yt-text{font-size:12px;color:var(--color-text-secondary);font-style:italic}
+
+/* MAGIC MOMENT */
+.magic-box{border-radius:12px;padding:16px;text-align:center;margin-bottom:12px}
+.magic-emoji{font-size:36px;margin-bottom:10px;display:block;animation:pop 0.4s ease}
+.magic-h{font-size:16px;font-weight:800;color:var(--color-text-primary);margin-bottom:6px}
+.magic-sub{font-size:12px;color:var(--color-text-secondary);line-height:1.6}
+.magic-formula{font-size:11px;font-weight:700;padding:8px 14px;border-radius:20px;display:inline-block;margin-top:10px;letter-spacing:0.5px}
+
+/* PRODUCT LOGIC */
+.logic-section{padding:4px 0}
+.logic-h{font-size:15px;font-weight:700;color:var(--color-text-primary);margin-bottom:14px}
+.logic-row{display:flex;gap:10px;margin-bottom:10px;padding:10px 12px;border-radius:10px;background:var(--color-background-secondary);align-items:flex-start}
+.lr-num{width:22px;height:22px;border-radius:50%;background:#F59E0B;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px}
+.lr-text{font-size:12px;color:var(--color-text-primary);line-height:1.6}
+.lr-text strong{font-weight:600}
+.lr-text em{color:#B45309;font-style:normal}
+
+.interest-map{border:0.5px solid var(--color-border-tertiary);border-radius:10px;overflow:hidden;margin-bottom:10px}
+.im-head{display:grid;grid-template-columns:1.2fr 1fr 1fr;padding:8px 12px;background:var(--color-background-secondary);gap:8px}
+.im-head div{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--color-text-tertiary)}
+.im-row{display:grid;grid-template-columns:1.2fr 1fr 1fr;padding:8px 12px;border-top:0.5px solid var(--color-border-tertiary);gap:8px;align-items:center}
+.im-row:hover{background:var(--color-background-secondary)}
+.im-interest{font-size:12px;font-weight:600;color:var(--color-text-primary)}
+.im-concept{font-size:11px;color:var(--color-text-secondary)}
+.im-hook{font-size:10px;color:#B45309;font-style:italic;line-height:1.4}
+
+.nav-row{display:flex;gap:8px;margin-top:12px}
+.nav-btn{flex:1;padding:11px;border-radius:10px;border:0.5px solid var(--color-border-secondary);font-size:12px;font-weight:600;cursor:pointer;font-family:'Sora',var(--font-sans);background:var(--color-background-primary);color:var(--color-text-primary);transition:all 0.15s}
+.nav-btn:hover{background:var(--color-background-secondary)}
+.nav-btn.primary{background:#1A1A2E;color:#fff;border-color:#1A1A2E}
+</style>
+
+<div class="g">
+<h2 class="sr-only">Interest-to-curiosity engine — how student interests map to engagement-first learning</h2>
+
+<!-- SCREEN 1: INTEREST SELECT -->
+<div class="screen on" id="sc-interest">
+  <div class="welcome-wrap">
+    <div class="brand-line">Student Inner OS · MGCV Elite Learning</div>
+    <span class="welcome-icon">✨</span>
+    <div class="welcome-h">Before we begin — what<br>excites <span>you most?</span></div>
+    <div class="welcome-sub">We'll make every concept feel like it was written for you. No boring chapters. Just things you already care about — with the logic behind them finally revealed.</div>
+  </div>
+  <div class="interest-label">Pick what you love</div>
+  <div class="interest-grid">
+    <div class="interest-card ic-cricket" onclick="selectInterest(this,'cricket','🏏','Cricket')"><span class="i-emoji">🏏</span><div class="i-name">Cricket</div></div>
+    <div class="interest-card ic-food" onclick="selectInterest(this,'food','🍛','Food')"><span class="i-emoji">🍛</span><div class="i-name">Food</div></div>
+    <div class="interest-card ic-movies" onclick="selectInterest(this,'movies','🎬','Movies')"><span class="i-emoji">🎬</span><div class="i-name">Movies</div></div>
+    <div class="interest-card ic-gaming" onclick="selectInterest(this,'gaming','🎮','Gaming')"><span class="i-emoji">🎮</span><div class="i-name">Gaming</div></div>
+    <div class="interest-card ic-music" onclick="selectInterest(this,'music','🎵','Music')"><span class="i-emoji">🎵</span><div class="i-name">Music</div></div>
+    <div class="interest-card ic-travel" onclick="selectInterest(this,'travel','✈️','Travel')"><span class="i-emoji">✈️</span><div class="i-name">Travel</div></div>
+    <div class="interest-card ic-tech" onclick="selectInterest(this,'tech','💻','Tech')"><span class="i-emoji">💻</span><div class="i-name">Tech</div></div>
+    <div class="interest-card ic-science" onclick="selectInterest(this,'science','🔭','Science')"><span class="i-emoji">🔭</span><div class="i-name">Science</div></div>
+  </div>
+  <button class="cta-btn" id="interest-next" disabled onclick="goConceptSelect()">Choose your interest above →</button>
+</div>
+
+<!-- SCREEN 2: CONCEPT SELECT (auto-hooked) -->
+<div class="screen" id="sc-concept">
+  <div class="concept-intro">
+    <div class="ci-welcome" id="concept-welcome">Loading...</div>
+    <div class="ci-sub">Pick any concept from your textbook. Watch what happens.</div>
+  </div>
+  <div class="concept-grid">
+    <div class="concept-card" onclick="selectConcept(this,'integers')">
+      <div class="cc-subject">Maths · Class 7</div>
+      <div class="cc-name">Negative Numbers</div>
+      <div class="cc-hook" id="hook-integers">Loading hook...</div>
+    </div>
+    <div class="concept-card" onclick="selectConcept(this,'photosynthesis')">
+      <div class="cc-subject">Science · Class 7</div>
+      <div class="cc-name">Photosynthesis</div>
+      <div class="cc-hook" id="hook-photo">Loading hook...</div>
+    </div>
+    <div class="concept-card" onclick="selectConcept(this,'fractions')">
+      <div class="cc-subject">Maths · Class 6</div>
+      <div class="cc-name">Fractions</div>
+      <div class="cc-hook" id="hook-fractions">Loading hook...</div>
+    </div>
+    <div class="concept-card" onclick="selectConcept(this,'light')">
+      <div class="cc-subject">Science · Class 8</div>
+      <div class="cc-name">Reflection of Light</div>
+      <div class="cc-hook" id="hook-light">Loading hook...</div>
+    </div>
+  </div>
+  <button class="cta-btn colored" id="concept-next" disabled onclick="goHook()">See my personalised hook →</button>
+  <div class="nav-row"><button class="nav-btn" onclick="goBack('sc-interest')">← Back</button></div>
+</div>
+
+<!-- SCREEN 3: THE HOOK (personalized) -->
+<div class="screen" id="sc-hook">
+  <div class="hook-screen">
+    <div class="hook-tag">Day 1 · Spark</div>
+    <div class="interest-badge" id="hook-badge">🏏 Cricket mode</div>
+    <div class="hook-card" id="hook-main-card">
+      <div class="hook-top">
+        <div class="hook-puzzle" id="hook-question">Loading...</div>
+        <div class="hook-why" id="hook-context">Loading context...</div>
+      </div>
+    </div>
+    <div class="fact-strip" id="fact-strip"></div>
+    <div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:8px">Take your best guess — there's no wrong answer.</div>
+    <textarea class="input-area" id="student-guess" placeholder="Type your thinking here..." rows="3"></textarea>
+    <div class="voice-row">
+      <button class="voice-btn"><div class="rdot"></div> Speak instead</button>
+      <div style="font-size:10px;color:var(--color-text-tertiary)">45 seconds, your own words</div>
+    </div>
+    <button class="cta-btn colored" style="margin-top:10px" onclick="goReveal()">Show me what's actually happening →</button>
+    <div class="nav-row"><button class="nav-btn" onclick="goBack('sc-concept')">← Change concept</button></div>
+  </div>
+</div>
+
+<!-- SCREEN 4: THE MAGIC REVEAL -->
+<div class="screen" id="sc-reveal">
+  <div class="hook-tag">The reveal · Day 1</div>
+  <div class="your-thought"><div class="yt-label">Your guess</div><div class="yt-text" id="reveal-guess">Loading...</div></div>
+  <div class="magic-box" id="magic-box">
+    <span class="magic-emoji" id="magic-emoji">⚡</span>
+    <div class="magic-h" id="magic-h">Loading...</div>
+    <div class="magic-sub" id="magic-sub">Loading...</div>
+    <div class="magic-formula" id="magic-formula">Loading...</div>
+  </div>
+  <div class="reveal-card" id="reveal-card">
+    <div class="reveal-label" id="reveal-mode-label">Explorer · The idea</div>
+    <div class="reveal-text" id="reveal-text">Loading...</div>
+    <div class="reveal-connection" id="reveal-connection">Loading...</div>
+  </div>
+  <div style="padding:12px 14px;border-radius:10px;background:var(--color-background-secondary);font-size:12px;color:var(--color-text-secondary);line-height:1.65;margin-bottom:10px">
+    <strong style="color:var(--color-text-primary)">Day 2 unlocks tomorrow.</strong> You'll see your own guess reflected back. The system will tell you exactly what you got right — and the one thing that was fuzzy.
+  </div>
+  <div class="nav-row">
+    <button class="nav-btn primary" onclick="showLogic()">How this engine works →</button>
+    <button class="nav-btn" onclick="resetAll()">Try different interest</button>
+  </div>
+</div>
+
+<!-- SCREEN 5: PRODUCT LOGIC (for founders / investors) -->
+<div class="screen" id="sc-logic">
+  <div class="logic-section">
+    <div class="logic-h">How the interest engine works behind the scenes</div>
+    <div class="logic-row"><div class="lr-num">1</div><div class="lr-text"><strong>Student picks interest</strong> — one-time, on first login. Stored as their profile signal. <em>Cricket, food, gaming, music etc.</em> — 8 categories, expandable.</div></div>
+    <div class="logic-row"><div class="lr-num">2</div><div class="lr-text"><strong>Every concept has 8 hook variants</strong> — one per interest. The textbook concept doesn't change. The entry point does. <em>Same integers lesson, 8 different ways in.</em></div></div>
+    <div class="logic-row"><div class="lr-num">3</div><div class="lr-text"><strong>The hook is written before content</strong> — not after. Interest → real-world scenario → textbook logic emerges naturally. The curriculum becomes the explanation, not the starting point.</div></div>
+    <div class="logic-row"><div class="lr-num">4</div><div class="lr-text"><strong>Student can change interest anytime</strong> — no label, no track. A student who says cricket today can switch to music next week. The system adapts. No judgement.</div></div>
+    <div class="logic-row"><div class="lr-num">5</div><div class="lr-text"><strong>Interest data becomes insight</strong> — teachers see which triggers got the best first-thought responses. This tells you which real-world frames land for this class. That's the behavioral moat.</div></div>
+
+    <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--color-text-tertiary);margin:16px 0 8px">Interest → Concept hook mapping (sample)</div>
+    <div class="interest-map">
+      <div class="im-head"><div>Interest</div><div>Concept</div><div>Hook question</div></div>
+      <div class="im-row"><div class="im-interest">🏏 Cricket</div><div class="im-concept">Integers</div><div class="im-hook">Can a team win and still have negative NRR?</div></div>
+      <div class="im-row"><div class="im-interest">🍛 Food</div><div class="im-concept">Fractions</div><div class="im-hook">Why does halving a biryani recipe not always taste the same?</div></div>
+      <div class="im-row"><div class="im-interest">🎮 Gaming</div><div class="im-concept">Integers</div><div class="im-hook">Why does your health bar go below zero in some games?</div></div>
+      <div class="im-row"><div class="im-interest">🎬 Movies</div><div class="im-concept">Light</div><div class="im-hook">How does a camera capture your face without touching you?</div></div>
+      <div class="im-row"><div class="im-interest">🎵 Music</div><div class="im-concept">Fractions</div><div class="im-hook">Why does a beat of 3/4 feel different from 4/4?</div></div>
+      <div class="im-row"><div class="im-interest">✈️ Travel</div><div class="im-concept">Photosynthesis</div><div class="im-hook">Why is the air fresher near forests than near cities?</div></div>
+      <div class="im-row"><div class="im-interest">💻 Tech</div><div class="im-concept">Integers</div><div class="im-hook">Why does your phone show -15% battery before shutting off?</div></div>
+      <div class="im-row"><div class="im-interest">🔭 Science</div><div class="im-concept">Photosynthesis</div><div class="im-hook">Could we engineer humans to get energy from sunlight?</div></div>
+    </div>
+
+    <div style="padding:12px 14px;border-radius:10px;background:#FFFBEB;border:0.5px solid #F59E0B;font-size:12px;color:#92400E;line-height:1.7;margin-bottom:12px">
+      <strong>What this means for Lovable:</strong> Add an <code>interests</code> field to student profile (stored once). Each DB concept block gets 8 hook variants keyed to interest. On Day 1 render, the hook_variant matching student interest is selected. The concept explanation, mechanism, and all 7 layers remain unchanged. Only the entry puzzle changes.
+    </div>
+    <div class="nav-row">
+      <button class="nav-btn primary" onclick="resetAll()">Try the engine again</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+let selInterest = null, selInterestEmoji = '', selInterestName = '';
+let selConcept = null;
+
+const DB = {
+  cricket: {
+    label: '🏏 Cricket mode',
+    bg: '#F0FDF4', border: '#22C55E', color: '#15803D',
+    integers: {
+      q: "India needs 47 runs from 3 overs to win. They get 45. Their Net Run Rate goes from +0.8 to... negative. How does a number go below zero?",
+      ctx: "You've seen scoreboards all your life. NRR goes negative. You accepted it. But you never asked — how can a rate be less than nothing? That's where negative numbers were born.",
+      facts: ['NRR can be -2.5', 'Debt is negative money', 'Temperature goes below 0'],
+      magic_emoji: '🏏',
+      magic_h: 'NRR invented negative numbers. Sort of.',
+      magic_sub: 'When quantity goes below a reference point, you need a number that goes below zero. Integers are just the math that cricket already uses.',
+      magic_formula: 'Runs scored - Runs against = can be negative',
+      reveal: "Integers are numbers that include negatives. When something can go below a reference point — debt, temperature, NRR — you need numbers below zero. Natural numbers can't describe debt. Integers can.",
+      connection: '🏏 Every time a team\'s NRR drops below zero, they are using integers — without knowing it.'
+    },
+    photosynthesis: {
+      q: "A cricket ground has 22,000 square metres of grass. Each blade makes food from sunlight — without eating anything. How?",
+      ctx: "The entire outfield is a solar factory. Not metaphorically — literally. Every blade of grass is converting light into food right now, and nobody planted food for it.",
+      facts: ['Grass makes its own food', 'No soil nutrients needed for energy', 'Chlorophyll = green solar panel'],
+      magic_emoji: '🌿',
+      magic_h: 'The pitch is a food factory.',
+      magic_sub: 'Photosynthesis is how plants harvest light and turn it into glucose — the energy currency of all life. The grass on every cricket ground does this 24/7.',
+      magic_formula: 'Sunlight + CO₂ + Water → Glucose + Oxygen',
+      reveal: "Photosynthesis is the process where plant cells capture sunlight using chlorophyll — the green pigment — and use that energy to convert CO₂ and water into glucose. The oxygen released is what you breathe.",
+      connection: '🏏 Every green cricket ground is performing 22,000 square metres of photosynthesis right now. The oxygen you breathe while watching the match came from it.'
+    },
+    fractions: {
+      q: "A bowler takes 3 wickets in 4 overs. Another takes 3 wickets in 6 overs. Who's better? Both have 3 wickets — so why does the answer feel obvious?",
+      ctx: "Counting whole wickets tells you nothing about efficiency. Fractions let you compare rates — and that's all cricket analysis really is.",
+      facts: ['Economy rate = runs/overs', 'Strike rate = balls/wicket', 'Average = runs/dismissals'],
+      magic_emoji: '📊',
+      magic_h: 'Cricket runs on fractions.',
+      magic_sub: 'Every cricket statistic — average, economy, strike rate — is a fraction. The whole game is about comparing parts to wholes.',
+      magic_formula: 'Wickets ÷ Overs = Bowling average (a fraction)',
+      reveal: "A fraction compares a part to a whole — how many wickets per overs bowled, runs per ball faced. When you compare rates instead of totals, you need fractions. That's exactly what cricket statistics are.",
+      connection: '🏏 Every time you say a bowler has an economy of 6.4, you\'ve just used a fraction without realising it.'
+    },
+    light: {
+      q: "The Jumbotron screen shows the batsman's face in HD — but the light hitting that camera is bouncing off a sweaty face 50 metres away. How does your face travel without moving?",
+      ctx: "The camera doesn't touch you. Light does. And light bouncing off you follows rules so precise that an HD camera 50 metres away can reconstruct your exact face.",
+      facts: ['Light bounces at equal angles', 'Rough surfaces scatter light', 'Mirrors preserve the bounce pattern'],
+      magic_emoji: '📸',
+      magic_h: 'Your face is made of bounced light.',
+      magic_sub: 'Reflection of light: light hits a surface and bounces at the same angle it arrived. Smooth surfaces (mirrors, camera lens coatings) bounce it predictably — rough surfaces scatter it.',
+      magic_formula: 'Angle of incidence = Angle of reflection',
+      reveal: "Reflection happens when light bounces off a surface. The angle it hits equals the angle it bounces — always. A smooth surface bounces it predictably (you see yourself). A rough surface scatters it everywhere (no image).",
+      connection: '🏏 The Jumbotron works because light bouncing off the player reaches the camera lens at precise angles. Reflection of light — the same physics as a mirror.'
+    }
+  },
+  food: {
+    label: '🍛 Food mode',
+    bg: '#FFF7ED', border: '#F97316', color: '#C2410C',
+    integers: {
+      q: "You owe the halwai ₹50 but only have ₹30. In your pocket you have -₹20 worth of biryani. How does money go below zero?",
+      ctx: "Debt is something you feel every day but never formalised. The moment you owe more than you have, you've crossed into integers — the world below zero.",
+      facts: ['Debt = negative money', 'Temperature of ice = below 0', 'Sea level = 0 reference'],
+      magic_emoji: '🍛',
+      magic_h: 'Debt invented negative numbers.',
+      magic_sub: 'Integers extend counting into debt, temperature, altitude — any measurement that can go below a reference point of zero.',
+      magic_formula: 'Money you have - Money you owe = can be negative',
+      reveal: "Integers include all whole numbers — positive, negative, and zero. They were invented to describe quantities that can go below a reference point: debt, temperature below freezing, altitude below sea level.",
+      connection: '🍛 Every time the halwai keeps a tab for a customer, he\'s using integers — quantities that go negative when owed.'
+    },
+    photosynthesis: {
+      q: "Palak paneer gets its green from palak. The palak grew without eating anything — just sunlight, air and water. How does a plant make food from air?",
+      ctx: "You eat food. Food came from a plant. The plant made that food from sunlight and air — not from soil, not from other food. This is the most bizarre factory on Earth and it's in your sabzi.",
+      facts: ['Plants eat air + sunlight', 'Glucose = plant food', 'Oxygen = plant waste (lucky for us)'],
+      magic_emoji: '🌱',
+      magic_h: 'Your dal makhani is solar energy.',
+      magic_sub: 'Every calorie in your food traces back to a plant capturing sunlight. Photosynthesis is the factory that converted solar energy into the molecules you digest.',
+      magic_formula: 'Sunlight + Air + Water → Food (glucose) + Oxygen',
+      reveal: "Photosynthesis: chloroplasts in plant cells use chlorophyll to absorb sunlight, split water molecules, and combine hydrogen with CO₂ to make glucose. Oxygen is released as a byproduct.",
+      connection: '🍛 The palak in your paneer performed photosynthesis to build every cell. You\'re eating stored solar energy — packaged by chemistry into something delicious.'
+    },
+    fractions: {
+      q: "A recipe serves 4 but you're cooking for 3. You need ¾ of everything. But when you take ¾ of ¾ cup of ghee — why doesn't the answer feel like a normal number?",
+      ctx: "Cooking breaks counting. You can't always use whole numbers when dividing recipes. The moment you halve or quarter a recipe, you're doing fraction arithmetic whether you know it or not.",
+      facts: ['½ tsp + ½ tsp = 1 tsp', '¾ of ½ = 3/8', 'Recipes are fraction problems'],
+      magic_emoji: '🥘',
+      magic_h: 'Every recipe is a fraction problem.',
+      magic_sub: 'When you scale a recipe, you multiply fractions. When you split a dish, you divide fractions. The kitchen is the most practical classroom for fraction arithmetic.',
+      magic_formula: '¾ of ½ cup = ¾ × ½ = 3/8 cup',
+      reveal: "Fractions represent parts of a whole. When you multiply fractions (¾ × ½), you multiply numerators and denominators separately. The result (3/8) is smaller than both — which feels strange but makes sense: a fraction of a fraction is even smaller.",
+      connection: '🍛 Next time you adjust a recipe, you\'re doing fraction multiplication. The kitchen is where fractions make their most practical sense.'
+    },
+    light: {
+      q: "You see your face in the back of a clean steel kadai. You see nothing in a rough wooden spoon. Both reflect some light — why does only one show your face?",
+      ctx: "Every surface reflects some light. But only some surfaces show you your face back. The difference is in how organised the reflection is — and that's the entire physics of mirrors.",
+      facts: ['Smooth surfaces = organised bounce', 'Rough surfaces = random scatter', 'Polish = fewer micro-scratches'],
+      magic_emoji: '🪞',
+      magic_h: 'A polished kadai is a mirror.',
+      magic_sub: 'Regular reflection (smooth surface) sends all light in one organised direction — you see an image. Diffuse reflection (rough surface) scatters light in all directions — no image, just brightness.',
+      magic_formula: 'Smooth surface → regular reflection → image formed',
+      reveal: "When light hits a smooth surface, all rays reflect at equal and opposite angles — so your face bounces back as an image. Rough surfaces have microscopic bumps that scatter each ray differently — no coherent image.",
+      connection: '🍛 The polished back of a steel thali works exactly like a mirror — same physics, just a different shape. The physics of reflection is in every kitchen.'
+    }
+  },
+  gaming: {
+    label: '🎮 Gaming mode',
+    bg: '#EFF6FF', border: '#3B82F6', color: '#1D4ED8',
+    integers: {
+      q: "Your character has 100 HP. A poison debuff does -15 damage per second for 3 seconds. You heal 20 HP. What's your HP? And why does the game even allow HP below zero?",
+      ctx: "Every game that has damage, debt, or backward movement uses negative numbers. The designers didn't invent this — mathematicians did, centuries before video games existed.",
+      facts: ['HP can go negative in some games', 'Damage = negative health', 'Gold debt in some RPGs'],
+      magic_emoji: '🎮',
+      magic_h: 'Game designers use integers constantly.',
+      magic_sub: 'Every stat that can go down — HP, gold, score — uses integers. The minus sign in your HP bar is the same mathematics as a bank balance going negative.',
+      magic_formula: '100 HP - 45 damage + 20 heal = 75 HP',
+      reveal: "Integers extend the number line below zero. In games, HP going negative might mean instant death — a threshold mechanic. In real life, integers describe debt, altitude below sea level, temperature below freezing — any measurement with a meaningful zero point.",
+      connection: '🎮 Every damage number in a game is a negative integer applied to a health pool. The game engine is doing integer arithmetic millions of times per second.'
+    },
+    photosynthesis: {
+      q: "An open-world game has forests that regenerate oxygen passively. The designers wrote that mechanic based on real biology. What are plants actually doing in real life?",
+      ctx: "Open-world games simulate ecosystems because real ecosystems have beautiful logic — trees passively producing oxygen, forests cooling temperatures. The designers copied the real code.",
+      facts: ['Forests produce 28% of oxygen', 'Deforestation = less oxygen', 'Deserts have no photosynthesis'],
+      magic_emoji: '🌲',
+      magic_h: 'The oxygen mechanic in games is real.',
+      magic_sub: 'Plants continuously convert CO₂ and sunlight into glucose and oxygen. The game\'s passive oxygen regeneration from forests is a direct simulation of photosynthesis.',
+      magic_formula: 'Sunlight + CO₂ + H₂O → C₆H₁₂O₆ + O₂',
+      reveal: "Photosynthesis is the biochemical process where chloroplasts in plant cells use light energy to convert carbon dioxide and water into glucose (plant food) and oxygen. It happens continuously, in every green cell, whenever light is available.",
+      connection: '🎮 The forest mechanic in open-world games (oxygen zones, healing near trees) is based on real photosynthesis. Real forests are the original passive regeneration system.'
+    },
+    fractions: {
+      q: "You're playing a game where a legendary drop has a 1/500 chance. You've opened 400 chests. Why does the 401st chest still feel like 1/500 — not 1/100?",
+      ctx: "This is one of the most important fraction concepts in probability — and one of the most misunderstood. Each event is independent. Past failures don't change the next fraction.",
+      facts: ['1/500 stays 1/500 per try', 'Gambler\'s fallacy is real', 'Expected value = fraction × reward'],
+      magic_emoji: '🎲',
+      magic_h: 'Probability is applied fractions.',
+      magic_sub: 'A 1/500 drop rate means each opening has a 1 in 500 chance. Each attempt is independent — the fraction resets. This is why gambling feels unfair: fractions don\'t remember history.',
+      magic_formula: 'P(drop) = 1/500 per chest, every chest, forever',
+      reveal: "A fraction like 1/500 describes the ratio of favorable outcomes to total outcomes. When events are independent (dice, chests, card draws), past results don't change the fraction — each event starts fresh. The fraction is a ratio, not a depleting resource.",
+      connection: '🎮 Every loot box, every drop rate, every critical hit chance in a game is a fraction. Understanding fractions means understanding when the game is being fair and when it\'s not.'
+    },
+    light: {
+      q: "In a game, a sniper scope shows you reflections of the environment around the enemy. In real life, a scope is just a metal tube with glass. How does glass show you things that aren't in front of it?",
+      ctx: "A scope is an engineered application of light reflection and refraction — the same physics your eye uses, just redirected and magnified. Glass doesn't create images. It redirects light that already exists.",
+      facts: ['Lenses bend light (refraction)', 'Mirrors bounce light (reflection)', 'Scopes combine both'],
+      magic_emoji: '🔭',
+      magic_h: 'Scopes are applied optics.',
+      magic_sub: 'Light reflects off the enemy, travels to the scope lens, bends (refracts) to form a focused image. Reflection is what makes the image exist. Refraction is what makes it sharp and magnified.',
+      magic_formula: 'Object → reflects light → lens bends it → eye sees image',
+      reveal: "Reflection of light: light bouncing off a surface at equal angles. When light from an object bounces off it and enters a lens, the lens bends it to a focal point — forming a sharp image. The scope uses both reflection (from the target) and refraction (through the glass).",
+      connection: '🎮 Every scope, every reflective surface in a game is simulating real optics. The game physics engine is running the same equations that describe a real sniper scope.'
+    }
+  },
+  movies: {
+    label: '🎬 Movies mode',
+    bg: '#F5F3FF', border: '#8B5CF6', color: '#6D28D9',
+    integers: {q:"A movie earns ₹200 crore at the box office but cost ₹250 crore to make. The studio says it 'lost' ₹50 crore. How does money go below zero?",ctx:"Every time a film flops, someone experiences negative numbers viscerally. The studio that invested ₹250 crore and got ₹200 crore back didn't get 'less' — they got a negative return.",facts:['ROI can be negative','Box office deficit = negative profit','Debt is negative savings'],magic_emoji:'🎬',magic_h:'Film flops are integer problems.',magic_sub:'When earnings go below investment, the result is negative. Profit = revenue - cost. When cost > revenue, profit is negative. That\'s an integer.',magic_formula:'₹200Cr - ₹250Cr = -₹50Cr (negative profit)',reveal:"Integers are whole numbers extending below zero. Negative integers describe situations where a quantity falls below a reference point: debt (below zero balance), loss (below zero profit), temperature (below zero Celsius).",connection:'🎬 Every film budget conversation uses integers. A flop doesn\'t give back a fraction of investment — it creates a negative number that accountants have to manage.'},
+    photosynthesis: {q:"Movies set on Mars always struggle with oxygen. But in real Earth sci-fi, characters in a forest have plenty. What makes a forest different from a desert?",ctx:"Forests produce oxygen passively — not because someone planted an oxygen factory. The mechanism behind it is one of the most elegant chemistry stories in biology.",facts:['Forests produce 28% of oxygen','Desert has no photosynthesis','Amazon = lungs of Earth'],magic_emoji:'🌿',magic_h:'Forests are oxygen factories.',magic_sub:'Every tree in every lush movie set is performing photosynthesis — converting CO₂ into O₂ continuously. The forest scenes in movies work because real forests are real oxygen producers.',magic_formula:'6CO₂ + 6H₂O + light → C₆H₁₂O₆ + 6O₂',reveal:"Photosynthesis is the process by which plants convert light energy, CO₂, and water into glucose and oxygen. Forests do this at enormous scale — they are literally the oxygen generation system of Earth.",connection:'🎬 The next time you see a lush forest in a film — those trees are actively producing the oxygen the actors are breathing during the shoot.'},
+    fractions: {q:"A 3-hour film earns 60% of its revenue in the first weekend. The next weekend it earns 40% of that. Is the second weekend audience a fraction of the first?",ctx:"Box office decay follows fraction patterns — each subsequent weekend earns a consistent fraction of the previous one. Film studios have whole departments modelling this.",facts:['Week 2 ≈ 40-50% of Week 1','Decay rate varies by genre','Streaming affects the fraction'],magic_emoji:'📊',magic_h:'Box office is applied fractions.',magic_sub:'Revenue decay is a fraction of the previous period — consistently. Studios use this to predict total revenue from opening weekend numbers.',magic_formula:'Week2 revenue = Week1 × 0.4 (approximately)',reveal:"Fractions describe ratios between quantities. When one week\'s revenue is 40% of the previous week, you\'re saying revenue = 40/100 of the prior value. Multiplying fractions repeatedly creates exponential decay — the mathematical shape of a film\'s box office run.",connection:'🎬 Film studios predict total box office from opening weekend by applying fraction multipliers. The entire business model of theatrical release is built on fraction mathematics.'},
+    light: {q:"A movie set has 40 lights, mirrors, and reflectors arranged to make one actor look perfectly lit from all sides. Why can't you just point one big light at them?",ctx:"Cinematographers spend years learning the physics of light reflection — how to bounce light off surfaces to fill shadows, create depth, and make actors look three-dimensional. It's applied physics.",facts:['Reflectors bounce light to fill shadows','Hard light casts sharp shadows','Soft light scatters everywhere'],magic_emoji:'💡',magic_h:'Cinematography is applied optics.',magic_sub:'Every reflector on a movie set is using the physics of light reflection — bouncing light at controlled angles to eliminate shadows and sculpt how the actor looks.',magic_formula:'Angle of incidence = angle of reflection (always)',reveal:"When light hits a surface, it reflects at the same angle it arrived (measured from the normal). Cinematographers use this to redirect light from powerful sources through reflectors and diffusers — controlling exactly where light lands and where it doesn't.",connection:'🎬 The next time you see a perfectly lit actor in a film, know that 5-15 reflectors are bouncing light at carefully calculated angles around them. Reflection of light is the fundamental tool of cinematography.'}
+  },
+  music: {
+    label: '🎵 Music mode',
+    bg: '#FDF2F8', border: '#EC4899', color: '#BE185D',
+    integers: {q:"A musician records at 0 dB (reference). They lower it by 6 dB. Then lower it another 6 dB. They're at -12 dB now. How does volume go below zero?",ctx:"Audio engineers work in negative numbers constantly. 0 dB isn't silence — it's a reference point. Everything below it is negative, everything above it is positive. The scale extends in both directions.",facts:['-12 dB is 75% quieter','0 dB = reference (not zero sound)','Silence is -∞ dB'],magic_emoji:'🎵',magic_h:'Sound engineers invented negative dB.',magic_sub:'The decibel scale uses zero as a reference point, not an absence. Negative dB means below the reference — quieter. This is integers: a scale that extends below a reference zero.',magic_formula:'0 dB (reference) - 12 = -12 dB (quieter)',reveal:"Integers include negative numbers — whole numbers below a reference zero. In audio, 0 dB is the reference level. Negative dB values describe sounds below that reference. The scale works in both directions, like integers on a number line.",connection:'🎵 Every time a sound engineer pulls a fader down below zero, they are using integer mathematics. The mixing board is literally a number line.'},
+    photosynthesis: {q:"A music festival in an open field feels different from one indoors — the air is somehow fresher, cleaner. The grass and trees around the venue are doing something. What?",ctx:"Open-air festival vibes aren't just psychological. The trees and grass around the venue are genuinely producing fresh oxygen and absorbing CO₂ — all through photosynthesis.",facts:['Trees absorb festival CO₂','Green spaces improve air quality','Forest oxygen = 28% of Earth\'s'],magic_emoji:'🌳',magic_h:'The trees at your festival are working.',magic_sub:'Photosynthesis: every plant converts CO₂ (which people exhale) into oxygen (which they inhale). An open festival with trees is a natural air recycler.',magic_formula:'CO₂ (exhaled by crowd) → absorbed by plants → O₂ released',reveal:"Photosynthesis uses light, CO₂, and water to produce glucose and oxygen. In an outdoor venue, plants around the audience absorb the CO₂ exhaled by thousands of people and release fresh oxygen — a passive air filtration system.",connection:'🎵 The fresher air at an outdoor festival compared to an indoor venue is partially because trees are performing photosynthesis around you — processing the CO₂ exhaled by the crowd.'},
+    fractions: {q:"A musical note called a 'half note' lasts half a beat. A 'quarter note' lasts a quarter. A '3/4 time signature' has 3 quarter notes per bar. Why is music literally written in fractions?",ctx:"Western music notation is a fraction system. Time signatures, note values, rhythms — all of it is fraction mathematics. You've been doing fraction arithmetic every time you clap in time.",facts:['Whole note = 4 beats','Half note = 2 beats','Quarter note = 1 beat'],magic_emoji:'🎼',magic_h:'Music is written in fractions.',magic_sub:'Note values are literal fractions: whole, half, quarter, eighth. Time signatures (3/4, 4/4) are fractions describing beats per bar. Musicians do fraction arithmetic to make notes fill a bar correctly.',magic_formula:'3/4 time: 3 quarter notes (3 × ¼ = ¾ of a whole)',reveal:"Fractions divide a whole into equal parts. In music, a 'whole note' is the unit, and all other notes are fractions of it. 4/4 time means 4 quarter-notes per bar — fractions that must add up to exactly 1 whole bar. Rhythm is applied fraction arithmetic.",connection:'🎵 When a drummer plays a 4/4 beat, they are ensuring four quarter notes — four ¼ fractions — sum to one whole bar. Every professional musician uses fraction arithmetic constantly.'},
+    light: {q:"A disco ball covers a dark room in moving spots of light using only one bright bulb. How does one source of light become hundreds of reflections?",ctx:"A disco ball is a deliberately fragmented mirror — tiny flat mirrors angled slightly differently so each one reflects the one light source in a different direction. One bulb. Infinite reflections.",facts:['Each mirror tile reflects at a different angle','Angle determines where the spot lands','Curved surfaces scatter reflection'],magic_emoji:'🪩',magic_h:'A disco ball is applied optics.',magic_sub:'Each mirror tile on a disco ball reflects the single light at a slightly different angle — sending the reflection to a different part of the room. Reflection physics multiplied by 500 tiles.',magic_formula:'One light → 500 mirrors at different angles → 500 spots',reveal:"The law of reflection: angle of incidence equals angle of reflection. A flat mirror reflects to one specific direction. A disco ball has hundreds of tiny flat mirrors, each angled slightly differently — so each one bounces the same light to a completely different spot in the room.",connection:'🎵 The disco ball is a direct application of the law of reflection — each tile proving that controlling the angle of a mirror surface controls where reflected light goes.'}
+  },
+  travel: {
+    label: '✈️ Travel mode',
+    bg: '#F0FDFA', border: '#14B8A6', color: '#0F766E',
+    integers: {q:"A city 500 metres above sea level. A Dead Sea resort 430 metres BELOW sea level. You travel from one to the other. How do we describe altitude with a single number system?",ctx:"The sea is the reference point — zero. Everything above is positive altitude. Everything below is negative. Without integers, you'd need two separate measurement systems for above and below sea level.",facts:['Dead Sea = -430m','Mount Everest = +8,849m','Sea level = 0 (reference)'],magic_emoji:'🌍',magic_h:'Altitude is an integer number line.',magic_sub:'Sea level is zero. Above = positive integers. Below = negative integers. The entire altitude system is an integer number line with sea level at zero.',magic_formula:'Dead Sea: 0 - 430 = -430m altitude',reveal:"Integers extend the number line below zero. Altitude uses sea level as the reference (zero). Elevations above sea level are positive integers, below sea level are negative. Without negative integers, you couldn't describe the Dead Sea or ocean trenches with a single number.",connection:'✈️ Every altitude reading on an aircraft or GPS uses integers. When you fly from Hyderabad (540m) to a valley below sea level, the altimeter crosses through zero — the integer number line made visible.'},
+    photosynthesis: {q:"A flight from Mumbai to London passes over forests, deserts, and oceans. Only certain regions look green from above. Why does life cluster where plants grow?",ctx:"From altitude, you can see exactly where photosynthesis is happening — it's everywhere that's green. Deserts are brown because there's no photosynthesis. Oceans look blue but are full of microscopic photosynthesis.",facts:['Amazon = 20% of Earth\'s oxygen','Oceans = 50% of photosynthesis','Deserts have almost none'],magic_emoji:'✈️',magic_h:'Green from above = photosynthesis below.',magic_sub:'The green regions you see from a plane window are where photosynthesis is happening. Brown = no photosynthesis. Blue ocean = microscopic algae doing photosynthesis below the surface.',magic_formula:'Green visible from altitude = chlorophyll = photosynthesis',reveal:"Photosynthesis requires light, water, and CO₂. Forests have all three — hence green. Deserts lack water. Oceans have phytoplankton doing photosynthesis at the surface — producing 50% of Earth's oxygen. The planet's oxygen supply is visible as green from altitude.",connection:'✈️ Next time you fly, look out the window. Every green region below you is actively doing photosynthesis — producing the oxygen you\'re breathing inside the pressurised cabin.'},
+    fractions: {q:"A journey from Delhi to Mumbai is 1,400 km. You complete ⅗ of it in 4 hours. You expect to complete the rest in 2 more hours. Why does that feel slightly off?",ctx:"Rate problems are fraction problems. Speed × time = distance. When you've done ⅗ of the journey, the remaining ⅖ needs its own calculation. The maths of travel is fraction arithmetic.",facts:['⅗ of 1400 = 840 km done','⅖ remaining = 560 km','Speed changes, so time changes'],magic_emoji:'🗺️',magic_h:'Travel planning is fraction maths.',magic_sub:'Distance fractions, time calculations, fuel percentages — travel is applied fraction arithmetic. Every ETA calculation uses fraction reasoning.',magic_formula:'⅗ done: 840km complete. ⅖ left = 560km remaining',reveal:"Fractions describe parts of a whole. In travel, distances are often fractions of total journeys. Multiplying fractions: ⅗ of 1,400 km = (3 × 1,400) ÷ 5 = 840 km. The remaining fraction (⅖) = 560 km. ETA calculations are fraction word problems.",connection:'✈️ Every GPS ETA is a live fraction calculation — distance remaining divided by current speed equals time remaining. You use fraction arithmetic every time you check your journey progress.'},
+    light: {q:"Driving into a desert at midday, you see a shimmering lake on the road ahead. You get closer — it disappears. What made you see water that wasn't there?",ctx:"This is one of the most beautiful optical phenomena in nature — a mirage. It happens because light bends when it passes through air of different temperatures. The physics is the same as a mirror, just with invisible surfaces.",facts:['Hot air has lower density','Light bends toward denser air','Desert mirage = total internal reflection'],magic_emoji:'🏜️',magic_h:'The desert mirage is bent light.',magic_sub:'Near a hot surface, air is layered by temperature. Light bends (refracts) at each layer boundary. At extreme angles, it can reflect entirely — showing you sky beneath you, which looks like water.',magic_formula:'Hot surface → density gradient → light bends → sky reflected',reveal:"Light changes direction when it moves between materials of different density. In a desert, layers of hot air near the ground are less dense than cool air above. Light from the sky bends downward through these layers and can reflect at very low angles — showing you the sky beneath you, which looks like water.",connection:'✈️ The desert mirage you see while driving is the same physics as a mirror — light reflecting at an angle. The road surface isn\'t reflecting; the air itself is, because heat changes how light travels.'}
+  },
+  tech: {
+    label: '💻 Tech mode',
+    bg: '#EEF2FF', border: '#6366F1', color: '#4338CA',
+    integers: {q:"Your phone shows -15% battery. A game shows your character has -200 HP (meaning they died 200 HP ago). Why do computers need numbers below zero?",ctx:"Computers process binary — but they model the real world, which has debt, deficits, and negative readings. Signed integers (with negatives) are a fundamental data type in every programming language.",facts:['int = whole number (with negatives)','uint = unsigned (only positive)','32-bit int: -2B to +2B range'],magic_emoji:'💻',magic_h:'Integers are a programming data type.',magic_sub:'In code, "int" means integer — whole number including negatives. A temperature sensor, bank balance, altitude — all need signed integers because real measurements go below zero.',magic_formula:'int temperature = -10; // valid in every language',reveal:"Integers are whole numbers including negatives. In computer science, signed integers (int, int64, etc.) can store negative values. Unsigned integers (uint) cannot — they start at zero. The choice of integer type depends on whether the real-world quantity can go negative.",connection:'💻 Every time your code crashes with an "integer overflow" or "negative value error," it\'s because real-world quantities went below zero and the data type wasn\'t ready for integers.'},
+    photosynthesis: {q:"AI data centres consume enormous energy. Researchers are exploring 'biological computing' using plant cells. Why would a plant cell make a better computer component than silicon?",ctx:"Plant cells perform incredibly efficient energy conversion through photosynthesis — something no silicon chip can replicate. The efficiency of chloroplasts is inspiring entirely new computing architectures.",facts:['Solar cell efficiency ≈ 20%','Photosynthesis efficiency ≈ 11%','But plants repair themselves'],magic_emoji:'🔬',magic_h:'Chloroplasts inspire computing.',magic_sub:'Photosynthesis converts light to chemical energy with remarkable efficiency. Researchers study it to design better solar cells and even biological transistors. Plant cells are inspiring the next generation of computing.',magic_formula:'Light energy → chemical energy (via chlorophyll)',reveal:"Photosynthesis is the conversion of light energy to chemical energy stored in glucose. The chloroplast is essentially a nanoscale energy converter. Materials scientists study its structure to improve artificial photovoltaics. Its self-repair mechanism (plants regrow damaged parts) inspires self-healing electronic materials.",connection:'💻 The next generation of solar panels is being designed by studying how chlorophyll absorbs light in photosynthesis. The biology you learn in Class 7 is inspiring the future of sustainable computing.'},
+    fractions: {q:"A 4K video file is 4 GB. You compress it to 800 MB. You've kept 1/5 of the data — but the video still looks identical. How does compression preserve quality at 1/5 the data?",ctx:"Data compression is fraction mathematics applied to information theory. You identify which fraction of the data is essential for human perception and discard the rest. JPEGs, MP3s, and streaming video all work this way.",facts:['JPEG discards ~95% of data','MP3 removes frequencies humans can\'t hear','H.264: keeps 1/10 the raw data'],magic_emoji:'📦',magic_h:'Compression is applied fractions.',magic_sub:'A compressed file keeps a fraction of the original data. The fraction kept preserves perceptible quality. The fraction discarded is redundancy or imperceptible details.',magic_formula:'800MB / 4000MB = 1/5 compression ratio',reveal:"Fractions describe ratios. Data compression ratios are fractions: 800MB from 4GB = 1/5 compression ratio. Compression algorithms identify which fraction of data is redundant or imperceptible and remove it, keeping only the fraction needed for acceptable quality.",connection:'💻 Every time you stream Netflix, you\'re watching a video compressed to 1/50 of its raw size. The entire streaming industry runs on fraction mathematics — deciding which fraction of data is worth keeping.'},
+    light: {q:"Your phone camera takes a great photo in daylight. In low light, it's grainy and blurry even with flash. Why can't the flash just make it exactly like daylight?",ctx:"A phone camera flash is a point source of light — it illuminates the subject but reflects harshly and creates harsh shadows. Daylight is diffuse, bouncing off everything. The physics of reflection is the entire difference.",facts:['Direct flash = harsh reflection','Diffused light = soft shadows','Camera sensors collect reflected light'],magic_emoji:'📱',magic_h:'Photography is applied optics.',magic_sub:'Your camera captures light reflecting off subjects. The quality of a photo depends on how light reflects. Harsh point-source flash reflects at hard angles — harsh images. Diffuse daylight reflects softly — even illumination.',magic_formula:'Point source → direct reflection → harsh image',reveal:"Photography captures light reflecting off subjects. The law of reflection: light bounces at equal angles. A point flash source creates hard shadows because light comes from one direction. Daylight is scattered by the atmosphere and bounces off everything — coming from all angles simultaneously, filling shadows.",connection:'💻 The entire field of computational photography (Google Night Sight, iPhone Portrait Mode) is software simulating how diffuse natural light reflects — trying to mimic daylight reflection physics using algorithms.'}
+  },
+  science: {
+    label: '🔭 Science mode',
+    bg: '#FFFBEB', border: '#F59E0B', color: '#B45309',
+    integers: {q:"A submarine dives to -300m (below sea level). A balloon rises to +15,000m. Scientists track both with the same measurement system. How does one number line describe both?",ctx:"The sea is the reference point zero. Above sea level = positive. Below = negative. Scientists, geographers, and engineers all use this single number line with integers extending in both directions.",facts:['Mariana Trench: -11,000m','Everest: +8,849m','Dead Sea: -430m'],magic_emoji:'🔭',magic_h:'Altitude is a signed integer scale.',magic_sub:'Zero is sea level. Above = positive integers. Below = negative integers. The entire planet\'s elevation system is an integer number line with sea level as the reference origin.',magic_formula:'Sea level = 0, Submarine at -300m, Balloon at +15,000m',reveal:"Integers are whole numbers extending in both directions from zero. Scientists use sea level as the zero reference for altitude. Positive integers represent elevations above sea level, negative integers represent depths below — one unified measurement system.",connection:'🔭 Oceanographers and geographers use the same integer number line — just different sides of zero. The number system was extended to include negatives precisely because the natural world has depths and deficits.'},
+    photosynthesis: {q:"Mars has sunlight. Mars has CO₂. Mars has water ice. Scientists tried growing plants there and mostly failed. They had all the ingredients — so what's missing?",ctx:"Photosynthesis seems simple: sunlight + CO₂ + water = food + oxygen. But the process requires specific temperatures, wavelengths of light, and a complex cellular machinery that evolved for Earth conditions.",facts:['Mars light is 43% of Earth\'s','Mars gravity = 38% of Earth\'s','Mars soil lacks key nutrients'],magic_emoji:'🚀',magic_h: 'Photosynthesis is Earth-optimised.',magic_sub:'The biochemistry of photosynthesis evolved for Earth conditions — specific light intensity, temperature range, gravity. Mars has the ingredients but not the conditions that the cellular machinery requires.',magic_formula:'Light (correct wavelength) + CO₂ + H₂O + [correct conditions] → glucose',reveal:"Photosynthesis uses chlorophyll to absorb specific wavelengths of red and blue light. On Mars, solar irradiance is 43% of Earth's, temperatures are extreme, and soil chemistry lacks key minerals. Even with CO₂ and water ice, the cellular machinery — evolved over billions of years for Earth — cannot function effectively.",connection:'🔭 Space scientists studying Mars colonisation are essentially studying the boundary conditions of photosynthesis — what the precise requirements are for the process that produces all Earth\'s oxygen and food.'},
+    fractions: {q:"Scientists say the universe is 13.8 billion years old. Humans have existed for only 1/100,000 of that time. How do scientists even compare quantities this different in scale?",ctx:"Scientific thinking requires comparing quantities across vastly different scales. Fractions and ratios are the only way to make sense of comparisons like this — expressing one quantity as a fraction of another.",facts:['Universe: 13.8 billion years','Humans: ~300,000 years','Ratio: 3×10⁵ / 1.38×10¹⁰ ≈ 1/46,000'],magic_emoji:'🌌',magic_h:'Science runs on ratios and fractions.',magic_sub:'Comparing quantities across different scales requires fractions. The ratio of human existence to universe age is a tiny fraction — which is the only way to make that comparison meaningful.',magic_formula:'300,000 / 13,800,000,000 ≈ 1/46,000',reveal:"Fractions and ratios allow comparison of quantities regardless of scale. Scientists express human history as a fraction of cosmic time, atom sizes as fractions of human hair widths, particle energies as fractions of solar output. Science is fundamentally about ratios — and fractions are how we write them.",connection:'🔭 Every time a scientist compares two quantities of different magnitudes — atom to molecule, particle to wave, light year to metre — they are using fraction reasoning. Fractions are the language of scientific comparison.'},
+    light: {q:"Stars emit light. Some of that light reaches your eye after travelling 4 light-years. But the star might not even exist anymore. Why does the past travel to you at the speed of light?",ctx:"Light is not instantaneous. It travels at a finite speed. The light from Proxima Centauri takes 4 years to reach Earth. You are not seeing the star as it is — you are seeing it as it was, 4 years ago.",facts:['Speed of light: 3×10⁸ m/s','Proxima Centauri: 4.24 light-years','Andromeda galaxy: 2.5M light-years away'],magic_emoji:'⭐',magic_h:'You see the past, not the present.',magic_sub:'Light travels fast but not infinitely fast. The reflection of light from a star 4 light-years away takes 4 years to reach your eye. You\'re seeing light that left before you were born.',magic_formula:'Distance ÷ Speed of light = Age of light you see',reveal:"Reflection of light and transmission of light both travel at the speed of light (3×10⁸ m/s). For nearby objects this is essentially instant. For stars light-years away, the travel time is years, decades, or millions of years. Astronomers looking at distant galaxies are literally seeing the ancient past — light that reflected off stars long before Earth existed.",connection:'🔭 Every star you see in the night sky is a time machine — you\'re seeing light that reflected off it years to millions of years ago. The reflection of light is also the transmission of history.'}
+  }
+};
+
+function selectInterest(el, id, emoji, name){
+  document.querySelectorAll('.interest-card').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+  selInterest = id; selInterestEmoji = emoji; selInterestName = name;
+  const btn = document.getElementById('interest-next');
+  btn.disabled = false;
+  btn.textContent = `Continue as ${emoji} ${name} fan →`;
+  btn.className = 'cta-btn colored';
+}
+
+function goConceptSelect(){
+  if(!selInterest) return;
+  const data = DB[selInterest];
+  document.getElementById('concept-welcome').textContent = `${selInterestEmoji} Perfect. Now pick any concept.`;
+  const concepts = ['integers','photosynthesis','fractions','light'];
+  concepts.forEach(c=>{
+    const el = document.getElementById('hook-'+c);
+    if(el && data[c]) el.textContent = data[c].q.substring(0,60)+'...';
+  });
+  show('sc-concept');
+}
+
+let selConceptId = null;
+function selectConcept(el, id){
+  document.querySelectorAll('.concept-card').forEach(c=>c.classList.remove('sel-c'));
+  el.classList.add('sel-c');
+  selConceptId = id;
+  const btn = document.getElementById('concept-next');
+  btn.disabled = false;
+  btn.textContent = `Show me the ${selInterestEmoji} hook →`;
+}
+
+function goHook(){
+  if(!selInterest || !selConceptId) return;
+  const d = DB[selInterest][selConceptId];
+  const id = DB[selInterest];
+  const badge = document.getElementById('hook-badge');
+  badge.textContent = id.label;
+  badge.style.background = id.bg;
+  badge.style.border = `0.5px solid ${id.border}`;
+  badge.style.color = id.color;
+  document.getElementById('hook-question').textContent = d.q;
+  document.getElementById('hook-context').textContent = d.ctx;
+  const strip = document.getElementById('fact-strip');
+  strip.innerHTML = '';
+  d.facts.forEach(f=>{
+    const chip = document.createElement('div');
+    chip.className = 'fact-chip';
+    chip.textContent = f;
+    chip.style.background = id.bg;
+    chip.style.color = id.color;
+    chip.style.borderColor = id.border;
+    strip.appendChild(chip);
+  });
+  const card = document.getElementById('hook-main-card');
+  card.style.background = id.bg;
+  card.style.border = `0.5px solid ${id.border}`;
+  show('sc-hook');
+}
+
+function goReveal(){
+  const d = DB[selInterest][selConceptId];
+  const id = DB[selInterest];
+  const guess = document.getElementById('student-guess').value.trim();
+  document.getElementById('reveal-guess').textContent = guess || '(no guess entered — that\'s okay too)';
+  const mb = document.getElementById('magic-box');
+  mb.style.background = id.bg;
+  mb.style.border = `0.5px solid ${id.border}`;
+  document.getElementById('magic-emoji').textContent = d.magic_emoji;
+  document.getElementById('magic-h').textContent = d.magic_h;
+  document.getElementById('magic-sub').textContent = d.magic_sub;
+  const mf = document.getElementById('magic-formula');
+  mf.textContent = d.magic_formula;
+  mf.style.background = id.bg; mf.style.color = id.color; mf.style.border = `0.5px solid ${id.border}`;
+  const rc = document.getElementById('reveal-card');
+  rc.style.background = id.bg; rc.style.border = `0.5px solid ${id.border}`;
+  document.getElementById('reveal-mode-label').textContent = `${selInterestEmoji} ${selInterestName} connection`;
+  document.getElementById('reveal-mode-label').style.color = id.color;
+  document.getElementById('reveal-text').textContent = d.reveal;
+  const conn = document.getElementById('reveal-connection');
+  conn.textContent = d.connection;
+  conn.style.background = id.bg; conn.style.color = id.color;
+  show('sc-reveal');
+}
+
+function showLogic(){ show('sc-logic'); }
+
+function show(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on')); document.getElementById(id).classList.add('on'); }
+function goBack(id){ show(id); }
+function resetAll(){
+  selInterest=null; selInterestEmoji=''; selInterestName=''; selConceptId=null;
+  document.querySelectorAll('.interest-card').forEach(c=>c.classList.remove('sel'));
+  document.querySelectorAll('.concept-card').forEach(c=>c.classList.remove('sel-c'));
+  document.getElementById('student-guess').value='';
+  const btn=document.getElementById('interest-next');
+  btn.disabled=true; btn.textContent='Choose your interest above →'; btn.className='cta-btn';
+  document.getElementById('concept-next').disabled=true;
+  show('sc-interest');
+}
+</script>

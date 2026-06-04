@@ -1,0 +1,554 @@
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+.g{font-family:'Sora',var(--font-sans);max-width:440px;margin:0 auto;padding:0 0 24px}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pop{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+@keyframes glow{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}50%{box-shadow:0 0 0 5px rgba(34,197,94,0.15)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+@keyframes rise{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes confetti{0%{transform:translateY(-10px) rotate(0deg);opacity:1}100%{transform:translateY(100px) rotate(360deg);opacity:0}}
+@keyframes unlock{0%{transform:scale(0.8) rotate(-5deg);opacity:0}60%{transform:scale(1.1) rotate(2deg)}100%{transform:scale(1) rotate(0deg);opacity:1}}
+
+.screen{display:none;animation:fadeUp 0.3s ease}
+.screen.on{display:block}
+
+/* ARC TOPBAR */
+.arc-bar{padding:10px 14px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-primary);display:flex;align-items:center;gap:10px;margin-bottom:12px;position:sticky;top:0;z-index:10}
+.arc-days{display:flex;gap:4px}
+.arc-day{padding:5px 10px;border-radius:20px;font-size:10px;font-weight:700;cursor:pointer;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-tertiary);transition:all 0.15s;font-family:'Sora',var(--font-sans)}
+.arc-day.d1c{background:#FEF3C7;border-color:#F59E0B;color:#B45309}
+.arc-day.d2c{background:#E0F2FE;border-color:#38BDF8;color:#0C4A6E}
+.arc-day.d3c{background:#F0FDF4;border-color:#22C55E;color:#14532D}
+.arc-day.locked{opacity:0.4;cursor:not-allowed}
+.arc-interest{margin-left:auto;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;background:#F0FDF4;color:#15803D;border:0.5px solid #22C55E}
+
+/* PROGRESS DOTS */
+.prog-dots{display:flex;gap:4px;align-items:center;margin-bottom:12px;padding:0 14px}
+.pd{width:7px;height:7px;border-radius:50%;background:var(--color-border-secondary);transition:all 0.3s;flex-shrink:0}
+.pd.done{background:#22C55E}
+.pd.done.b{background:#38BDF8}
+.pd.done.m{background:#8B5CF6}
+.pd.cur{background:var(--color-text-primary);transform:scale(1.4)}
+.pd-line{flex:1;height:1px;background:var(--color-border-tertiary)}
+.pd-label{font-size:10px;color:var(--color-text-tertiary);margin-left:6px}
+
+/* CARDS */
+.card{border:0.5px solid var(--color-border-tertiary);border-radius:14px;overflow:hidden;margin-bottom:10px;background:var(--color-background-primary)}
+.card-top{padding:13px 16px 0}
+.step-tag{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px;padding-bottom:8px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.step-tag::after{content:'';flex:1;height:0.5px;background:var(--color-border-tertiary)}
+.card-body{padding:12px 16px 16px}
+.section-h{font-size:16px;font-weight:800;color:var(--color-text-primary);line-height:1.3;margin-bottom:6px}
+.section-b{font-size:12px;color:var(--color-text-secondary);line-height:1.7;margin-bottom:10px}
+
+/* RECALL BUBBLE */
+.recall{border:0.5px solid #F59E0B;border-radius:10px;padding:12px 14px;background:#FFFBEB;margin-bottom:10px}
+.recall-tag{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#B45309;margin-bottom:5px}
+.recall-text{font-size:13px;color:#92400E;font-style:italic;line-height:1.5}
+.recall-now{font-size:11px;color:#B45309;margin-top:6px;font-weight:600}
+
+/* COMPARISON VISUAL */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.cmp-card{border-radius:10px;padding:12px;text-align:center}
+.cmp-name{font-size:11px;font-weight:700;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px}
+.cmp-stat{font-size:22px;font-weight:800;line-height:1;margin-bottom:4px}
+.cmp-detail{font-size:10px;line-height:1.5}
+.cmp-result{border-radius:8px;padding:3px 10px;font-size:10px;font-weight:700;display:inline-block;margin-top:6px}
+
+/* CHOOSE */
+.choose-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.c-btn{padding:8px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid var(--color-border-secondary);background:var(--color-background-secondary);color:var(--color-text-primary);font-family:'Sora',var(--font-sans);transition:all 0.15s}
+.c-btn:hover{background:var(--color-background-primary)}
+.c-btn.cor{background:#F0FDF4;border-color:#22C55E;color:#15803D;animation:glow 0.4s ease}
+.c-btn.wrg{background:#FEF2F2;border-color:#EF4444;color:#B91C1C;animation:shake 0.3s ease}
+.c-btn.dis{opacity:0.3;cursor:default;pointer-events:none}
+
+/* REVEAL */
+.reveal{border-radius:10px;padding:12px 14px;margin:8px 0;font-size:12px;line-height:1.65;display:none}
+.reveal.on{display:block;animation:fadeUp 0.3s ease}
+
+/* EXPLAIN BOX */
+.explain-box{border:0.5px solid var(--color-border-secondary);border-radius:10px;padding:12px;background:var(--color-background-secondary);margin-bottom:10px}
+.explain-prompt{font-size:13px;font-weight:700;color:var(--color-text-primary);margin-bottom:8px;line-height:1.4}
+.explain-sub{font-size:11px;color:var(--color-text-secondary);margin-bottom:10px;line-height:1.5;padding:8px 10px;background:var(--color-background-primary);border-radius:8px;border-left:2px solid #F59E0B}
+.explain-input{border:0.5px solid var(--color-border-secondary);border-radius:8px;padding:10px 12px;background:var(--color-background-primary);font-size:13px;color:var(--color-text-primary);font-family:'Sora',var(--font-sans);resize:none;width:100%;outline:none;line-height:1.6;min-height:64px}
+.explain-input:focus{border-color:#F59E0B}
+.voice-row{display:flex;gap:8px;margin-top:6px;align-items:center}
+.v-btn{display:flex;align-items:center;gap:4px;padding:6px 10px;border-radius:6px;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);font-size:10px;font-weight:600;color:var(--color-text-secondary);cursor:pointer;font-family:'Sora',var(--font-sans)}
+.rdot{width:6px;height:6px;border-radius:50%;background:#EF4444;animation:pulse 1.5s infinite}
+
+/* AI MIRROR */
+.ai-mirror{border:0.5px solid var(--color-border-tertiary);border-radius:10px;padding:12px 14px;margin-bottom:10px;background:var(--color-background-primary);display:none}
+.ai-mirror.on{display:block;animation:fadeUp 0.4s ease}
+.ai-head{display:flex;align-items:center;gap:7px;margin-bottom:8px}
+.ai-av{width:20px;height:20px;border-radius:50%;background:#EEEDFE;display:flex;align-items:center;justify-content:center}
+.ai-av-i{width:8px;height:8px;border-radius:50%;background:#534AB7}
+.ai-name{font-size:11px;font-weight:600;color:var(--color-text-secondary)}
+.ai-body{font-size:12px;color:var(--color-text-primary);line-height:1.65}
+.ai-gap{margin-top:8px;padding:8px 10px;background:#FFFBEB;border-radius:7px;font-size:11px;color:#633806;line-height:1.55;font-weight:500}
+
+/* DETECTIVE */
+.det-header{background:#FEF2F2;border-radius:8px;padding:8px 12px;margin-bottom:10px}
+.det-title{font-size:11px;font-weight:700;color:#B91C1C}
+.det-sub{font-size:10px;color:#EF4444;margin-top:2px}
+.stmt{border:0.5px solid var(--color-border-tertiary);border-radius:10px;padding:12px;margin-bottom:8px;background:var(--color-background-primary)}
+.stmt-text{font-size:13px;font-weight:600;color:var(--color-text-primary);margin-bottom:8px;line-height:1.4}
+.stmt-reveal{border-radius:7px;padding:8px 10px;margin-top:8px;font-size:11px;line-height:1.6;display:none}
+.stmt-reveal.on{display:block}
+
+/* TEACH FRIEND — THE PEAK MOMENT */
+.teach-card{border-radius:14px;overflow:hidden;margin-bottom:10px;border:1.5px solid #22C55E;background:#F0FDF4}
+.teach-top{background:#15803D;padding:10px 14px;display:flex;align-items:center;gap:8px}
+.teach-icon{font-size:18px}
+.teach-top-text{font-size:11px;font-weight:700;color:#fff;letter-spacing:0.5px}
+.teach-body{padding:14px}
+.teach-scenario{font-size:13px;font-weight:700;color:#14532D;line-height:1.4;margin-bottom:8px}
+.teach-context{font-size:12px;color:#166534;line-height:1.6;margin-bottom:12px;padding:8px 10px;background:rgba(255,255,255,0.6);border-radius:8px}
+.teach-choices{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.teach-choice{padding:10px 12px;border-radius:8px;border:1.5px solid rgba(20,83,45,0.2);background:rgba(255,255,255,0.5);font-size:12px;font-weight:600;cursor:pointer;color:#14532D;font-family:'Sora',var(--font-sans);transition:all 0.15s;line-height:1.4}
+.teach-choice:hover{background:rgba(255,255,255,0.8)}
+.teach-choice.sel-t{background:#fff;border-color:#22C55E;animation:pop 0.25s ease}
+.teach-reveal{padding:10px 12px;background:rgba(255,255,255,0.7);border-radius:8px;display:none}
+.teach-reveal.on{display:block;animation:fadeUp 0.3s ease}
+.teach-share{border-radius:10px;padding:12px 14px;background:#fff;border:1px solid #22C55E;margin-top:10px}
+.teach-share-label{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#15803D;margin-bottom:6px}
+.teach-share-text{font-size:13px;color:#14532D;line-height:1.6;font-style:italic;font-weight:600}
+.share-btn{margin-top:8px;padding:7px 14px;border-radius:20px;border:none;background:#15803D;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:'Sora',var(--font-sans)}
+
+/* COMPLEXITY UNLOCK */
+.unlock-card{border:1.5px solid #8B5CF6;border-radius:14px;overflow:hidden;margin-bottom:10px;animation:unlock 0.5s ease}
+.unlock-top{background:#6D28D9;padding:10px 14px;display:flex;align-items:center;gap:8px}
+.unlock-icon{font-size:18px}
+.unlock-top-text{font-size:11px;font-weight:700;color:#fff}
+.unlock-body{padding:14px;background:#F5F3FF}
+.unlock-h{font-size:14px;font-weight:800;color:#3C1A78;margin-bottom:6px}
+.unlock-sub{font-size:12px;color:#5B21B6;line-height:1.65;margin-bottom:10px}
+.unlock-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.unlock-item{border-radius:8px;padding:8px 10px;background:rgba(255,255,255,0.6);border:0.5px solid rgba(139,92,246,0.3)}
+.ui-label{font-size:9px;font-weight:700;color:#6D28D9;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px}
+.ui-text{font-size:11px;color:#3C1A78;line-height:1.4;font-weight:500}
+
+/* OS SCORE */
+.os-score{border-radius:14px;overflow:hidden;margin-bottom:10px}
+.os-top{background:#1A1A2E;padding:12px 14px}
+.os-top-label{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.4);margin-bottom:8px}
+.os-gains{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.os-g{text-align:center;padding:8px 4px;background:rgba(255,255,255,0.04);border-radius:6px}
+.os-n{font-size:16px;font-weight:800;line-height:1;margin-bottom:2px}
+.os-l{font-size:8px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px}
+.os-body{background:#FAFAFA;padding:12px 14px;border:0.5px solid var(--color-border-tertiary);border-top:none;border-radius:0 0 14px 14px}
+.os-principle{display:flex;gap:8px;padding:6px 0;border-bottom:0.5px solid var(--color-border-tertiary);align-items:flex-start}
+.os-principle:last-child{border-bottom:none}
+.op-num{width:18px;height:18px;border-radius:50%;background:#F59E0B;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.op-text{font-size:11px;color:var(--color-text-primary);line-height:1.5}
+.op-text strong{font-weight:600}
+
+/* ACTION BTN */
+.act{width:100%;padding:13px;border-radius:12px;border:none;font-size:14px;font-weight:700;cursor:pointer;font-family:'Sora',var(--font-sans);transition:all 0.15s;margin-top:6px}
+.act:active{transform:scale(0.97)}
+.act-d1{background:#F59E0B;color:#fff}
+.act-d2{background:#0284C7;color:#fff}
+.act-d3{background:#15803D;color:#fff}
+.act-ghost{background:transparent;color:var(--color-text-secondary);border:0.5px solid var(--color-border-secondary);font-size:12px;padding:8px}
+
+/* CONFETTI */
+.confetti-wrap{position:relative;overflow:hidden;height:0}
+.cp{position:absolute;width:8px;height:8px;border-radius:2px;animation:confetti 1.5s ease forwards}
+
+/* 7-LAYER INDICATOR */
+.layer-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px}
+</style>
+
+<div class="g">
+<h2 class="sr-only">Complete 3-day arc — cricket hook through to teach-your-friend and complexity unlock</h2>
+
+<!-- ARC TOPBAR -->
+<div class="arc-bar">
+  <div class="arc-days">
+    <div class="arc-day d1c" onclick="goDay(1)">Day 1 ✓</div>
+    <div class="arc-day d2c" id="d2-tab" onclick="goDay(2)">Day 2</div>
+    <div class="arc-day d3c locked" id="d3-tab" onclick="goDay(3)">Day 3 🔒</div>
+  </div>
+  <div class="arc-interest">🏏 Cricket</div>
+</div>
+
+<!-- ════════════ DAY 2 ════════════ -->
+<div class="screen on" id="day2">
+  <div class="prog-dots">
+    <div class="pd cur" id="p2-0"></div>
+    <div class="pd-line"></div><div class="pd" id="p2-1"></div>
+    <div class="pd-line"></div><div class="pd" id="p2-2"></div>
+    <div class="pd-line"></div><div class="pd" id="p2-3"></div>
+    <div class="pd-label" id="p2-label">Recall</div>
+  </div>
+
+  <!-- D2 SCREEN A: RECALL -->
+  <div class="screen on" id="d2a">
+    <div class="card">
+      <div class="card-top">
+        <div class="step-tag" style="color:#0284C7">
+          <div class="layer-pill" style="background:#E0F2FE;color:#0C4A6E">Layer 2 · Mechanism</div>
+          Day 2 · Build · 6 min
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="recall">
+          <div class="recall-tag">Yesterday you thought</div>
+          <div class="recall-text">"Sixes are mostly about strength and bat size"</div>
+          <div class="recall-now">Today you'll discover exactly why that's incomplete — and something most cricket fans never realise.</div>
+        </div>
+        <div class="section-h">Two bowlers. Same 3 wickets. Completely different story.</div>
+        <div class="section-b">Here's a puzzle your cricket friends probably can't solve. Think carefully before you answer.</div>
+
+        <div class="compare">
+          <div class="cmp-card" style="background:#EFF6FF;border:1.5px solid #3B82F6">
+            <div class="cmp-name" style="color:#1D4ED8">Bumrah</div>
+            <div class="cmp-stat" style="color:#1D4ED8">3 wickets</div>
+            <div class="cmp-detail" style="color:#3B82F6">in 4 overs</div>
+            <div class="cmp-result" style="background:#DBEAFE;color:#1D4ED8">Economy: 5.2</div>
+          </div>
+          <div class="cmp-card" style="background:#FEF3C7;border:1.5px solid #F59E0B">
+            <div class="cmp-name" style="color:#B45309">Arshdeep</div>
+            <div class="cmp-stat" style="color:#B45309">3 wickets</div>
+            <div class="cmp-detail" style="color:#F59E0B">in 6 overs</div>
+            <div class="cmp-result" style="background:#FEF3C7;color:#B45309">Economy: 7.8</div>
+          </div>
+        </div>
+
+        <div style="font-size:13px;font-weight:700;color:var(--color-text-primary);margin-bottom:8px">Same wickets. Who performed better in this spell?</div>
+        <div class="choose-row">
+          <div class="c-btn" onclick="d2Pick(this,'bumrah','correct')">Bumrah 💪</div>
+          <div class="c-btn" onclick="d2Pick(this,'equal','wrong')">Both equal 🤷</div>
+          <div class="c-btn" onclick="d2Pick(this,'arshdeep','wrong')">Arshdeep 🤔</div>
+        </div>
+        <div class="reveal" id="d2a-reveal" style="background:#F0FDF4;border:0.5px solid #22C55E;color:#14532D">
+          <strong>Bumrah</strong> — 3 wickets in 4 overs means fewer balls wasted. Rate = wickets ÷ overs = 3/4. Arshdeep took 3/6. <strong>3/4 is a bigger fraction than 3/6</strong>. Efficiency matters more than totals. This is exactly what fractions measure — performance per unit.
+        </div>
+        <button class="act act-d2" id="d2a-btn" style="display:none" onclick="d2Next('d2b',1)">Next — see the deeper why →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- D2 SCREEN B: MECHANISM -->
+  <div class="screen" id="d2b">
+    <div class="card">
+      <div class="card-top">
+        <div class="step-tag" style="color:#0284C7">
+          <div class="layer-pill" style="background:#E0F2FE;color:#0C4A6E">Layer 3 · Reasoning</div>
+          Why fractions exist
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="section-h">Counting doesn't always tell the truth.</div>
+        <div class="section-b">3 wickets sounds the same whether you bowled 4 overs or 10 overs. But you intuitively know they're not the same. Why?<br><br>Because your brain is secretly computing a ratio — how many wickets <em>per over</em>. That ratio is a fraction. <strong>Fractions exist because totals lie and rates tell the truth.</strong></div>
+        <div style="border-radius:10px;padding:12px;background:#EFF6FF;border:0.5px solid #3B82F6;margin-bottom:10px">
+          <div style="font-size:11px;font-weight:700;color:#1D4ED8;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px">The Fraction Formula in Cricket</div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="font-size:12px;color:#1E40AF;padding:6px 8px;background:rgba(255,255,255,0.6);border-radius:6px">Bowling average = Runs conceded ÷ Wickets taken</div>
+            <div style="font-size:12px;color:#1E40AF;padding:6px 8px;background:rgba(255,255,255,0.6);border-radius:6px">Economy rate = Runs conceded ÷ Overs bowled</div>
+            <div style="font-size:12px;color:#1E40AF;padding:6px 8px;background:rgba(255,255,255,0.6);border-radius:6px;font-weight:600">Both are fractions — part ÷ whole = rate</div>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--color-text-secondary);line-height:1.7;margin-bottom:10px;padding:8px 12px;background:var(--color-background-secondary);border-radius:8px;border-left:2px solid #F59E0B">
+          <strong style="color:var(--color-text-primary)">The connection to Virat Kohli:</strong> Kohli has played 500+ matches, average 54. A new player plays 2 matches, scores a lot, average is 80. Who is more reliable? The average (runs ÷ innings) is a fraction — and a fraction needs enough data to be meaningful. A fraction from 2 innings lies. A fraction from 500 tells the truth.
+        </div>
+        <button class="act act-d2" onclick="d2Next('d2c',2)">Now explain it in your own words →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- D2 SCREEN C: FEYNMAN -->
+  <div class="screen" id="d2c">
+    <div class="card">
+      <div class="card-top">
+        <div class="step-tag" style="color:#0284C7">
+          <div class="layer-pill" style="background:#E0F2FE;color:#0C4A6E">Layer 2 · Prove You Know It</div>
+          Teach it back
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="explain-box">
+          <div class="explain-prompt">Your cricket-crazy cousin says: "Rahul has 5 wickets and Jadeja has 3. Rahul is obviously better." How do you correct him?</div>
+          <div class="explain-sub">Use what you just learned. Keep it simple — like you're texting a friend. Cricket language is fine.</div>
+          <textarea class="explain-input" id="d2c-input" placeholder="Bro, that's not how it works. Wickets alone don't tell you..." rows="3"></textarea>
+          <div class="voice-row"><button class="v-btn"><div class="rdot"></div> Say it out loud instead</button><span style="font-size:10px;color:var(--color-text-tertiary)">45 sec · casual language</span></div>
+        </div>
+        <button class="act act-d2" onclick="showD2Mirror()">Submit →</button>
+      </div>
+    </div>
+    <div class="ai-mirror" id="d2-mirror">
+      <div class="ai-head"><div class="ai-av"><div class="ai-av-i"></div></div><div class="ai-name">Inner OS</div></div>
+      <div class="ai-body">You used rate-thinking correctly — that's the key insight. Comparing wickets without overs is like comparing runs without balls faced.</div>
+      <div class="ai-gap">One gap to sharpen: mention that both numbers matter — wickets AND overs. Economy = wickets ÷ overs. You need both parts to get the fraction. Next time, state both numbers when comparing.</div>
+    </div>
+    <button class="act act-d2" id="d2c-next" style="display:none" onclick="d2Next('d2d',3)">One last detective challenge →</button>
+  </div>
+
+  <!-- D2 SCREEN D: DETECTIVE -->
+  <div class="screen" id="d2d">
+    <div class="card">
+      <div class="card-top">
+        <div class="step-tag" style="color:#0284C7">
+          <div class="layer-pill" style="background:#E0F2FE;color:#0C4A6E">Layer 4 · Assumptions</div>
+          Spot the trap
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="det-header"><div class="det-title">Detective challenge — harder than yesterday</div><div class="det-sub">Most fans get this wrong</div></div>
+        <div class="stmt" id="stmt-d2">
+          <div class="stmt-text">"Virat Kohli's average is 54. He played 2 matches recently and scored 0 and 10. So now his average dropped below 54."</div>
+          <div class="choose-row">
+            <div class="c-btn" onclick="d2Det(this,'true','wrong')">True — obviously</div>
+            <div class="c-btn" onclick="d2Det(this,'depends','correct')">Depends on something</div>
+          </div>
+          <div class="reveal" id="d2-det-reveal" style="background:#F5F3FF;border:0.5px solid #8B5CF6;color:#3C1A78">
+            <strong>Depends on sample size.</strong> Adding 2 low-scoring innings to 500+ innings barely moves the average — the fraction denominator (total innings) is so large that 2 innings barely changes it. This is why Kohli's average from 500 matches is reliable, but a player's average from 2 matches means almost nothing. <strong>Fractions need enough data to be meaningful.</strong>
+          </div>
+        </div>
+        <button class="act act-d2" id="d2d-btn" style="display:none" onclick="finishDay2()">Day 2 complete →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- D2 DONE -->
+  <div class="screen" id="d2done">
+    <div class="card">
+      <div class="card-body" style="text-align:center;padding:20px 16px">
+        <div style="font-size:36px;margin-bottom:10px;animation:pop 0.4s ease">🏏</div>
+        <div style="font-size:18px;font-weight:800;color:var(--color-text-primary);margin-bottom:4px">Day 2 done.</div>
+        <div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:16px">You learned why fractions exist — and used cricket to prove it.</div>
+        <div style="padding:10px 14px;border-radius:10px;background:#FFFBEB;border:0.5px solid #F59E0B;text-align:left;margin-bottom:14px">
+          <div style="font-size:9px;font-weight:700;color:#B45309;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px">Day 3 unlocks tomorrow · Master</div>
+          <div style="font-size:12px;color:#92400E;line-height:1.65">You'll get a real cricket puzzle your friends can't solve — and the words to explain it perfectly. Plus: why do some small fractions feel bigger than large ones? 🤔</div>
+        </div>
+        <button class="act act-d3" style="margin-top:0" onclick="goDay(3)">Preview Day 3 →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ DAY 3 ════════════ -->
+<div class="screen" id="day3">
+  <div class="prog-dots">
+    <div class="pd cur" id="p3-0"></div>
+    <div class="pd-line"></div><div class="pd" id="p3-1"></div>
+    <div class="pd-line"></div><div class="pd" id="p3-2"></div>
+    <div class="pd-line"></div><div class="pd" id="p3-3"></div>
+    <div class="pd-label" id="p3-label">First principles</div>
+  </div>
+
+  <!-- D3 SCREEN A: FIRST PRINCIPLES -->
+  <div class="screen on" id="d3a">
+    <div class="card">
+      <div class="card-top">
+        <div class="step-tag" style="color:#15803D">
+          <div class="layer-pill" style="background:#F0FDF4;color:#14532D">Layer 6 · First Principles</div>
+          Day 3 · Master · 8 min
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="section-h">Why does maths need fractions at all?</div>
+        <div class="section-b">Strip it to the root. Before fractions existed, people could only count whole things — 1 goat, 2 goats. But what if you wanted to split a goat? Or compare speeds? Or share something unequally?</div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px">
+          <div style="padding:8px 12px;border-radius:8px;background:#FEF3C7;font-size:12px;color:#78350F;line-height:1.55"><strong>Problem 1:</strong> Two bowlers took 3 wickets each — but you can't compare them with whole numbers alone. You need wickets <em>per over</em>.</div>
+          <div style="padding:8px 12px;border-radius:8px;background:#E0F2FE;font-size:12px;color:#0C4A6E;line-height:1.55"><strong>Problem 2:</strong> Kohli scored 5000 runs in 100 innings. Stating just "5000" means nothing. You need runs <em>per innings</em> = average.</div>
+          <div style="padding:8px 12px;border-radius:8px;background:#F0FDF4;font-size:12px;color:#14532D;line-height:1.55"><strong>Solution:</strong> A fraction (a ÷ b) lets you express "a for every b" — performance per unit. <strong>Fractions were invented to compare fairly.</strong></div>
+        </div>
+        <div style="font-size:13px;font-weight:700;color:var(--color-text-primary);margin-bottom:8px">Quick confirm — which one needs a fraction to compare fairly?</div>
+        <div class="choose-row">
+          <div class="c-btn" onclick="d3Pick(this,'runs','wrong')">Total runs scored</div>
+          <div class="c-btn" onclick="d3Pick(this,'rate','correct')">Runs per ball faced</div>
+          <div class="c-btn" onclick="d3Pick(this,'count','wrong')">Number of sixes hit</div>
+        </div>
+        <div class="reveal" id="d3a-reveal" style="background:#F0FDF4;border:0.5px solid #22C55E;color:#14532D">
+          <strong>Runs per ball faced</strong> — because this is a rate (part ÷ whole = fraction). Total sixes and total runs are whole numbers that don't need division. Rates always need fractions.
+        </div>
+        <button class="act act-d3" id="d3a-btn" style="display:none" onclick="d3Next('d3b',1)">Go deeper →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- D3 SCREEN B: REAL WORLD CASE -->
+  <div class="screen" id="d3b">
+    <div class="card">
+      <div class="card-top">
+        <div class="step-tag" style="color:#15803D">
+          <div class="layer-pill" style="background:#F0FDF4;color:#14532D">Layer 4 · Real World</div>
+          The puzzle most fans get wrong
+        </div>
+      </div>
+      <div class="card-body">
+        <div style="border-radius:10px;padding:12px;background:#1A1A2E;margin-bottom:12px">
+          <div style="font-size:10px;font-weight:700;color:#F59E0B;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px">Real match scenario</div>
+          <div style="font-size:13px;color:#fff;line-height:1.65;margin-bottom:10px">Vaibhav Suryavanshi plays 2 IPL matches. Scores 150 and 120. Average = 135.<br>Virat Kohli plays 250 IPL matches. Average = 54.<br><br>A newspaper writes: <em>"Vaibhav is currently a better batter than Kohli by average."</em></div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.6);line-height:1.6">Is the newspaper right? Wrong? Or is something missing?</div>
+        </div>
+        <div class="choose-row">
+          <div class="c-btn" onclick="d3CaseP(this,'right','wrong')">Newspaper is right</div>
+          <div class="c-btn" onclick="d3CaseP(this,'missing','correct')">Something's missing</div>
+          <div class="c-btn" onclick="d3CaseP(this,'wrong','wrong')">Newspaper is wrong</div>
+        </div>
+        <div class="reveal" id="d3b-reveal" style="background:#FFFBEB;border:0.5px solid #F59E0B;color:#78350F">
+          <strong>Something's missing — sample size.</strong> Vaibhav's average of 135 from 2 innings is a fraction with a denominator of 2. Kohli's 54 from 250 innings is a fraction with a denominator of 250. <strong>A fraction from 2 data points is unreliable.</strong> The newspaper used the right tool (average = fraction) but ignored how trustworthy the fraction is. Two innings can be lucky. Two hundred-fifty innings tells the real story.
+        </div>
+        <button class="act act-d3" id="d3b-btn" style="display:none" onclick="d3Next('d3c',2)">Now — teach your friend →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- D3 SCREEN C: TEACH YOUR FRIEND — THE PEAK MOMENT -->
+  <div class="screen" id="d3c">
+    <div class="confetti-wrap" id="conf-wrap" style="height:60px"></div>
+    <div class="teach-card">
+      <div class="teach-top">
+        <div class="teach-icon">🗣️</div>
+        <div class="teach-top-text">Teach your friend · The moment that proves you understood</div>
+      </div>
+      <div class="teach-body">
+        <div class="teach-scenario">Your friend says: "Bumrah and Arshdeep both got 3 wickets today. They're equal, right?"</div>
+        <div class="teach-context">You know better now. How do you explain it — simply, in cricket language, so they actually get it?</div>
+        <div class="teach-choices" id="teach-choices">
+          <div class="teach-choice" onclick="pickTeach(this,0)">"Not exactly — you have to check how many overs they bowled. 3 wickets in 4 overs is way better than 3 wickets in 6 overs. It's like scoring 50 in 20 balls vs 50 in 40 balls."</div>
+          <div class="teach-choice" onclick="pickTeach(this,1)">"Wickets alone mean nothing bro. What's their economy? Their strike rate? We need to see the rate — that's the real comparison."</div>
+          <div class="teach-choice" onclick="pickTeach(this,2)">"Think of it this way: if I gave you ₹100 and took 4 days, vs giving ₹100 and taking 6 days — both gave you the same money but one was faster. Same wickets, fewer overs = faster = better."</div>
+        </div>
+        <div class="teach-reveal" id="teach-reveal">
+          <div style="font-size:11px;font-weight:700;color:#14532D;margin-bottom:6px">All three are correct — you picked your natural way of explaining. That's exactly what understanding means.</div>
+          <div class="teach-share">
+            <div class="teach-share-label">Your cricket fact to share</div>
+            <div class="teach-share-text" id="teach-share-text">"Did you know 3 wickets in 4 overs beats 3 wickets in 6 overs? It's a fraction — efficiency per over. Most fans miss this."</div>
+            <button class="share-btn">Share with a cricket friend →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button class="act act-d3" id="d3c-btn" style="display:none" onclick="d3Next('d3d',3)">See what you've built →</button>
+  </div>
+
+  <!-- D3 SCREEN D: OS SCORE + COMPLEXITY UNLOCK -->
+  <div class="screen" id="d3d">
+    <!-- OS SCORE -->
+    <div class="os-score">
+      <div class="os-top">
+        <div class="os-top-label">Inner OS · 3-day arc complete</div>
+        <div class="os-gains">
+          <div class="os-g"><div class="os-n" style="color:#22C55E">+3%</div><div class="os-l">Clarity</div></div>
+          <div class="os-g"><div class="os-n" style="color:#38BDF8">+3%</div><div class="os-l">Thinking</div></div>
+          <div class="os-g"><div class="os-n" style="color:#8B5CF6">+2%</div><div class="os-l">Attention</div></div>
+          <div class="os-g"><div class="os-n" style="color:#F59E0B">+2%</div><div class="os-l">Momentum</div></div>
+          <div class="os-g"><div class="os-n" style="color:#EF4444">+1%</div><div class="os-l">Character</div></div>
+        </div>
+      </div>
+      <div class="os-body">
+        <div style="font-size:10px;font-weight:700;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px">7 timeless principles you just lived</div>
+        <div class="os-principle"><div class="op-num">1</div><div class="op-text"><strong>Started from reality</strong> — a cricket match, not a textbook definition</div></div>
+        <div class="os-principle"><div class="op-num">3</div><div class="op-text"><strong>Confusion was safe</strong> — "3 wickets = equal" was a safe first thought</div></div>
+        <div class="os-principle"><div class="op-num">4</div><div class="op-text"><strong>Productive discomfort</strong> — the Kohli vs Vaibhav puzzle made you work</div></div>
+        <div class="os-principle"><div class="op-num">5</div><div class="op-text"><strong>Your words reflected back</strong> — your Day 1 guess appeared on Day 2</div></div>
+        <div class="os-principle"><div class="op-num">7</div><div class="op-text"><strong>Ended with expression</strong> — you taught your friend. That's mastery.</div></div>
+      </div>
+    </div>
+
+    <!-- COMPLEXITY UNLOCK -->
+    <div class="unlock-card">
+      <div class="unlock-top"><div class="unlock-icon">🔓</div><div class="unlock-top-text">Next arc unlocked — slightly harder, same cricket frame</div></div>
+      <div class="unlock-body">
+        <div class="unlock-h">Ready for the next level?</div>
+        <div class="unlock-sub">Same interest. Same cricket. But now the questions have more layers — based on how you responded over 3 days.</div>
+        <div class="unlock-grid">
+          <div class="unlock-item"><div class="ui-label">Week 2 hook</div><div class="ui-text">Why do D/L method results sometimes feel unfair? (Fractions + averages deeper)</div></div>
+          <div class="unlock-item"><div class="ui-label">Week 3 hook</div><div class="ui-text">How does toss advantage vary by pitch? (Probability + ratios)</div></div>
+          <div class="unlock-item"><div class="ui-label">Month 2</div><div class="ui-text">Can you predict a team's total from powerplay? (Algebra begins)</div></div>
+          <div class="unlock-item"><div class="ui-label">Month 3</div><div class="ui-text">Why does Kohli's average drop in SENA countries? (Statistics, data)</div></div>
+        </div>
+      </div>
+    </div>
+
+    <button class="act act-d3" onclick="restart()">Start next concept →</button>
+  </div>
+</div>
+
+</div>
+
+<script>
+let d2Steps=0, d3Steps=0;
+const colors2=['b','b','b','b'];
+
+function goDay(d){
+  document.querySelectorAll('.screen[id^="day"]').forEach(s=>s.classList.remove('on'));
+  if(d===1) return;
+  if(d===2){document.getElementById('day2').classList.add('on');showD2Screen('d2a');setD2Prog(0)}
+  if(d===3){document.getElementById('d3-tab').classList.remove('locked');document.getElementById('day3').classList.add('on');showD3Screen('d3a');setD3Prog(0)}
+}
+
+function showD2Screen(id){document.querySelectorAll('[id^="d2"]').forEach(s=>{if(s.tagName==='DIV'&&s.classList.contains('screen'))s.classList.remove('on')});document.getElementById(id).classList.add('on')}
+function showD3Screen(id){document.querySelectorAll('[id^="d3"]').forEach(s=>{if(s.tagName==='DIV'&&s.classList.contains('screen'))s.classList.remove('on')});document.getElementById(id).classList.add('on')}
+
+function setD2Prog(n){for(let i=0;i<4;i++){const p=document.getElementById('p2-'+i);p.className='pd'+(i<n?' done b':i===n?' cur':'')}}
+function setD3Prog(n){const labels=['First principles','Real case','Teach friend','Growth'];for(let i=0;i<4;i++){const p=document.getElementById('p3-'+i);p.className='pd'+(i<n?' done':i===n?' cur':'')}; document.getElementById('p3-label').textContent=labels[Math.min(n,3)]}
+
+function d2Pick(el,val,res){
+  if(el.classList.contains('cor')||el.classList.contains('wrg'))return;
+  document.querySelectorAll('#d2a .c-btn').forEach(b=>{b.className='c-btn dis'});
+  el.className='c-btn '+(res==='correct'?'cor':'wrg');
+  document.getElementById('d2a-reveal').className='reveal on';
+  document.getElementById('d2a-btn').style.display='block';
+}
+
+function d2Next(to,step){showD2Screen(to);setD2Prog(step);window.scrollTo({top:0,behavior:'smooth'})}
+
+function showD2Mirror(){
+  document.getElementById('d2-mirror').className='ai-mirror on';
+  document.getElementById('d2c-next').style.display='block';
+}
+
+function d2Det(el,val,res){
+  if(el.classList.contains('cor')||el.classList.contains('wrg'))return;
+  document.querySelectorAll('#d2d .c-btn').forEach(b=>{b.className='c-btn dis'});
+  el.className='c-btn '+(res==='correct'?'cor':'wrg');
+  document.getElementById('d2-det-reveal').className='reveal on';
+  document.getElementById('d2d-btn').style.display='block';
+}
+
+function finishDay2(){showD2Screen('d2done');setD2Prog(4);document.getElementById('d3-tab').classList.remove('locked')}
+
+function d3Pick(el,val,res){
+  if(el.classList.contains('cor')||el.classList.contains('wrg'))return;
+  document.querySelectorAll('#d3a .c-btn').forEach(b=>{b.className='c-btn dis'});
+  el.className='c-btn '+(res==='correct'?'cor':'wrg');
+  document.getElementById('d3a-reveal').className='reveal on';
+  document.getElementById('d3a-btn').style.display='block';
+}
+
+function d3CaseP(el,val,res){
+  if(el.classList.contains('cor')||el.classList.contains('wrg'))return;
+  document.querySelectorAll('#d3b .c-btn').forEach(b=>{b.className='c-btn dis'});
+  el.className='c-btn '+(res==='correct'?'cor':'wrg');
+  document.getElementById('d3b-reveal').className='reveal on';
+  document.getElementById('d3b-btn').style.display='block';
+}
+
+function d3Next(to,step){showD3Screen(to);setD3Prog(step);window.scrollTo({top:0,behavior:'smooth'});if(to==='d3c')spawnConfetti()}
+
+function pickTeach(el,idx){
+  document.querySelectorAll('.teach-choice').forEach(c=>c.classList.remove('sel-t'));
+  el.classList.add('sel-t');
+  const shares=["\"Did you know 3 wickets in 4 overs beats 3 wickets in 6 overs? It's a fraction — efficiency per over. Most fans miss this.\"","\"Bro, in cricket you can't just compare wickets. Check the overs too — it's about rate, like speed: faster = better bowler.\"","\"Think of it like money: same amount but one took less time. Same wickets but fewer overs = better bowler. It's fractions.\""];
+  document.getElementById('teach-share-text').textContent = shares[idx];
+  document.getElementById('teach-reveal').className='teach-reveal on';
+  document.getElementById('d3c-btn').style.display='block';
+}
+
+function spawnConfetti(){
+  const w=document.getElementById('conf-wrap');
+  w.style.height='60px';
+  const cols=['#F59E0B','#22C55E','#3B82F6','#8B5CF6','#EF4444'];
+  for(let i=0;i<20;i++){const p=document.createElement('div');p.className='cp';p.style.left=Math.random()*100+'%';p.style.background=cols[~~(Math.random()*5)];p.style.animationDelay=Math.random()*0.5+'s';p.style.animationDuration=(1+Math.random())+'s';w.appendChild(p);setTimeout(()=>p.remove(),2000)}
+}
+
+function restart(){goDay(2)}
+</script>

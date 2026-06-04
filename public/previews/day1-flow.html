@@ -1,0 +1,411 @@
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+.g{font-family:'Sora',var(--font-sans);max-width:480px;margin:0 auto;padding:8px 0 20px}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pop{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+@keyframes glow{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}50%{box-shadow:0 0 0 6px rgba(34,197,94,0.15)}}
+@keyframes timerTick{from{width:100%}to{width:0%}}
+@keyframes confettiFall{0%{transform:translateY(-10px) rotate(0deg);opacity:1}100%{transform:translateY(80px) rotate(360deg);opacity:0}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+@keyframes slideRight{from{width:0}to{width:100%}}
+
+.screen{display:none;animation:fadeUp 0.3s ease}
+.screen.on{display:block}
+
+/* PROGRESS TOPBAR */
+.topbar{position:sticky;top:0;z-index:10;background:var(--color-background-primary);border-bottom:0.5px solid var(--color-border-tertiary);padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+.tb-left{display:flex;align-items:center;gap:8px}
+.tb-badge{font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px}
+.tb-steps{display:flex;gap:4px}
+.ts{width:6px;height:6px;border-radius:50%;background:var(--color-border-secondary);transition:all 0.3s}
+.ts.done{background:#22C55E}
+.ts.active{background:var(--color-text-primary);transform:scale(1.3)}
+.tb-timer{font-size:11px;font-weight:600;color:var(--color-text-secondary);display:flex;align-items:center;gap:5px}
+.timer-bar{width:60px;height:3px;background:var(--color-border-tertiary);border-radius:2px;overflow:hidden}
+.timer-fill{height:100%;background:#22C55E;border-radius:2px;transition:background 0.5s}
+
+/* MAIN CARD */
+.main{border:0.5px solid var(--color-border-tertiary);border-radius:14px;overflow:hidden;margin-bottom:10px;background:var(--color-background-primary)}
+.card-top{padding:14px 16px 0}
+.step-tag{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.step-tag::after{content:'';flex:1;height:0.5px;background:var(--color-border-tertiary)}
+.story-h{font-size:18px;font-weight:800;color:var(--color-text-primary);line-height:1.3;margin-bottom:8px}
+.story-b{font-size:13px;color:var(--color-text-secondary);line-height:1.7;margin-bottom:12px;padding:10px 12px;border-radius:8px;background:var(--color-background-secondary)}
+.card-body{padding:12px 16px 16px}
+
+/* GUESS ECHO */
+.guess-echo{border-left:3px solid #F59E0B;padding:8px 12px;border-radius:0 8px 8px 0;background:var(--color-background-secondary);margin-bottom:12px}
+.ge-label{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#B45309;margin-bottom:3px}
+.ge-text{font-size:12px;color:var(--color-text-secondary);font-style:italic}
+
+/* VISUAL STORY CARD */
+.visual-frame{border-radius:10px;padding:16px;margin-bottom:12px;text-align:center}
+.vf-emoji{font-size:44px;margin-bottom:10px;display:block}
+.vf-title{font-size:15px;font-weight:800;color:var(--color-text-primary);margin-bottom:6px}
+.vf-body{font-size:12px;color:var(--color-text-secondary);line-height:1.7}
+.vf-formula{font-size:13px;font-weight:700;padding:8px 16px;border-radius:20px;display:inline-block;margin-top:10px}
+
+/* SORT ACTIVITY */
+.sort-instruction{font-size:12px;color:var(--color-text-secondary);margin-bottom:10px;line-height:1.6;padding:8px 12px;border-radius:8px;background:var(--color-background-secondary)}
+.sort-items{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;min-height:36px}
+.sort-item{padding:6px 12px;border-radius:20px;border:1.5px solid var(--color-border-secondary);background:var(--color-background-primary);font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s;user-select:none;color:var(--color-text-primary)}
+.sort-item.sel{border-color:#3B82F6;background:#EFF6FF;color:#1D4ED8}
+.sort-item.placed{opacity:0.3;cursor:default}
+.sort-bins{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.bin{border:1.5px dashed var(--color-border-secondary);border-radius:10px;padding:10px;min-height:60px;cursor:pointer;transition:all 0.2s}
+.bin.correct{border-color:#22C55E;background:#F0FDF4;animation:glow 0.5s ease}
+.bin.wrong{border-color:#EF4444;background:#FEF2F2;animation:shake 0.3s ease}
+.bin-label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
+.bin-items{display:flex;flex-wrap:wrap;gap:4px;min-height:24px}
+.bin-chip{font-size:10px;font-weight:600;padding:3px 8px;border-radius:10px}
+
+/* BELIEVE DOUBT */
+.bd-statement{font-size:16px;font-weight:700;color:var(--color-text-primary);line-height:1.4;margin-bottom:6px}
+.bd-context{font-size:12px;color:var(--color-text-secondary);line-height:1.55;margin-bottom:14px;font-style:italic}
+.bd-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.bd-btn{padding:12px 8px;border-radius:10px;border:1.5px solid var(--color-border-secondary);font-size:13px;font-weight:700;cursor:pointer;font-family:'Sora',var(--font-sans);transition:all 0.15s;background:var(--color-background-primary);color:var(--color-text-primary);text-align:center}
+.bd-btn:hover{background:var(--color-background-secondary)}
+.bd-btn.correct{background:#F0FDF4;border-color:#22C55E;color:#15803D;animation:glow 0.5s ease}
+.bd-btn.wrong{background:#FEF2F2;border-color:#EF4444;color:#B91C1C;animation:shake 0.3s ease}
+.bd-btn.disabled{opacity:0.35;cursor:default;pointer-events:none}
+.bd-reveal{border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.65;margin-top:8px;display:none}
+.bd-reveal.on{display:block}
+
+/* TRAP REVEAL (the "aha" moment) */
+.trap-card{border-radius:12px;padding:16px;margin-bottom:12px}
+.trap-emoji{font-size:28px;margin-bottom:8px;display:block}
+.trap-h{font-size:15px;font-weight:800;color:var(--color-text-primary);margin-bottom:6px}
+.trap-b{font-size:12px;color:var(--color-text-secondary);line-height:1.65}
+.trap-link{font-size:12px;font-weight:600;margin-top:8px;padding:8px 12px;border-radius:8px;line-height:1.5}
+
+/* DONE SCREEN */
+.done-wrap{text-align:center;padding:20px 0 8px;position:relative;overflow:hidden}
+.done-confetti{position:absolute;top:0;left:0;right:0;pointer-events:none;overflow:hidden;height:80px}
+.confetti-piece{position:absolute;width:8px;height:8px;border-radius:2px;animation:confettiFall 1.5s ease forwards}
+.done-icon{font-size:40px;margin-bottom:12px;display:block;animation:pop 0.4s ease}
+.done-h{font-size:20px;font-weight:800;color:var(--color-text-primary);margin-bottom:4px}
+.done-sub{font-size:13px;color:var(--color-text-secondary);margin-bottom:16px;line-height:1.6}
+.done-gains{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.dg-card{border-radius:10px;padding:10px 6px;text-align:center;background:var(--color-background-secondary)}
+.dg-num{font-size:20px;font-weight:800;line-height:1;margin-bottom:2px}
+.dg-lbl{font-size:9px;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:1px}
+.done-tease{border-radius:10px;padding:12px 14px;margin-bottom:12px;text-align:left}
+.dt-label{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px}
+.dt-text{font-size:12px;line-height:1.6}
+.done-fact{border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:12px;line-height:1.65;font-weight:500}
+.streak-row{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:16px}
+.streak-n{font-size:28px;font-weight:800;color:#F59E0B;line-height:1}
+.streak-l{font-size:11px;color:var(--color-text-secondary)}
+
+/* ACTION BTN */
+.act-btn{width:100%;padding:13px;border-radius:12px;border:none;font-size:14px;font-weight:700;cursor:pointer;font-family:'Sora',var(--font-sans);transition:all 0.15s;margin-top:8px;letter-spacing:0.3px}
+.act-btn:active{transform:scale(0.97)}
+.btn-skip{background:transparent;color:var(--color-text-tertiary);border:0.5px solid var(--color-border-tertiary);font-size:12px;padding:8px;margin-top:4px}
+
+/* TIME TAG */
+.time-tag{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:600;padding:2px 8px;border-radius:20px;background:var(--color-background-secondary);color:var(--color-text-tertiary);margin-bottom:8px}
+
+/* VOICE ROW */
+.voice-row{display:flex;gap:8px;margin-top:8px;align-items:center}
+.voice-btn{display:flex;align-items:center;gap:5px;padding:7px 12px;border-radius:8px;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);font-size:11px;font-weight:500;color:var(--color-text-secondary);cursor:pointer;font-family:'Sora',var(--font-sans)}
+.rdot{width:7px;height:7px;border-radius:50%;background:#EF4444;animation:pulse 1.5s infinite}
+
+/* INPUT */
+.input-area{border:0.5px solid var(--color-border-secondary);border-radius:10px;padding:10px 12px;background:var(--color-background-secondary);font-size:13px;color:var(--color-text-primary);font-family:'Sora',var(--font-sans);resize:none;width:100%;outline:none;line-height:1.6;min-height:64px}
+.input-area:focus{border-color:#F59E0B}
+</style>
+
+<div class="g">
+<h2 class="sr-only">Complete Day 1 — 5 minute curiosity-maintained learning arc</h2>
+
+<!-- STICKY TOPBAR -->
+<div class="topbar" id="topbar">
+  <div class="tb-left">
+    <div class="tb-badge" id="tb-badge" style="background:#F0FDF4;color:#15803D">🏏 Cricket</div>
+    <div class="tb-steps">
+      <div class="ts active" id="ts0"></div>
+      <div class="ts" id="ts1"></div>
+      <div class="ts" id="ts2"></div>
+      <div class="ts" id="ts3"></div>
+      <div class="ts" id="ts4"></div>
+    </div>
+  </div>
+  <div class="tb-timer">
+    <span id="timer-text">~5 min</span>
+    <div class="timer-bar"><div class="timer-fill" id="timer-fill" style="width:100%"></div></div>
+  </div>
+</div>
+
+<!-- SCREEN 0: HOOK (already done — the entry) -->
+<div class="screen on" id="sc0">
+  <div class="main">
+    <div class="card-top">
+      <div class="step-tag" style="color:#F59E0B">The hook · 60 seconds</div>
+      <div class="story-h">Can a team win a match and still have a negative NRR?</div>
+    </div>
+    <div class="card-body">
+      <div class="story-b">India beats Sri Lanka by 2 wickets. But their NRR drops from +0.4 to -0.1. How can winning lower a score? And what does "negative" even mean for a rate?</div>
+      <div class="time-tag">⏱ 60s</div>
+      <textarea class="input-area" id="guess-input" placeholder="Take your best guess — no wrong answer..." rows="2"></textarea>
+      <div class="voice-row"><button class="voice-btn"><div class="rdot"></div> Speak instead</button><span style="font-size:10px;color:var(--color-text-tertiary)">45 sec, your own words</span></div>
+      <button class="act-btn" style="background:#1A1A2E;color:#fff;margin-top:10px" onclick="next(1)">Lock in my guess →</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN 1: VISUAL STORY (concept reveal — maintains cricket frame) -->
+<div class="screen" id="sc1">
+  <div class="main">
+    <div class="card-top">
+      <div class="step-tag" style="color:#22C55E">Aha moment · 60 seconds</div>
+      <div class="guess-echo"><div class="ge-label">You guessed</div><div class="ge-text" id="shown-guess">Loading...</div></div>
+    </div>
+    <div class="card-body">
+      <div class="visual-frame" style="background:#F0FDF4;border:0.5px solid #22C55E">
+        <span class="vf-emoji">🏏</span>
+        <div class="vf-title">NRR is a number line. Zero is the reference.</div>
+        <div class="vf-body">NRR = (runs scored per over) − (runs conceded per over). When you concede more than you score across all matches, the subtraction gives a number below zero. That's a negative integer — a number that exists to the left of zero on the number line.</div>
+        <div class="vf-formula" style="background:#DCFCE7;color:#15803D">Runs scored/ov − Runs conceded/ov = can be negative</div>
+      </div>
+      <div style="font-size:12px;color:var(--color-text-secondary);line-height:1.65;margin-bottom:10px">The number line doesn't stop at zero. It keeps going left — into negative territory. That's exactly what integers are: whole numbers that include the world below zero.</div>
+      <div class="time-tag">⏱ next: 90 sec activity</div>
+      <button class="act-btn" style="background:#15803D;color:#fff" onclick="next(2)">Got it — now try this →</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN 2: SORT ACTIVITY (cricket-framed, not generic) -->
+<div class="screen" id="sc2">
+  <div class="main">
+    <div class="card-top">
+      <div class="step-tag" style="color:#3B82F6">Sort it · 90 seconds</div>
+      <div class="story-h">Which of these are below zero?</div>
+    </div>
+    <div class="card-body">
+      <div class="sort-instruction">Tap a number, then tap which side it belongs on. Some are above zero (+), some are below (−). The cricket ones you've already seen — trust your instinct for the rest.</div>
+      <div class="time-tag">⏱ 90s</div>
+      <div class="sort-items" id="sort-pool">
+        <div class="sort-item" onclick="selItem(this,'-0.8')">NRR: -0.8</div>
+        <div class="sort-item" onclick="selItem(this,'+1.2')">NRR: +1.2</div>
+        <div class="sort-item" onclick="selItem(this,'-50m')">-50m sea level</div>
+        <div class="sort-item" onclick="selItem(this,'+340')">+340 runs</div>
+        <div class="sort-item" onclick="selItem(this,'-15C')">-15°C temp</div>
+        <div class="sort-item" onclick="selItem(this,'+8848m')">Everest: +8848m</div>
+      </div>
+      <div class="sort-bins">
+        <div class="bin" id="bin-pos" onclick="placeTo('pos')">
+          <div class="bin-label" style="color:#15803D">Above zero (+)</div>
+          <div class="bin-items" id="bi-pos"></div>
+        </div>
+        <div class="bin" id="bin-neg" onclick="placeTo('neg')">
+          <div class="bin-label" style="color:#EF4444">Below zero (−)</div>
+          <div class="bin-items" id="bi-neg"></div>
+        </div>
+      </div>
+      <button class="act-btn" style="background:#1D4ED8;color:#fff" id="sort-check-btn" onclick="checkSort()">Check →</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN 3: BELIEVE / DOUBT (the trap — cricket framed) -->
+<div class="screen" id="sc3">
+  <div class="main">
+    <div class="card-top">
+      <div class="step-tag" style="color:#8B5CF6">Spot the trap · 45 seconds</div>
+    </div>
+    <div class="card-body">
+      <div style="font-size:11px;font-weight:600;color:#6D28D9;margin-bottom:8px;padding:6px 10px;background:#F5F3FF;border-radius:6px;display:inline-block">Detective challenge — most people get this wrong</div>
+      <div class="bd-statement">"A cricket team with an NRR of -0.5 has definitely lost more matches than they've won."</div>
+      <div class="bd-context">Think about it. NRR depends on run rate, not just wins and losses. Could you lose big and win narrow — and end up with a negative NRR despite equal wins?</div>
+      <div class="time-tag">⏱ 45s · commit before thinking too long</div>
+      <div class="bd-btns">
+        <div class="bd-btn" id="bd-believe" onclick="checkBD('believe')">✓ I believe this</div>
+        <div class="bd-btn" id="bd-doubt" onclick="checkBD('doubt')">⚡ I doubt this</div>
+      </div>
+      <div class="bd-reveal" id="bd-reveal">
+        <div style="font-size:12px;line-height:1.65;color:var(--color-text-primary)">
+          <strong>The statement is false.</strong> A team could win 3 matches narrowly and lose 1 by a huge margin — ending with a negative NRR despite more wins. NRR measures how efficiently you scored runs, not whether you won. A big loss "poisons" the average more than a narrow win "helps" it. This is exactly why integers and averages behave differently from simple counting.
+        </div>
+        <div style="margin-top:8px;font-size:11px;color:#6D28D9;font-weight:600">🧠 What you just did: you questioned an assumption. That's the core skill.</div>
+      </div>
+      <button class="act-btn" style="background:#6D28D9;color:#fff;display:none" id="bd-next-btn" onclick="next(4)">See what I learned today →</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN 4: DONE — THE 5-MINUTE PAYOFF -->
+<div class="screen" id="sc4">
+  <div class="main">
+    <div class="card-body">
+      <div class="done-wrap">
+        <div class="done-confetti" id="confetti-area"></div>
+        <span class="done-icon">⚡</span>
+        <div class="done-h">Day 1 done. Real learning in 5 minutes.</div>
+        <div class="done-sub">Here's what just happened in your brain:</div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px">
+        <div style="display:flex;gap:10px;padding:10px 12px;border-radius:8px;background:#F0FDF4;align-items:flex-start">
+          <span style="font-size:16px;flex-shrink:0">1</span>
+          <div style="font-size:12px;color:var(--color-text-primary);line-height:1.6"><strong>You got confused first</strong> — NRR going negative felt strange. That confusion is what made the concept stick. Confusion is the beginning of understanding.</div>
+        </div>
+        <div style="display:flex;gap:10px;padding:10px 12px;border-radius:8px;background:#EFF6FF;align-items:flex-start">
+          <span style="font-size:16px;flex-shrink:0">2</span>
+          <div style="font-size:12px;color:var(--color-text-primary);line-height:1.6"><strong>You sorted real examples</strong> — not textbook numbers. When you placed -50m and -15°C in the "below zero" bin, you built the concept in your own mind.</div>
+        </div>
+        <div style="display:flex;gap:10px;padding:10px 12px;border-radius:8px;background:#F5F3FF;align-items:flex-start">
+          <span style="font-size:16px;flex-shrink:0">3</span>
+          <div style="font-size:12px;color:var(--color-text-primary);line-height:1.6"><strong>You caught a trap</strong> — a statement that sounds true but isn't. That's the hardest skill in mathematics. You used it.</div>
+        </div>
+      </div>
+
+      <div class="done-gains">
+        <div class="dg-card"><div class="dg-num" style="color:#22C55E">+1%</div><div class="dg-lbl">Clarity</div></div>
+        <div class="dg-card"><div class="dg-num" style="color:#3B82F6">+1%</div><div class="dg-lbl">Thinking</div></div>
+        <div class="dg-card"><div class="dg-num" style="color:#F59E0B" id="streak-done">Day 1</div><div class="dg-lbl">Streak started</div></div>
+      </div>
+
+      <div class="done-tease" style="background:#FFFBEB;border:0.5px solid #F59E0B">
+        <div class="dt-label" style="color:#B45309">Tomorrow · Day 2 · Build</div>
+        <div class="dt-text" style="color:#92400E">We'll show you exactly what you guessed today — your own words. Then we'll go one layer deeper: why negative numbers had to be invented, and what breaks without them. 6 minutes.</div>
+      </div>
+
+      <div class="done-fact" style="background:#F0FDF4;color:#15803D;border:0.5px solid #22C55E">
+        🏏 <strong>One fact to take out of here:</strong> The next time you see a negative NRR on a scorecard, you'll know you're looking at an integer — a number that tells a story of more conceded than scored. That's the entire concept, right there.
+      </div>
+
+      <button class="act-btn" style="background:#1A1A2E;color:#fff" onclick="restart()">Try another concept →</button>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+let step = 0;
+let selSortItem = null;
+let sortPlacements = {pos:[],neg:[]};
+const posAnswers = ['+1.2','+340','+8848m'];
+const negAnswers = ['-0.8','-50m','-15C'];
+
+const STEPS = [
+  {label:'Hook',time:'~5 min',pct:100},
+  {label:'Reveal',time:'~4 min',pct:80},
+  {label:'Sort it',time:'~3 min',pct:60},
+  {label:'Detect',time:'~1.5 min',pct:30},
+  {label:'Done!',time:'done',pct:0}
+];
+
+function setStep(n){
+  step = n;
+  for(let i=0;i<5;i++){
+    const el = document.getElementById('ts'+i);
+    el.className = 'ts'+(i<n?' done':i===n?' active':'');
+  }
+  const tf = document.getElementById('timer-fill');
+  const timerText = document.getElementById('timer-text');
+  const s = STEPS[n];
+  tf.style.width = s.pct+'%';
+  tf.style.background = s.pct > 60 ? '#22C55E' : s.pct > 30 ? '#F59E0B' : '#EF4444';
+  timerText.textContent = s.time;
+}
+
+function next(n){
+  if(n===1){
+    const g = document.getElementById('guess-input').value.trim();
+    document.getElementById('shown-guess').textContent = g || '(no guess — that\'s okay)';
+  }
+  if(n===4) spawnConfetti();
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  document.getElementById('sc'+n).classList.add('on');
+  setStep(n);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// SORT
+function selItem(el, val){
+  if(el.classList.contains('placed')) return;
+  document.querySelectorAll('.sort-item').forEach(i=>{if(!i.classList.contains('placed'))i.classList.remove('sel')});
+  el.classList.add('sel');
+  selSortItem = val;
+}
+
+function placeTo(zone){
+  if(!selSortItem) return;
+  sortPlacements[zone].push(selSortItem);
+  const bi = document.getElementById('bi-'+zone);
+  const chip = document.createElement('div');
+  chip.className = 'bin-chip';
+  chip.textContent = selSortItem;
+  chip.style.background = zone==='pos'?'#DCFCE7':'#FEF2F2';
+  chip.style.color = zone==='pos'?'#15803D':'#B91C1C';
+  bi.appendChild(chip);
+  document.querySelectorAll('.sort-item').forEach(i=>{
+    if(i.textContent.trim().includes(selSortItem.replace('+',' ').trim()) || i.getAttribute('onclick')?.includes(`'${selSortItem}'`)){
+      i.classList.add('placed'); i.classList.remove('sel');
+    }
+  });
+  selSortItem = null;
+}
+
+function checkSort(){
+  let anyPlaced = sortPlacements.pos.length + sortPlacements.neg.length > 0;
+  if(!anyPlaced){next(3);return;}
+  let allCorrect = true;
+  sortPlacements.pos.forEach(v=>{if(!posAnswers.includes(v)){allCorrect=false;const b=document.getElementById('bin-pos');b.classList.add('wrong');setTimeout(()=>b.classList.remove('wrong'),400)}});
+  sortPlacements.neg.forEach(v=>{if(!negAnswers.includes(v)){allCorrect=false;const b=document.getElementById('bin-neg');b.classList.add('wrong');setTimeout(()=>b.classList.remove('wrong'),400)}});
+  if(sortPlacements.pos.length>0) document.getElementById('bin-pos').classList.add('correct');
+  if(sortPlacements.neg.length>0) document.getElementById('bin-neg').classList.add('correct');
+  setTimeout(()=>next(3), 800);
+}
+
+function checkBD(choice){
+  const correct = 'doubt';
+  const believe = document.getElementById('bd-believe');
+  const doubt = document.getElementById('bd-doubt');
+  const isRight = choice === correct;
+  believe.className = 'bd-btn' + (choice==='believe'?(isRight?' correct':' wrong'):' disabled');
+  doubt.className = 'bd-btn' + (choice==='doubt'?(isRight?' correct':' wrong'):' disabled');
+  believe.style.pointerEvents='none'; doubt.style.pointerEvents='none';
+  document.getElementById('bd-reveal').className = 'bd-reveal on';
+  document.getElementById('bd-reveal').style.background = '#F5F3FF';
+  document.getElementById('bd-reveal').style.padding = '10px 12px';
+  document.getElementById('bd-reveal').style.borderRadius = '8px';
+  document.getElementById('bd-next-btn').style.display = 'block';
+}
+
+function spawnConfetti(){
+  const area = document.getElementById('confetti-area');
+  const colors = ['#F59E0B','#22C55E','#3B82F6','#8B5CF6','#EF4444'];
+  for(let i=0;i<18;i++){
+    const p = document.createElement('div');
+    p.className = 'confetti-piece';
+    p.style.left = Math.random()*100+'%';
+    p.style.background = colors[Math.floor(Math.random()*colors.length)];
+    p.style.animationDelay = (Math.random()*0.8)+'s';
+    p.style.animationDuration = (1+Math.random())+'s';
+    area.appendChild(p);
+    setTimeout(()=>p.remove(), 2000);
+  }
+}
+
+function restart(){
+  step=0; selSortItem=null; sortPlacements={pos:[],neg:[]};
+  document.getElementById('guess-input').value='';
+  document.getElementById('bi-pos').innerHTML=''; document.getElementById('bi-neg').innerHTML='';
+  ['bin-pos','bin-neg'].forEach(id=>document.getElementById(id).className='bin');
+  ['bd-believe','bd-doubt'].forEach(id=>{document.getElementById(id).className='bd-btn';document.getElementById(id).style.pointerEvents='auto'});
+  document.getElementById('bd-reveal').className='bd-reveal';
+  document.getElementById('bd-next-btn').style.display='none';
+  document.querySelectorAll('.sort-item').forEach(i=>i.classList.remove('placed','sel'));
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  document.getElementById('sc0').classList.add('on');
+  setStep(0);
+}
+
+setStep(0);
+</script>
