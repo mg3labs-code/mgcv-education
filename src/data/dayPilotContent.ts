@@ -218,21 +218,21 @@ export const dayPilotContent: Record<string, DayPilotContent> = {
   "ch1::ch1-ep2": makeChapterPilot("Euclid's Division Lemma", "Euclid's Division Lemma breaks a number into divisor, quotient, and remainder."),
   "ch1::ch1-ep3": makeChapterPilot("prime factorization", "Prime factorization shows every whole number as a unique product of primes."),
   "ch1::ch1-ep1": withConceptMeta({
-    hookQuestion: "Why do we need so many different kinds of numbers?",
+    hookQuestion: "A team flew to the World Cup semis without playing their last match. A decimal that never ends decided it. How?",
     conceptText:
-      "Numbers come in families. Counting numbers help us count things we can see. Then we needed 0 for nothing. Then we needed negative numbers for opposites like debt or below zero. Each new family was added when the old numbers could not solve a real problem.",
+      "Net Run Rate, monsoon onset dates, song BPMs, bill splits — every 'average' you see is built from one whole number divided by another. Most of those divisions never end cleanly. Some stop (1÷2 = 0.5). Some repeat forever in a pattern (1÷3 = 0.333…). Some, like √2, never repeat at all. Together they fill every point on the number line — and we call them the real numbers. The scoreboard rounds. The number doesn't.",
     detective: {
-      statement: "Zero is a counting number.",
+      statement: "0.9999999… (nines that never stop) is almost equal to 1, but not exactly 1.",
       isTrue: false,
       explain:
-        "Counting numbers start at 1. Zero was added later — it's a whole number, not a counting (natural) number. Tricky, right?",
+        "Feels true — but it's false. Proof in one line: let x = 0.999…. Then 10x = 9.999…. Subtract: 9x = 9, so x = 1. Same point on the number line, two valid names. Your doubt wasn't wrong — it just means your brain takes 'infinity' seriously. That's what real numbers are about.",
     },
     quickCheck: {
-      prompt: "Which of these numbers belongs to ALL of these families: counting, whole, integer, AND rational?",
-      options: ["−2", "0", "7", "1.5"],
-      correctIndex: 2,
+      prompt: "An IPL team's Net Run Rate shows as 1.34782608… on the points table. Which family of real numbers is this?",
+      options: ["Irrational — digits never stop", "Rational — it's runs ÷ overs, two whole numbers", "Neither — sport numbers are special", "Whole number — boards round it"],
+      correctIndex: 1,
       explain:
-        "7 is counted (1, 2, 3… 7), it's whole (no fraction), it's an integer (no negative needed), and it can be written as 7/1 → so it's rational too. Negatives skip 'counting' and 'whole'; 0 skips 'counting'; 1.5 skips 'integer'.",
+        "Every NRR is runs ÷ overs — an integer divided by an integer. That makes it rational by definition, even when the decimal tail is endless. Irrational numbers (like √2) come from a totally different source — they can't be written as any fraction at all.",
     },
     day1Sort: {
       variant: "buckets",
