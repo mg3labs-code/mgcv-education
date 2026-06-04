@@ -9,9 +9,11 @@ import { useAuth } from "@/contexts/AuthContext";
 export type ArcStep =
   | "interest"
   | "hook"
-  | "guess"
+  | "hook_mcq"
   | "first_thought"
-  | "tiny_reveal"
+  | "aha_visual"
+  | "sort_activity"
+  | "trap_tf"
   | "day1_done"
   | "yesterday_echo"
   | "believe_doubt"
