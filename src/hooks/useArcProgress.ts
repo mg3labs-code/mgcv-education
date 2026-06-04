@@ -2,14 +2,13 @@
 // Local-first (so the UI never blocks on the network) and writes
 // quietly through to Supabase when the user is signed in.
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
 export type ArcStep =
   | "interest"
   | "hook"
-  | "hook_mcq"
   | "first_thought"
   | "aha_visual"
   | "sort_activity"
@@ -18,6 +17,7 @@ export type ArcStep =
   | "yesterday_echo"
   | "believe_doubt"
   | "unfold"
+  | "tricky_mcq"
   | "own_words"
   | "day2_done"
   | "mini_cases"
@@ -64,7 +64,9 @@ export function useArcProgress(conceptKey: string) {
   });
   const [loaded, setLoaded] = useState(false);
 
-  // Hydrate from server once when user is known
+  // In-memory stack of steps the user has visited, so Back walks the actual path.
+  const historyRef = useRef<ArcStep[]>([]);
+
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -143,6 +145,10 @@ export function useArcProgress(conceptKey: string) {
   const update = useCallback(
     (patch: Partial<ArcProgress>) => {
       setProgress((prev) => {
+        // record the previous step in history when moving forward
+        if (patch.currentStep && patch.currentStep !== prev.currentStep) {
+          historyRef.current.push(prev.currentStep);
+        }
         const next = { ...prev, ...patch };
         void persist(next);
         return next;
@@ -151,5 +157,28 @@ export function useArcProgress(conceptKey: string) {
     [persist],
   );
 
-  return { progress, update, loaded };
+  // Walk back through the actual visited steps (one pop per call).
+  const goBack = useCallback(() => {
+    setProgress((prev) => {
+      const last = historyRef.current.pop();
+      if (!last) return prev;
+      // If we're walking back across a day boundary, adjust currentDay too.
+      const day: 1 | 2 | 3 =
+        last === "interest" || last === "hook" || last === "first_thought" ||
+        last === "aha_visual" || last === "sort_activity" || last === "trap_tf" ||
+        last === "day1_done"
+          ? 1
+          : last === "yesterday_echo" || last === "believe_doubt" || last === "unfold" ||
+            last === "tricky_mcq" || last === "own_words" || last === "day2_done"
+          ? 2
+          : 3;
+      const next = { ...prev, currentStep: last, currentDay: day };
+      void persist(next);
+      return next;
+    });
+  }, [persist]);
+
+  const canGoBack = historyRef.current.length > 0 && progress.currentStep !== "interest";
+
+  return { progress, update, goBack, canGoBack, loaded };
 }
