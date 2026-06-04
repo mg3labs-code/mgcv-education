@@ -1565,103 +1565,127 @@ const DayGatedEpisode = ({
   }
   const day3Sections = day3RichSections.slice(0, 1);
 
-  const canViewDay2 = info.demoOverride || info.day1Done || info.day2Done || info.day3Done;
-  const canViewDay3 = info.demoOverride || info.day2Done || info.day3Done;
-  const lockedBySequence = (viewDay === 2 && !canViewDay2) || (viewDay === 3 && !canViewDay3);
-
+  // Open navigation: any day reachable any time. Only the 20h time-gate (set by demo controls)
+  // can still soft-block, but per product direction we drop sequence-locks entirely.
   // Render body based on the day the student is currently *viewing*.
-  // Sequence comes first (Day 1 → Day 2 → Day 3), then the per-day time gate.
   let body: React.ReactNode;
-  if (lockedBySequence) {
-    const requiredDay = viewDay === 2 ? 1 : 2;
-    body = <DayLockedWall day={viewDay} unlocksAt={null} episodeTitle={`Finish Day ${requiredDay} first · ${episodeTitle}`} />;
-  } else if (viewDay === 3) {
-    if (!info.day3Done && info.day3Locked && info.day3UnlocksAt) {
-      body = <DayLockedWall day={3} unlocksAt={info.day3UnlocksAt} episodeTitle={episodeTitle} />;
-    } else {
-      body = (
-        <Day3Master
-          episodeTitle={episodeTitle}
-          chapterId={chapterId ?? ""}
-          episodeId={episodeId ?? ""}
-          conceptKey={pilot.conceptKey}
-          conceptLabel={pilot.conceptLabel}
-          whyItWorks={pilot.day3.whyItWorks}
-          masterSections={day3Sections}
-          proveItPrompt={pilot.day3.proveItPrompt}
-          caseStudy={pilot.day3.caseStudy}
-          growthGains={pilot.day3.growthGains}
-          sortActivity={pilot.day3.sort}
-          nextEpisodeTitle={nextEpisodeTitle}
-          onNextEpisode={onNextEpisode}
-          ladder={{
-            chapterId: chapterId ?? null,
-            episodeId: episodeId ?? null,
-            conceptKey: pilot.conceptKey ?? null,
-            subject: subject ?? null,
-            chapterSlug: chapterSlug ?? chapterId ?? null,
-          }}
-          onProgress={setDayProgress}
-        />
-      );
-    }
+  if (viewDay === 3) {
+    body = (
+      <Day3Master
+        episodeTitle={episodeTitle}
+        chapterId={chapterId ?? ""}
+        episodeId={episodeId ?? ""}
+        conceptKey={pilot.conceptKey}
+        conceptLabel={pilot.conceptLabel}
+        whyItWorks={pilot.day3.whyItWorks}
+        masterSections={day3Sections}
+        proveItPrompt={pilot.day3.proveItPrompt}
+        caseStudy={pilot.day3.caseStudy}
+        growthGains={pilot.day3.growthGains}
+        sortActivity={pilot.day3.sort}
+        nextEpisodeTitle={nextEpisodeTitle}
+        onNextEpisode={onNextEpisode}
+        ladder={{
+          chapterId: chapterId ?? null,
+          episodeId: episodeId ?? null,
+          conceptKey: pilot.conceptKey ?? null,
+          subject: subject ?? null,
+          chapterSlug: chapterSlug ?? chapterId ?? null,
+        }}
+        onProgress={setDayProgress}
+      />
+    );
   } else if (viewDay === 2) {
-    if (!info.day2Done && info.day2Locked && info.day2UnlocksAt) {
-      body = <DayLockedWall day={2} unlocksAt={info.day2UnlocksAt} episodeTitle={episodeTitle} />;
-    } else {
-      body = (
-        <Day2Build
-          episodeTitle={episodeTitle}
-          deepDiveText={pilot.day2.deepDiveText}
-          deepDiveSections={day2Sections}
-          detective1={pilot.day2.detective1}
-          detective2={pilot.day2.detective2}
-          sortActivity={pilot.day2.sort}
-          ladder={{
-            chapterId: chapterId ?? null,
-            episodeId: episodeId ?? null,
-            conceptKey: pilot.conceptKey ?? null,
-            subject: subject ?? null,
-            chapterSlug: chapterSlug ?? chapterId ?? null,
-          }}
-          onProgress={setDayProgress}
-        />
-      );
-    }
-  } else if (viewDay === 1 && hasInterestVariants && !interest) {
+    body = (
+      <Day2Build
+        episodeTitle={episodeTitle}
+        deepDiveText={pilot.day2.deepDiveText}
+        deepDiveSections={day2Sections}
+        detective1={pilot.day2.detective1}
+        detective2={pilot.day2.detective2}
+        sortActivity={pilot.day2.sort}
+        ladder={{
+          chapterId: chapterId ?? null,
+          episodeId: episodeId ?? null,
+          conceptKey: pilot.conceptKey ?? null,
+          subject: subject ?? null,
+          chapterSlug: chapterSlug ?? chapterId ?? null,
+        }}
+        onProgress={setDayProgress}
+      />
+    );
+  } else if (viewDay === 1 && hasInterestVariants && interestList.length === 0) {
+    // ─── Interest picker (multi-select up to 3) ───
     body = (
       <div className="min-h-[80vh] flex items-center justify-center px-4 py-8">
-        <div className="w-full max-w-lg space-y-6 animate-fade-in">
+        <div className="w-full max-w-lg space-y-5 animate-fade-in">
           <div className="text-center space-y-2">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-bold uppercase tracking-wide">
-              ✨ Before we start
+              ✨ Pick 3 worlds you like
             </div>
             <h1 className="text-2xl font-bold text-foreground leading-tight">
-              What sparks your curiosity most?
+              Which worlds bring lessons alive for you?
             </h1>
             <p className="text-sm text-muted-foreground">
-              Pick one — today's mystery will start from something you already love.
+              Pick up to 3. Your top pick becomes today's lens.
             </p>
           </div>
-          <div className="grid sm:grid-cols-2 gap-3">
-            {PILOT_INTEREST_OPTIONS.map((opt) => (
-              <button
-                key={opt.tag}
-                type="button"
-                onClick={() => pickInterest(opt.tag)}
-                className="text-left rounded-2xl border-2 border-border bg-card hover:bg-accent hover:border-primary/40 transition-all p-4 min-h-[88px] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                <div className="text-2xl mb-1" aria-hidden="true">{opt.emoji}</div>
-                <div className="font-bold text-foreground">{opt.label}</div>
-                <div className="text-xs text-muted-foreground mt-0.5">{opt.sub}</div>
-              </button>
-            ))}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+            {PILOT_INTEREST_OPTIONS.map((opt) => {
+              const picked = interestList.includes(opt.tag);
+              const order = interestList.indexOf(opt.tag) + 1;
+              const disabled = !picked && interestList.length >= 3;
+              return (
+                <button
+                  key={opt.tag}
+                  type="button"
+                  onClick={() => toggleInterest(opt.tag)}
+                  disabled={disabled}
+                  className={[
+                    "relative text-left rounded-2xl border-2 transition-all p-3 min-h-[84px] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    picked
+                      ? "border-primary bg-primary/10 shadow-sm"
+                      : disabled
+                        ? "border-border bg-muted/30 opacity-50 cursor-not-allowed"
+                        : "border-border bg-card hover:bg-accent hover:border-primary/40",
+                  ].join(" ")}
+                >
+                  {picked && (
+                    <span className="absolute top-1.5 right-1.5 h-5 w-5 rounded-full bg-primary text-primary-foreground text-[11px] font-bold flex items-center justify-center">
+                      {order}
+                    </span>
+                  )}
+                  <div className="text-xl mb-1" aria-hidden="true">{opt.emoji}</div>
+                  <div className="font-bold text-foreground text-sm">{opt.label}</div>
+                  <div className="text-[11px] text-muted-foreground mt-0.5">{opt.sub}</div>
+                </button>
+              );
+            })}
           </div>
-          <p className="text-center text-[11px] text-muted-foreground">
-            You can change this anytime — it only flavours the opening story.
-          </p>
+          <Button
+            type="button"
+            className="w-full"
+            disabled={interestList.length === 0}
+            onClick={confirmInterests}
+          >
+            Continue {interestList.length > 0 ? `with ${interestList.length} pick${interestList.length > 1 ? "s" : ""}` : ""}
+          </Button>
         </div>
       </div>
+    );
+  } else if (viewDay === 1 && hasInterestVariants && interest && !curiosityAsked) {
+    // ─── Pre-Day-1 curiosity prompt ───
+    const opt = PILOT_INTEREST_OPTIONS.find((o) => o.tag === interest);
+    body = (
+      <PreEpisodeCuriosityPrompt
+        emoji={opt?.emoji ?? "✨"}
+        interestLabel={opt?.label ?? interest}
+        conceptLabel={pilot.conceptLabel ?? "this topic"}
+        chapterId={chapterId ?? ""}
+        episodeId={episodeId ?? ""}
+        conceptKey={pilot.conceptKey ?? episodeKey}
+        onContinue={markCuriosityAsked}
+      />
     );
   } else {
     body = (
@@ -1699,14 +1723,28 @@ const DayGatedEpisode = ({
         onChangeDay={(d) => setViewDay(d)}
       />
       {hasInterestVariants && interest && (
-        <div className="max-w-4xl mx-auto px-4 pt-2 flex items-center justify-end gap-2 text-[11px] text-muted-foreground">
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary font-semibold">
-            {PILOT_INTEREST_OPTIONS.find((o) => o.tag === interest)?.emoji}
-            {PILOT_INTEREST_OPTIONS.find((o) => o.tag === interest)?.label}
-          </span>
+        <div className="max-w-4xl mx-auto px-4 pt-2 flex items-center justify-end gap-2 text-[11px] text-muted-foreground flex-wrap">
+          <span className="text-muted-foreground">Lens:</span>
+          {interestList.map((tag) => {
+            const opt = PILOT_INTEREST_OPTIONS.find((o) => o.tag === tag);
+            const active = tag === interest;
+            return (
+              <button
+                key={tag}
+                type="button"
+                onClick={() => active ? null : saveInterests([tag, ...interestList.filter((t) => t !== tag)])}
+                className={[
+                  "inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-semibold transition-colors",
+                  active ? "bg-primary/15 text-primary border border-primary/30" : "bg-muted text-muted-foreground hover:bg-muted/70 border border-border",
+                ].join(" ")}
+              >
+                {opt?.emoji} {opt?.label}
+              </button>
+            );
+          })}
           <button
             type="button"
-            onClick={() => { try { localStorage.removeItem(interestKey); } catch { /* ignore */ } setInterest(null); }}
+            onClick={() => { try { localStorage.removeItem(interestKey); localStorage.removeItem(interestListKey); localStorage.removeItem(promptKey); } catch { /* ignore */ } setInterestList([]); setCuriosityAsked(false); }}
             className="underline hover:text-foreground"
           >
             change
