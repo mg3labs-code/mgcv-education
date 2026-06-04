@@ -296,7 +296,7 @@ export const dayPilotContent: Record<string, DayPilotContent> = {
       whyItWorks:
         "A number system grows when reality forces it to. You cannot count −3 cows, but you can owe ₹3. That is why negative numbers exist. Math grows when old rules cannot describe something real, so people build a better rule.",
       proveItPrompt:
-        "Imagine you're explaining to a younger cousin why we need negative numbers. What real-life situation would you use to convince them?",
+        "Your cousin says '0.333… is NOT exactly 1/3 — it's just close.' In two sentences, convince them they're the same number.",
       caseStudy:
         "A cricket team's net run rate can be negative. Without negative numbers, we could not clearly show who is behind in a tournament. Your call: where else do negative numbers help us show a real situation clearly?",
       growthGains: [
