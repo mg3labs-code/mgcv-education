@@ -285,6 +285,8 @@ export const realNumbers: RealNumbersConcept = {
       : "Yesterday you started wondering whether some numbers ever really end. Let's follow that.",
   believeDoubtClaim:
     "Claim: the number 0.9999999… (nines that never stop) is not 'almost 1'. It is exactly equal to 1. Same point on the number line. Two valid names. Believe it, doubt it, or unsure?",
+  believeDoubtReveal:
+    "Most students DOUBT this — and that's the right instinct to start with. But here's the proof in one line: let x = 0.999…. Then 10x = 9.999…. Subtract: 10x − x = 9.999… − 0.999… = 9. So 9x = 9, which means x = 1. Same number, two names. (Bonus: Cricket NRR of 1.999… and 2.000 are literally the same standing on the qualifier table.) Your doubt wasn't wrong — it just means your brain takes 'infinity' seriously. That's exactly what real numbers are about.",
   conceptUnfold: [
     {
       step: "What you already see",
