@@ -80,19 +80,8 @@ export default function CuriosityArc() {
   // hook-flavoured Day 3 mini case (single per hook now — synced)
   const miniCase: MiniCase = hook.miniCase;
 
-  // Gating: which steps require an interaction before Next is allowed.
-  const requires: Record<string, boolean> = {
-    hook: true,
-    first_thought: true,
-    sort_activity: true,
-    trap_tf: true,
-    believe_doubt: true,
-    tricky_mcq: true,
-    own_words: true,
-    mini_cases: true,
-    teach_friend: true,
-  };
-  const canNext = !requires[step] || !!stepDone[step];
+  // Demo mode: Next is always unlocked — presenters can move freely.
+  const canNext = true;
 
   const advance = (patch: Partial<typeof progress>) => {
     clearStep(step);
@@ -342,8 +331,7 @@ export default function CuriosityArc() {
             clearStep(step);
             update({ currentStep: nextStep });
           }}
-          nextLabel={canNext ? "Next" : "Locked"}
-          lockReason="Finish this step to unlock"
+          nextLabel="Next"
         />
       )}
     </div>
