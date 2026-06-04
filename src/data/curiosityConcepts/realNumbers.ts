@@ -283,7 +283,7 @@ export const realNumbers: RealNumbersConcept = {
       ? `Yesterday you said: "${firstThought.trim()}". Let's see where that thought leads.`
       : "Yesterday you started wondering whether some numbers ever really end. Let's follow that.",
   believeDoubtClaim:
-    "Claim: every number you can think of either ends, repeats forever in a pattern, or never repeats at all.",
+    "Claim: the number 0.9999999… (nines that never stop) is not 'almost 1'. It is exactly equal to 1. Same point on the number line. Two valid names. Believe it, doubt it, or unsure?",
   conceptUnfold: [
     {
       step: "What you already see",
