@@ -25,7 +25,7 @@ export default function CuriosityArc() {
 
   if (!loaded) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-dvh bg-background flex items-center justify-center" role="status" aria-live="polite">
         <div className="text-muted-foreground text-sm">Preparing your arc…</div>
       </div>
     );
@@ -34,9 +34,15 @@ export default function CuriosityArc() {
   const step = progress.currentStep;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background text-foreground">
+      <a
+        href="#arc-main"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-primary focus:text-primary-foreground focus:px-3 focus:py-2"
+      >
+        Skip to content
+      </a>
       <header className="border-b border-border bg-card/50 backdrop-blur sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
           <div>
             <div className="text-xs uppercase tracking-wider text-muted-foreground">
               Class 10 · Maths
@@ -49,7 +55,11 @@ export default function CuriosityArc() {
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 py-8 sm:py-12">
+      <main
+        id="arc-main"
+        aria-live="polite"
+        className="max-w-4xl mx-auto px-4 py-8 sm:py-12"
+      >
         {step === "interest" && (
           <InterestPicker
             onPick={(tag, custom) =>
@@ -207,10 +217,14 @@ export default function CuriosityArc() {
 
 function DayPill({ day }: { day: 1 | 2 | 3 }) {
   return (
-    <div className="flex items-center gap-1">
+    <ol
+      className="flex items-center gap-1"
+      aria-label={`Currently on day ${day} of 3`}
+    >
       {[1, 2, 3].map((d) => (
-        <span
+        <li
           key={d}
+          aria-current={d === day ? "step" : undefined}
           className={`text-xs px-2 py-1 rounded-full border ${
             d === day
               ? "bg-primary text-primary-foreground border-primary"
@@ -220,8 +234,8 @@ function DayPill({ day }: { day: 1 | 2 | 3 }) {
           }`}
         >
           Day {d}
-        </span>
+        </li>
       ))}
-    </div>
+    </ol>
   );
 }

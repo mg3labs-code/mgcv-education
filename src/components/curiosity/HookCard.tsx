@@ -12,7 +12,7 @@ export default function HookCard({ hook, onReady }: Props) {
   return (
     <Card className="p-6 sm:p-8 max-w-2xl mx-auto">
       <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground mb-3">
-        <Eye className="h-3.5 w-3.5" />
+        <Eye className="h-3.5 w-3.5" aria-hidden="true" />
         Day 1 · Something you've already seen
       </div>
       <h2 className="text-2xl sm:text-3xl font-serif font-semibold mb-3 leading-tight">

@@ -20,17 +20,22 @@ export default function BelieveDoubt({ claim, onPick }: Props) {
       <div className="text-xs uppercase tracking-wider text-muted-foreground mb-3">
         Sit with this for a moment
       </div>
-      <p className="text-lg sm:text-xl font-serif leading-relaxed mb-6">{claim}</p>
-      <div className="grid sm:grid-cols-3 gap-3">
+      <p id="bd-claim" className="text-lg sm:text-xl font-serif leading-relaxed mb-6 text-foreground">
+        {claim}
+      </p>
+      <div role="radiogroup" aria-labelledby="bd-claim" className="grid sm:grid-cols-3 gap-3">
         {options.map((o) => (
           <button
             key={o.id}
+            type="button"
+            role="radio"
+            aria-checked={picked === o.id}
             onClick={() => {
               setPicked(o.id);
               setTimeout(() => onPick(o.id), 200);
             }}
             disabled={picked !== null}
-            className={`rounded-xl border p-3 font-medium transition-all ${
+            className={`rounded-xl border p-3 min-h-11 font-medium text-foreground transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
               picked === o.id
                 ? "border-primary bg-primary/10"
                 : "border-border bg-card hover:bg-accent hover:border-primary/40"
