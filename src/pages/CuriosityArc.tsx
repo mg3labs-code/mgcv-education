@@ -20,24 +20,31 @@ import { Button } from "@/components/ui/button";
 
 const CONCEPT = realNumbers;
 
+// Day 1 = ONE MYSTERY in 5 tiny beats (~5 min). No sort, no trap, no long forms.
+//   hook(MCQ tap) → first_thought(one free guess) → aha_visual(surprise+reveal)
+//   → believe_doubt(one misconception) → day1_done(teaser for tomorrow)
 const DAY1_STEPS = [
   "hook",
   "first_thought",
   "aha_visual",
-  "sort_activity",
-  "trap_tf",
+  "believe_doubt",
   "day1_done",
 ] as const;
+// Day 2 = build understanding (~7 min). Yesterday echo → sort/match → unfold
+// explanation → tricky misconception MCQ → own-words bridge.
 const DAY2_STEPS = [
   "yesterday_echo",
-  "believe_doubt",
+  "sort_activity",
   "unfold",
   "tricky_mcq",
   "own_words",
   "day2_done",
 ] as const;
+// Day 3 = apply + defend + teach (~8 min). Case → defend (trap T/F) → teach a
+// friend → loop close.
 const DAY3_STEPS = [
   "mini_cases",
+  "trap_tf",
   "teach_friend",
   "loop_close",
   "day3_done",
@@ -45,9 +52,10 @@ const DAY3_STEPS = [
 
 const EST_LABEL: Record<1 | 2 | 3, string> = {
   1: "~5 min",
-  2: "~6 min",
-  3: "~5 min",
+  2: "~7 min",
+  3: "~8 min",
 };
+
 
 export default function CuriosityArc() {
   const { progress, update, goBack, canGoBack, loaded } = useArcProgress(CONCEPT.conceptKey);
