@@ -104,16 +104,6 @@ const Day2Build = ({ episodeTitle, deepDiveText, deepDiveSections, detective1, d
     return (
       <div className="min-h-[80vh] flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-lg space-y-5 animate-fade-in">
-          {ladder && (
-            <ConfidenceLadder
-              day={2}
-              chapterId={ladder.chapterId}
-              episodeId={ladder.episodeId}
-              conceptKey={ladder.conceptKey}
-              subject={ladder.subject}
-              chapterSlug={ladder.chapterSlug}
-            />
-          )}
           <div className="text-center space-y-2">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-400 text-[11px] font-bold uppercase tracking-wide">
               <Brain className="h-3 w-3" /> Remember this?
