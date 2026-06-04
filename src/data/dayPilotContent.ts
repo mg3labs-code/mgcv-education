@@ -464,7 +464,15 @@ export function getPilotContent(chapterId?: string, episodeId?: string): DayPilo
 // ── Interest-flavoured hook overrides (Day 1 first-thought + concept reveal) ──
 // Keeps the same trap / sort / Day-2 / Day-3 — only swaps the opening mystery so
 // the student feels the lesson starts from something they already love.
-export type PilotInterest = "cricket" | "nature" | "music" | "travel";
+export type PilotInterest =
+  | "cricket"
+  | "food"
+  | "movies"
+  | "gaming"
+  | "music"
+  | "travel"
+  | "tech"
+  | "nature";
 
 export interface PilotInterestOverride {
   hookQuestion: string;
@@ -474,41 +482,65 @@ export interface PilotInterestOverride {
 }
 
 export const PILOT_INTEREST_OPTIONS: { tag: PilotInterest; label: string; emoji: string; sub: string }[] = [
-  { tag: "cricket", label: "Cricket", emoji: "🏏", sub: "NRR, run-rates, qualifiers" },
-  { tag: "nature", label: "Monsoon & nature", emoji: "🌧", sub: "Rain, forests, wildlife" },
-  { tag: "music", label: "Music", emoji: "🎵", sub: "BPM, beats, tempo" },
-  { tag: "travel", label: "Travel & food", emoji: "✈️", sub: "Flights, splits, recipes" },
+  { tag: "cricket", label: "Cricket", emoji: "🏏", sub: "Scores, NRR, qualifiers" },
+  { tag: "food",    label: "Foodie",  emoji: "🍔", sub: "Bills, recipes, splits" },
+  { tag: "movies",  label: "Movies",  emoji: "🎬", sub: "Frames, runtime, edits" },
+  { tag: "gaming",  label: "Gaming",  emoji: "🎮", sub: "FPS, ranks, drops" },
+  { tag: "music",   label: "Music",   emoji: "🎵", sub: "BPM, beats, tempo" },
+  { tag: "travel",  label: "Travel",  emoji: "✈️", sub: "Flights, fuel, fares" },
+  { tag: "tech",    label: "Tech",    emoji: "💻", sub: "Phones, apps, chips" },
+  { tag: "nature",  label: "Nature",  emoji: "🌧", sub: "Rain, forests, animals" },
 ];
 
 const PILOT_INTEREST_OVERRIDES: Record<string, Partial<Record<PilotInterest, PilotInterestOverride>>> = {
   "ch1::ch1-ep1": {
     cricket: {
-      badgeLabel: "Cricket",
-      emoji: "🏏",
+      badgeLabel: "Cricket", emoji: "🏏",
       hookQuestion: "A team flew to the World Cup semis without playing their last match. A decimal that never ends decided it. How?",
       conceptText:
         "Net Run Rate = runs ÷ overs — one whole number divided by another. Most of those divisions never end cleanly (1÷3 = 0.333…, NRR = 1.34782608…). Some, like √2, never repeat at all. Together they fill every point on the number line — the real numbers. The scoreboard rounds. The number doesn't.",
     },
+    food: {
+      badgeLabel: "Foodie", emoji: "🍔",
+      hookQuestion: "Bill ₹1000, split 3 ways. The app says ₹333.33 each — but 3 × 333.33 = ₹999.99. Where did the missing paisa go?",
+      conceptText:
+        "1000 ÷ 3 = 333.333… — a decimal that never ends. Every recipe scale, every bill split, every 'price per gram' is integer ÷ integer. Some divisions terminate, most don't, and a few (like √2 in a square pizza's diagonal) never even repeat. All of them sit exactly on the number line — that's the real numbers. The app rounds. The maths doesn't.",
+    },
+    movies: {
+      badgeLabel: "Movies", emoji: "🎬",
+      hookQuestion: "A 2-hour movie has exactly 172,800 frames at 24 fps — but on your phone at 23.976 fps it's 172,627.2 frames. How can you have 0.2 of a frame?",
+      conceptText:
+        "Frame rate = frames ÷ seconds. 24000 ÷ 1001 = 23.976023976… — never ends. Runtime, file size, subtitle timing — every one is a ratio of integers. Most don't terminate. Some, like √2 in a cinema screen's diagonal, never even repeat. They all fit on the number line — the real numbers. Players round to whole frames. The number itself never does.",
+    },
+    gaming: {
+      badgeLabel: "Gaming", emoji: "🎮",
+      hookQuestion: "Your FPS counter shows a clean 60.0 — but the GPU is actually rendering at 59.9404… fps. Same game, two true numbers. How?",
+      conceptText:
+        "FPS = frames ÷ seconds, ping = ms ÷ packet, drop-rate = lost ÷ sent. Every gaming stat is integer ÷ integer. Many divisions never terminate (1÷7 = 0.142857142857…). A few, like √2 in a diagonal jump, never even repeat. All of them are real numbers — every point on the number line. Your HUD rounds. The engine doesn't.",
+    },
+    music: {
+      badgeLabel: "Music", emoji: "🎵",
+      hookQuestion: "Your tuner shows 120.000 BPM. Your friend's app shows 119.9999987… BPM. Both are right. How?",
+      conceptText:
+        "BPM = beats ÷ minutes — a fraction. Most fractions never end cleanly (1÷3 = 0.333…). Some numbers, like √2 in a perfect interval, never repeat at all. Between any two BPM readings there are infinitely many real numbers — the apps just round to different decimal places. The real number line has no gaps.",
+    },
+    travel: {
+      badgeLabel: "Travel", emoji: "✈️",
+      hookQuestion: "Google Maps says 'arriving in 23 min' — but the route engine actually computed 22.7142857… min. Why round a number that never ends?",
+      conceptText:
+        "ETA = distance ÷ speed. Fuel-per-km, ₹-per-litre, splits between 3 friends — all integer ÷ integer. Most divisions never terminate. A few, like √2 in a diagonal shortcut, never repeat. Every one of them is a real number sitting exactly on the number line. Apps round. Reality doesn't.",
+    },
+    tech: {
+      badgeLabel: "Tech", emoji: "💻",
+      hookQuestion: "Your phone says 'battery 67%' — but the chip reports 66.8421052…%. Why does the screen lie and the maths can't?",
+      conceptText:
+        "Battery % = mAh used ÷ mAh total. Download speed = bits ÷ seconds. Pixel density = pixels ÷ inch. Every spec is integer ÷ integer. Most divisions never terminate (1÷7 = 0.142857…). Some, like √2 in a screen's diagonal, never repeat at all. They all fit on the number line — the real numbers. The UI rounds. The chip never does.",
+    },
     nature: {
-      badgeLabel: "Monsoon",
-      emoji: "🌧",
+      badgeLabel: "Monsoon", emoji: "🌧",
       hookQuestion: "IMD says the Kerala monsoon arrives ~June 1 every year — but the model actually says 31.4285714… May. Why does the date get rounded but the maths can't be?",
       conceptText:
         "Every 'average rainfall', 'average onset date', 'average forest cover' is sum ÷ count — a fraction of two whole numbers. Most divisions never terminate (1÷7 = 0.142857142857…). Some, like √2, never repeat at all. All of them fit on the number line — that's the real numbers. Headlines round. Nature doesn't.",
-    },
-    music: {
-      badgeLabel: "Music",
-      emoji: "🎵",
-      hookQuestion: "Your tuner app shows the song at 120.000 BPM. Your friend's app shows 119.9999987… BPM. Both are right. How?",
-      conceptText:
-        "BPM = beats ÷ minutes — a fraction. Most fractions never end cleanly (1÷3 = 0.333…). Some numbers, like √2, never repeat at all. Between any two BPM readings there are infinitely many real numbers — the apps just round to different decimal places. The real number line has no gaps.",
-    },
-    travel: {
-      badgeLabel: "Travel",
-      emoji: "✈️",
-      hookQuestion: "A bill for ₹1000 split among 3 friends should be ₹333.33… each — but the payment app only shows ₹333.33. Where did the extra paisa go?",
-      conceptText:
-        "1000 ÷ 3 = 333.333… — a decimal that never ends. Apps round to 2 places, but the real number sits on the number line, exactly. Every average flight time, bill split, fuel-per-km is integer ÷ integer. Some divisions terminate. Most don't. A few, like √2, never even repeat — yet all of them are real numbers.",
     },
   },
 };
