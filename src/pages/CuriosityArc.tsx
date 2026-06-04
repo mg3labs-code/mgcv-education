@@ -217,10 +217,14 @@ export default function CuriosityArc() {
 
 function DayPill({ day }: { day: 1 | 2 | 3 }) {
   return (
-    <div className="flex items-center gap-1">
+    <ol
+      className="flex items-center gap-1"
+      aria-label={`Currently on day ${day} of 3`}
+    >
       {[1, 2, 3].map((d) => (
-        <span
+        <li
           key={d}
+          aria-current={d === day ? "step" : undefined}
           className={`text-xs px-2 py-1 rounded-full border ${
             d === day
               ? "bg-primary text-primary-foreground border-primary"
@@ -230,8 +234,8 @@ function DayPill({ day }: { day: 1 | 2 | 3 }) {
           }`}
         >
           Day {d}
-        </span>
+        </li>
       ))}
-    </div>
+    </ol>
   );
 }
