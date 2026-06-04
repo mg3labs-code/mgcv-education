@@ -94,19 +94,19 @@ const hooks: HookVariant[] = [
     tag: "cricket",
     emoji: "🏏",
     badgeLabel: "Cricket mode",
-    headline: "Why does the run-rate never sit still?",
+    headline: "A team made the semis without playing their last match. How?",
     scene:
-      "Score 84 in 12.3 overs. The scoreboard shows run-rate 6.81081081… and it keeps trailing dots.",
+      "World Cup pool stage. Rain washes out the final game. Yet by morning, one team is on the qualifier flight — and their 'score' on the table is a strange decimal like 1.3478…",
     noticed:
-      "On some balls the number lands cleanly. On others it just refuses to end.",
+      "No runs were scored. No wickets fell. But a number called Net Run Rate (NRR) — runs ÷ overs faced minus runs conceded ÷ overs bowled — silently decided who flies home and who plays the semis. And that number almost never ends cleanly.",
     mcq: {
-      question: "Why does the run-rate sometimes show endless digits?",
+      question: "Why can a team's fate hinge on a number with endless trailing digits?",
       choices: [
-        { label: "Scoreboard glitch 🛠️", correct: false, feedback: "Looks easy — but the same calculator on your phone does it too. Not a glitch." },
-        { label: "Some divisions truly never end 🔁", correct: true, feedback: "Yes — 84 ÷ 12.3 falls into a repeating loop. The maths is honest, the screen just cuts it off." },
-        { label: "Only happens on odd numbers 🎲", correct: false, feedback: "Tempting pattern — but 1 ÷ 3 also never ends. Something deeper is going on." },
+        { label: "Cricket boards round randomly 🎲", correct: false, feedback: "Boards follow a strict ICC formula. The endless digits come from the maths itself, not a coin toss." },
+        { label: "NRR is runs ÷ overs — and most divisions never end cleanly 🔁", correct: true, feedback: "Exactly. Net Run Rate is built from divisions like 287 ÷ 49.4 — which falls into a repeating pattern forever. The board just truncates the tail." },
+        { label: "Decimals only matter when it rains ☔", correct: false, feedback: "Rain just freezes the score. The decimal weirdness was already there in every over of every match." },
       ],
-      reveal: "Some divisions *terminate* (1÷2 = 0.5). Some *repeat forever* (1÷3 = 0.333…). The scoreboard isn't lying — it's just out of pixels.",
+      reveal: "Every Net Run Rate, Duckworth-Lewis par score and asking rate is built from integer ÷ integer. Most of them never terminate — they repeat forever. The scoreboard truncates, but the maths decides the qualifier.",
     },
     guesses: [
       "The number ends, the scoreboard is just lazy.",
