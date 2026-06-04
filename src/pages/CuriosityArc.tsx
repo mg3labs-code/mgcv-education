@@ -34,9 +34,15 @@ export default function CuriosityArc() {
   const step = progress.currentStep;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background text-foreground">
+      <a
+        href="#arc-main"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-primary focus:text-primary-foreground focus:px-3 focus:py-2"
+      >
+        Skip to content
+      </a>
       <header className="border-b border-border bg-card/50 backdrop-blur sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
           <div>
             <div className="text-xs uppercase tracking-wider text-muted-foreground">
               Class 10 · Maths
@@ -49,7 +55,11 @@ export default function CuriosityArc() {
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 py-8 sm:py-12">
+      <main
+        id="arc-main"
+        aria-live="polite"
+        className="max-w-4xl mx-auto px-4 py-8 sm:py-12"
+      >
         {step === "interest" && (
           <InterestPicker
             onPick={(tag, custom) =>
