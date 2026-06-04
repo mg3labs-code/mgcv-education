@@ -1445,16 +1445,63 @@ const DayGatedEpisode = ({
   }, [info.currentDay, episodeKey]);
 
   // ─── Interest picker gate (Day 1 only, episodes with interest-flavoured hooks) ──
+  // Now allows picking up to 3 interests; first one is the active "lens".
+  // Persists to profiles.interests (+ localStorage for offline fallback).
   const interestKey = `mgcv:textbook-interest:${episodeKey}`;
+  const interestListKey = `mgcv:textbook-interests-multi`;
   const hasInterestVariants = hasPilotInterestOverrides(chapterId, episodeId);
-  const [interest, setInterest] = useState<PilotInterest | null>(() => {
-    if (typeof window === "undefined") return null;
-    const stored = localStorage.getItem(interestKey);
-    return (stored as PilotInterest) || null;
+  const [interestList, setInterestList] = useState<PilotInterest[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const stored = localStorage.getItem(interestListKey);
+      if (stored) return JSON.parse(stored) as PilotInterest[];
+      const single = localStorage.getItem(interestKey);
+      return single ? [single as PilotInterest] : [];
+    } catch { return []; }
   });
-  const pickInterest = (tag: PilotInterest) => {
-    try { localStorage.setItem(interestKey, tag); } catch { /* ignore */ }
-    setInterest(tag);
+  const interest: PilotInterest | null = interestList[0] ?? null;
+
+  // Curiosity-prompt step state: once interest is picked, ask the one-line wonder.
+  const promptKey = `mgcv:curiosity-prompt:${episodeKey}`;
+  const [curiosityAsked, setCuriosityAsked] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem(promptKey) === "1";
+  });
+
+  // Load profile interests once (lets the picker pre-fill on a new device).
+  useEffect(() => {
+    if (!user || interestList.length > 0) return;
+    (async () => {
+      const { data } = await (supabase as unknown as { from: (t: string) => { select: (c: string) => { eq: (k: string, v: string) => { maybeSingle: () => Promise<{ data: { interests: string[] | null } | null }> } } } })
+        .from("profiles").select("interests").eq("user_id", user.id).maybeSingle();
+      const arr = (data?.interests ?? []) as PilotInterest[];
+      if (arr.length > 0) setInterestList(arr);
+    })();
+  }, [user, interestList.length]);
+
+  const saveInterests = async (next: PilotInterest[]) => {
+    setInterestList(next);
+    try { localStorage.setItem(interestListKey, JSON.stringify(next)); } catch { /* ignore */ }
+    if (next[0]) { try { localStorage.setItem(interestKey, next[0]); } catch { /* ignore */ } }
+    if (user) {
+      try {
+        await (supabase as unknown as { from: (t: string) => { update: (v: Record<string, unknown>) => { eq: (k: string, v: string) => Promise<unknown> } } })
+          .from("profiles")
+          .update({ interests: next, interests_set_at: new Date().toISOString(), interest_tag: next[0] ?? null })
+          .eq("user_id", user.id);
+      } catch { /* non-blocking */ }
+    }
+  };
+  const toggleInterest = (tag: PilotInterest) => {
+    const exists = interestList.includes(tag);
+    if (exists) { saveInterests(interestList.filter((t) => t !== tag)); return; }
+    if (interestList.length >= 3) return;
+    saveInterests([...interestList, tag]);
+  };
+  const confirmInterests = () => { if (interestList.length > 0) saveInterests(interestList); };
+  const markCuriosityAsked = () => {
+    setCuriosityAsked(true);
+    try { localStorage.setItem(promptKey, "1"); } catch { /* ignore */ }
   };
 
   if (isLoading) return <EpisodeLoadingTransition />;
