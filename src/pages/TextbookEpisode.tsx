@@ -1650,6 +1650,21 @@ const DayGatedEpisode = ({
         viewDay={viewDay}
         onChangeDay={(d) => setViewDay(d)}
       />
+      {hasInterestVariants && interest && (
+        <div className="max-w-4xl mx-auto px-4 pt-2 flex items-center justify-end gap-2 text-[11px] text-muted-foreground">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary font-semibold">
+            {PILOT_INTEREST_OPTIONS.find((o) => o.tag === interest)?.emoji}
+            {PILOT_INTEREST_OPTIONS.find((o) => o.tag === interest)?.label}
+          </span>
+          <button
+            type="button"
+            onClick={() => { try { localStorage.removeItem(interestKey); } catch { /* ignore */ } setInterest(null); }}
+            className="underline hover:text-foreground"
+          >
+            change
+          </button>
+        </div>
+      )}
       {body}
       <DevDayToggle />
     </div>
