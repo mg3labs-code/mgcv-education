@@ -147,23 +147,13 @@ const Day1Spark = ({
     return (
       <div className="min-h-[80vh] flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-lg space-y-6 animate-fade-in">
-          {ladder && (
-            <ConfidenceLadder
-              day={1}
-              chapterId={ladder.chapterId}
-              episodeId={ladder.episodeId}
-              conceptKey={ladder.conceptKey}
-              subject={ladder.subject}
-              chapterSlug={ladder.chapterSlug}
-            />
-          )}
           <div className="text-center space-y-2">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-bold uppercase tracking-wide">
               <Sparkles className="h-3 w-3" />
-              First Guess
+              The Hook · 60 sec
             </div>
             <h1 className="text-2xl font-bold text-foreground leading-tight">{hookQuestion}</h1>
-            <p className="text-sm text-muted-foreground">No right answer. Just your honest first thought.</p>
+            <p className="text-sm text-muted-foreground">Take your best guess — no right answer.</p>
           </div>
 
           <div className="rounded-2xl border-2 border-primary/30 bg-card p-4 space-y-3">
