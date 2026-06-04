@@ -15,6 +15,7 @@ import { useVoiceGuide } from "@/hooks/useVoiceGuide";
 import ExamAlertBanner from "@/components/student/ExamAlertBanner";
 import { useDiscoveryToasts } from "@/hooks/useDiscoveryToasts";
 import DashboardGreeting from "@/components/DashboardGreeting";
+import WeeklyInterestSummary from "@/components/student/WeeklyInterestSummary";
 
 interface ScheduleItem {
   type: string;
@@ -576,6 +577,11 @@ const StudentDashboard = () => {
               {/* Greeting */}
               <FadeSlide>
                 <DashboardGreeting firstName={firstName} subline={greeting} />
+              </FadeSlide>
+
+              {/* Weekly summary — how the interest lens is shifting metrics */}
+              <FadeSlide delay={60}>
+                <WeeklyInterestSummary />
               </FadeSlide>
 
               {/* PHASE 4: Inner OS as hero */}
