@@ -83,6 +83,7 @@ export interface RealNumbersConcept {
 
   yesterdayEchoTemplate: (firstThought: string) => string;
   believeDoubtClaim: string;
+  believeDoubtReveal: string;
   conceptUnfold: { step: string; body: string }[];
 
   teachAFriendPrompt: string;
