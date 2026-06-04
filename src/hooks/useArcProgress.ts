@@ -113,23 +113,25 @@ export function useArcProgress(conceptKey: string) {
       }
       if (!user) return;
       await supabase.from("curiosity_arc_progress").upsert(
-        {
-          user_id: user.id,
-          concept_key: next.conceptKey,
-          current_day: next.currentDay,
-          current_step: next.currentStep,
-          interest_tag: next.interestTag ?? null,
-          day1_first_thought: next.day1FirstThought ?? null,
-          day1_guess: next.day1Guess ?? null,
-          day1_completed_at: next.day1CompletedAt ?? null,
-          day2_belief: next.day2Belief ?? null,
-          day2_own_words: next.day2OwnWords ?? null,
-          day2_completed_at: next.day2CompletedAt ?? null,
-          day3_case_answers: next.day3CaseAnswers ?? {},
-          day3_teach_line: next.day3TeachLine ?? null,
-          day3_completed_at: next.day3CompletedAt ?? null,
-          signals: next.signals ?? {},
-        },
+        [
+          {
+            user_id: user.id,
+            concept_key: next.conceptKey,
+            current_day: next.currentDay,
+            current_step: next.currentStep,
+            interest_tag: next.interestTag ?? null,
+            day1_first_thought: next.day1FirstThought ?? null,
+            day1_guess: next.day1Guess ?? null,
+            day1_completed_at: next.day1CompletedAt ?? null,
+            day2_belief: next.day2Belief ?? null,
+            day2_own_words: next.day2OwnWords ?? null,
+            day2_completed_at: next.day2CompletedAt ?? null,
+            day3_case_answers: next.day3CaseAnswers ?? {},
+            day3_teach_line: next.day3TeachLine ?? null,
+            day3_completed_at: next.day3CompletedAt ?? null,
+            signals: next.signals ?? {},
+          },
+        ],
         { onConflict: "user_id,concept_key" },
       );
     },
