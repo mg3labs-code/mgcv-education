@@ -45,7 +45,7 @@ import DevDayToggle from "@/components/episode/DevDayToggle";
 import Day2Build from "@/components/episode/Day2Build";
 import Day3Master from "@/components/episode/Day3Master";
 import DayLockedWall from "@/components/episode/DayLockedWall";
-import { getPilotContent } from "@/data/dayPilotContent";
+import { getPilotContent, getPilotInterestOverride, hasPilotInterestOverrides, PILOT_INTEREST_OPTIONS, type PilotInterest } from "@/data/dayPilotContent";
 
 const LANGUAGE_SUBJECTS = new Set(["Telugu", "Hindi"]);
 
