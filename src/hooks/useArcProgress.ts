@@ -130,7 +130,6 @@ export function useArcProgress(conceptKey: string) {
             day3_teach_line: next.day3TeachLine ?? null,
             day3_completed_at: next.day3CompletedAt ?? null,
             signals: (next.signals ?? {}) as never,
-            signals: next.signals ?? {},
           },
         ],
         { onConflict: "user_id,concept_key" },
