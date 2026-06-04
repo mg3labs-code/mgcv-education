@@ -214,18 +214,19 @@ const hooks: HookVariant[] = [
     tag: "movies",
     emoji: "🎬",
     badgeLabel: "Music & movies",
-    headline: "A song's tempo: 120 BPM, 121 BPM, 120.5 BPM.",
+    headline: "Two apps tag the SAME song at different BPMs. Both are right.",
     scene:
-      "A music app shows the beats-per-minute. Sometimes a clean number. Sometimes 120.5. Sometimes 120.4999…",
-    noticed: "The app rounds — but the real tempo isn't always a whole number.",
+      "Spotify says the new Pritam track is 128 BPM. A DJ's studio tool says 127.9999… BPM. Shazam shows 128. A music-theory paper online insists the real tempo is exactly 128/1.00000001 — irrational at the decimal tail.",
+    noticed:
+      "Three apps, three numbers, one song. Nobody is wrong. The 'real' tempo lives somewhere on the number line that no single screen can fully print.",
     mcq: {
-      question: "Why does BPM sometimes show endless digits like 120.4999…?",
+      question: "Why can four different tools all give different 'exact' BPMs for the same song?",
       choices: [
-        { label: "App lag 🔄", correct: false, feedback: "Easy to blame the app. But the real beat genuinely sits between two whole numbers." },
-        { label: "Tempo can sit between integers 🎼", correct: true, feedback: "Yes — between any two whole numbers there's an entire universe of in-between numbers." },
-        { label: "Only digital songs do this 💿", correct: false, feedback: "A metronome wound by hand can land between beats — it's a property of numbers, not files." },
+        { label: "Music apps copy each other badly 🎧", correct: false, feedback: "Each app actually measures the gap between beats fresh. They aren't copying — they're rounding differently." },
+        { label: "Between any two whole BPMs sit infinite real numbers — each app picks a different rounding 🎼", correct: true, feedback: "Yes. The true tempo is a real number on a continuous line. Some apps round to integers, some to 4 decimals, some keep the irrational tail. All point at the same musical truth." },
+        { label: "Only DJ tools are correct 🎚️", correct: false, feedback: "Not quite — even the DJ tool rounds at some digit. Every digital display has to stop somewhere; the music doesn't." },
       ],
-      reveal: "Between 120 and 121 sit infinite real numbers. Some end, some repeat, some never settle.",
+      reveal: "Between 127 and 128 BPM there are infinite real numbers — terminating, repeating, and never-repeating. Every BPM badge you've ever seen is a rounded label on a number that, mathematically, has no end.",
     },
     guesses: [
       "Tempo is always a whole number; decimals are bugs.",
