@@ -1,55 +1,104 @@
-# Fix the 3-Day Curiosity Arc on `/student/textbook/ch1/ch1-ep1`
+# Two engagement features — one for students, one for teachers
 
-## Root causes you flagged (verified in code)
+Both unlock the "real-world hook" promise across the whole product, not just one chapter.
 
-1. **Same NRR cricket question twice on Day 1**
-   `conceptRungs.ts` rung 1 (WARM-UP) and `dayPilotContent.ts` `hookQuestion` (FIRST GUESS) were both rewritten to the *exact same* NRR 1.3478 line in the last pass. Two different components render them on the same screen → looks duplicated.
+---
 
-2. **No interest / domain picker before Day 1 in the textbook flow**
-   The standalone `/curiosity` arc has `InterestPicker` (cricket / nature / music / travel / food). The textbook episode at `/student/textbook/ch1/ch1-ep1` skips it entirely and hard-locks to cricket NRR.
+## Feature 1 — Interest → Curiosity Engine (student-facing)
 
-3. **Day 2 falls back to textbook "Active Reasoning"**
-   Screenshot 2 shows "Why is it important for us to have 'Real Numbers' in mathematics?" — that's a generic `ReasoningBlock` from the NCERT-style textbook, not a curiosity beat. Same break on Day 3 ("Design a 5-second test…") — it's the rung-5 prompt re-used verbatim, not interest-themed.
+### What the student experiences
 
-4. **Day 3 final reflection ("Design a 5-second test") is duplicated from the warm-up ladder** and reads like schoolwork, not the "teach a friend" tone in the Claude HTML.
+**Step A — One-time interest picker (on first login, after onboarding)**
+A clean 8-tile grid (matches your `interest_to_curiosity_engine.html`):
+🏏 Cricket · 🍔 Food · 🎬 Movies · 🎮 Gaming · 🎵 Music · ✈️ Travel · 💻 Tech · 🌧 Nature
+Multi-select up to 3. Saved to `profiles.interest_tag` (already exists) — extended to `profiles.interests text[]` (array) so multiple stick.
 
-## What I'll build (mirroring `day1_complete_5min_flow.html` + `interest_to_curiosity_engine.html`)
+**Step B — Every Day-1 hook now reframes through their top interest**
+Example, real numbers chapter:
+- Cricket kid sees: "A team flew to World Cup semis without playing their last match. A decimal that never ends decided it…"
+- Food kid sees: "Bill ₹1000 split 3 ways = ₹333.33… each. Where's the extra paisa?"
+- Music kid sees: "Tuner A says 120.000 BPM. Tuner B says 119.9999987… BPM. Both right. How?"
+- Gaming kid sees: "Your FPS counter shows 60.0 — but the game engine actually runs at 59.9404… How do GPUs round?"
 
-### A. Day 1 — one mystery, 5 beats, no duplicates
-- **Beat 0 (new): Interest picker** — render `InterestPicker` *inside* `TextbookEpisode` on Day 1 view, persisted via `useArcProgress(conceptKey)` so Day 2/3 reuse it. Chips: 🏏 Cricket · 🌧 Monsoon · 🎵 Music · ✈️ Travel · 🌳 Nature. Skippable (defaults to cricket).
-- **Beat 1: Warm-up** — change rung 1 in `conceptRungs.ts` to a *different* themed gimme (e.g. cricket: "Toss won 6/10 — is that a 'real' number you can plot?"). Keep NRR mystery only as the FIRST GUESS hook.
-- **Beat 2: First Guess (hook)** — `hookQuestion` swaps per chosen interest (NRR for cricket, Kerala monsoon onset for nature, BPM for music, average flight time for travel).
-- **Beat 3: Aha reveal** — `conceptText` rewritten per interest, same shape as Claude's `vf-frame` (emoji + one-line title + 2-sentence body + formula chip).
-- **Beat 4: Sort the Rebels** — keep current 5-number sort, add interest-flavoured item labels (e.g. "NRR: −0.8" instead of "−100" when cricket is picked).
-- **Beat 5: Believe / Doubt** — keep 0.999… = 1 trap (it's the strongest one in the Claude file).
+The 3-day arc plumbing already supports this (`getPilotInterestOverride`). I'll expand the override bank from 1 chapter × 4 interests to **all chapters × 8 interests** using the same subject-aware factory you just approved.
 
-### B. Day 2 — build (replace generic Active Reasoning)
-- Override the Day 2 textbook Active Reasoning block on `ch1::ch1-ep1` with the interest-themed deep dive from `dayPilotContent.day2.deepDiveText` (already cricket-flavoured). I'll gate `ReasoningBlock` rendering when pilot content exists for the episode.
-- Add a *yesterday echo* card on Day 2 top (Claude pattern) showing what they typed on Day 1.
+**Step C — "Why this hook?" chip on every screen**
+A small pill at top: `🏏 Cricket lens · change`. One tap = pick a different interest for this episode only. Keeps the kid in control.
 
-### C. Day 3 — master (replace duplicate "Design a 5-second test")
-- Replace `proveItPrompt` with the Claude HTML's "teach a friend" line: "Your cousin asks why 0.333… and 1/3 are the same. In two sentences — convince them."
-- Keep the existing case study + order-sort (those already work).
+### Schema change (1 migration)
+```
+ALTER TABLE profiles ADD COLUMN interests text[] DEFAULT '{}';
+-- keep interest_tag for back-compat (primary interest)
+```
 
-### D. Verification
-After edits, navigate to `/student/textbook/ch1/ch1-ep1`, walk D1 → D2 → D3 in the browser, confirm:
-- no duplicate question on Day 1
-- interest picker shows, persists, and changes the hook copy
-- Day 2 shows the curiosity deep dive, not the NCERT Active Reasoning
-- back / next stays unlocked throughout (demo mode)
+### Files
+- `src/components/onboarding/InterestPicker.tsx` (new — 8-tile grid)
+- `src/data/interestOverrides.ts` (new — bank of 8 interests × N chapters, with the cricket-HTML pattern)
+- `src/components/episode/InterestChip.tsx` (new — "lens" switcher at top of episode)
+- Wire into existing `Day1Spark` / `Day2Build` / `Day3Master` via the override hook that's already there.
 
-## Files I'll touch (frontend only)
+---
 
-- `src/data/conceptRungs.ts` — rewrite rung 1 to a distinct warm-up
-- `src/data/dayPilotContent.ts` — add `hooksByInterest` map for `ch1::ch1-ep1`, swap Day 3 prove-it prompt
-- `src/pages/TextbookEpisode.tsx` — render `InterestPicker` once on Day 1, read tag via `useArcProgress`, pass selected hook/concept down, suppress the textbook `ReasoningBlock` when pilot is active
-- `src/components/episode/Day1Spark.tsx` — accept an optional `interestBadge` for the topbar
-- `src/components/episode/Day2Build.tsx` — show "Yesterday you guessed" echo card
+## Feature 2 — Misconception Clusters (teacher-facing)
 
-## What I'm explicitly NOT changing
+### What the teacher sees
 
-- Voice playback, 7-layer page, defense mode prompt quality, full-practice page — out of scope for this pass (you said those are working / will be tuned later).
-- Backend / DB schema / RLS — pure frontend reskin.
-- The standalone `/curiosity` route — already uses this pattern; this PR brings the textbook episode in line with it.
+A new card on the Teacher Dashboard: **"Common misconceptions this week"**.
 
-Confirm and I'll ship it in one pass.
+Example:
+> 📐 Real Numbers · Class 10-B
+> **18 of 32 students** wrote variations of *"0.999… is close to 1 but not equal"*
+> AI-clustered from submitted answers · [Re-explain this to class] [See exact answers]
+
+When clicked → opens a "Re-teach in 90 seconds" panel with:
+- The misconception in plain words
+- The one-line fix (pre-written by AI)
+- A 30-sec voice script the teacher can read out
+- "Push as a quick recap to all 18 students" button (creates a `teacher_alert` on each affected student's home)
+
+### How clustering works
+
+Cron-style edge function `cluster-misconceptions` runs nightly:
+1. Pulls last 7 days of `student_answers` where `ai_feedback->>'is_wrong' = true`
+2. Groups by `(assignment.subject, question_id)`
+3. For each group with ≥3 wrong answers, calls Lovable AI with all answer texts → returns up to 3 clusters with `{cluster_name, count, sample_quotes[], one_line_fix, reteach_script}`
+4. Inserts into a new `misconception_clusters` table
+
+### Schema (1 migration)
+```
+CREATE TABLE misconception_clusters (
+  id uuid PK, teacher_id uuid, class_name text, subject text,
+  chapter_id text, episode_id text, concept_label text,
+  cluster_name text, student_count int, sample_quotes jsonb,
+  one_line_fix text, reteach_script text,
+  affected_student_ids uuid[], detected_at timestamptz,
+  is_resolved bool default false
+);
+-- + GRANTs + RLS scoped to teacher_id = auth.uid()
+```
+
+### Files
+- `supabase/migrations/...sql` (table + RLS + GRANTs)
+- `supabase/functions/cluster-misconceptions/index.ts` (nightly clusterer)
+- `src/components/teacher/MisconceptionClusters.tsx` (new card)
+- `src/pages/TeacherDashboard.tsx` (add the card)
+- "Push recap" button → reuses existing `teacher_alerts` table
+
+---
+
+## Build order (so you see value fast)
+
+1. **Interest picker + chip** (front-end only, 1 file each) — instant visible change
+2. **Expand the interest override bank** from 1 chapter → all current pilot chapters
+3. **Misconception table + RLS migration**
+4. **Clusterer edge function + teacher card**
+5. **"Push re-explain to students" wire-up**
+
+Step 1+2 ship together as "Interest Engine v1". Steps 3-5 ship as "Misconception Radar v1".
+
+---
+
+## Two quick decisions I need from you before I start
+
+1. **Interest picker — when?** (a) Right after signup, mandatory · (b) Optional, dismissible card on dashboard · (c) Shown the first time they open ANY episode
+2. **Misconception re-explain — where does it land for the student?** (a) A red banner on their dashboard "Your teacher noticed something — quick fix" · (b) Auto-injected as Day-2 recall when they next open that episode · (c) Both
