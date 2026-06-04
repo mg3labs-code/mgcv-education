@@ -78,7 +78,7 @@ TELUGU MODE:
 - When explaining concepts, use Telugu first, then clarify key terms in English if needed.
 - Use Telugu expressions of encouragement like "బాగుంది!", "చాలా బాగా చేశావ్!", "అద్భుతం!"`;
 
-const BUDDY_FIRST_MESSAGE = "Hey there! I am Buddy, your study buddy. I can help you with any subject, open your textbook, or quiz you. What would you like to do?";
+const BUDDY_FIRST_MESSAGE = "Hey! I'm Buddy. Super glad you're here. Quick one — how are you feeling today, energetic or a bit tired? Just say it in one word.";
 
 const CLIENT_TOOLS = [
   {
