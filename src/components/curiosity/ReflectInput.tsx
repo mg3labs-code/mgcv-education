@@ -62,18 +62,33 @@ export default function ReflectInput({
         {text.length}/600
       </div>
 
-      {!bridge ? (
-        <Button onClick={submit} disabled={!text.trim() || loading} className="mt-3 w-full sm:w-auto">
-          {loading ? (
-            <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" aria-hidden="true" />
-              <span>Listening…</span>
-            </>
-          ) : (
-            "Share this thought"
-          )}
+      {!bridge && !loading && (
+        <Button onClick={submit} disabled={!text.trim()} className="mt-3 w-full sm:w-auto">
+          Share this thought
         </Button>
-      ) : (
+      )}
+
+      {loading && (
+        <div className="mt-4 space-y-3" aria-live="polite" aria-busy="true">
+          <div className="rounded-xl bg-primary/5 border border-primary/20 p-4">
+            <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-primary/80 mb-2">
+              <Loader2 className="h-3.5 w-3.5 animate-spin motion-reduce:hidden" aria-hidden="true" />
+              <span>Reading what you wrote…</span>
+            </div>
+            <div className="space-y-2" aria-hidden="true">
+              <div className="h-3 w-11/12 rounded bg-primary/10 animate-pulse" />
+              <div className="h-3 w-9/12 rounded bg-primary/10 animate-pulse" />
+              <div className="h-3 w-7/12 rounded bg-primary/10 animate-pulse" />
+            </div>
+            <p className="sr-only">Reflecting back to you in a moment.</p>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            This takes a few seconds — we're letting the system think before it replies.
+          </p>
+        </div>
+      )}
+
+      {bridge && (
         <div className="mt-4 space-y-4 animate-fade-in" aria-live="polite">
           <div className="rounded-xl bg-primary/5 border border-primary/20 p-4">
             <div className="text-xs uppercase tracking-wider text-primary/80 mb-1">
@@ -86,6 +101,7 @@ export default function ReflectInput({
           </Button>
         </div>
       )}
+
     </Card>
   );
 }
