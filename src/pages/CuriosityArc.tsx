@@ -20,24 +20,31 @@ import { Button } from "@/components/ui/button";
 
 const CONCEPT = realNumbers;
 
+// Day 1 = ONE MYSTERY in 5 tiny beats (~5 min). No sort, no trap, no long forms.
+//   hook(MCQ tap) → first_thought(one free guess) → aha_visual(surprise+reveal)
+//   → believe_doubt(one misconception) → day1_done(teaser for tomorrow)
 const DAY1_STEPS = [
   "hook",
   "first_thought",
   "aha_visual",
-  "sort_activity",
-  "trap_tf",
+  "believe_doubt",
   "day1_done",
 ] as const;
+// Day 2 = build understanding (~7 min). Yesterday echo → sort/match → unfold
+// explanation → tricky misconception MCQ → own-words bridge.
 const DAY2_STEPS = [
   "yesterday_echo",
-  "believe_doubt",
+  "sort_activity",
   "unfold",
   "tricky_mcq",
   "own_words",
   "day2_done",
 ] as const;
+// Day 3 = apply + defend + teach (~8 min). Case → defend (trap T/F) → teach a
+// friend → loop close.
 const DAY3_STEPS = [
   "mini_cases",
+  "trap_tf",
   "teach_friend",
   "loop_close",
   "day3_done",
@@ -45,9 +52,10 @@ const DAY3_STEPS = [
 
 const EST_LABEL: Record<1 | 2 | 3, string> = {
   1: "~5 min",
-  2: "~6 min",
-  3: "~5 min",
+  2: "~7 min",
+  3: "~8 min",
 };
+
 
 export default function CuriosityArc() {
   const { progress, update, goBack, canGoBack, loaded } = useArcProgress(CONCEPT.conceptKey);
@@ -152,7 +160,7 @@ export default function CuriosityArc() {
           <AhaVisual
             guess={progress.day1FirstThought ?? ""}
             aha={hook.aha}
-            onContinue={() => advance({ currentStep: "sort_activity" })}
+            onContinue={() => advance({ currentStep: "believe_doubt" })}
           />
         )}
 
@@ -164,7 +172,7 @@ export default function CuriosityArc() {
               markDone("sort_activity");
               advance({
                 signals: { ...(progress.signals ?? {}), sortAllCorrect: allCorrect },
-                currentStep: "trap_tf",
+                currentStep: "unfold",
               });
             }}
           />
@@ -177,8 +185,7 @@ export default function CuriosityArc() {
               markDone("trap_tf");
               advance({
                 signals: { ...(progress.signals ?? {}), trapPick: pick },
-                currentStep: "day1_done",
-                day1CompletedAt: new Date().toISOString(),
+                currentStep: "teach_friend",
               });
             }}
           />
@@ -196,7 +203,7 @@ export default function CuriosityArc() {
         {step === "yesterday_echo" && (
           <YesterdayEcho
             echo={CONCEPT.yesterdayEchoTemplate(progress.day1FirstThought ?? "")}
-            onContinue={() => advance({ currentStep: "believe_doubt" })}
+            onContinue={() => advance({ currentStep: "sort_activity" })}
           />
         )}
 
@@ -205,10 +212,21 @@ export default function CuriosityArc() {
             claim={CONCEPT.believeDoubtClaim}
             onPick={(choice) => {
               markDone("believe_doubt");
-              advance({ day2Belief: choice, currentStep: "unfold" });
+              // Day 1 uses believe/doubt as the misconception beat; Day 2 (if
+              // ever routed here) continues into unfold.
+              if (progress.currentDay === 1) {
+                advance({
+                  day2Belief: choice,
+                  currentStep: "day1_done",
+                  day1CompletedAt: new Date().toISOString(),
+                });
+              } else {
+                advance({ day2Belief: choice, currentStep: "unfold" });
+              }
             }}
           />
         )}
+
 
         {step === "unfold" && (
           <ConceptUnfold
@@ -255,11 +273,12 @@ export default function CuriosityArc() {
               markDone("mini_cases");
               advance({
                 day3CaseAnswers: { ...(progress.day3CaseAnswers ?? {}), [miniCase.id]: answer },
-                currentStep: "teach_friend",
+                currentStep: "trap_tf",
               });
             }}
           />
         )}
+
 
         {step === "teach_friend" && (
           <ReflectInput
