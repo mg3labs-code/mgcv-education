@@ -273,11 +273,12 @@ export default function CuriosityArc() {
               markDone("mini_cases");
               advance({
                 day3CaseAnswers: { ...(progress.day3CaseAnswers ?? {}), [miniCase.id]: answer },
-                currentStep: "teach_friend",
+                currentStep: "trap_tf",
               });
             }}
           />
         )}
+
 
         {step === "teach_friend" && (
           <ReflectInput
