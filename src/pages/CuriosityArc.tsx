@@ -1,6 +1,6 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useArcProgress } from "@/hooks/useArcProgress";
-import { realNumbers, type InterestTag } from "@/data/curiosityConcepts/realNumbers";
+import { realNumbers, type InterestTag, type MiniCase } from "@/data/curiosityConcepts/realNumbers";
 import InterestPicker from "@/components/curiosity/InterestPicker";
 import HookShortCard from "@/components/curiosity/HookShortCard";
 import ReflectInput from "@/components/curiosity/ReflectInput";
@@ -11,17 +11,17 @@ import Day1Done from "@/components/curiosity/Day1Done";
 import YesterdayEcho from "@/components/curiosity/YesterdayEcho";
 import BelieveDoubt from "@/components/curiosity/BelieveDoubt";
 import ConceptUnfold from "@/components/curiosity/ConceptUnfold";
-import ApplyMiniCases from "@/components/curiosity/ApplyMiniCases";
+import TrickyMcq from "@/components/curiosity/TrickyMcq";
 import LoopClose from "@/components/curiosity/LoopClose";
 import ArcTopbar from "@/components/curiosity/ArcTopbar";
+import ArcNav from "@/components/curiosity/ArcNav";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
 const CONCEPT = realNumbers;
 
-// step ordering used to drive the progress dots in the topbar
 const DAY1_STEPS = [
   "hook",
-  "hook_mcq",
   "first_thought",
   "aha_visual",
   "sort_activity",
@@ -32,6 +32,7 @@ const DAY2_STEPS = [
   "yesterday_echo",
   "believe_doubt",
   "unfold",
+  "tricky_mcq",
   "own_words",
   "day2_done",
 ] as const;
@@ -49,7 +50,12 @@ const EST_LABEL: Record<1 | 2 | 3, string> = {
 };
 
 export default function CuriosityArc() {
-  const { progress, update, loaded } = useArcProgress(CONCEPT.conceptKey);
+  const { progress, update, goBack, canGoBack, loaded } = useArcProgress(CONCEPT.conceptKey);
+
+  // local per-step interaction flags (drive the gated Next button)
+  const [stepDone, setStepDone] = useState<Record<string, boolean>>({});
+  const markDone = (s: string) => setStepDone((d) => ({ ...d, [s]: true }));
+  const clearStep = (s: string) => setStepDone((d) => ({ ...d, [s]: false }));
 
   const hook = useMemo(() => {
     const tag = (progress.interestTag as InterestTag) || "cricket";
@@ -68,16 +74,33 @@ export default function CuriosityArc() {
   const day = progress.currentDay;
   const stepsForDay =
     day === 1 ? DAY1_STEPS : day === 2 ? DAY2_STEPS : DAY3_STEPS;
-  const stepIndex = Math.max(
-    0,
-    (stepsForDay as readonly string[]).indexOf(step),
-  );
-
-  // Interest picker is its own welcome screen (pre-arc)
+  const stepIndex = Math.max(0, (stepsForDay as readonly string[]).indexOf(step));
   const showTopbar = step !== "interest";
 
+  // hook-flavoured Day 3 mini case (single per hook now — synced)
+  const miniCase: MiniCase = hook.miniCase;
+
+  // Gating: which steps require an interaction before Next is allowed.
+  const requires: Record<string, boolean> = {
+    hook: true,
+    first_thought: true,
+    sort_activity: true,
+    trap_tf: true,
+    believe_doubt: true,
+    tricky_mcq: true,
+    own_words: true,
+    mini_cases: true,
+    teach_friend: true,
+  };
+  const canNext = !requires[step] || !!stepDone[step];
+
+  const advance = (patch: Partial<typeof progress>) => {
+    clearStep(step);
+    update(patch);
+  };
+
   return (
-    <div className="min-h-dvh bg-background text-foreground arc-shell">
+    <div className="min-h-dvh bg-background text-foreground arc-shell flex flex-col">
       <a
         href="#arc-main"
         className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-primary focus:text-primary-foreground focus:px-3 focus:py-2"
@@ -96,11 +119,7 @@ export default function CuriosityArc() {
         />
       )}
 
-      <main
-        id="arc-main"
-        aria-live="polite"
-        className="px-4 py-6 sm:py-8"
-      >
+      <main id="arc-main" aria-live="polite" className="flex-1 px-4 py-6 sm:py-8">
         {step === "interest" && (
           <InterestPicker
             onPick={(tag, custom) =>
@@ -116,13 +135,13 @@ export default function CuriosityArc() {
         {step === "hook" && (
           <HookShortCard
             hook={hook}
-            onPickedAndContinue={(picked, correct) =>
+            onPickedAndContinue={(picked, correct) => {
               update({
                 day1Guess: picked,
                 signals: { ...(progress.signals ?? {}), hookCorrect: correct },
                 currentStep: "first_thought",
-              })
-            }
+              });
+            }}
           />
         )}
 
@@ -135,7 +154,7 @@ export default function CuriosityArc() {
             placeholder="One sentence is enough."
             ctaLabel="See the aha moment →"
             onContinue={(text) =>
-              update({ day1FirstThought: text, currentStep: "aha_visual" })
+              advance({ day1FirstThought: text, currentStep: "aha_visual" })
             }
           />
         )}
@@ -144,7 +163,7 @@ export default function CuriosityArc() {
           <AhaVisual
             guess={progress.day1FirstThought ?? ""}
             aha={hook.aha}
-            onContinue={() => update({ currentStep: "sort_activity" })}
+            onContinue={() => advance({ currentStep: "sort_activity" })}
           />
         )}
 
@@ -152,28 +171,27 @@ export default function CuriosityArc() {
           <SortActivity
             prompt={hook.sortPrompt}
             items={hook.sortItems}
-            onDone={(allCorrect) =>
-              update({
-                signals: {
-                  ...(progress.signals ?? {}),
-                  sortAllCorrect: allCorrect,
-                },
+            onDone={(allCorrect) => {
+              markDone("sort_activity");
+              advance({
+                signals: { ...(progress.signals ?? {}), sortAllCorrect: allCorrect },
                 currentStep: "trap_tf",
-              })
-            }
+              });
+            }}
           />
         )}
 
         {step === "trap_tf" && (
           <TrapTF
             trap={hook.trap}
-            onContinue={(pick) =>
-              update({
+            onContinue={(pick) => {
+              markDone("trap_tf");
+              advance({
                 signals: { ...(progress.signals ?? {}), trapPick: pick },
                 currentStep: "day1_done",
                 day1CompletedAt: new Date().toISOString(),
-              })
-            }
+              });
+            }}
           />
         )}
 
@@ -181,10 +199,7 @@ export default function CuriosityArc() {
           <Day1Done
             interestEmoji={hook.emoji}
             onContinue={() =>
-              update({
-                currentStep: "yesterday_echo",
-                currentDay: 2,
-              })
+              advance({ currentStep: "yesterday_echo", currentDay: 2 })
             }
           />
         )}
@@ -192,23 +207,36 @@ export default function CuriosityArc() {
         {step === "yesterday_echo" && (
           <YesterdayEcho
             echo={CONCEPT.yesterdayEchoTemplate(progress.day1FirstThought ?? "")}
-            onContinue={() => update({ currentStep: "believe_doubt" })}
+            onContinue={() => advance({ currentStep: "believe_doubt" })}
           />
         )}
 
         {step === "believe_doubt" && (
           <BelieveDoubt
             claim={CONCEPT.believeDoubtClaim}
-            onPick={(choice) =>
-              update({ day2Belief: choice, currentStep: "unfold" })
-            }
+            onPick={(choice) => {
+              markDone("believe_doubt");
+              advance({ day2Belief: choice, currentStep: "unfold" });
+            }}
           />
         )}
 
         {step === "unfold" && (
           <ConceptUnfold
             steps={CONCEPT.conceptUnfold}
-            onDone={() => update({ currentStep: "own_words" })}
+            onDone={() => advance({ currentStep: "tricky_mcq" })}
+          />
+        )}
+
+        {step === "tricky_mcq" && (
+          <TrickyMcq
+            data={hook.trickyMcq}
+            onPicked={(correct) => {
+              markDone("tricky_mcq");
+              update({
+                signals: { ...(progress.signals ?? {}), trickyCorrect: correct },
+              });
+            }}
           />
         )}
 
@@ -221,7 +249,7 @@ export default function CuriosityArc() {
             placeholder="No textbook words needed."
             ctaLabel="Continue tomorrow →"
             onContinue={(text) =>
-              update({
+              advance({
                 day2OwnWords: text,
                 currentStep: "mini_cases",
                 currentDay: 3,
@@ -232,11 +260,15 @@ export default function CuriosityArc() {
         )}
 
         {step === "mini_cases" && (
-          <ApplyMiniCases
-            cases={CONCEPT.miniCases}
-            onDone={(answers) =>
-              update({ day3CaseAnswers: answers, currentStep: "teach_friend" })
-            }
+          <HookMiniCase
+            mc={miniCase}
+            onContinue={(answer) => {
+              markDone("mini_cases");
+              advance({
+                day3CaseAnswers: { ...(progress.day3CaseAnswers ?? {}), [miniCase.id]: answer },
+                currentStep: "teach_friend",
+              });
+            }}
           />
         )}
 
@@ -249,7 +281,7 @@ export default function CuriosityArc() {
             placeholder="Talk like you're really talking to them."
             ctaLabel="Close the loop"
             onContinue={(text) =>
-              update({ day3TeachLine: text, currentStep: "loop_close" })
+              advance({ day3TeachLine: text, currentStep: "loop_close" })
             }
           />
         )}
@@ -276,7 +308,7 @@ export default function CuriosityArc() {
           />
         )}
 
-        <div className="text-center mt-8">
+        <div className="text-center mt-6">
           <Button
             variant="ghost"
             size="sm"
@@ -290,6 +322,76 @@ export default function CuriosityArc() {
           </Button>
         </div>
       </main>
+
+      {showTopbar && (
+        <ArcNav
+          canBack={canGoBack}
+          onBack={goBack}
+          canNext={canNext}
+          onNext={() => {
+            // Default forward — most steps already auto-advance via their own CTA.
+            // This is a safety hatch for passive screens (aha, day_done, unfold).
+            const order: string[] = [
+              "interest",
+              ...DAY1_STEPS,
+              ...DAY2_STEPS,
+              ...DAY3_STEPS,
+            ];
+            const idx = order.indexOf(step);
+            const nextStep = (order[idx + 1] ?? step) as typeof step;
+            clearStep(step);
+            update({ currentStep: nextStep });
+          }}
+          nextLabel={canNext ? "Next" : "Locked"}
+          lockReason="Finish this step to unlock"
+        />
+      )}
+    </div>
+  );
+}
+
+// Inline Day-3 mini case component — hook-flavoured + domain example.
+function HookMiniCase({
+  mc,
+  onContinue,
+}: {
+  mc: MiniCase;
+  onContinue: (answer: string) => void;
+}) {
+  const [draft, setDraft] = useState("");
+  return (
+    <div className="arc-shell max-w-[480px] mx-auto space-y-3">
+      <div className="text-[10px] uppercase tracking-[2px] font-bold text-emerald-700 flex items-center gap-2">
+        <span>Day 3 · Try it on something new</span>
+        <span aria-hidden="true" className="flex-1 h-px bg-border" />
+      </div>
+      <Card className="p-4 sm:p-5">
+        <p className="arc-display text-[15px] sm:text-base font-extrabold leading-snug mb-2">
+          {mc.situation}
+        </p>
+        <p className="text-[12px] text-muted-foreground italic mb-3">
+          Hint: {mc.nudge}
+        </p>
+        <div className="rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-900 text-[12px] px-3 py-2 mb-3">
+          <span className="font-semibold">In apps you already use → </span>
+          {mc.domainExample}
+        </div>
+        <textarea
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          rows={3}
+          placeholder="Write what you think…"
+          maxLength={400}
+          className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 resize-none"
+        />
+        <Button
+          className="mt-3 w-full"
+          disabled={!draft.trim()}
+          onClick={() => onContinue(draft.trim())}
+        >
+          Now teach a friend →
+        </Button>
+      </Card>
     </div>
   );
 }
