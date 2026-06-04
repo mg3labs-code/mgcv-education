@@ -1495,7 +1495,11 @@ const DayGatedEpisode = ({
       node: <ApplicationBlock content={b.content as ApplicationContent} />,
     });
   }
-  const day2Sections = day2RichSections.slice(0, 1);
+  // When this episode has hand-authored interest-flavoured pilot copy, we hide
+  // the generic textbook reasoning block on Day 2 — the curiosity deep dive
+  // (pilot.day2.deepDiveText) replaces it so the student isn't asked the same
+  // textbook question twice.
+  const day2Sections = hasInterestVariants ? [] : day2RichSections.slice(0, 1);
 
   // ─── Day 3 master sections: assumptions + implications (Full Story shows both) ──
   const day3RichSections: { title: string; node: React.ReactNode }[] = [];
