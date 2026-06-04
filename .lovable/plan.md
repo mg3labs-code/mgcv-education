@@ -1,104 +1,82 @@
-# Two engagement features — one for students, one for teachers
+# Engagement Engine v2 — 4 features + a simulation
 
-Both unlock the "real-world hook" promise across the whole product, not just one chapter.
+## A. 3-Interest onboarding (replace 1-pick gate)
 
----
+Today the picker is shown the first time a student opens any pilot episode, single-select, stored in `localStorage`. Move it earlier and allow up to 3.
 
-## Feature 1 — Interest → Curiosity Engine (student-facing)
+- New onboarding step right after signup: "Pick 3 worlds you like" — 10 tiles (🏏 Sports · 🍕 Food · 🚆 Travel · 🎮 Games · 💰 Money · 🎬 Movies · 🌿 Nature · 🚀 Space · 📱 Tech · 🏙 My City).
+- Saved to `profiles.interests text[]` (new column, migration).
+- Episode picks **interest #1** by default; the chip at the top lets the student switch to #2 or #3 for that episode only.
+- Existing single-tile gate inside `TextbookEpisode` is removed (no more "before we start" wall).
 
-### What the student experiences
+## B. Pre-episode curiosity prompt
 
-**Step A — One-time interest picker (on first login, after onboarding)**
-A clean 8-tile grid (matches your `interest_to_curiosity_engine.html`):
-🏏 Cricket · 🍔 Food · 🎬 Movies · 🎮 Gaming · 🎵 Music · ✈️ Travel · 💻 Tech · 🌧 Nature
-Multi-select up to 3. Saved to `profiles.interest_tag` (already exists) — extended to `profiles.interests text[]` (array) so multiple stick.
+Before Day-1 Spark renders, show a one-screen card:
+> "🏏 Quick thought before we start — what's the trickiest thing about *real numbers* in cricket you've ever wondered?"
+> [text field, 80 chars max, **Skip** allowed]
 
-**Step B — Every Day-1 hook now reframes through their top interest**
-Example, real numbers chapter:
-- Cricket kid sees: "A team flew to World Cup semis without playing their last match. A decimal that never ends decided it…"
-- Food kid sees: "Bill ₹1000 split 3 ways = ₹333.33… each. Where's the extra paisa?"
-- Music kid sees: "Tuner A says 120.000 BPM. Tuner B says 119.9999987… BPM. Both right. How?"
-- Gaming kid sees: "Your FPS counter shows 60.0 — but the game engine actually runs at 59.9404… How do GPUs round?"
+- Stored in `curiosity_arc_progress.day1_first_thought` (column already exists).
+- Mirrored back on Day-2 ("Yesterday you wondered: …") — this hook already exists, we just feed it.
 
-The 3-day arc plumbing already supports this (`getPilotInterestOverride`). I'll expand the override bank from 1 chapter × 4 interests to **all chapters × 8 interests** using the same subject-aware factory you just approved.
+The prompts come from a small bank keyed by `(interest, subject)` — 1 sentence each, written to be tricky-but-readable for Class 7+. Example bank for real-numbers:
+- sports → "How can a team **win** a match but still have a **negative** run-rate?"
+- food → "Why does 1000 ÷ 3 = ₹333.33 each but 3 × ₹333.33 ≠ ₹1000?"
+- gaming → "Your FPS says 60. The GPU says 59.9404. Which one is lying?"
+- tech → "Your battery shows 67% — the chip reports 66.842%. Why does the UI round?"
+…and 6 more.
 
-**Step C — "Why this hook?" chip on every screen**
-A small pill at top: `🏏 Cricket lens · change`. One tap = pick a different interest for this episode only. Keeps the kid in control.
+## C. Remove day-lock, open back-and-forth navigation
 
-### Schema change (1 migration)
-```
-ALTER TABLE profiles ADD COLUMN interests text[] DEFAULT '{}';
--- keep interest_tag for back-compat (primary interest)
-```
+Currently Day-2 and Day-3 are gated on previous day completion. Per your direction: **all three days are reachable from the top tab at any time**. Student decides the order. Already-completed days keep their green tick; un-completed don't block.
 
-### Files
-- `src/components/onboarding/InterestPicker.tsx` (new — 8-tile grid)
-- `src/data/interestOverrides.ts` (new — bank of 8 interests × N chapters, with the cricket-HTML pattern)
-- `src/components/episode/InterestChip.tsx` (new — "lens" switcher at top of episode)
-- Wire into existing `Day1Spark` / `Day2Build` / `Day3Master` via the override hook that's already there.
+Concrete change: in `StageTopbar` / day-toggle logic, drop the `disabled` flag based on completion. Persist `viewDay` regardless of progress.
 
----
+## D. Weekly summary: "Did the interest engine help me?"
 
-## Feature 2 — Misconception Clusters (teacher-facing)
+A new card on the student dashboard, shown once a week:
 
-### What the teacher sees
+> **Your week with 🏏 cricket lens**
+> · Episodes finished: 4 (vs 1.6 weekly avg before)
+> · Day-2 recall accuracy: **78%** (vs 54% pre-interest)
+> · Retention risk dropped from **High → Medium** on 3 concepts
+> · Time-to-first-answer: **42 sec** (down from 1m 18s)
+> _"You're thinking faster when the question comes from cricket."_
 
-A new card on the Teacher Dashboard: **"Common misconceptions this week"**.
+Data sources already in DB:
+- `episode_progress.layer_scores` → day-completion flags + explain scores
+- `episode_interactions.time_spent_seconds`, `correct_on_first_try`
+- `retention_predictions.risk_level`
+- `profiles.interests` (new) tells us the cutover date
 
-Example:
-> 📐 Real Numbers · Class 10-B
-> **18 of 32 students** wrote variations of *"0.999… is close to 1 but not equal"*
-> AI-clustered from submitted answers · [Re-explain this to class] [See exact answers]
+Implementation: one read-only RPC `get_weekly_interest_summary(_user_id, _interest_tag)` that returns the 4 numbers + pre/post comparison. Card calls it; no new tables, no edge function.
 
-When clicked → opens a "Re-teach in 90 seconds" panel with:
-- The misconception in plain words
-- The one-line fix (pre-written by AI)
-- A 30-sec voice script the teacher can read out
-- "Push as a quick recap to all 18 students" button (creates a `teacher_alert` on each affected student's home)
+## E. Simulate 10 hybrid students end-to-end (verification, not feature)
 
-### How clustering works
+After A–D are wired, run a Node script via `code--exec`:
+1. Create 10 dummy auth users via service-role key.
+2. For each: pick 1–3 random interests from the 10 → fill `profiles.interests`.
+3. Walk them through: login → onboarding → pick interest → curiosity prompt → Day-1 (detective + sort) → Day-2 (recall + explain) → Day-3 (case + teach-back), in random order (since lock is gone).
+4. Write fake answers (50% correct, 50% wrong) into `episode_interactions` and `episode_progress`.
+5. At the end, query `retention_predictions` + the new weekly-summary RPC to confirm numbers flow.
+6. Print a pass/fail table per student.
 
-Cron-style edge function `cluster-misconceptions` runs nightly:
-1. Pulls last 7 days of `student_answers` where `ai_feedback->>'is_wrong' = true`
-2. Groups by `(assignment.subject, question_id)`
-3. For each group with ≥3 wrong answers, calls Lovable AI with all answer texts → returns up to 3 clusters with `{cluster_name, count, sample_quotes[], one_line_fix, reteach_script}`
-4. Inserts into a new `misconception_clusters` table
-
-### Schema (1 migration)
-```
-CREATE TABLE misconception_clusters (
-  id uuid PK, teacher_id uuid, class_name text, subject text,
-  chapter_id text, episode_id text, concept_label text,
-  cluster_name text, student_count int, sample_quotes jsonb,
-  one_line_fix text, reteach_script text,
-  affected_student_ids uuid[], detected_at timestamptz,
-  is_resolved bool default false
-);
--- + GRANTs + RLS scoped to teacher_id = auth.uid()
-```
-
-### Files
-- `supabase/migrations/...sql` (table + RLS + GRANTs)
-- `supabase/functions/cluster-misconceptions/index.ts` (nightly clusterer)
-- `src/components/teacher/MisconceptionClusters.tsx` (new card)
-- `src/pages/TeacherDashboard.tsx` (add the card)
-- "Push recap" button → reuses existing `teacher_alerts` table
+This is a script run, not committed code — output goes to console.
 
 ---
 
-## Build order (so you see value fast)
+## Build order this turn
 
-1. **Interest picker + chip** (front-end only, 1 file each) — instant visible change
-2. **Expand the interest override bank** from 1 chapter → all current pilot chapters
-3. **Misconception table + RLS migration**
-4. **Clusterer edge function + teacher card**
-5. **"Push re-explain to students" wire-up**
+1. Migration: `profiles.interests text[]` + `get_weekly_interest_summary` RPC.
+2. Onboarding step + 10-tile picker.
+3. Pre-episode curiosity prompt component + interest×subject prompt bank.
+4. Remove day-lock in StageTopbar / Day-router.
+5. Weekly summary card on dashboard.
+6. Run the 10-student simulation script and show results.
 
-Step 1+2 ship together as "Interest Engine v1". Steps 3-5 ship as "Misconception Radar v1".
+Step 1 needs your approval (migration tool). Everything else is frontend + 1 edge-case-free RPC.
 
 ---
 
-## Two quick decisions I need from you before I start
+## One thing I want to lock before I build
 
-1. **Interest picker — when?** (a) Right after signup, mandatory · (b) Optional, dismissible card on dashboard · (c) Shown the first time they open ANY episode
-2. **Misconception re-explain — where does it land for the student?** (a) A red banner on their dashboard "Your teacher noticed something — quick fix" · (b) Auto-injected as Day-2 recall when they next open that episode · (c) Both
+When the student opens an episode, should I auto-pick interest #1 from their 3-list, or show a tiny "Today's lens: 🏏 Cricket [swap]" pill and let them choose every time? **Default: auto-pick #1 with a "swap" pill** — fewer taps. Tell me if you want the explicit picker instead.
