@@ -296,7 +296,7 @@ export const dayPilotContent: Record<string, DayPilotContent> = {
       whyItWorks:
         "A number system grows when reality forces it to. You cannot count −3 cows, but you can owe ₹3. That is why negative numbers exist. Math grows when old rules cannot describe something real, so people build a better rule.",
       proveItPrompt:
-        "Imagine you're explaining to a younger cousin why we need negative numbers. What real-life situation would you use to convince them?",
+        "Your cousin says '0.333… is NOT exactly 1/3 — it's just close.' In two sentences, convince them they're the same number.",
       caseStudy:
         "A cricket team's net run rate can be negative. Without negative numbers, we could not clearly show who is behind in a tournament. Your call: where else do negative numbers help us show a real situation clearly?",
       growthGains: [
@@ -332,3 +332,70 @@ export function getPilotContent(chapterId?: string, episodeId?: string): DayPilo
   if (exactPilot) return exactPilot;
   return null;
 }
+
+// ── Interest-flavoured hook overrides (Day 1 first-thought + concept reveal) ──
+// Keeps the same trap / sort / Day-2 / Day-3 — only swaps the opening mystery so
+// the student feels the lesson starts from something they already love.
+export type PilotInterest = "cricket" | "nature" | "music" | "travel";
+
+export interface PilotInterestOverride {
+  hookQuestion: string;
+  conceptText: string;
+  badgeLabel: string;
+  emoji: string;
+}
+
+export const PILOT_INTEREST_OPTIONS: { tag: PilotInterest; label: string; emoji: string; sub: string }[] = [
+  { tag: "cricket", label: "Cricket", emoji: "🏏", sub: "NRR, run-rates, qualifiers" },
+  { tag: "nature", label: "Monsoon & nature", emoji: "🌧", sub: "Rain, forests, wildlife" },
+  { tag: "music", label: "Music", emoji: "🎵", sub: "BPM, beats, tempo" },
+  { tag: "travel", label: "Travel & food", emoji: "✈️", sub: "Flights, splits, recipes" },
+];
+
+const PILOT_INTEREST_OVERRIDES: Record<string, Partial<Record<PilotInterest, PilotInterestOverride>>> = {
+  "ch1::ch1-ep1": {
+    cricket: {
+      badgeLabel: "Cricket",
+      emoji: "🏏",
+      hookQuestion: "A team flew to the World Cup semis without playing their last match. A decimal that never ends decided it. How?",
+      conceptText:
+        "Net Run Rate = runs ÷ overs — one whole number divided by another. Most of those divisions never end cleanly (1÷3 = 0.333…, NRR = 1.34782608…). Some, like √2, never repeat at all. Together they fill every point on the number line — the real numbers. The scoreboard rounds. The number doesn't.",
+    },
+    nature: {
+      badgeLabel: "Monsoon",
+      emoji: "🌧",
+      hookQuestion: "IMD says the Kerala monsoon arrives ~June 1 every year — but the model actually says 31.4285714… May. Why does the date get rounded but the maths can't be?",
+      conceptText:
+        "Every 'average rainfall', 'average onset date', 'average forest cover' is sum ÷ count — a fraction of two whole numbers. Most divisions never terminate (1÷7 = 0.142857142857…). Some, like √2, never repeat at all. All of them fit on the number line — that's the real numbers. Headlines round. Nature doesn't.",
+    },
+    music: {
+      badgeLabel: "Music",
+      emoji: "🎵",
+      hookQuestion: "Your tuner app shows the song at 120.000 BPM. Your friend's app shows 119.9999987… BPM. Both are right. How?",
+      conceptText:
+        "BPM = beats ÷ minutes — a fraction. Most fractions never end cleanly (1÷3 = 0.333…). Some numbers, like √2, never repeat at all. Between any two BPM readings there are infinitely many real numbers — the apps just round to different decimal places. The real number line has no gaps.",
+    },
+    travel: {
+      badgeLabel: "Travel",
+      emoji: "✈️",
+      hookQuestion: "A bill for ₹1000 split among 3 friends should be ₹333.33… each — but the payment app only shows ₹333.33. Where did the extra paisa go?",
+      conceptText:
+        "1000 ÷ 3 = 333.333… — a decimal that never ends. Apps round to 2 places, but the real number sits on the number line, exactly. Every average flight time, bill split, fuel-per-km is integer ÷ integer. Some divisions terminate. Most don't. A few, like √2, never even repeat — yet all of them are real numbers.",
+    },
+  },
+};
+
+export function getPilotInterestOverride(
+  chapterId: string | undefined,
+  episodeId: string | undefined,
+  interest: PilotInterest | undefined,
+): PilotInterestOverride | null {
+  if (!chapterId || !episodeId || !interest) return null;
+  return PILOT_INTEREST_OVERRIDES[`${chapterId}::${episodeId}`]?.[interest] ?? null;
+}
+
+export function hasPilotInterestOverrides(chapterId?: string, episodeId?: string): boolean {
+  if (!chapterId || !episodeId) return false;
+  return !!PILOT_INTEREST_OVERRIDES[`${chapterId}::${episodeId}`];
+}
+

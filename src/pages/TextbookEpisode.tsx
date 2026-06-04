@@ -45,7 +45,7 @@ import DevDayToggle from "@/components/episode/DevDayToggle";
 import Day2Build from "@/components/episode/Day2Build";
 import Day3Master from "@/components/episode/Day3Master";
 import DayLockedWall from "@/components/episode/DayLockedWall";
-import { getPilotContent } from "@/data/dayPilotContent";
+import { getPilotContent, getPilotInterestOverride, hasPilotInterestOverrides, PILOT_INTEREST_OPTIONS, type PilotInterest } from "@/data/dayPilotContent";
 
 const LANGUAGE_SUBJECTS = new Set(["Telugu", "Hindi"]);
 
@@ -1444,10 +1444,29 @@ const DayGatedEpisode = ({
     setDayProgress(0);
   }, [info.currentDay, episodeKey]);
 
+  // ─── Interest picker gate (Day 1 only, episodes with interest-flavoured hooks) ──
+  const interestKey = `mgcv:textbook-interest:${episodeKey}`;
+  const hasInterestVariants = hasPilotInterestOverrides(chapterId, episodeId);
+  const [interest, setInterest] = useState<PilotInterest | null>(() => {
+    if (typeof window === "undefined") return null;
+    const stored = localStorage.getItem(interestKey);
+    return (stored as PilotInterest) || null;
+  });
+  const pickInterest = (tag: PilotInterest) => {
+    try { localStorage.setItem(interestKey, tag); } catch { /* ignore */ }
+    setInterest(tag);
+  };
+
   if (isLoading) return <EpisodeLoadingTransition />;
 
   const blocksByType = (type: string) =>
     (dbBlocks ?? []).filter((b) => b.type === type);
+
+  // Apply interest override on top of the static pilot copy
+  const interestOverride = getPilotInterestOverride(chapterId, episodeId, interest ?? undefined);
+  const activePilot = interestOverride
+    ? { ...pilot, hookQuestion: interestOverride.hookQuestion, conceptText: interestOverride.conceptText }
+    : pilot;
 
   // ─── Day 1 story node: first visual_aid from the episode ──
   const day1VisualBlock = blocksByType("visual_aid")[0];
@@ -1476,7 +1495,11 @@ const DayGatedEpisode = ({
       node: <ApplicationBlock content={b.content as ApplicationContent} />,
     });
   }
-  const day2Sections = day2RichSections.slice(0, 1);
+  // When this episode has hand-authored interest-flavoured pilot copy, we hide
+  // the generic textbook reasoning block on Day 2 — the curiosity deep dive
+  // (pilot.day2.deepDiveText) replaces it so the student isn't asked the same
+  // textbook question twice.
+  const day2Sections = hasInterestVariants ? [] : day2RichSections.slice(0, 1);
 
   // ─── Day 3 master sections: assumptions + implications (Full Story shows both) ──
   const day3RichSections: { title: string; node: React.ReactNode }[] = [];
@@ -1557,23 +1580,58 @@ const DayGatedEpisode = ({
         />
       );
     }
+  } else if (viewDay === 1 && hasInterestVariants && !interest) {
+    body = (
+      <div className="min-h-[80vh] flex items-center justify-center px-4 py-8">
+        <div className="w-full max-w-lg space-y-6 animate-fade-in">
+          <div className="text-center space-y-2">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-bold uppercase tracking-wide">
+              ✨ Before we start
+            </div>
+            <h1 className="text-2xl font-bold text-foreground leading-tight">
+              What sparks your curiosity most?
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Pick one — today's mystery will start from something you already love.
+            </p>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-3">
+            {PILOT_INTEREST_OPTIONS.map((opt) => (
+              <button
+                key={opt.tag}
+                type="button"
+                onClick={() => pickInterest(opt.tag)}
+                className="text-left rounded-2xl border-2 border-border bg-card hover:bg-accent hover:border-primary/40 transition-all p-4 min-h-[88px] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <div className="text-2xl mb-1" aria-hidden="true">{opt.emoji}</div>
+                <div className="font-bold text-foreground">{opt.label}</div>
+                <div className="text-xs text-muted-foreground mt-0.5">{opt.sub}</div>
+              </button>
+            ))}
+          </div>
+          <p className="text-center text-[11px] text-muted-foreground">
+            You can change this anytime — it only flavours the opening story.
+          </p>
+        </div>
+      </div>
+    );
   } else {
     body = (
       <Day1Spark
         episodeTitle={episodeTitle}
-        hookQuestion={pilot.hookQuestion}
-        conceptText={pilot.conceptText}
+        hookQuestion={activePilot.hookQuestion}
+        conceptText={activePilot.conceptText}
         storyNode={day1StoryNode}
         storyTitle={day1StoryTitle}
-        quickCheck={pilot.quickCheck}
-        detectiveStatement={pilot.detective.statement}
-        detectiveIsTrue={pilot.detective.isTrue}
-        detectiveExplain={pilot.detective.explain}
-        sortActivity={pilot.day1Sort}
+        quickCheck={activePilot.quickCheck}
+        detectiveStatement={activePilot.detective.statement}
+        detectiveIsTrue={activePilot.detective.isTrue}
+        detectiveExplain={activePilot.detective.explain}
+        sortActivity={activePilot.day1Sort}
         ladder={{
           chapterId: chapterId ?? null,
           episodeId: episodeId ?? null,
-          conceptKey: pilot.conceptKey ?? null,
+          conceptKey: activePilot.conceptKey ?? null,
           subject: subject ?? null,
           chapterSlug: chapterSlug ?? chapterId ?? null,
         }}
@@ -1592,6 +1650,21 @@ const DayGatedEpisode = ({
         viewDay={viewDay}
         onChangeDay={(d) => setViewDay(d)}
       />
+      {hasInterestVariants && interest && (
+        <div className="max-w-4xl mx-auto px-4 pt-2 flex items-center justify-end gap-2 text-[11px] text-muted-foreground">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary font-semibold">
+            {PILOT_INTEREST_OPTIONS.find((o) => o.tag === interest)?.emoji}
+            {PILOT_INTEREST_OPTIONS.find((o) => o.tag === interest)?.label}
+          </span>
+          <button
+            type="button"
+            onClick={() => { try { localStorage.removeItem(interestKey); } catch { /* ignore */ } setInterest(null); }}
+            className="underline hover:text-foreground"
+          >
+            change
+          </button>
+        </div>
+      )}
       {body}
       <DevDayToggle />
     </div>

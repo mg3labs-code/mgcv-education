@@ -1,106 +1,55 @@
+# Fix the 3-Day Curiosity Arc on `/student/textbook/ch1/ch1-ep1`
 
-## Goal
+## Root causes you flagged (verified in code)
 
-Make the demo feel like a real, shippable app: clean teacher dashboard, a 3-day curiosity arc that mirrors the activities used in Deep Dive, with hook-aligned questions, working back/next navigation, gated 7-layer flow, and consistent typography across desktop / laptop / tablet / mobile.
+1. **Same NRR cricket question twice on Day 1**
+   `conceptRungs.ts` rung 1 (WARM-UP) and `dayPilotContent.ts` `hookQuestion` (FIRST GUESS) were both rewritten to the *exact same* NRR 1.3478 line in the last pass. Two different components render them on the same screen → looks duplicated.
 
----
+2. **No interest / domain picker before Day 1 in the textbook flow**
+   The standalone `/curiosity` arc has `InterestPicker` (cricket / nature / music / travel / food). The textbook episode at `/student/textbook/ch1/ch1-ep1` skips it entirely and hard-locks to cricket NRR.
 
-## Part 1 — Teacher Dashboard polish
+3. **Day 2 falls back to textbook "Active Reasoning"**
+   Screenshot 2 shows "Why is it important for us to have 'Real Numbers' in mathematics?" — that's a generic `ReasoningBlock` from the NCERT-style textbook, not a curiosity beat. Same break on Day 3 ("Design a 5-second test…") — it's the rung-5 prompt re-used verbatim, not interest-themed.
 
-Files: `src/pages/TeacherDashboard.tsx`, `src/index.css`
+4. **Day 3 final reflection ("Design a 5-second test") is duplicated from the warm-up ladder** and reads like schoolwork, not the "teach a friend" tone in the Claude HTML.
 
-- Strip inline-style soup; move to Tailwind tokens so the page inherits the design system (no more random `fontSize: 13` mixed with `fontSize: 20`).
-- One type scale: `text-2xl` page title, `text-lg` card titles, `text-sm` body, `text-xs` meta. Same scale used on student dashboard.
-- Spacing: consistent `p-6`, `gap-4`, `space-y-5`. Cards: `rounded-2xl border border-border bg-card shadow-sm`.
-- Class selector → segmented pill row with `bg-muted` track and `bg-primary text-primary-foreground` active.
-- Header alignment: greeting + date + class on one row at ≥768px, stacked on mobile.
-- Quick Actions grid: `grid-cols-1 sm:grid-cols-3` so laptop (1366) doesn't squash icons.
+## What I'll build (mirroring `day1_complete_5min_flow.html` + `interest_to_curiosity_engine.html`)
 
-## Part 2 — Clarity icon + ThinkingNetwork
+### A. Day 1 — one mystery, 5 beats, no duplicates
+- **Beat 0 (new): Interest picker** — render `InterestPicker` *inside* `TextbookEpisode` on Day 1 view, persisted via `useArcProgress(conceptKey)` so Day 2/3 reuse it. Chips: 🏏 Cricket · 🌧 Monsoon · 🎵 Music · ✈️ Travel · 🌳 Nature. Skippable (defaults to cricket).
+- **Beat 1: Warm-up** — change rung 1 in `conceptRungs.ts` to a *different* themed gimme (e.g. cricket: "Toss won 6/10 — is that a 'real' number you can plot?"). Keep NRR mystery only as the FIRST GUESS hook.
+- **Beat 2: First Guess (hook)** — `hookQuestion` swaps per chosen interest (NRR for cricket, Kerala monsoon onset for nature, BPM for music, average flight time for travel).
+- **Beat 3: Aha reveal** — `conceptText` rewritten per interest, same shape as Claude's `vf-frame` (emoji + one-line title + 2-sentence body + formula chip).
+- **Beat 4: Sort the Rebels** — keep current 5-number sort, add interest-flavoured item labels (e.g. "NRR: −0.8" instead of "−100" when cricket is picked).
+- **Beat 5: Believe / Doubt** — keep 0.999… = 1 trap (it's the strongest one in the Claude file).
 
-Files: `src/components/ThinkingNetwork.tsx`, `src/components/MetricCard.tsx`
+### B. Day 2 — build (replace generic Active Reasoning)
+- Override the Day 2 textbook Active Reasoning block on `ch1::ch1-ep1` with the interest-themed deep dive from `dayPilotContent.day2.deepDiveText` (already cricket-flavoured). I'll gate `ReasoningBlock` rendering when pilot content exists for the episode.
+- Add a *yesterday echo* card on Day 2 top (Claude pattern) showing what they typed on Day 1.
 
-- Redesign the Clarity ring: layered SVG (outer track + animated gradient arc + inner crisp number), `aria-label` with the percentage.
-- Lock icon container to `h-10 w-10` (mobile) / `h-12 w-12` (≥md) using Tailwind classes, not inline px — fixes the laptop sizing drift.
-- Same icon system applied to Thinking / Focus / Character so all four read as a set.
+### C. Day 3 — master (replace duplicate "Design a 5-second test")
+- Replace `proveItPrompt` with the Claude HTML's "teach a friend" line: "Your cousin asks why 0.333… and 1/3 are the same. In two sentences — convince them."
+- Keep the existing case study + order-sort (those already work).
 
-## Part 3 — /curiosity 3-day arc, rebuilt around Deep Dive activities
+### D. Verification
+After edits, navigate to `/student/textbook/ch1/ch1-ep1`, walk D1 → D2 → D3 in the browser, confirm:
+- no duplicate question on Day 1
+- interest picker shows, persists, and changes the hook copy
+- Day 2 shows the curiosity deep dive, not the NCERT Active Reasoning
+- back / next stays unlocked throughout (demo mode)
 
-Files (new): `src/data/curiosityConcepts/realNumbers.ts` (expand), `src/components/curiosity/ArcNav.tsx`, `src/components/curiosity/LayerStepper.tsx`, `src/components/curiosity/activities/*` (one per activity type).
-Files (edit): `src/pages/CuriosityArc.tsx`, `src/hooks/useArcProgress.ts`.
+## Files I'll touch (frontend only)
 
-### Activity set (mirrors what Deep Dive uses)
+- `src/data/conceptRungs.ts` — rewrite rung 1 to a distinct warm-up
+- `src/data/dayPilotContent.ts` — add `hooksByInterest` map for `ch1::ch1-ep1`, swap Day 3 prove-it prompt
+- `src/pages/TextbookEpisode.tsx` — render `InterestPicker` once on Day 1, read tag via `useArcProgress`, pass selected hook/concept down, suppress the textbook `ReasoningBlock` when pilot is active
+- `src/components/episode/Day1Spark.tsx` — accept an optional `interestBadge` for the topbar
+- `src/components/episode/Day2Build.tsx` — show "Yesterday you guessed" echo card
 
-Each Day exposes the same kind of blocks the student already sees in Textbook episodes, so the demo feels like one product:
+## What I'm explicitly NOT changing
 
-1. Hook card (MCQ, 3 choices) — already exists, kept.
-2. Believe / Doubt / Not sure — kept.
-3. True / False with twist — kept, retitled "Spot the trap".
-4. Drag-drop sort (tap-to-place bins) — kept.
-5. Tricky MCQ (2–3 options, one trap distractor) — new, reused across days.
-6. Reflect input (one-line write) — kept.
-7. Aha visual reveal — kept.
-8. Teach-a-friend mic/text — kept.
+- Voice playback, 7-layer page, defense mode prompt quality, full-practice page — out of scope for this pass (you said those are working / will be tuned later).
+- Backend / DB schema / RLS — pure frontend reskin.
+- The standalone `/curiosity` route — already uses this pattern; this PR brings the textbook episode in line with it.
 
-### Hook ↔ activity sync (the bug today)
-
-In `realNumbers.ts`, each `HookVariant` (cricket / travel / movies / other) gets its own:
-- `mcq` (already exists)
-- `sortItems` + `sortPrompt` (already exists)
-- `trap` claim (already exists)
-- **new**: `trickyMcq` (Day 2)
-- **new**: `miniCase` (Day 3, hook-flavoured: cricket → run-rate, travel → bill, movies → BPM)
-
-`CuriosityArc.tsx` always reads activities from the resolved `hook` object — never from a global pool. This guarantees the cricket flow stays cricket end-to-end.
-
-### Domain-flavoured examples (Uber / Zomato / etc, simple level)
-
-New `domainExamples` field on each hook, surfaced in the Day-3 mini-case copy:
-- Cricket → "Uber surge multiplier 1.333… — same maths as run-rate."
-- Travel → "Zomato bill split for 3 friends — ₹83.33 forever."
-- Movies → "Spotify tempo detector rounds 120.499… to 120.5."
-
-Kept one-line, no engineering depth — just "you've seen this in apps you use".
-
-### 3-day arc structure
-
-Day 1 — Spark (5 min)
-  Hook MCQ → First thought → Aha visual → Sort activity → Trap T/F → Day-1 done.
-
-Day 2 — Build (6 min)
-  Yesterday echo → Believe/Doubt → Concept unfold (3 steps) → **Tricky MCQ** (new) → Own words → Day-2 done.
-
-Day 3 — Master (5 min)
-  Domain mini-case (hook-flavoured) → Teach-a-friend → Loop close → Day-3 done.
-
-### Navigation (back / next, gated)
-
-New `ArcNav` footer pinned at bottom of every step:
-- `← Back` — always enabled except on the first step of the arc.
-- `Next →` — disabled until the step's required interaction is done (pick made, text typed, all items placed). Tooltip explains why it's locked.
-- Steps that *require* completion (MCQs, sort, trap, reflect) block forward navigation; passive screens (aha, day-done) allow free next.
-- Back uses an in-memory `historyStack` in `useArcProgress` so it walks the actual visited steps, not a hard-coded order.
-
-### 7-layer gating
-
-The "7 layers" referenced in the docs map onto: Interest → Hook → Reflect → Aha → Sort → Trap → Loop-close. Each layer renders a numbered chip in the new `LayerStepper` topbar with three states: locked (grey + lock icon), active (filled), done (check). The stepper is clickable only on done/active layers — locked ones show a toast: "Finish the current step to unlock."
-
-## Part 4 — Responsive verification
-
-After implementation:
-- Use `browser--navigate_to_sandbox` then `browser--set_viewport_size` at 1920×1080, 1366×768, 834×1194, 390×844.
-- Walk `/teacher` and `/curiosity` at each size, screenshot, confirm: no overflow, type scale steady, Clarity icon same visual weight, ArcNav reachable without scrolling on mobile.
-
-## Technical notes
-
-- Keep all colour values in HSL tokens; no new raw hex except inside `realNumbers.ts` data strings.
-- `useArcProgress` gains: `historyStack: ArcStep[]`, `goBack()`, `canGoNext(step): boolean`.
-- `LayerStepper` is a presentational component; gating logic lives in `useArcProgress`.
-- No schema changes — `signals` jsonb already stores per-step completion flags.
-- No new edge functions.
-
-## Out of scope (will not touch this round)
-
-- Other teacher subpages (analytics, assignments) beyond shared tokens.
-- Voice / TTS layer on the arc.
-- New concepts beyond Real Numbers.
+Confirm and I'll ship it in one pass.
