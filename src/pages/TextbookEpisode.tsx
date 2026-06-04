@@ -1444,10 +1444,29 @@ const DayGatedEpisode = ({
     setDayProgress(0);
   }, [info.currentDay, episodeKey]);
 
+  // ─── Interest picker gate (Day 1 only, episodes with interest-flavoured hooks) ──
+  const interestKey = `mgcv:textbook-interest:${episodeKey}`;
+  const hasInterestVariants = hasPilotInterestOverrides(chapterId, episodeId);
+  const [interest, setInterest] = useState<PilotInterest | null>(() => {
+    if (typeof window === "undefined") return null;
+    const stored = localStorage.getItem(interestKey);
+    return (stored as PilotInterest) || null;
+  });
+  const pickInterest = (tag: PilotInterest) => {
+    try { localStorage.setItem(interestKey, tag); } catch { /* ignore */ }
+    setInterest(tag);
+  };
+
   if (isLoading) return <EpisodeLoadingTransition />;
 
   const blocksByType = (type: string) =>
     (dbBlocks ?? []).filter((b) => b.type === type);
+
+  // Apply interest override on top of the static pilot copy
+  const interestOverride = getPilotInterestOverride(chapterId, episodeId, interest ?? undefined);
+  const activePilot = interestOverride
+    ? { ...pilot, hookQuestion: interestOverride.hookQuestion, conceptText: interestOverride.conceptText }
+    : pilot;
 
   // ─── Day 1 story node: first visual_aid from the episode ──
   const day1VisualBlock = blocksByType("visual_aid")[0];
