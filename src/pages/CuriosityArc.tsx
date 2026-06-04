@@ -25,7 +25,7 @@ export default function CuriosityArc() {
 
   if (!loaded) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-dvh bg-background flex items-center justify-center" role="status" aria-live="polite">
         <div className="text-muted-foreground text-sm">Preparing your arc…</div>
       </div>
     );
