@@ -160,7 +160,7 @@ export default function CuriosityArc() {
           <AhaVisual
             guess={progress.day1FirstThought ?? ""}
             aha={hook.aha}
-            onContinue={() => advance({ currentStep: "sort_activity" })}
+            onContinue={() => advance({ currentStep: "believe_doubt" })}
           />
         )}
 
@@ -172,7 +172,7 @@ export default function CuriosityArc() {
               markDone("sort_activity");
               advance({
                 signals: { ...(progress.signals ?? {}), sortAllCorrect: allCorrect },
-                currentStep: "trap_tf",
+                currentStep: "unfold",
               });
             }}
           />
@@ -185,8 +185,7 @@ export default function CuriosityArc() {
               markDone("trap_tf");
               advance({
                 signals: { ...(progress.signals ?? {}), trapPick: pick },
-                currentStep: "day1_done",
-                day1CompletedAt: new Date().toISOString(),
+                currentStep: "teach_friend",
               });
             }}
           />
@@ -204,7 +203,7 @@ export default function CuriosityArc() {
         {step === "yesterday_echo" && (
           <YesterdayEcho
             echo={CONCEPT.yesterdayEchoTemplate(progress.day1FirstThought ?? "")}
-            onContinue={() => advance({ currentStep: "believe_doubt" })}
+            onContinue={() => advance({ currentStep: "sort_activity" })}
           />
         )}
 
@@ -213,10 +212,21 @@ export default function CuriosityArc() {
             claim={CONCEPT.believeDoubtClaim}
             onPick={(choice) => {
               markDone("believe_doubt");
-              advance({ day2Belief: choice, currentStep: "unfold" });
+              // Day 1 uses believe/doubt as the misconception beat; Day 2 (if
+              // ever routed here) continues into unfold.
+              if (progress.currentDay === 1) {
+                advance({
+                  day2Belief: choice,
+                  currentStep: "day1_done",
+                  day1CompletedAt: new Date().toISOString(),
+                });
+              } else {
+                advance({ day2Belief: choice, currentStep: "unfold" });
+              }
             }}
           />
         )}
+
 
         {step === "unfold" && (
           <ConceptUnfold
