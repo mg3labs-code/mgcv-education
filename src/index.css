@@ -609,3 +609,17 @@
 .backface-hidden {
   backface-visibility: hidden;
 }
+
+/* Respect users who prefer reduced motion.
+   Keeps essential feedback (opacity changes) but removes movement. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
