@@ -2,18 +2,51 @@ import { useMemo } from "react";
 import { useArcProgress } from "@/hooks/useArcProgress";
 import { realNumbers, type InterestTag } from "@/data/curiosityConcepts/realNumbers";
 import InterestPicker from "@/components/curiosity/InterestPicker";
-import HookCard from "@/components/curiosity/HookCard";
-import TapGuesses from "@/components/curiosity/TapGuesses";
+import HookShortCard from "@/components/curiosity/HookShortCard";
 import ReflectInput from "@/components/curiosity/ReflectInput";
-import TinyReveal from "@/components/curiosity/TinyReveal";
+import AhaVisual from "@/components/curiosity/AhaVisual";
+import SortActivity from "@/components/curiosity/SortActivity";
+import TrapTF from "@/components/curiosity/TrapTF";
+import Day1Done from "@/components/curiosity/Day1Done";
 import YesterdayEcho from "@/components/curiosity/YesterdayEcho";
 import BelieveDoubt from "@/components/curiosity/BelieveDoubt";
 import ConceptUnfold from "@/components/curiosity/ConceptUnfold";
 import ApplyMiniCases from "@/components/curiosity/ApplyMiniCases";
 import LoopClose from "@/components/curiosity/LoopClose";
+import ArcTopbar from "@/components/curiosity/ArcTopbar";
 import { Button } from "@/components/ui/button";
 
 const CONCEPT = realNumbers;
+
+// step ordering used to drive the progress dots in the topbar
+const DAY1_STEPS = [
+  "hook",
+  "hook_mcq",
+  "first_thought",
+  "aha_visual",
+  "sort_activity",
+  "trap_tf",
+  "day1_done",
+] as const;
+const DAY2_STEPS = [
+  "yesterday_echo",
+  "believe_doubt",
+  "unfold",
+  "own_words",
+  "day2_done",
+] as const;
+const DAY3_STEPS = [
+  "mini_cases",
+  "teach_friend",
+  "loop_close",
+  "day3_done",
+] as const;
+
+const EST_LABEL: Record<1 | 2 | 3, string> = {
+  1: "~5 min",
+  2: "~6 min",
+  3: "~5 min",
+};
 
 export default function CuriosityArc() {
   const { progress, update, loaded } = useArcProgress(CONCEPT.conceptKey);
@@ -25,40 +58,48 @@ export default function CuriosityArc() {
 
   if (!loaded) {
     return (
-      <div className="min-h-dvh bg-background flex items-center justify-center" role="status" aria-live="polite">
+      <div className="min-h-dvh bg-background flex items-center justify-center arc-shell" role="status" aria-live="polite">
         <div className="text-muted-foreground text-sm">Preparing your arc…</div>
       </div>
     );
   }
 
   const step = progress.currentStep;
+  const day = progress.currentDay;
+  const stepsForDay =
+    day === 1 ? DAY1_STEPS : day === 2 ? DAY2_STEPS : DAY3_STEPS;
+  const stepIndex = Math.max(
+    0,
+    (stepsForDay as readonly string[]).indexOf(step),
+  );
+
+  // Interest picker is its own welcome screen (pre-arc)
+  const showTopbar = step !== "interest";
 
   return (
-    <div className="min-h-dvh bg-background text-foreground">
+    <div className="min-h-dvh bg-background text-foreground arc-shell">
       <a
         href="#arc-main"
         className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-primary focus:text-primary-foreground focus:px-3 focus:py-2"
       >
         Skip to content
       </a>
-      <header className="border-b border-border bg-card/50 backdrop-blur sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
-          <div>
-            <div className="text-xs uppercase tracking-wider text-muted-foreground">
-              Class 10 · Maths
-            </div>
-            <h1 className="text-base sm:text-lg font-serif font-semibold">
-              {CONCEPT.conceptLabel} · 3-day curiosity loop
-            </h1>
-          </div>
-          <DayPill day={progress.currentDay} />
-        </div>
-      </header>
+
+      {showTopbar && (
+        <ArcTopbar
+          currentDay={day}
+          stepIndex={stepIndex}
+          totalSteps={stepsForDay.length}
+          interestEmoji={hook.emoji}
+          interestLabel={hook.badgeLabel}
+          estLabel={EST_LABEL[day]}
+        />
+      )}
 
       <main
         id="arc-main"
         aria-live="polite"
-        className="max-w-4xl mx-auto px-4 py-8 sm:py-12"
+        className="px-4 py-6 sm:py-8"
       >
         {step === "interest" && (
           <InterestPicker
@@ -73,13 +114,15 @@ export default function CuriosityArc() {
         )}
 
         {step === "hook" && (
-          <HookCard hook={hook} onReady={() => update({ currentStep: "guess" })} />
-        )}
-
-        {step === "guess" && (
-          <TapGuesses
-            guesses={hook.guesses}
-            onPick={(guess) => update({ day1Guess: guess, currentStep: "first_thought" })}
+          <HookShortCard
+            hook={hook}
+            onPickedAndContinue={(picked, correct) =>
+              update({
+                day1Guess: picked,
+                signals: { ...(progress.signals ?? {}), hookCorrect: correct },
+                currentStep: "first_thought",
+              })
+            }
           />
         )}
 
@@ -90,21 +133,57 @@ export default function CuriosityArc() {
             interestTag={progress.interestTag}
             prompt="Before any answer — what's the very first thing going through your head about this?"
             placeholder="One sentence is enough."
-            ctaLabel="See today's tiny reveal"
+            ctaLabel="See the aha moment →"
             onContinue={(text) =>
-              update({ day1FirstThought: text, currentStep: "tiny_reveal" })
+              update({ day1FirstThought: text, currentStep: "aha_visual" })
             }
           />
         )}
 
-        {step === "tiny_reveal" && (
-          <TinyReveal
-            line={hook.tinyReveal}
-            onClose={() =>
+        {step === "aha_visual" && (
+          <AhaVisual
+            guess={progress.day1FirstThought ?? ""}
+            aha={hook.aha}
+            onContinue={() => update({ currentStep: "sort_activity" })}
+          />
+        )}
+
+        {step === "sort_activity" && (
+          <SortActivity
+            prompt={hook.sortPrompt}
+            items={hook.sortItems}
+            onDone={(allCorrect) =>
+              update({
+                signals: {
+                  ...(progress.signals ?? {}),
+                  sortAllCorrect: allCorrect,
+                },
+                currentStep: "trap_tf",
+              })
+            }
+          />
+        )}
+
+        {step === "trap_tf" && (
+          <TrapTF
+            trap={hook.trap}
+            onContinue={(pick) =>
+              update({
+                signals: { ...(progress.signals ?? {}), trapPick: pick },
+                currentStep: "day1_done",
+                day1CompletedAt: new Date().toISOString(),
+              })
+            }
+          />
+        )}
+
+        {step === "day1_done" && (
+          <Day1Done
+            interestEmoji={hook.emoji}
+            onContinue={() =>
               update({
                 currentStep: "yesterday_echo",
                 currentDay: 2,
-                day1CompletedAt: new Date().toISOString(),
               })
             }
           />
@@ -212,30 +291,5 @@ export default function CuriosityArc() {
         </div>
       </main>
     </div>
-  );
-}
-
-function DayPill({ day }: { day: 1 | 2 | 3 }) {
-  return (
-    <ol
-      className="flex items-center gap-1"
-      aria-label={`Currently on day ${day} of 3`}
-    >
-      {[1, 2, 3].map((d) => (
-        <li
-          key={d}
-          aria-current={d === day ? "step" : undefined}
-          className={`text-xs px-2 py-1 rounded-full border ${
-            d === day
-              ? "bg-primary text-primary-foreground border-primary"
-              : d < day
-              ? "bg-primary/10 text-primary border-primary/30"
-              : "bg-card text-muted-foreground border-border"
-          }`}
-        >
-          Day {d}
-        </li>
-      ))}
-    </ol>
   );
 }
