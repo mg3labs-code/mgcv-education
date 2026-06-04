@@ -48,17 +48,17 @@ export const CHAPTER_1_RUNGS: ConceptRungSet[] = [
     subject: "Maths",
     regionVariants: {
       telangana: {
-        rung1: { prompt: "A team flew to the World Cup semis without playing their last match — their Net Run Rate was 1.3478… (digits never ended). Is a number with a never-ending tail still a 'real' number?" },
+        rung1: { prompt: "Quick gut-check: a coin lands heads 6 times out of 10 tosses. Is 6/10 a 'real' number you can plot on the number line?" },
       },
     },
     rungs: [
       {
-        prompt: "A team flew to the World Cup semis without playing their last match — their Net Run Rate was 1.3478… (digits never ended). Is a number with a never-ending tail still a 'real' number?",
+        prompt: "Quick gut-check: a coin lands heads 6 times out of 10 tosses. Is 6/10 a 'real' number you can plot on the number line?",
         type: "yesno",
-        options: ["Yes — it's real", "No — endless = fake"],
+        options: ["Yes — I can plot it", "No — it's just a ratio"],
         correctIndex: 0,
-        reveal: "Yes. Every NRR, asking-rate, monsoon-onset average is integer ÷ integer — and most of them never terminate. The scoreboard truncates the tail, but the number sits on the real number line, exactly.",
-        clothing: "stakes",
+        reveal: "Yes. 6/10 = 0.6 sits exactly between 0 and 1 on the number line. Every fraction of two whole numbers lands somewhere on that line — that's what makes it 'real'.",
+        clothing: "familiarity",
       },
       {
         prompt: "IMD predicts the Kerala monsoon arrives ~June 1 every year, but the model actually says 31.4285714… May. Why does the headline get a clean date but the model keeps a never-ending decimal?",
