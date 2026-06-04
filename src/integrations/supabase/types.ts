@@ -619,6 +619,8 @@ export type Database = {
           full_name: string
           id: string
           interest_tag: string | null
+          interests: string[]
+          interests_set_at: string | null
           region: string | null
           school_name: string | null
           updated_at: string
@@ -631,6 +633,8 @@ export type Database = {
           full_name?: string
           id?: string
           interest_tag?: string | null
+          interests?: string[]
+          interests_set_at?: string | null
           region?: string | null
           school_name?: string | null
           updated_at?: string
@@ -643,6 +647,8 @@ export type Database = {
           full_name?: string
           id?: string
           interest_tag?: string | null
+          interests?: string[]
+          interests_set_at?: string | null
           region?: string | null
           school_name?: string | null
           updated_at?: string
@@ -1317,6 +1323,22 @@ export type Database = {
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
+      }
+      get_weekly_interest_summary: {
+        Args: { _user_id: string }
+        Returns: {
+          avg_time_after_seconds: number
+          avg_time_before_seconds: number
+          cutover_at: string
+          episodes_after: number
+          episodes_before: number
+          first_try_rate_after: number
+          first_try_rate_before: number
+          has_interests: boolean
+          high_risk_after: number
+          high_risk_before: number
+          top_interest: string
+        }[]
       }
       has_role: {
         Args: {
