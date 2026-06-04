@@ -210,10 +210,9 @@ export default function CuriosityArc() {
         {step === "believe_doubt" && (
           <BelieveDoubt
             claim={CONCEPT.believeDoubtClaim}
+            reveal={CONCEPT.believeDoubtReveal}
             onPick={(choice) => {
               markDone("believe_doubt");
-              // Day 1 uses believe/doubt as the misconception beat; Day 2 (if
-              // ever routed here) continues into unfold.
               if (progress.currentDay === 1) {
                 advance({
                   day2Belief: choice,

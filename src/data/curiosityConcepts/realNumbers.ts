@@ -83,6 +83,7 @@ export interface RealNumbersConcept {
 
   yesterdayEchoTemplate: (firstThought: string) => string;
   believeDoubtClaim: string;
+  believeDoubtReveal: string;
   conceptUnfold: { step: string; body: string }[];
 
   teachAFriendPrompt: string;
@@ -94,19 +95,19 @@ const hooks: HookVariant[] = [
     tag: "cricket",
     emoji: "🏏",
     badgeLabel: "Cricket mode",
-    headline: "Why does the run-rate never sit still?",
+    headline: "A team made the semis without playing their last match. How?",
     scene:
-      "Score 84 in 12.3 overs. The scoreboard shows run-rate 6.81081081… and it keeps trailing dots.",
+      "World Cup pool stage. Rain washes out the final game. Yet by morning, one team is on the qualifier flight — and their 'score' on the table is a strange decimal like 1.3478…",
     noticed:
-      "On some balls the number lands cleanly. On others it just refuses to end.",
+      "No runs were scored. No wickets fell. But a number called Net Run Rate (NRR) — runs ÷ overs faced minus runs conceded ÷ overs bowled — silently decided who flies home and who plays the semis. And that number almost never ends cleanly.",
     mcq: {
-      question: "Why does the run-rate sometimes show endless digits?",
+      question: "Why can a team's fate hinge on a number with endless trailing digits?",
       choices: [
-        { label: "Scoreboard glitch 🛠️", correct: false, feedback: "Looks easy — but the same calculator on your phone does it too. Not a glitch." },
-        { label: "Some divisions truly never end 🔁", correct: true, feedback: "Yes — 84 ÷ 12.3 falls into a repeating loop. The maths is honest, the screen just cuts it off." },
-        { label: "Only happens on odd numbers 🎲", correct: false, feedback: "Tempting pattern — but 1 ÷ 3 also never ends. Something deeper is going on." },
+        { label: "Cricket boards round randomly 🎲", correct: false, feedback: "Boards follow a strict ICC formula. The endless digits come from the maths itself, not a coin toss." },
+        { label: "NRR is runs ÷ overs — and most divisions never end cleanly 🔁", correct: true, feedback: "Exactly. Net Run Rate is built from divisions like 287 ÷ 49.4 — which falls into a repeating pattern forever. The board just truncates the tail." },
+        { label: "Decimals only matter when it rains ☔", correct: false, feedback: "Rain just freezes the score. The decimal weirdness was already there in every over of every match." },
       ],
-      reveal: "Some divisions *terminate* (1÷2 = 0.5). Some *repeat forever* (1÷3 = 0.333…). The scoreboard isn't lying — it's just out of pixels.",
+      reveal: "Every Net Run Rate, Duckworth-Lewis par score and asking rate is built from integer ÷ integer. Most of them never terminate — they repeat forever. The scoreboard truncates, but the maths decides the qualifier.",
     },
     guesses: [
       "The number ends, the scoreboard is just lazy.",
@@ -152,21 +153,21 @@ const hooks: HookVariant[] = [
   },
   {
     tag: "travel",
-    emoji: "🍛",
-    badgeLabel: "Food & travel",
-    headline: "Splitting a ₹250 dosa bill three ways.",
+    emoji: "🌧️",
+    badgeLabel: "Nature & travel",
+    headline: "The monsoon hits Kerala on June 1 — almost every year, for 150 years. How?",
     scene:
-      "Three friends, one plate, total ₹250. The calculator shows ₹83.3333333… per person.",
+      "IMD's official 'normal onset date' for the Kerala monsoon is June 1. But the model that predicts it doesn't spit out 'June 1'. It spits out things like 31.4 May ± 4 days, with rainfall averages like 2.74285714… cm/day per district.",
     noticed:
-      "Nobody actually pays that — someone pays ₹84 and the maths quietly leaks a paisa.",
+      "The date you read in the news is a whole number. The number the model actually uses is a decimal that refuses to end — and the difference between 'announce' and 'compute' is exactly the difference between rounded life and real maths.",
     mcq: {
-      question: "Why does ₹250 ÷ 3 never give a clean rupee answer?",
+      question: "Why do scientific averages like rainfall, temperature and onset dates almost never land on whole numbers?",
       choices: [
-        { label: "Calculator rounds badly 🧮", correct: false, feedback: "The calculator is honest. The number itself has no clean ending." },
-        { label: "3 doesn't divide 250 evenly 🔁", correct: true, feedback: "Right — and the leftover keeps repeating as .333… forever. Money pretends it ends; maths doesn't." },
-        { label: "Rupees can't be split 💸", correct: false, feedback: "₹250 ÷ 2 gives a clean ₹125. The problem is the number 3, not the rupee." },
+        { label: "Sensors are broken 📡", correct: false, feedback: "150 years of data from thousands of stations — same behaviour. It isn't the sensors." },
+        { label: "Averages are sums ÷ counts — most don't divide cleanly 🔁", correct: true, feedback: "Yes. Total rainfall ÷ number of days is integer ÷ integer — almost always a non-terminating decimal. News rounds it; science doesn't." },
+        { label: "Weather is random — no pattern exists 🎲", correct: false, feedback: "There's a strong pattern (that's why we can predict at all). The endless decimals come from division, not randomness." },
       ],
-      reveal: "Some divisions land. Some don't. 250 ÷ 3 falls into a repeating loop forever — your phone just truncates.",
+      reveal: "Every scientific average — rainfall, temperature, river flow, even your school's attendance % — is built from division. Most divisions don't terminate. The 'clean' number you see is a polite lie for headlines.",
     },
     guesses: [
       "₹250 ÷ 3 has an exact answer; the phone is rounding.",
@@ -214,18 +215,19 @@ const hooks: HookVariant[] = [
     tag: "movies",
     emoji: "🎬",
     badgeLabel: "Music & movies",
-    headline: "A song's tempo: 120 BPM, 121 BPM, 120.5 BPM.",
+    headline: "Two apps tag the SAME song at different BPMs. Both are right.",
     scene:
-      "A music app shows the beats-per-minute. Sometimes a clean number. Sometimes 120.5. Sometimes 120.4999…",
-    noticed: "The app rounds — but the real tempo isn't always a whole number.",
+      "Spotify says the new Pritam track is 128 BPM. A DJ's studio tool says 127.9999… BPM. Shazam shows 128. A music-theory paper online insists the real tempo is exactly 128/1.00000001 — irrational at the decimal tail.",
+    noticed:
+      "Three apps, three numbers, one song. Nobody is wrong. The 'real' tempo lives somewhere on the number line that no single screen can fully print.",
     mcq: {
-      question: "Why does BPM sometimes show endless digits like 120.4999…?",
+      question: "Why can four different tools all give different 'exact' BPMs for the same song?",
       choices: [
-        { label: "App lag 🔄", correct: false, feedback: "Easy to blame the app. But the real beat genuinely sits between two whole numbers." },
-        { label: "Tempo can sit between integers 🎼", correct: true, feedback: "Yes — between any two whole numbers there's an entire universe of in-between numbers." },
-        { label: "Only digital songs do this 💿", correct: false, feedback: "A metronome wound by hand can land between beats — it's a property of numbers, not files." },
+        { label: "Music apps copy each other badly 🎧", correct: false, feedback: "Each app actually measures the gap between beats fresh. They aren't copying — they're rounding differently." },
+        { label: "Between any two whole BPMs sit infinite real numbers — each app picks a different rounding 🎼", correct: true, feedback: "Yes. The true tempo is a real number on a continuous line. Some apps round to integers, some to 4 decimals, some keep the irrational tail. All point at the same musical truth." },
+        { label: "Only DJ tools are correct 🎚️", correct: false, feedback: "Not quite — even the DJ tool rounds at some digit. Every digital display has to stop somewhere; the music doesn't." },
       ],
-      reveal: "Between 120 and 121 sit infinite real numbers. Some end, some repeat, some never settle.",
+      reveal: "Between 127 and 128 BPM there are infinite real numbers — terminating, repeating, and never-repeating. Every BPM badge you've ever seen is a rounded label on a number that, mathematically, has no end.",
     },
     guesses: [
       "Tempo is always a whole number; decimals are bugs.",
@@ -282,7 +284,9 @@ export const realNumbers: RealNumbersConcept = {
       ? `Yesterday you said: "${firstThought.trim()}". Let's see where that thought leads.`
       : "Yesterday you started wondering whether some numbers ever really end. Let's follow that.",
   believeDoubtClaim:
-    "Claim: every number you can think of either ends, repeats forever in a pattern, or never repeats at all.",
+    "Claim: the number 0.9999999… (nines that never stop) is not 'almost 1'. It is exactly equal to 1. Same point on the number line. Two valid names. Believe it, doubt it, or unsure?",
+  believeDoubtReveal:
+    "Most students DOUBT this — and that's the right instinct to start with. But here's the proof in one line: let x = 0.999…. Then 10x = 9.999…. Subtract: 10x − x = 9.999… − 0.999… = 9. So 9x = 9, which means x = 1. Same number, two names. (Bonus: Cricket NRR of 1.999… and 2.000 are literally the same standing on the qualifier table.) Your doubt wasn't wrong — it just means your brain takes 'infinity' seriously. That's exactly what real numbers are about.",
   conceptUnfold: [
     {
       step: "What you already see",
