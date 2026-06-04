@@ -51,6 +51,7 @@ const AdaptiveSystemHub = lazy(() => import("./pages/AdaptiveSystemHub"));
 const Demo2304 = lazy(() => import("./pages/Demo2304"));
 const Demo2605 = lazy(() => import("./pages/Demo2605"));
 const PreviewBC = lazy(() => import("./pages/PreviewBC"));
+const CuriosityArc = lazy(() => import("./pages/CuriosityArc"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
@@ -122,6 +123,8 @@ const App = () => (
                 <Route path="/demo-2304/:subject" element={<Demo2304 />} />
                 <Route path="/2605" element={<Demo2605 />} />
                 <Route path="/preview-bc" element={<PreviewBC />} />
+                <Route path="/curiosity" element={<CuriosityArc />} />
+                <Route path="/curiosity/real-numbers" element={<CuriosityArc />} />
                 <Route path="/student" element={<ProtectedRoute><StudentDashboard /></ProtectedRoute>} />
                 <Route path="/student/episode/:id" element={<ProtectedRoute><LearningEpisode /></ProtectedRoute>} />
                 <Route path="/student/onboarding" element={<ProtectedRoute><StudentOnboarding /></ProtectedRoute>} />

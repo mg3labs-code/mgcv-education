@@ -323,6 +323,69 @@ export type Database = {
           },
         ]
       }
+      curiosity_arc_progress: {
+        Row: {
+          concept_key: string
+          created_at: string
+          current_day: number
+          current_step: string
+          day1_completed_at: string | null
+          day1_first_thought: string | null
+          day1_guess: string | null
+          day2_belief: string | null
+          day2_completed_at: string | null
+          day2_own_words: string | null
+          day3_case_answers: Json | null
+          day3_completed_at: string | null
+          day3_teach_line: string | null
+          id: string
+          interest_tag: string | null
+          signals: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          concept_key: string
+          created_at?: string
+          current_day?: number
+          current_step?: string
+          day1_completed_at?: string | null
+          day1_first_thought?: string | null
+          day1_guess?: string | null
+          day2_belief?: string | null
+          day2_completed_at?: string | null
+          day2_own_words?: string | null
+          day3_case_answers?: Json | null
+          day3_completed_at?: string | null
+          day3_teach_line?: string | null
+          id?: string
+          interest_tag?: string | null
+          signals?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          concept_key?: string
+          created_at?: string
+          current_day?: number
+          current_step?: string
+          day1_completed_at?: string | null
+          day1_first_thought?: string | null
+          day1_guess?: string | null
+          day2_belief?: string | null
+          day2_completed_at?: string | null
+          day2_own_words?: string | null
+          day3_case_answers?: Json | null
+          day3_completed_at?: string | null
+          day3_teach_line?: string | null
+          id?: string
+          interest_tag?: string | null
+          signals?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       daily_activity: {
         Row: {
           activity_date: string
@@ -555,6 +618,7 @@ export type Database = {
           created_at: string
           full_name: string
           id: string
+          interest_tag: string | null
           region: string | null
           school_name: string | null
           updated_at: string
@@ -566,6 +630,7 @@ export type Database = {
           created_at?: string
           full_name?: string
           id?: string
+          interest_tag?: string | null
           region?: string | null
           school_name?: string | null
           updated_at?: string
@@ -577,6 +642,7 @@ export type Database = {
           created_at?: string
           full_name?: string
           id?: string
+          interest_tag?: string | null
           region?: string | null
           school_name?: string | null
           updated_at?: string
