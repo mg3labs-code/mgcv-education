@@ -47,7 +47,6 @@ import Day3Master from "@/components/episode/Day3Master";
 import DayLockedWall from "@/components/episode/DayLockedWall";
 import { getPilotContent, getPilotInterestOverride, hasPilotInterestOverrides, PILOT_INTEREST_OPTIONS, type PilotInterest } from "@/data/dayPilotContent";
 import PreEpisodeCuriosityPrompt from "@/components/curiosity/PreEpisodeCuriosityPrompt";
-import CricketArcLive from "@/components/curiosity/CricketArcLive";
 import InterestArcLive from "@/components/curiosity/InterestArcLive";
 import { getArcLens } from "@/data/interestArcLenses";
 
