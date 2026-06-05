@@ -47,7 +47,8 @@ import Day3Master from "@/components/episode/Day3Master";
 import DayLockedWall from "@/components/episode/DayLockedWall";
 import { getPilotContent, getPilotInterestOverride, hasPilotInterestOverrides, PILOT_INTEREST_OPTIONS, type PilotInterest } from "@/data/dayPilotContent";
 import PreEpisodeCuriosityPrompt from "@/components/curiosity/PreEpisodeCuriosityPrompt";
-import CricketArcLive from "@/components/curiosity/CricketArcLive";
+import InterestArcLive from "@/components/curiosity/InterestArcLive";
+import { getArcLens } from "@/data/interestArcLenses";
 
 const LANGUAGE_SUBJECTS = new Set(["Telugu", "Hindi"]);
 
@@ -1571,14 +1572,18 @@ const DayGatedEpisode = ({
   // can still soft-block, but per product direction we drop sequence-locks entirely.
   // Render body based on the day the student is currently *viewing*.
   let body: React.ReactNode;
-  // ─── CRICKET LENS · pixel-faithful 3-day arc port ──
-  // When the student's active interest is cricket on an episode that has
-  // interest-flavoured hooks, render the full ported HTML arc instead of the
-  // generic Day1Spark/Day2Build/Day3Master components.
-  if (hasInterestVariants && interest === "cricket" && interestList.length > 0 && curiosityAsked) {
+  // ─── INTEREST LENS · pixel-faithful 3-day arc (cricket / food / travel / nature) ──
+  // When the student's active interest has a full ArcLens defined, render the
+  // generalized InterestArcLive engine. Same Day1/Day2/Day3 structure, only
+  // the surface story changes per lens.
+  const activeLens = hasInterestVariants && interest && interestList.length > 0 && curiosityAsked
+    ? getArcLens(interest)
+    : null;
+  if (activeLens) {
     body = (
-      <CricketArcLive
+      <InterestArcLive
         episodeTitle={episodeTitle}
+        lens={activeLens}
         chapterId={chapterId}
         episodeId={episodeId}
         conceptKey={pilot.conceptKey ?? episodeKey}
