@@ -684,7 +684,7 @@ const TextbookEpisode = () => {
       <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "#F9FAFB" }}>
         <div className="text-center">
           <p className="text-muted-foreground mb-4">Episode not found.</p>
-          <Button variant="outline" onClick={() => navigate("/student/textbook")}>Back to Textbook</Button>
+          <Button variant="outline" onClick={() => navigate(ROUTES.textbook.root)}>Back to Textbook</Button>
         </div>
       </div>
     );
