@@ -191,9 +191,9 @@ export default function TodayThoughtCard({ firstName }: { firstName: string }) {
           current={nextLayer}
           onPick={(layer) => {
             if (data.chapterId && data.episodeId) {
-              navigate(`/student/textbook/${data.chapterId}/${data.episodeId}?layer=${layer.key}`);
+              navigate(ROUTES.textbook.episodeWithLayer(data.chapterId, data.episodeId, layer.key));
             } else {
-              navigate("/student/textbook");
+              navigate(ROUTES.textbook.root);
             }
           }}
         />
