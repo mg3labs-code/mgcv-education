@@ -16,7 +16,7 @@ import ExamAlertBanner from "@/components/student/ExamAlertBanner";
 import { useDiscoveryToasts } from "@/hooks/useDiscoveryToasts";
 import DashboardGreeting from "@/components/DashboardGreeting";
 import WeeklyInterestSummary from "@/components/student/WeeklyInterestSummary";
-import ParentWeeklyNote from "@/components/student/ParentWeeklyNote";
+// ParentWeeklyNote removed from student dashboard (parents receive it privately)
 
 interface ScheduleItem {
   type: string;
