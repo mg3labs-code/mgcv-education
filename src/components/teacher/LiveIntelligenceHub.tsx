@@ -147,20 +147,20 @@ const LiveIntelligenceHub = ({ className }: Props) => {
       {/* TABS */}
       <Tabs defaultValue="signals" className="w-full">
         <div className="px-3 sm:px-4 pt-3 border-b border-border bg-muted/30">
-          <TabsList className="bg-transparent p-0 h-auto gap-1 flex-wrap">
+          <TabsList className="bg-transparent p-0 h-auto gap-1 w-full grid grid-cols-4">
             {[
               { v: "signals", Icon: Radio, label: "Live Signals" },
               { v: "miscon", Icon: Target, label: "Misconceptions" },
               { v: "depth", Icon: Layers, label: "Depth Map" },
-              { v: "hooks", Icon: Lightbulb, label: "Tomorrow's Hooks" },
+              { v: "hooks", Icon: Lightbulb, label: "Hooks" },
             ].map((t) => (
               <TabsTrigger
                 key={t.v}
                 value={t.v}
-                className="data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-foreground text-muted-foreground rounded-lg px-3 py-2 text-xs sm:text-sm font-semibold gap-1.5"
+                className="data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-foreground text-muted-foreground rounded-lg px-2 py-2 text-[11px] sm:text-sm font-semibold gap-1.5 flex-col sm:flex-row h-auto"
               >
-                <t.Icon className="h-3.5 w-3.5" />
-                <span className="hidden xs:inline sm:inline">{t.label}</span>
+                <t.Icon className="h-4 w-4" />
+                <span className="truncate">{t.label}</span>
               </TabsTrigger>
             ))}
           </TabsList>
