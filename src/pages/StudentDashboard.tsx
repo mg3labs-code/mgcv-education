@@ -16,6 +16,7 @@ import ExamAlertBanner from "@/components/student/ExamAlertBanner";
 import { useDiscoveryToasts } from "@/hooks/useDiscoveryToasts";
 import DashboardGreeting from "@/components/DashboardGreeting";
 import TodayThoughtCard from "@/components/student/TodayThoughtCard";
+import { ROUTES } from "@/lib/routes";
 
 interface ScheduleItem {
   type: string;
