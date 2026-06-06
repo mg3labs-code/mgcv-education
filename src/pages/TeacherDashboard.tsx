@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
-import ThinkingNetwork from "@/components/ThinkingNetwork";
+import ClassCognitiveProfile from "@/components/teacher/ClassCognitiveProfile";
 import LiveIntelligenceHub from "@/components/teacher/LiveIntelligenceHub";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
