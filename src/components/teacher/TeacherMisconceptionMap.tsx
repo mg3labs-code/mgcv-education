@@ -129,7 +129,11 @@ const TeacherMisconceptionMap = ({ className }: Props) => {
       .slice(0, 10);
   }, [data, blockType, severity]);
 
-  const chartData = top.slice(0, 6).map((g) => ({
+  const isDemo = top.length === 0 && !isLoading;
+  const displayTop = isDemo
+    ? DEMO_MISCONCEPTIONS.map((d) => ({ ...d, students: new Set<string>() }))
+    : top;
+  const chartData = displayTop.slice(0, 6).map((g: any) => ({
     name: `${g.episode.replace(/-/g, " ")}`.slice(0, 18),
     rate: Math.round(g.stuckRate * 100),
     color: heatColor(g.stuckRate).hex,
