@@ -73,11 +73,18 @@ Deno.serve(async (req) => {
       .eq("concept_key", conceptKey)
       .maybeSingle();
 
-    if (existing && existing.rung_1 && (existing.rung_1 as { prompt?: string }).prompt) {
+    // Only serve from cache if it was produced with the current 7-layer prompt
+    // (source === "ai-generated-7layer"). Older rows are regenerated on demand.
+    if (
+      existing &&
+      existing.rung_1 &&
+      (existing.rung_1 as { prompt?: string }).prompt &&
+      existing.source === "ai-generated-7layer"
+    ) {
       return new Response(
         JSON.stringify({
           rungs: [existing.rung_1, existing.rung_2, existing.rung_3, existing.rung_4, existing.rung_5],
-          source: existing.source ?? "ai-generated",
+          source: existing.source,
           cached: true,
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } },
