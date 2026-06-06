@@ -86,10 +86,10 @@ export function useConceptRungs({
           .eq("concept_key", conceptKey)
           .maybeSingle();
 
-        if (!cancelled && !error && data) {
+        if (!cancelled && !error && data?.source === "ai-generated-7layer-v2") {
           const rungs = [data.rung_1, data.rung_2, data.rung_3, data.rung_4, data.rung_5] as unknown as Rung[];
           if (rungs.every((r) => r && (r as Rung).prompt)) {
-            setState({ rungs, loading: false, error: null, source: (data.source as State["source"]) ?? "ai-generated" });
+            setState({ rungs, loading: false, error: null, source: "ai-generated" });
             return;
           }
         }

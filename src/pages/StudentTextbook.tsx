@@ -35,7 +35,7 @@ const StudentTextbook = () => {
 
   return (
     <PageLayout role="student" breadcrumbItems={breadcrumbs}>
-      <div className="max-w-5xl mx-auto">
+      <div className="w-full max-w-[1280px] mx-auto">
 
         {/* ── Learning Journey Flow — desktop only (hidden on mobile to reduce clutter) ── */}
         <div className="hidden md:block mb-8 bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 border border-indigo-200 rounded-2xl p-5 md:p-6">

@@ -26,7 +26,7 @@ const TextbookChapter = () => {
   if (isLoading) {
     return (
       <PageLayout role="student">
-        <div className="max-w-4xl mx-auto">
+        <div className="w-full max-w-[1280px] mx-auto">
           <DetailSkeleton />
         </div>
       </PageLayout>
@@ -57,7 +57,7 @@ const TextbookChapter = () => {
 
   return (
     <PageLayout role="student" breadcrumbItems={breadcrumbs}>
-      <div className="max-w-4xl mx-auto">
+      <div className="w-full max-w-[1280px] mx-auto">
 
         {/* Chapter Header */}
         <div className="rounded-2xl p-6 mb-8 text-white relative overflow-hidden" style={{ background: `linear-gradient(135deg, ${chapter.color}, ${chapter.color}cc)` }}>
@@ -169,7 +169,7 @@ const TextbookChapter = () => {
                           variant="secondary"
                           size="sm"
                           className="gap-1 justify-center"
-                          onClick={() => navigate(ROUTES.textbook.episodeWithMode(chapterId!, episode.id, "pilot2"))}
+                          onClick={() => navigate(ROUTES.textbook.episodeWithMode(chapterId!, episode.id, "seven-layer"))}
                         >
                           <Layers className="h-3.5 w-3.5" /> 7-layer lesson
                         </Button>

@@ -14,21 +14,29 @@ interface Body {
   region?: string | null;
 }
 
-const SYSTEM_PROMPT = `You write tiny, friendly learning prompts for Indian Class 9-10 students.
+const RUNG_SOURCE = "ai-generated-7layer-v2";
 
-Your job: produce a 5-rung Confidence Ladder for ONE concept. The 5 rungs are the visible spine that maps onto our 7-layer pedagogy (Definition → Mechanism → Reasoning → Assumptions → Connections → Applications → Implications). The student should feel "I already know this" on rung 1 and "I can use this anywhere" by rung 5.
+const SYSTEM_PROMPT = `You are an expert Indian school curriculum designer for Classes 6-10 across Telangana and CBSE boards.
 
-Rules — each rung exercises the named layer:
-- Rung 1 DEFINITION: a yes/no or simple MCQ that pins down what the concept IS, answerable in under 10 seconds with an everyday Indian object (phone, school bag, cricket, snacks, currency).
-- Rung 2 MECHANISM: same idea, ask HOW it works in one tiny step. MCQ or yesno preferred.
-- Rung 3 REASONING: ask them to explain WHY it works in their own words (shortText). One sentence is fine.
-- Rung 4 CONNECTIONS: a friend says something wrong OR show them the same idea in a new place — ask them to bridge it (shortText). This is where assumptions get tested.
-- Rung 5 IMPLICATIONS: open prompt — what FOLLOWS from this idea, or where could they use it next (openText).
+Your job: produce a 5-step student interaction ladder for ONE exact concept. The steps are a compact visible spine for our 7-layer pedagogy: Definition → Mechanism → Reasoning → Assumptions → Connections → Applications → Implications. The student should feel, "I can see it, test it, explain it, question it, and use it."
 
-Tone: warm, simple, never patronising. No jargon. Reading level: 13 year old.
-Do NOT mention the words "rung", "layer", "level", "ladder", "easy", "hard" in the prompts themselves.
-Each "reveal" is 1-2 sentences that affirm the student and bridge to the underlying concept — naming the layer in plain words (e.g. "That's the mechanism — …", "Nice — that's the reasoning behind it.").
-The prompt must be specific to the concept_key the user gives you. Never produce generic filler.`;
+Rules — each step must exercise the named layers:
+- Step 1 DEFINITION: pin down what the concept IS using one concrete, local example. Prefer MCQ/yes-no answerable in under 10 seconds.
+- Step 2 MECHANISM: ask HOW it works in one tiny observable step. Use a familiar object, classroom moment, home example, money, map, phone, food, weather, sport, or story.
+- Step 3 REASONING: ask WHY it works in the student's own words. Keep it one sentence, but require cause-effect thinking.
+- Step 4 ASSUMPTIONS + CONNECTIONS: challenge one tempting misconception or move the idea into a new subject/place. Ask the student to bridge the gap.
+- Step 5 APPLICATIONS + IMPLICATIONS: ask where this idea helps next, what decision it improves, or what would break if we did not know it.
+
+Quality bar:
+- Must be specific to subject + concept_key. Never generic filler like "useful in daily life" without an example.
+- Match Class 6-10 level: simple words, accurate science/math/social/language meaning, no college terminology unless explained.
+- Use richer examples than "phone/cricket" when the concept demands it: shop bill, ration scale, bus route, crop, medicine label, monsoon, kitchen, game score, poem line, local map, electricity bill.
+- Include one misconception/trap and one practical use.
+- Keep prompts short; reveals can be 1-2 sentences and must teach a next idea.
+- Do NOT mention the words "rung", "layer", "level", "ladder", "easy", "hard" in the prompts themselves.
+- Avoid weak phrases: "built by many mathematicians", "helps solve daily problems", "good thinking grows step by step". Name the useful idea directly.
+
+Reveal style: affirm the answer, then explain the thinking skill in plain words, e.g. "Yes — that is the mechanism: the current needs a closed path."`;
 
 async function callLovableAI(payload: object): Promise<unknown> {
   const apiKey = Deno.env.get("LOVABLE_API_KEY");
@@ -73,13 +81,13 @@ Deno.serve(async (req) => {
       .eq("concept_key", conceptKey)
       .maybeSingle();
 
-    // Only serve from cache if it was produced with the current 7-layer prompt
-    // (source === "ai-generated-7layer"). Older rows are regenerated on demand.
+    // Only serve from cache if it was produced with the current quality prompt.
+    // Older rows are regenerated on demand.
     if (
       existing &&
       existing.rung_1 &&
       (existing.rung_1 as { prompt?: string }).prompt &&
-      existing.source === "ai-generated-7layer"
+      existing.source === RUNG_SOURCE
     ) {
       return new Response(
         JSON.stringify({
@@ -95,7 +103,7 @@ Deno.serve(async (req) => {
 Concept key: ${conceptKey}
 Region flavor (only for rungs 1-2, optional): ${region ?? "none"}
 
-Produce the 5-rung ladder for this concept.`;
+Produce the 5-step interaction set for this concept.`;
 
     const aiResp = await callLovableAI({
       model: "google/gemini-2.5-flash",
@@ -108,7 +116,7 @@ Produce the 5-rung ladder for this concept.`;
           type: "function",
           function: {
             name: "emit_rungs",
-            description: "Return the 5-rung Confidence Ladder.",
+            description: "Return the 5-step 7-layer interaction set.",
             parameters: {
               type: "object",
               properties: {
@@ -162,13 +170,13 @@ Produce the 5-rung ladder for this concept.`;
           rung_3: r3,
           rung_4: r4,
           rung_5: r5,
-          source: "ai-generated-7layer",
+          source: RUNG_SOURCE,
         },
         { onConflict: "chapter_id,episode_id,concept_key" },
       );
 
     return new Response(
-      JSON.stringify({ rungs: parsed.rungs, source: "ai-generated-7layer", cached: false }),
+      JSON.stringify({ rungs: parsed.rungs, source: RUNG_SOURCE, cached: false }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (err) {
