@@ -28,18 +28,26 @@ export default function ReflectInput({
   const [text, setText] = useState(initial ?? "");
   const [bridge, setBridge] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const submit = async () => {
     if (!text.trim()) return;
     setLoading(true);
-    const res = await bridgeFromAnswer({
-      conceptKey,
-      step,
-      studentText: text,
-      interestTag,
-    });
-    setBridge(res.line);
-    setLoading(false);
+    setError(null);
+    try {
+      const res = await bridgeFromAnswer({
+        conceptKey,
+        step,
+        studentText: text,
+        interestTag,
+      });
+      setBridge(res.line);
+    } catch (e) {
+      console.error("ReflectInput submit failed", e);
+      setError("Couldn't read that just now. Try once more?");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -87,6 +95,16 @@ export default function ReflectInput({
           </p>
         </div>
       )}
+
+      {error && !loading && (
+        <div className="mt-4 rounded-xl border border-destructive/30 bg-destructive/5 p-4" aria-live="polite">
+          <p className="text-sm text-destructive">{error}</p>
+          <Button onClick={submit} variant="outline" size="sm" className="mt-3">
+            Try again
+          </Button>
+        </div>
+      )}
+
 
       {bridge && (
         <div className="mt-4 space-y-4 animate-fade-in" aria-live="polite">
