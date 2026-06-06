@@ -35,6 +35,7 @@ const StageTopbar = ({
   dayProgress = 0,
   viewDay,
   onChangeDay,
+  depthTrack,
 }: Props) => {
   const navigate = useNavigate();
   const { info } = useEpisodeDay();
@@ -113,6 +114,7 @@ const StageTopbar = ({
         dayProgress={dayProgress}
         doneDays={doneDays}
         onJumpToDay={onChangeDay}
+        depthTrack={depthTrack}
       />
     </header>
   );
