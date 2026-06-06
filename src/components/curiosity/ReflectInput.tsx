@@ -96,6 +96,16 @@ export default function ReflectInput({
         </div>
       )}
 
+      {error && !loading && (
+        <div className="mt-4 rounded-xl border border-destructive/30 bg-destructive/5 p-4" aria-live="polite">
+          <p className="text-sm text-destructive">{error}</p>
+          <Button onClick={submit} variant="outline" size="sm" className="mt-3">
+            Try again
+          </Button>
+        </div>
+      )}
+
+
       {bridge && (
         <div className="mt-4 space-y-4 animate-fade-in" aria-live="polite">
           <div className="rounded-xl bg-primary/5 border border-primary/20 p-4">
