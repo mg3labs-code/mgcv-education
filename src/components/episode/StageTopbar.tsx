@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { dayLabels, type DayNumber } from "@/lib/childFriendlyLabels";
 import { useEpisodeDay } from "@/contexts/EpisodeDayContext";
 import { useSoundFx } from "@/hooks/useSoundFx";
-import CuriosityLadder from "./CuriosityLadder";
+import CuriosityLadder, { type DepthTrack } from "./CuriosityLadder";
 
 interface Props {
   episodeTitle: string;
@@ -17,6 +17,8 @@ interface Props {
   viewDay?: DayNumber;
   /** Callback when student jumps to a different day. */
   onChangeDay?: (day: DayNumber) => void;
+  /** Adaptive depth track for current rung. */
+  depthTrack?: DepthTrack;
 }
 
 /**
@@ -33,6 +35,7 @@ const StageTopbar = ({
   dayProgress = 0,
   viewDay,
   onChangeDay,
+  depthTrack,
 }: Props) => {
   const navigate = useNavigate();
   const { info } = useEpisodeDay();
@@ -111,6 +114,7 @@ const StageTopbar = ({
         dayProgress={dayProgress}
         doneDays={doneDays}
         onJumpToDay={onChangeDay}
+        depthTrack={depthTrack}
       />
     </header>
   );

@@ -17,6 +17,14 @@ export type Signal = {
 };
 
 export type PacingDecision = "climb" | "repeat" | "vibecheck";
+export type DepthTrack = "foundation" | "core" | "advanced";
+
+function deriveTrack(signal: Signal): DepthTrack {
+  if (!signal.correct && signal.wrongAttempts >= 2) return "foundation";
+  if (signal.vibeResponse === "hard") return "foundation";
+  if (signal.correct && signal.timeSec <= 20 && signal.wrongAttempts === 0 && signal.answerChanges <= 1) return "advanced";
+  return "core";
+}
 
 const VIBE_META: Record<"easy" | "right" | "hard", { emoji: string; label: string }> = {
   easy: { emoji: "😌", label: "Too easy" },
@@ -91,7 +99,7 @@ export function useRungPacing({ userId, chapterId, episodeId, conceptKey, day }:
   }, [userId, chapterId, episodeId, conceptKey, start, bonusMax]);
 
   const persist = useCallback(
-    async (rung: number, signal: Signal | null, vibeShownNow: boolean) => {
+    async (rung: number, signal: Signal | null, vibeShownNow: boolean, track?: DepthTrack) => {
       if (!userId || !chapterId || !episodeId || !conceptKey) return;
       try {
         await supabase.from("student_rung_state").upsert(
@@ -103,6 +111,7 @@ export function useRungPacing({ userId, chapterId, episodeId, conceptKey, day }:
             current_rung: rung,
             last_signal: signal ?? {},
             vibe_check_shown_today: vibeShownNow,
+            ...(track ? { depth_track: track } : {}),
           },
           { onConflict: "user_id,chapter_id,episode_id,concept_key" },
         );
@@ -147,7 +156,8 @@ export function useRungPacing({ userId, chapterId, episodeId, conceptKey, day }:
         return currentRung;
       }
       setCurrentRung(next);
-      persist(next, signal ?? null, vibeShown);
+      const track = signal ? deriveTrack(signal) : undefined;
+      persist(next, signal ?? null, vibeShown, track);
       return next;
     },
     [bonusMax, currentRung, normalMax, persist, vibeShown],

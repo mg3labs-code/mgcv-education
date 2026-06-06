@@ -950,6 +950,7 @@ export type Database = {
           concept_key: string
           created_at: string
           current_rung: number
+          depth_track: string
           episode_id: string
           id: string
           last_signal: Json
@@ -962,6 +963,7 @@ export type Database = {
           concept_key: string
           created_at?: string
           current_rung?: number
+          depth_track?: string
           episode_id: string
           id?: string
           last_signal?: Json
@@ -974,6 +976,7 @@ export type Database = {
           concept_key?: string
           created_at?: string
           current_rung?: number
+          depth_track?: string
           episode_id?: string
           id?: string
           last_signal?: Json
