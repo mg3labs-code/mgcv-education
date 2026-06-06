@@ -6,6 +6,7 @@ import { Layers, Sparkles, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import { DEMO_DEPTH } from "./demoData";
 
 interface Props {
   className: string;
