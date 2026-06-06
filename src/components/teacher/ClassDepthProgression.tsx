@@ -6,6 +6,7 @@ import { Layers, Sparkles, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import { DEMO_DEPTH } from "./demoData";
 
 interface Props {
   className: string;
@@ -72,12 +73,17 @@ const ClassDepthProgression = ({ className }: Props) => {
       latest.push(r);
     }
   }
-  const total = latest.length || 1;
-  const dist = {
-    foundation: latest.filter((r) => r.depth_track === "foundation").length,
-    core: latest.filter((r) => r.depth_track === "core").length,
-    advanced: latest.filter((r) => r.depth_track === "advanced").length,
-  };
+  const isDemo = latest.length === 0 && !isLoading;
+  const dist = isDemo
+    ? DEMO_DEPTH.dist
+    : {
+        foundation: latest.filter((r) => r.depth_track === "foundation").length,
+        core: latest.filter((r) => r.depth_track === "core").length,
+        advanced: latest.filter((r) => r.depth_track === "advanced").length,
+      };
+  const total = isDemo
+    ? dist.foundation + dist.core + dist.advanced
+    : latest.length || 1;
   const pct = (n: number) => Math.round((n / total) * 100);
 
   // Group latest by chapter → student rows
@@ -93,6 +99,11 @@ const ClassDepthProgression = ({ className }: Props) => {
       <div className="flex items-center gap-2 mb-1">
         <Layers className="h-5 w-5 text-primary" aria-hidden="true" />
         <h2 className="text-lg font-semibold text-foreground">Depth Progression</h2>
+        {isDemo && (
+          <span className="ml-auto text-[10px] font-bold uppercase tracking-wide text-amber-600 bg-amber-500/10 px-2 py-0.5 rounded-full">
+            Demo
+          </span>
+        )}
       </div>
       <p className="text-xs text-muted-foreground mb-4">
         How students in {className} are pacing across Foundation → Core → Advanced, per episode.
@@ -160,38 +171,51 @@ const ClassDepthProgression = ({ className }: Props) => {
       {/* Per-chapter per-student rows */}
       {isLoading ? (
         <div className="text-xs text-muted-foreground">Loading depth data…</div>
-      ) : latest.length === 0 ? (
-        <div className="text-xs text-muted-foreground py-4 text-center">
-          No episode depth recorded yet. Once students start an episode their pacing shows up here.
-        </div>
       ) : (
         <div className="space-y-4 max-h-[420px] overflow-y-auto pr-1">
-          {Array.from(byChapter.entries()).map(([chapter, items]) => (
+          {(isDemo
+            ? Object.entries(DEMO_DEPTH.byChapter).map(
+                ([chapter, items]) =>
+                  [chapter, items.map((it) => ({
+                    user_id: it.user_id,
+                    chapter_id: chapter,
+                    episode_id: it.episode_id,
+                    current_rung: it.current_rung,
+                    depth_track: it.depth_track,
+                    updated_at: new Date().toISOString(),
+                    _name: it.name,
+                  }))] as const,
+              )
+            : Array.from(byChapter.entries()).map(([c, items]) => [c, items] as const)
+          ).map(([chapter, items]) => (
             <div key={chapter}>
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-[11px] uppercase tracking-wide font-bold text-muted-foreground">
                   Chapter
                 </span>
-                <span className="text-sm font-semibold text-foreground truncate">{chapter}</span>
+                <span className="text-sm font-semibold text-foreground truncate capitalize">
+                  {String(chapter).replace(/-/g, " ")}
+                </span>
                 <span className="ml-auto text-[11px] text-muted-foreground tabular-nums">
-                  {items.length} student{items.length === 1 ? "" : "s"}
+                  {(items as any[]).length} student{(items as any[]).length === 1 ? "" : "s"}
                 </span>
               </div>
               <ul className="divide-y divide-border rounded-xl border border-border overflow-hidden">
-                {items.map((r) => {
-                  const meta = TRACK_COLORS[r.depth_track];
+                {(items as any[]).map((r: any) => {
+                  const meta = TRACK_COLORS[r.depth_track as Row["depth_track"]];
+                  const displayName = r._name ?? nameMap.get(r.user_id) ?? "Student";
                   return (
                     <li
                       key={`${r.user_id}-${r.episode_id}`}
                       className="flex items-center gap-3 p-3 bg-card hover:bg-muted/40 transition-colors cursor-pointer"
-                      onClick={() => navigate(`/teacher/student/${r.user_id}`)}
+                      onClick={() => !isDemo && navigate(`/teacher/student/${r.user_id}`)}
                     >
                       <div className={`h-8 w-8 rounded-full flex items-center justify-center text-[11px] font-bold text-white ${meta.bg} ring-2 ${meta.ring}`}>
-                        {(nameMap.get(r.user_id) ?? "S").slice(0, 1).toUpperCase()}
+                        {displayName.slice(0, 1).toUpperCase()}
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="text-sm font-semibold text-foreground truncate">
-                          {nameMap.get(r.user_id) ?? "Student"}
+                          {displayName}
                         </div>
                         <div className="text-[11px] text-muted-foreground truncate">
                           Ep. {r.episode_id} · Rung {r.current_rung}/5

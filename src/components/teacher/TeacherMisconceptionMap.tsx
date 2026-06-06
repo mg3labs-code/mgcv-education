@@ -20,6 +20,7 @@ import {
   Tooltip,
   Cell,
 } from "recharts";
+import { DEMO_MISCONCEPTIONS } from "./demoData";
 
 interface Props {
   className: string;
@@ -128,7 +129,11 @@ const TeacherMisconceptionMap = ({ className }: Props) => {
       .slice(0, 10);
   }, [data, blockType, severity]);
 
-  const chartData = top.slice(0, 6).map((g) => ({
+  const isDemo = top.length === 0 && !isLoading;
+  const displayTop = isDemo
+    ? DEMO_MISCONCEPTIONS.map((d) => ({ ...d, students: new Set<string>() }))
+    : top;
+  const chartData = displayTop.slice(0, 6).map((g: any) => ({
     name: `${g.episode.replace(/-/g, " ")}`.slice(0, 18),
     rate: Math.round(g.stuckRate * 100),
     color: heatColor(g.stuckRate).hex,
@@ -139,6 +144,11 @@ const TeacherMisconceptionMap = ({ className }: Props) => {
       <div className="flex items-center gap-2 mb-1">
         <Target className="h-5 w-5 text-rose-500" aria-hidden="true" />
         <h2 className="text-lg font-semibold text-foreground">Misconception Map</h2>
+        {isDemo && (
+          <span className="ml-auto text-[10px] font-bold uppercase tracking-wide text-amber-600 bg-amber-500/10 px-2 py-0.5 rounded-full">
+            Demo
+          </span>
+        )}
       </div>
       <p className="text-xs text-muted-foreground mb-4">
         Where {className} is getting stuck — filter to pinpoint what to address next.
@@ -203,10 +213,6 @@ const TeacherMisconceptionMap = ({ className }: Props) => {
 
       {isLoading ? (
         <div className="text-xs text-muted-foreground">Loading…</div>
-      ) : top.length === 0 ? (
-        <div className="text-xs text-muted-foreground py-6 text-center">
-          No misconception patterns matching these filters.
-        </div>
       ) : (
         <>
           {/* Top struggle chart */}
@@ -246,7 +252,7 @@ const TeacherMisconceptionMap = ({ className }: Props) => {
           </div>
 
           <ul className="space-y-2">
-            {top.map((g) => {
+            {displayTop.map((g: any) => {
               const h = heatColor(g.stuckRate);
               return (
                 <li

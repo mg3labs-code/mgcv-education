@@ -75,11 +75,15 @@ const LiveIntelligenceHub = ({ className }: Props) => {
     return () => clearInterval(t);
   }, []);
 
+  const noLiveData = !stats || (stats.students === 0 && stats.signals24h === 0);
+  const demoStats = { students: 22, activeNow: 7, signals24h: 184, climbing: 12, stuckCount: 5 };
+  const liveStats = noLiveData ? demoStats : stats!;
+
   const heroStats = [
-    { label: "Live now", value: stats?.activeNow ?? 0, color: "from-emerald-400 to-teal-500", glow: "shadow-emerald-500/30" },
-    { label: "Signals · 24h", value: stats?.signals24h ?? 0, color: "from-violet-400 to-fuchsia-500", glow: "shadow-violet-500/30" },
-    { label: "Climbing ↑", value: stats?.climbing ?? 0, color: "from-sky-400 to-blue-500", glow: "shadow-sky-500/30" },
-    { label: "Stuck moments", value: stats?.stuckCount ?? 0, color: "from-rose-400 to-orange-500", glow: "shadow-rose-500/30" },
+    { label: "Live now", value: liveStats.activeNow, color: "from-emerald-400 to-teal-500", glow: "shadow-emerald-500/30" },
+    { label: "Signals · 24h", value: liveStats.signals24h, color: "from-violet-400 to-fuchsia-500", glow: "shadow-violet-500/30" },
+    { label: "Climbing ↑", value: liveStats.climbing, color: "from-sky-400 to-blue-500", glow: "shadow-sky-500/30" },
+    { label: "Stuck moments", value: liveStats.stuckCount, color: "from-rose-400 to-orange-500", glow: "shadow-rose-500/30" },
   ];
 
   return (
@@ -136,27 +140,27 @@ const LiveIntelligenceHub = ({ className }: Props) => {
 
         <div className="relative mt-3 flex items-center gap-1.5 text-[10px] text-white/50">
           <Sparkles className="h-3 w-3" />
-          <span>{stats?.students ?? 0} students in {className} · stats refresh every 10s</span>
+          <span>{liveStats.students} students in {className} · stats refresh every 10s{noLiveData ? " · demo data" : ""}</span>
         </div>
       </div>
 
       {/* TABS */}
       <Tabs defaultValue="signals" className="w-full">
         <div className="px-3 sm:px-4 pt-3 border-b border-border bg-muted/30">
-          <TabsList className="bg-transparent p-0 h-auto gap-1 flex-wrap">
+          <TabsList className="bg-transparent p-0 h-auto gap-1 w-full grid grid-cols-4">
             {[
               { v: "signals", Icon: Radio, label: "Live Signals" },
               { v: "miscon", Icon: Target, label: "Misconceptions" },
               { v: "depth", Icon: Layers, label: "Depth Map" },
-              { v: "hooks", Icon: Lightbulb, label: "Tomorrow's Hooks" },
+              { v: "hooks", Icon: Lightbulb, label: "Hooks" },
             ].map((t) => (
               <TabsTrigger
                 key={t.v}
                 value={t.v}
-                className="data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-foreground text-muted-foreground rounded-lg px-3 py-2 text-xs sm:text-sm font-semibold gap-1.5"
+                className="data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-foreground text-muted-foreground rounded-lg px-2 py-2 text-[11px] sm:text-sm font-semibold gap-1.5 flex-col sm:flex-row h-auto"
               >
-                <t.Icon className="h-3.5 w-3.5" />
-                <span className="hidden xs:inline sm:inline">{t.label}</span>
+                <t.Icon className="h-4 w-4" />
+                <span className="truncate">{t.label}</span>
               </TabsTrigger>
             ))}
           </TabsList>
