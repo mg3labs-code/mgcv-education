@@ -20,6 +20,7 @@ import {
   Tooltip,
   Cell,
 } from "recharts";
+import { DEMO_MISCONCEPTIONS } from "./demoData";
 
 interface Props {
   className: string;
