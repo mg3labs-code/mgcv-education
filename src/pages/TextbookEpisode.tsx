@@ -704,7 +704,7 @@ const TextbookEpisode = () => {
             subject={chapter?.title ?? null}
             chapterSlug={chapterId ?? null}
             nextEpisodeTitle={nextEpisode?.title}
-            onNextEpisode={() => nextEpisode && navigate(`/student/textbook/${chapterId}/${nextEpisode.id}`)}
+            onNextEpisode={() => nextEpisode && navigate(ROUTES.textbook.episode(chapterId!, nextEpisode.id))}
           />
         </EpisodeDayProvider>
       </DifficultyProvider>
