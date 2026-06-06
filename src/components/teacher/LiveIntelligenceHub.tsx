@@ -77,13 +77,13 @@ const LiveIntelligenceHub = ({ className }: Props) => {
 
   const noLiveData = !stats || (stats.students === 0 && stats.signals24h === 0);
   const demoStats = { students: 22, activeNow: 7, signals24h: 184, climbing: 12, stuckCount: 5 };
-  const s = noLiveData ? demoStats : stats!;
+  const liveStats = noLiveData ? demoStats : stats!;
 
   const heroStats = [
-    { label: "Live now", value: s.activeNow, color: "from-emerald-400 to-teal-500", glow: "shadow-emerald-500/30" },
-    { label: "Signals · 24h", value: s.signals24h, color: "from-violet-400 to-fuchsia-500", glow: "shadow-violet-500/30" },
-    { label: "Climbing ↑", value: s.climbing, color: "from-sky-400 to-blue-500", glow: "shadow-sky-500/30" },
-    { label: "Stuck moments", value: s.stuckCount, color: "from-rose-400 to-orange-500", glow: "shadow-rose-500/30" },
+    { label: "Live now", value: liveStats.activeNow, color: "from-emerald-400 to-teal-500", glow: "shadow-emerald-500/30" },
+    { label: "Signals · 24h", value: liveStats.signals24h, color: "from-violet-400 to-fuchsia-500", glow: "shadow-violet-500/30" },
+    { label: "Climbing ↑", value: liveStats.climbing, color: "from-sky-400 to-blue-500", glow: "shadow-sky-500/30" },
+    { label: "Stuck moments", value: liveStats.stuckCount, color: "from-rose-400 to-orange-500", glow: "shadow-rose-500/30" },
   ];
 
   return (
