@@ -165,7 +165,8 @@ const ClassDepthProgression = ({ className }: Props) => {
                   return (
                     <li
                       key={`${r.user_id}-${r.episode_id}`}
-                      className="flex items-center gap-3 p-3 bg-card hover:bg-muted/40 transition-colors"
+                      className="flex items-center gap-3 p-3 bg-card hover:bg-muted/40 transition-colors cursor-pointer"
+                      onClick={() => navigate(`/teacher/student/${r.user_id}`)}
                     >
                       <div className={`h-8 w-8 rounded-full flex items-center justify-center text-[11px] font-bold text-white ${meta.bg} ring-2 ${meta.ring}`}>
                         {(nameMap.get(r.user_id) ?? "S").slice(0, 1).toUpperCase()}
@@ -184,6 +185,7 @@ const ClassDepthProgression = ({ className }: Props) => {
                         <Sparkles className="h-2.5 w-2.5" />
                         {meta.label}
                       </span>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
                     </li>
                   );
                 })}
