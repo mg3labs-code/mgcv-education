@@ -73,12 +73,17 @@ const ClassDepthProgression = ({ className }: Props) => {
       latest.push(r);
     }
   }
-  const total = latest.length || 1;
-  const dist = {
-    foundation: latest.filter((r) => r.depth_track === "foundation").length,
-    core: latest.filter((r) => r.depth_track === "core").length,
-    advanced: latest.filter((r) => r.depth_track === "advanced").length,
-  };
+  const isDemo = latest.length === 0 && !isLoading;
+  const dist = isDemo
+    ? DEMO_DEPTH.dist
+    : {
+        foundation: latest.filter((r) => r.depth_track === "foundation").length,
+        core: latest.filter((r) => r.depth_track === "core").length,
+        advanced: latest.filter((r) => r.depth_track === "advanced").length,
+      };
+  const total = isDemo
+    ? dist.foundation + dist.core + dist.advanced
+    : latest.length || 1;
   const pct = (n: number) => Math.round((n / total) * 100);
 
   // Group latest by chapter → student rows
