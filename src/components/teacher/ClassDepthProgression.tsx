@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Layers, Sparkles, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 
 interface Props {
   className: string;
@@ -97,46 +98,63 @@ const ClassDepthProgression = ({ className }: Props) => {
         How students in {className} are pacing across Foundation → Core → Advanced, per episode.
       </p>
 
-      {/* Distribution bar */}
-      <div className="space-y-2 mb-5">
-        <div
-          className="h-3 w-full rounded-full overflow-hidden flex bg-muted"
-          role="img"
-          aria-label={`Depth distribution: ${pct(dist.foundation)}% foundation, ${pct(dist.core)}% core, ${pct(dist.advanced)}% advanced`}
-        >
-          <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: `${pct(dist.foundation)}%` }}
-            transition={{ duration: 0.6 }}
-            className="bg-sky-500"
-          />
-          <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: `${pct(dist.core)}%` }}
-            transition={{ duration: 0.6, delay: 0.05 }}
-            className="bg-emerald-500"
-          />
-          <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: `${pct(dist.advanced)}%` }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="bg-violet-500"
-          />
+      {/* Distribution — donut + legend */}
+      <div className="grid grid-cols-[120px_1fr] sm:grid-cols-[140px_1fr] gap-4 items-center mb-5">
+        <div className="relative h-[120px] sm:h-[140px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={[
+                  { name: "Foundation", value: dist.foundation },
+                  { name: "Core", value: dist.core },
+                  { name: "Advanced", value: dist.advanced },
+                ]}
+                dataKey="value"
+                innerRadius="60%"
+                outerRadius="92%"
+                stroke="hsl(var(--background))"
+                strokeWidth={2}
+                paddingAngle={2}
+              >
+                <Cell fill="hsl(199 89% 48%)" />
+                <Cell fill="hsl(160 64% 43%)" />
+                <Cell fill="hsl(258 65% 56%)" />
+              </Pie>
+              <Tooltip
+                contentStyle={{
+                  fontSize: 11,
+                  borderRadius: 8,
+                  border: "1px solid hsl(var(--border))",
+                  background: "hsl(var(--popover))",
+                }}
+                formatter={(v: number, n: string) => [`${v} · ${pct(Number(v))}%`, n]}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+            <span className="text-xl sm:text-2xl font-bold text-foreground tabular-nums leading-none">{total}</span>
+            <span className="text-[10px] uppercase tracking-wide text-muted-foreground mt-0.5">Episodes</span>
+          </div>
         </div>
-        <div className="grid grid-cols-3 gap-2 text-[11px] sm:text-xs">
+
+        <ul className="space-y-1.5 text-xs">
           {(["foundation", "core", "advanced"] as const).map((k) => {
             const meta = TRACK_COLORS[k];
             return (
-              <div key={k} className="flex items-center gap-2 min-w-0">
-                <span className={`h-2.5 w-2.5 rounded-full ${meta.bg} shrink-0`} aria-hidden />
-                <span className="font-medium text-foreground truncate">{meta.label}</span>
-                <span className="ml-auto tabular-nums text-muted-foreground">
+              <li key={k} className="flex items-center gap-2 min-w-0">
+                <span className={`h-3 w-3 rounded-sm ${meta.bg} shrink-0`} aria-hidden />
+                <span className="font-semibold text-foreground truncate">{meta.label}</span>
+                <motion.span
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="ml-auto tabular-nums text-muted-foreground"
+                >
                   {dist[k]} · {pct(dist[k])}%
-                </span>
-              </div>
+                </motion.span>
+              </li>
             );
           })}
-        </div>
+        </ul>
       </div>
 
       {/* Per-chapter per-student rows */}
