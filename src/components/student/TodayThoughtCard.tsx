@@ -240,29 +240,78 @@ function FirstTimeCard({ firstName, onBegin }: { firstName: string; onBegin: () 
     <article className="relative overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-sm md:p-8">
       <div
         aria-hidden
-        className="absolute inset-0 opacity-50"
+        className="absolute inset-0 opacity-50 pointer-events-none"
         style={{
-          background: "radial-gradient(700px 200px at 0% 0%, hsl(175 80% 92%), transparent 60%)",
+          background:
+            "radial-gradient(700px 200px at 0% 0%, hsl(200 80% 92%), transparent 60%), radial-gradient(600px 200px at 100% 100%, hsl(270 70% 94%), transparent 65%)",
         }}
       />
-      <div className="relative space-y-4">
-        <p className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
-          <Sparkles className="h-3.5 w-3.5" /> Welcome, {firstName}
-        </p>
-        <h2 className="font-serif text-3xl font-bold leading-tight text-foreground md:text-4xl">
-          A quiet place to think.
-        </h2>
-        <p className="max-w-prose text-base leading-relaxed text-muted-foreground">
-          Pick a chapter when you're ready. Every idea here is taught in seven small layers —
-          start at the first one, no rush, no scores.
-        </p>
-        <button
-          onClick={onBegin}
-          className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-md transition hover:brightness-110"
+      <div className="relative grid gap-6 md:grid-cols-[1fr_auto]">
+        <div className="space-y-5 min-w-0">
+          <p className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+            <Sparkles className="h-3.5 w-3.5" /> Welcome, {firstName}
+          </p>
+          <h2 className="font-serif text-3xl font-bold leading-tight text-foreground md:text-4xl">
+            Learn any idea in 7 small layers.
+          </h2>
+          <p className="max-w-prose text-base leading-relaxed text-muted-foreground">
+            Most apps quiz you. Here, every concept is unpacked layer by layer — from{" "}
+            <span className="font-semibold text-foreground">what it is</span> all the way to{" "}
+            <span className="font-semibold text-foreground">what follows from it</span>.
+            No scores, no rush. Just one layer at a time.
+          </p>
+
+          <ol className="space-y-1.5 text-sm">
+            {LAYERS.slice(0, 3).map((l) => (
+              <li key={l.key} className="flex items-baseline gap-2.5">
+                <span
+                  className="grid h-5 w-5 shrink-0 place-items-center rounded text-[10px] font-bold text-white"
+                  style={{ background: `hsl(${l.hue} 65% 45%)` }}
+                >
+                  {l.index}
+                </span>
+                <span className="text-foreground">
+                  <span className="font-semibold">{l.name}</span>
+                  <span className="text-muted-foreground"> — {l.caption}</span>
+                </span>
+              </li>
+            ))}
+            <li className="pl-7 text-xs italic text-muted-foreground">
+              …and 4 more: Assumptions, Connections, Applications, Implications.
+            </li>
+          </ol>
+
+          <div className="flex flex-wrap items-center gap-3 pt-1">
+            <button
+              onClick={onBegin}
+              className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-md transition hover:brightness-110 active:scale-[0.98]"
+            >
+              Try Layer 1 · Definition
+              <ArrowRight className="h-4 w-4" />
+            </button>
+            <span className="text-xs text-muted-foreground">Takes about 2 minutes.</span>
+          </div>
+        </div>
+
+        <aside
+          aria-label="Seven layers of understanding"
+          className="hidden min-w-[180px] flex-col gap-1.5 rounded-xl border border-border/60 bg-background/60 p-3 backdrop-blur-sm md:flex"
         >
-          Open the textbook
-          <ArrowRight className="h-4 w-4" />
-        </button>
+          <p className="px-1 pb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+            The 7 layers
+          </p>
+          {LAYERS.map((l) => (
+            <div key={l.key} className="flex items-center gap-2.5 rounded-lg px-2 py-1.5">
+              <span
+                className="grid h-6 w-6 shrink-0 place-items-center rounded-md text-[11px] font-bold text-white"
+                style={{ background: `hsl(${l.hue} 65% 45%)` }}
+              >
+                {l.index}
+              </span>
+              <span className="truncate text-[12.5px] text-foreground/80">{l.name}</span>
+            </div>
+          ))}
+        </aside>
       </div>
     </article>
   );
