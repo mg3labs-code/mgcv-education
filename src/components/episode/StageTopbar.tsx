@@ -110,5 +110,8 @@ const StageTopbar = ({
 
       {/* Row 2 (removed) — legacy 5-rung Curiosity Ladder. The 7-layer spine on
           TodayThoughtCard is the new visible progression. */}
+    </header>
+  );
+};
 
 export default StageTopbar;
