@@ -190,6 +190,16 @@ const TeacherDashboard = () => {
           {/* Depth Progression — per-student per-episode adaptive track */}
           <ClassDepthProgression className={selectedClass} />
 
+          {/* Two-column live thinking + misconception map */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <TeacherThinkingSignals className={selectedClass} />
+            <TeacherMisconceptionMap className={selectedClass} />
+          </div>
+
+          {/* Suggested hooks for tomorrow */}
+          <TeacherSuggestedHooks className={selectedClass} />
+
+
           {/* Today's Classes */}
 
           <Card className="p-5 sm:p-6">
