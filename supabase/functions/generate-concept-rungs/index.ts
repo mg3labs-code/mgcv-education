@@ -162,13 +162,13 @@ Produce the 5-rung ladder for this concept.`;
           rung_3: r3,
           rung_4: r4,
           rung_5: r5,
-          source: "ai-generated",
+          source: "ai-generated-7layer",
         },
         { onConflict: "chapter_id,episode_id,concept_key" },
       );
 
     return new Response(
-      JSON.stringify({ rungs: parsed.rungs, source: "ai-generated", cached: false }),
+      JSON.stringify({ rungs: parsed.rungs, source: "ai-generated-7layer", cached: false }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (err) {
