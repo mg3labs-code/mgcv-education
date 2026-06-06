@@ -186,7 +186,7 @@ const TextbookChapter = () => {
                     )}
                     <button
                       type="button"
-                      onClick={() => navigate(`/student/textbook/${chapterId}/${episode.id}`)}
+                      onClick={() => navigate(ROUTES.textbook.episode(chapterId!, episode.id))}
                       className={`h-10 w-full rounded-lg sm:h-9 sm:w-9 sm:rounded-full flex items-center justify-center transition-colors ${
                         isDone ? "bg-success/10 text-success" : "bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white"
                       }`}
