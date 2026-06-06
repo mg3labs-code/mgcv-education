@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
-import ThinkingNetwork from "@/components/ThinkingNetwork";
+import ClassCognitiveProfile from "@/components/teacher/ClassCognitiveProfile";
 import LiveIntelligenceHub from "@/components/teacher/LiveIntelligenceHub";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
@@ -162,27 +162,11 @@ const TeacherDashboard = () => {
             ))}
           </div>
 
-          {/* Class Thinking Network */}
-          <Card className="p-5 sm:p-6">
-            <div className="flex items-center gap-2 mb-1">
-              <Brain className="h-5 w-5 text-primary" aria-hidden="true" />
-              <h2 className="text-lg font-semibold text-foreground">Class Thinking Profile</h2>
-            </div>
-            <p className="text-xs text-muted-foreground mb-3">
-              Average cognitive dimensions across {studentCount} students
-            </p>
-            <div className="flex justify-center">
-              <ThinkingNetwork
-                scores={classMetrics.map((d) => ({
-                  name: d.label,
-                  score: d.score,
-                  icon: "",
-                  color: d.color,
-                }))}
-                size="md"
-              />
-            </div>
-          </Card>
+          {/* Class Cognitive Profile — radar + per-dimension breakdown */}
+          <ClassCognitiveProfile
+            scores={classMetrics.map((d) => ({ label: d.label, score: d.score }))}
+            studentCount={studentCount}
+          />
 
           {/* Live Intelligence Hub — premium organized panel for all four live widgets */}
           <LiveIntelligenceHub className={selectedClass} />
