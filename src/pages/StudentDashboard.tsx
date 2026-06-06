@@ -620,7 +620,7 @@ const StudentDashboard = () => {
               {/* ALWAYS: Continue Learning */}
               <div style={{ marginTop: 16 }}>
                 <FadeSlide delay={100}>
-                  <ContinueLearning onContinue={() => navigate("/student/textbook/ch1")} />
+                  <ContinueLearning onContinue={() => navigate(ROUTES.textbook.chapter("ch1"))} />
                 </FadeSlide>
               </div>
 
