@@ -465,10 +465,41 @@ const TextbookEpisode = () => {
         completed_at: new Date().toISOString(),
         answer_changes: answerChanges[blockIndex] || 0,
       }, { onConflict: "user_id,chapter_id,episode_id,block_index" });
+
+      // Also advance the 7-layer spine (read by TodayThoughtCard). We use a
+      // separate concept_key suffix so this never collides with the legacy
+      // 1..5 confidence-ladder pacing rows written by useRungPacing.
+      const layer = blockToLayer(block.type);
+      const spineConceptKey = `${episodeId}__spine`;
+      const { data: existing } = await supabase
+        .from("student_rung_state")
+        .select("current_rung")
+        .eq("user_id", user.id)
+        .eq("chapter_id", chapterId)
+        .eq("episode_id", episodeId)
+        .eq("concept_key", spineConceptKey)
+        .maybeSingle();
+      const nextRung = Math.max(existing?.current_rung ?? 0, layer.index);
+      if (nextRung !== (existing?.current_rung ?? -1)) {
+        await supabase.from("student_rung_state").upsert({
+          user_id: user.id,
+          chapter_id: chapterId,
+          episode_id: episodeId,
+          concept_key: spineConceptKey,
+          current_rung: nextRung,
+          last_signal: {
+            block_type: block.type,
+            layer: layer.key,
+            layer_index: layer.index,
+            wrong_attempts: wrong,
+            time_spent_seconds: timeSpent,
+          },
+        }, { onConflict: "user_id,chapter_id,episode_id,concept_key" });
+      }
     } catch (e) {
       console.error("Failed to persist interaction:", e);
     }
-  }, [user, chapterId, episodeId, navBlocks, sectionTimings, comprehensionResults, wrongAttempts]);
+  }, [user, chapterId, episodeId, navBlocks, sectionTimings, comprehensionResults, wrongAttempts, answerChanges]);
 
   // Persist time on unmount for the current active block
   useEffect(() => {
