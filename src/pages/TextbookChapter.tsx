@@ -47,8 +47,8 @@ const TextbookChapter = () => {
   }
 
   const breadcrumbs = [
-    { label: "Dashboard", href: "/student" },
-    { label: "Textbook", href: "/student/textbook" },
+    { label: "Dashboard", href: ROUTES.student.root },
+    { label: "Textbook", href: ROUTES.textbook.root },
     { label: chapter.title },
   ];
 
