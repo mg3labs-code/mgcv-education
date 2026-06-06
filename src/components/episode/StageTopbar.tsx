@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { dayLabels, type DayNumber } from "@/lib/childFriendlyLabels";
 import { useEpisodeDay } from "@/contexts/EpisodeDayContext";
 import { useSoundFx } from "@/hooks/useSoundFx";
-import CuriosityLadder, { type DepthTrack } from "./CuriosityLadder";
+import type { DepthTrack } from "./CuriosityLadder";
 
 interface Props {
   episodeTitle: string;
@@ -52,7 +52,7 @@ const StageTopbar = ({
   return (
     <header className="sticky top-0 z-40 backdrop-blur-md bg-background/90 border-b border-border">
       {/* Row 1 — back, title, controls */}
-      <div className="max-w-3xl mx-auto px-3 sm:px-4 pt-3 pb-2 flex items-center gap-3">
+      <div className="w-full max-w-[1280px] mx-auto px-3 sm:px-6 pt-3 pb-2 flex items-center gap-3">
         <button
           onClick={() => navigate(exitTo || (-1 as never))}
           className="h-10 w-10 rounded-xl flex items-center justify-center hover:bg-muted text-muted-foreground transition-colors"
