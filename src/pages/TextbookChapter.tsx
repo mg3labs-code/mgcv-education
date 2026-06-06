@@ -130,7 +130,7 @@ const TextbookChapter = () => {
                   </div>
                   <button
                     type="button"
-                    onClick={() => navigate(`/student/textbook/${chapterId}/${episode.id}`)}
+                    onClick={() => navigate(ROUTES.textbook.episode(chapterId!, episode.id))}
                     className="flex-1 min-w-0 text-left"
                   >
                     <div className="flex items-center gap-2 flex-wrap">
