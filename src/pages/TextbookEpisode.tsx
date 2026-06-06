@@ -222,6 +222,7 @@ const TextbookEpisode = () => {
   }, []);
 
   const { data: chapter, isLoading: chapterLoading } = useChapterEpisodes(chapterId);
+  const depthTrack = useEpisodeDepthTrack(chapterId, episodeId);
   const { data: dbBlocks, isLoading: blocksLoading } = useEpisodeBlocks(chapterId, episodeId, jeeMode ? "all" : "board");
 
   const episode = chapter?.episodes.find((e) => e.id === episodeId);
@@ -1744,6 +1745,7 @@ const DayGatedEpisode = ({
         dayProgress={dayProgress}
         viewDay={viewDay}
         onChangeDay={(d) => setViewDay(d)}
+        depthTrack={depthTrack}
       />
       <FirstThoughtAnchor
         conceptKey={pilot.conceptKey ?? episodeKey}
