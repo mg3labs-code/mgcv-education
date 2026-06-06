@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Lightbulb, Trophy, Utensils, Plane, Leaf } from "lucide-react";
-import { DEMO_HOOKS } from "./demoData";
+import EmptyState from "@/components/EmptyState";
 
 interface Props {
   className: string;
@@ -27,11 +27,12 @@ const HOOK_TEMPLATES: Record<string, (concept: string) => string> = {
  * Suggests interest-anchored hooks for tomorrow based on (1) the concepts
  * the class struggled with most and (2) the top interest of students in
  * that class. Pure heuristic — no AI call yet, deterministic + fast.
+ * No demo fallback — empty class shows real empty state.
  */
 const TeacherSuggestedHooks = ({ className }: Props) => {
   const { user } = useAuth();
 
-  const { data } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["suggested-hooks", user?.id, className],
     enabled: !!user,
     queryFn: async () => {
@@ -40,9 +41,8 @@ const TeacherSuggestedHooks = ({ className }: Props) => {
         .select("user_id, interests")
         .eq("class_name", className);
       const ids = (students ?? []).map((s) => s.user_id);
-      if (!ids.length) return { hooks: [] as { concept: string; interest: string; line: string }[] };
+      if (!ids.length) return { hooks: [] as { concept: string; interest: string; line: string }[], hasStudents: false };
 
-      // Top interest in the class
       const tally: Record<string, number> = {};
       for (const s of students ?? []) {
         for (const i of (s.interests ?? []) as string[]) {
@@ -51,7 +51,6 @@ const TeacherSuggestedHooks = ({ className }: Props) => {
       }
       const topInterest = Object.entries(tally).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "cricket";
 
-      // Concepts with most wrong attempts
       const { data: ix } = await supabase
         .from("episode_interactions")
         .select("episode_id, wrong_attempts, correct_on_first_try")
@@ -63,57 +62,66 @@ const TeacherSuggestedHooks = ({ className }: Props) => {
         if (score > 0) byEp[r.episode_id] = (byEp[r.episode_id] ?? 0) + score;
       }
       const topConcepts = Object.entries(byEp).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k]) => k);
-      if (!topConcepts.length) topConcepts.push("Real Numbers", "Polynomials", "Quadratics");
 
       const template = HOOK_TEMPLATES[topInterest] ?? HOOK_TEMPLATES.cricket;
       const hooks = topConcepts.map((c) => ({
-        concept: c,
+        concept: c.replace(/-/g, " "),
         interest: topInterest,
-        line: template(c),
+        line: template(c.replace(/-/g, " ")),
       }));
-      return { hooks };
+      return { hooks, hasStudents: true };
     },
   });
 
-  const realHooks = data?.hooks ?? [];
-  const isDemo = realHooks.length === 0;
-  const hooks = isDemo ? DEMO_HOOKS : realHooks;
+  const hooks = data?.hooks ?? [];
+  const hasStudents = data?.hasStudents ?? false;
+  const isEmpty = !isLoading && hooks.length === 0;
 
   return (
     <Card className="p-5 sm:p-6">
       <div className="flex items-center gap-2 mb-1">
         <Lightbulb className="h-5 w-5 text-amber-500" aria-hidden="true" />
-        <h2 className="text-lg font-semibold text-foreground">Suggested Hooks for Tomorrow</h2>
-        {isDemo && (
-          <span className="ml-auto text-[10px] font-bold uppercase tracking-wide text-amber-600 bg-amber-500/10 px-2 py-0.5 rounded-full">
-            Demo
-          </span>
-        )}
+        <h2 className="text-lg font-semibold text-foreground">Tomorrow's Openers</h2>
       </div>
       <p className="text-xs text-muted-foreground mb-4">
         Interest-anchored openers for the concepts {className} struggled with this week.
       </p>
-      <ul className="space-y-2">
-        {hooks.map((h) => {
-          const meta = INTEREST_ICONS[h.interest] ?? INTEREST_ICONS.cricket;
-          return (
-            <li
-              key={h.concept}
-              className="flex items-start gap-3 p-3 rounded-xl border border-border bg-card hover:bg-muted/30 transition-colors"
-            >
-              <div className={`h-9 w-9 rounded-xl flex items-center justify-center shrink-0 ${meta.tint}`}>
-                <meta.Icon className="h-4 w-4" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="text-[11px] uppercase tracking-wide font-bold text-muted-foreground">
-                  {h.concept} · via {h.interest}
+
+      {isLoading ? (
+        <div className="text-xs text-muted-foreground py-8 text-center">Generating openers…</div>
+      ) : isEmpty ? (
+        <EmptyState
+          icon={Lightbulb}
+          title={hasStudents ? "Nothing to address this week" : "No students linked to this class yet"}
+          description={
+            hasStudents
+              ? "No struggle signals found in the last 7 days — your class is moving smoothly. Openers will reappear when a concept needs attention."
+              : "Once students join this class, we'll suggest openers anchored in their real-life interests."
+          }
+        />
+      ) : (
+        <ul className="space-y-2">
+          {hooks.map((h) => {
+            const meta = INTEREST_ICONS[h.interest] ?? INTEREST_ICONS.cricket;
+            return (
+              <li
+                key={h.concept}
+                className="flex items-start gap-3 p-3 rounded-xl border border-border bg-card hover:bg-muted/30 transition-colors"
+              >
+                <div className={`h-9 w-9 rounded-xl flex items-center justify-center shrink-0 ${meta.tint}`}>
+                  <meta.Icon className="h-4 w-4" />
                 </div>
-                <div className="text-sm text-foreground leading-snug mt-0.5">{h.line}</div>
-              </div>
-            </li>
-          );
-        })}
-      </ul>
+                <div className="min-w-0 flex-1">
+                  <div className="text-[11px] uppercase tracking-wide font-bold text-muted-foreground">
+                    {h.concept} · via {h.interest}
+                  </div>
+                  <div className="text-sm text-foreground leading-snug mt-0.5">{h.line}</div>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </Card>
   );
 };

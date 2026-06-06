@@ -6,7 +6,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
-import { DEMO_SIGNALS } from "./demoData";
+import EmptyState from "@/components/EmptyState";
+import { rungToLayer } from "@/lib/sevenLayers";
 
 interface Props {
   className: string;
@@ -14,7 +15,7 @@ interface Props {
 
 type Signal = {
   id: string;
-  kind: "rung" | "thought" | "vibe";
+  kind: "layer" | "thought" | "vibe";
   studentName: string;
   text: string;
   meta?: string;
@@ -22,22 +23,23 @@ type Signal = {
 };
 
 const KIND_META: Record<Signal["kind"], { color: string; bg: string; Icon: typeof Radio; label: string }> = {
-  rung: { color: "text-emerald-600", bg: "bg-emerald-500/10", Icon: ChevronUp, label: "Climbed" },
-  thought: { color: "text-violet-600", bg: "bg-violet-500/10", Icon: MessageCircle, label: "First thought" },
-  vibe: { color: "text-amber-600", bg: "bg-amber-500/10", Icon: Sparkles, label: "Vibe check" },
+  layer:   { color: "text-emerald-600", bg: "bg-emerald-500/10", Icon: ChevronUp,    label: "Reached layer" },
+  thought: { color: "text-violet-600",  bg: "bg-violet-500/10",  Icon: MessageCircle, label: "First thought" },
+  vibe:    { color: "text-amber-600",   bg: "bg-amber-500/10",   Icon: Sparkles,      label: "Vibe check" },
 };
 
 /**
- * Live stream of student thinking signals — rung climbs, first thoughts,
+ * Live stream of student thinking signals — layer reaches, first thoughts,
  * vibe-check responses. Realtime subscription on student_rung_state
  * and curiosity_arc_progress, scoped to the teacher's class via RLS.
+ *
+ * No silent demo data — empty class shows an authentic empty state.
  */
 const TeacherThinkingSignals = ({ className }: Props) => {
   const { user } = useAuth();
   const [signals, setSignals] = useState<Signal[]>([]);
 
-  // Get class student ids + names (RLS scopes to teacher's class).
-  const { data: students } = useQuery({
+  const { data: students, isLoading: studentsLoading } = useQuery({
     queryKey: ["class-students-min", user?.id, className],
     enabled: !!user,
     queryFn: async () => {
@@ -52,7 +54,6 @@ const TeacherThinkingSignals = ({ className }: Props) => {
   const nameMap = new Map((students ?? []).map((s) => [s.user_id, s.full_name ?? "Student"]));
   const ids = (students ?? []).map((s) => s.user_id);
 
-  // Seed with recent rows
   useEffect(() => {
     if (ids.length === 0) {
       setSignals([]);
@@ -77,14 +78,17 @@ const TeacherThinkingSignals = ({ className }: Props) => {
       ]);
       if (cancelled) return;
       const merged: Signal[] = [
-        ...(rungs ?? []).map((r: any) => ({
-          id: `r-${r.id}`,
-          kind: "rung" as const,
-          studentName: nameMap.get(r.user_id) ?? "Student",
-          text: `Rung ${r.current_rung}/5 · ${r.depth_track}`,
-          meta: r.episode_id,
-          at: r.updated_at,
-        })),
+        ...(rungs ?? []).map((r: any) => {
+          const layer = rungToLayer(r.current_rung);
+          return {
+            id: `r-${r.id}`,
+            kind: "layer" as const,
+            studentName: nameMap.get(r.user_id) ?? "Student",
+            text: `Layer ${layer.index} · ${layer.name} · ${r.depth_track}`,
+            meta: r.episode_id,
+            at: r.updated_at,
+          };
+        }),
         ...(arcs ?? []).map((a: any) => ({
           id: `a-${a.id}`,
           kind: "thought" as const,
@@ -99,7 +103,6 @@ const TeacherThinkingSignals = ({ className }: Props) => {
     return () => { cancelled = true; };
   }, [ids.join(",")]);
 
-  // Realtime
   useEffect(() => {
     if (ids.length === 0) return;
     const ch = supabase
@@ -110,13 +113,14 @@ const TeacherThinkingSignals = ({ className }: Props) => {
         (payload) => {
           const r: any = payload.new;
           if (!r || !ids.includes(r.user_id)) return;
+          const layer = rungToLayer(r.current_rung);
           setSignals((prev) =>
             [
               {
                 id: `r-${r.id}-${Date.now()}`,
-                kind: "rung",
+                kind: "layer",
                 studentName: nameMap.get(r.user_id) ?? "Student",
-                text: `Rung ${r.current_rung}/5 · ${r.depth_track}`,
+                text: `Layer ${layer.index} · ${layer.name} · ${r.depth_track}`,
                 meta: r.episode_id,
                 at: r.updated_at ?? new Date().toISOString(),
               } as Signal,
@@ -152,54 +156,64 @@ const TeacherThinkingSignals = ({ className }: Props) => {
     };
   }, [ids.join(",")]);
 
-  const isDemo = signals.length === 0;
-  const displaySignals = isDemo ? (DEMO_SIGNALS as Signal[]) : signals;
+  const isEmpty = !studentsLoading && signals.length === 0;
 
   return (
     <Card className="p-5 sm:p-6">
       <div className="flex items-center gap-2 mb-1">
         <Radio className="h-5 w-5 text-primary animate-pulse" aria-hidden="true" />
         <h2 className="text-lg font-semibold text-foreground">Thinking Signals · Live</h2>
-        <span className="ml-auto inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-emerald-600">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-          {isDemo ? "Demo" : "Live"}
-        </span>
+        {!isEmpty && (
+          <span className="ml-auto inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-emerald-600">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            Live
+          </span>
+        )}
       </div>
       <p className="text-xs text-muted-foreground mb-4">
-        Rung climbs, first thoughts and vibe-checks from {className} as they happen.
+        Layer reaches, first thoughts and vibe-checks from {className} as they happen.
       </p>
-      <ul className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
-        <AnimatePresence initial={false}>
-          {displaySignals.map((s) => {
-            const m = KIND_META[s.kind];
-            return (
-              <motion.li
-                key={s.id}
-                layout
-                initial={{ opacity: 0, y: -8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className="flex items-start gap-3 p-3 rounded-xl border border-border bg-card hover:bg-muted/30 transition-colors"
-              >
-                <div className={`h-9 w-9 rounded-xl flex items-center justify-center shrink-0 ${m.bg}`}>
-                  <m.Icon className={`h-4 w-4 ${m.color}`} />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-foreground truncate">{s.studentName}</span>
-                    <span className={`text-[10px] font-bold uppercase tracking-wide ${m.color}`}>{m.label}</span>
+
+      {isEmpty ? (
+        <EmptyState
+          icon={Radio}
+          title="No signals yet in this class"
+          description="As soon as a student starts an episode or shares a first thought, you'll see it stream in here in real time."
+        />
+      ) : (
+        <ul className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
+          <AnimatePresence initial={false}>
+            {signals.map((s) => {
+              const m = KIND_META[s.kind];
+              return (
+                <motion.li
+                  key={s.id}
+                  layout
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="flex items-start gap-3 p-3 rounded-xl border border-border bg-card hover:bg-muted/30 transition-colors"
+                >
+                  <div className={`h-9 w-9 rounded-xl flex items-center justify-center shrink-0 ${m.bg}`}>
+                    <m.Icon className={`h-4 w-4 ${m.color}`} />
                   </div>
-                  <div className="text-sm text-foreground/90 line-clamp-2">{s.text}</div>
-                  <div className="text-[11px] text-muted-foreground mt-0.5">
-                    {s.meta ? <span className="mr-2">{s.meta}</span> : null}
-                    {formatDistanceToNow(new Date(s.at), { addSuffix: true })}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-foreground truncate">{s.studentName}</span>
+                      <span className={`text-[10px] font-bold uppercase tracking-wide ${m.color}`}>{m.label}</span>
+                    </div>
+                    <div className="text-sm text-foreground/90 line-clamp-2">{s.text}</div>
+                    <div className="text-[11px] text-muted-foreground mt-0.5">
+                      {s.meta ? <span className="mr-2">{s.meta}</span> : null}
+                      {formatDistanceToNow(new Date(s.at), { addSuffix: true })}
+                    </div>
                   </div>
-                </div>
-              </motion.li>
-            );
-          })}
-        </AnimatePresence>
-      </ul>
+                </motion.li>
+              );
+            })}
+          </AnimatePresence>
+        </ul>
+      )}
     </Card>
   );
 };

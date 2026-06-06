@@ -20,7 +20,8 @@ import {
   Tooltip,
   Cell,
 } from "recharts";
-import { DEMO_MISCONCEPTIONS } from "./demoData";
+import EmptyState from "@/components/EmptyState";
+import { blockToLayer, LAYERS, type Layer } from "@/lib/sevenLayers";
 
 interface Props {
   className: string;
@@ -65,7 +66,7 @@ const heatColor = (rate: number) => {
 const TeacherMisconceptionMap = ({ className }: Props) => {
   const { user } = useAuth();
   const [range, setRange] = useState<RangeKey>("14");
-  const [blockType, setBlockType] = useState<string>("all");
+  const [layerFilter, setLayerFilter] = useState<string>("all");
   const [severity, setSeverity] = useState<SeverityKey>("all");
 
   const { data, isLoading } = useQuery({
@@ -77,7 +78,7 @@ const TeacherMisconceptionMap = ({ className }: Props) => {
         .select("user_id")
         .eq("class_name", className);
       const ids = (students ?? []).map((s) => s.user_id);
-      if (!ids.length) return [];
+      if (!ids.length) return { rows: [] as Row[], hasStudents: false };
       const days = Number(range);
       const { data } = await supabase
         .from("episode_interactions")
@@ -86,28 +87,27 @@ const TeacherMisconceptionMap = ({ className }: Props) => {
         )
         .in("user_id", ids)
         .gte("created_at", new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString());
-      return (data ?? []) as Row[];
+      return { rows: (data ?? []) as Row[], hasStudents: true };
     },
   });
 
-  const blockTypes = useMemo(() => {
-    const set = new Set<string>();
-    (data ?? []).forEach((r) => set.add(r.block_type));
-    return ["all", ...Array.from(set).sort()];
-  }, [data]);
+  const rows = data?.rows ?? [];
+  const hasStudents = data?.hasStudents ?? false;
 
   const top = useMemo(() => {
     const groups = new Map<
       string,
-      { chapter: string; episode: string; block: string; attempts: number; wrong: number; students: Set<string> }
+      { chapter: string; episode: string; block: string; layer: Layer; attempts: number; wrong: number; students: Set<string> }
     >();
-    for (const r of data ?? []) {
-      if (blockType !== "all" && r.block_type !== blockType) continue;
-      const key = `${r.chapter_id}::${r.episode_id}::${r.block_type}`;
+    for (const r of rows) {
+      const layer = blockToLayer(r.block_type);
+      if (layerFilter !== "all" && layer.key !== layerFilter) continue;
+      const key = `${r.chapter_id}::${r.episode_id}::${layer.key}`;
       const g = groups.get(key) ?? {
         chapter: r.chapter_id,
         episode: r.episode_id,
         block: r.block_type,
+        layer,
         attempts: 0,
         wrong: 0,
         students: new Set<string>(),
@@ -127,31 +127,24 @@ const TeacherMisconceptionMap = ({ className }: Props) => {
       .filter((g) => g.wrong > 0 && g.stuckRate >= min)
       .sort((a, b) => b.stuckRate - a.stuckRate)
       .slice(0, 10);
-  }, [data, blockType, severity]);
+  }, [rows, layerFilter, severity]);
 
-  const isDemo = top.length === 0 && !isLoading;
-  const displayTop = isDemo
-    ? DEMO_MISCONCEPTIONS.map((d) => ({ ...d, students: new Set<string>() }))
-    : top;
-  const chartData = displayTop.slice(0, 6).map((g: any) => ({
-    name: `${g.episode.replace(/-/g, " ")}`.slice(0, 18),
+  const chartData = top.slice(0, 6).map((g) => ({
+    name: `L${g.layer.index} · ${g.episode.replace(/-/g, " ")}`.slice(0, 22),
     rate: Math.round(g.stuckRate * 100),
     color: heatColor(g.stuckRate).hex,
   }));
+
+  const showEmpty = !isLoading && top.length === 0;
 
   return (
     <Card className="p-5 sm:p-6">
       <div className="flex items-center gap-2 mb-1">
         <Target className="h-5 w-5 text-rose-500" aria-hidden="true" />
-        <h2 className="text-lg font-semibold text-foreground">Misconception Map</h2>
-        {isDemo && (
-          <span className="ml-auto text-[10px] font-bold uppercase tracking-wide text-amber-600 bg-amber-500/10 px-2 py-0.5 rounded-full">
-            Demo
-          </span>
-        )}
+        <h2 className="text-lg font-semibold text-foreground">Misconception Map · by Layer</h2>
       </div>
       <p className="text-xs text-muted-foreground mb-4">
-        Where {className} is getting stuck — filter to pinpoint what to address next.
+        Where {className} is getting stuck — grouped by the 7 layers of understanding.
       </p>
 
       {/* Filters */}
@@ -170,14 +163,15 @@ const TeacherMisconceptionMap = ({ className }: Props) => {
           </SelectContent>
         </Select>
 
-        <Select value={blockType} onValueChange={setBlockType}>
+        <Select value={layerFilter} onValueChange={setLayerFilter}>
           <SelectTrigger className="h-9 text-xs">
-            <SelectValue placeholder="Block type" />
+            <SelectValue placeholder="Layer" />
           </SelectTrigger>
           <SelectContent>
-            {blockTypes.map((b) => (
-              <SelectItem key={b} value={b} className="text-xs capitalize">
-                {b === "all" ? "All block types" : b.replace(/_/g, " ")}
+            <SelectItem value="all" className="text-xs">All 7 layers</SelectItem>
+            {LAYERS.map((l) => (
+              <SelectItem key={l.key} value={l.key} className="text-xs">
+                Layer {l.index} · {l.name}
               </SelectItem>
             ))}
           </SelectContent>
@@ -212,10 +206,19 @@ const TeacherMisconceptionMap = ({ className }: Props) => {
       </div>
 
       {isLoading ? (
-        <div className="text-xs text-muted-foreground">Loading…</div>
+        <div className="text-xs text-muted-foreground py-8 text-center">Loading misconceptions…</div>
+      ) : showEmpty ? (
+        <EmptyState
+          icon={Target}
+          title={hasStudents ? "No misconceptions in this window" : "No students linked to this class yet"}
+          description={
+            hasStudents
+              ? "Great news — nothing has crossed the 'Watch' threshold in this range. Try a wider range, or remove the layer filter."
+              : "Add students to this class or run the simulation script to populate authentic signals here."
+          }
+        />
       ) : (
         <>
-          {/* Top struggle chart */}
           <div className="h-44 -ml-2 mb-4">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
@@ -252,11 +255,11 @@ const TeacherMisconceptionMap = ({ className }: Props) => {
           </div>
 
           <ul className="space-y-2">
-            {displayTop.map((g: any) => {
+            {top.map((g) => {
               const h = heatColor(g.stuckRate);
               return (
                 <li
-                  key={`${g.chapter}-${g.episode}-${g.block}`}
+                  key={`${g.chapter}-${g.episode}-${g.layer.key}`}
                   className="grid grid-cols-[auto_1fr_auto] items-center gap-3 p-3 rounded-xl border border-border bg-card"
                 >
                   <div
@@ -268,8 +271,11 @@ const TeacherMisconceptionMap = ({ className }: Props) => {
                   <div className="min-w-0">
                     <div className="text-sm font-semibold text-foreground truncate">
                       {g.episode} ·{" "}
-                      <span className="text-muted-foreground font-medium capitalize">
-                        {g.block.replace(/_/g, " ")}
+                      <span
+                        className="text-[11px] font-bold tracking-wider uppercase rounded px-1.5 py-0.5 ml-1"
+                        style={{ background: `hsl(${g.layer.hue} 80% 94%)`, color: `hsl(${g.layer.hue} 60% 35%)` }}
+                      >
+                        L{g.layer.index} · {g.layer.name}
                       </span>
                     </div>
                     <div className="text-[11px] text-muted-foreground truncate">
