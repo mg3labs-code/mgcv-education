@@ -110,9 +110,9 @@ const StudentTextbook = () => {
               const handleClick = () => {
                 if (!hasEpisodes) return;
                 if (showResume && chProg.resumeEpisodeSlug) {
-                  navigate(`/student/textbook/${chapter.id}/${chProg.resumeEpisodeSlug}`);
+                  navigate(ROUTES.textbook.episode(chapter.id, chProg.resumeEpisodeSlug));
                 } else {
-                  navigate(`/student/textbook/${chapter.id}`);
+                  navigate(ROUTES.textbook.chapter(chapter.id));
                 }
               };
 
