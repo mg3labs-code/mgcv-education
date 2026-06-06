@@ -169,7 +169,7 @@ const TextbookChapter = () => {
                           variant="secondary"
                           size="sm"
                           className="gap-1 justify-center"
-                          onClick={() => navigate(`/student/textbook/${chapterId}/${episode.id}?mode=pilot2`)}
+                          onClick={() => navigate(ROUTES.textbook.episodeWithMode(chapterId!, episode.id, "pilot2"))}
                         >
                           <Layers className="h-3.5 w-3.5" /> 7-layer lesson
                         </Button>
