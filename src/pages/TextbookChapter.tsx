@@ -95,7 +95,7 @@ const TextbookChapter = () => {
             </div>
             <Button
               size="sm"
-              onClick={() => navigate(`/student/textbook/${chapterId}/${chProg.resumeEpisodeSlug}`)}
+              onClick={() => navigate(ROUTES.textbook.episode(chapterId!, chProg.resumeEpisodeSlug))}
             >
               Resume
             </Button>
