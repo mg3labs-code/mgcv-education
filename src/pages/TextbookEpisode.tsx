@@ -124,7 +124,7 @@ const TextbookEpisode = () => {
   const [searchParams] = useSearchParams();
   const layerParam = searchParams.get("layer");
   const modeParam = searchParams.get("mode");
-  const forceFullReader = modeParam === "seven-layer" || modeParam === "lesson" || modeParam === "content" || modeParam === "full" || modeParam === "practice" || modeParam === "legacy";
+  const forceFullReader = modeParam === "pilot2" || modeParam === "seven-layer" || modeParam === "lesson" || modeParam === "content" || modeParam === "full" || modeParam === "practice" || modeParam === "legacy";
   const navigate = useNavigate();
   const { user } = useAuth();
   const [showDefense, setShowDefense] = useState(false);
@@ -989,7 +989,7 @@ const TextbookEpisode = () => {
 
       {/* ═══ CONTENT AREA ═══ */}
       <div ref={contentRef} style={{ flex: 1, overflowY: "auto", padding: "0 12px 120px", WebkitOverflowScrolling: "touch" }}>
-        <div style={{ maxWidth: 720, margin: "0 auto", paddingTop: 16 }}>
+        <div style={{ maxWidth: 1120, margin: "0 auto", paddingTop: 20 }}>
 
           {isLanguage && langSubject && <LanguageProgressWidget subjectName={langSubject} />}
 
@@ -1729,7 +1729,7 @@ const DayGatedEpisode = ({
     <div className="min-h-screen bg-background">
       <StageTopbar
         episodeTitle={episodeTitle}
-        pilotPractice2To={chapterId && episodeId ? ROUTES.textbook.episodeWithMode(chapterId, episodeId, "pilot2") : undefined}
+        pilotPractice2To={chapterId && episodeId ? ROUTES.textbook.episodeWithMode(chapterId, episodeId, "seven-layer") : undefined}
         fullReaderTo={chapterId && episodeId ? ROUTES.textbook.episodeWithMode(chapterId, episodeId, "full") : undefined}
         dayProgress={dayProgress}
         viewDay={viewDay}
