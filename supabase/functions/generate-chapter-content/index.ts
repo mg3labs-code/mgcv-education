@@ -89,22 +89,28 @@ For jee_speed_drill:
 
 Return ONLY the JSON array, no markdown wrapping.`;
       } else {
-        systemPrompt = `You are an expert curriculum designer creating world-class educational content for ${grade}th class ${subject} (${board} State Board).
+        systemPrompt = `You are an expert curriculum designer creating world-class educational content for ${grade}th class ${subject} (${board} State Board) students in India.
 
 You follow the 7-Layer Elite Learning Framework:
-- Layer 1 (Definition/Concept): Simple, non-academic explanation. Like explaining to a bright child. Use analogies.
-- Layer 2 (Mechanism/Activity): Step-by-step "how it works" walkthrough. Interactive classify/match/explore activity.
-- Layer 3 (Reasoning - Cambridge "Why"): Central question + 3 "why" sub-questions with hints and deeper insights.
-- Layer 4 (Assumptions - Oxford Tutorial Defense): 3 hidden assumptions students take for granted. Challenge each.
-- Layer 5 (Connections - MIT Cross-Domain): 4-5 connections to Science, Finance, Technology, History, Art/Music.
-- Layer 6 (Application - Harvard Case Method): Real-world Indian scenario with 3 questions, careers list, and "why this matters".
-- Layer 7 (Implications - Oxford Essay): Big "what if" question, 3 structured implication categories (Global/Future/Philosophical), and an essay prompt.
+- Layer 1 (Definition/Concept): Give the exact meaning in simple words, then one memorable local example. No vague filler.
+- Layer 2 (Mechanism/Activity): Show how it works through clear steps a student can mentally act out.
+- Layer 3 (Reasoning): Ask why it works. Use cause-effect reasoning, not memorisation.
+- Layer 4 (Assumptions): Surface common wrong beliefs and challenge them carefully.
+- Layer 5 (Connections): Connect to other school subjects, home/community situations, technology, money, maps, health, language, or nature.
+- Layer 6 (Application): Use an Indian real-world case with a choice, trade-off, or practical problem.
+- Layer 7 (Implications): Ask what changes if the idea is true, what breaks without it, and how it helps future learning.
 
 Also include: recall (4 Q&A pairs), explain (prompt + guide points), assessment (3-4 MCQs), exercise (textbook problems).
 
 Additionally, include 2-3 visual_aid blocks placed after concept, reasoning, and application blocks. Each visual_aid block helps students visualize the topic with images or short videos.
 
-Content must be culturally relevant to Indian students. Use Indian examples, ₹ currency, cricket/Bollywood references where appropriate.`;
+Content quality rules:
+- Match the class level: accurate, interesting, not too high terminology, not childish.
+- Use concrete examples from school, home, Hyderabad/Telangana/India, shop bills, weather, buses, farming, kitchen, sports, maps, phones, electricity, health, or stories where relevant.
+- Avoid generic lines such as "built by many people", "helps solve daily problems", or "good thinking grows step by step" unless a precise example follows.
+- Every block must contain a reasoning move: compare, classify, trace cause-effect, test an assumption, or apply in a new situation.
+- Keep explanations short but rich: students should understand why the idea matters, not only what it is.
+- Use simple analogies, but never sacrifice correctness.`;
 
         userPrompt = `Generate complete 7-layer content blocks for:
 Subject: ${subject}
