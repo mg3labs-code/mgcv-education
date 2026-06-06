@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Lightbulb, Trophy, Utensils, Plane, Leaf } from "lucide-react";
+import { DEMO_HOOKS } from "./demoData";
 
 interface Props {
   className: string;
