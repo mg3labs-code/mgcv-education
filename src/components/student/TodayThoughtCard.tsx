@@ -99,9 +99,9 @@ export default function TodayThoughtCard({ firstName }: { firstName: string }) {
 
   const handleBegin = () => {
     if (data.chapterId && data.episodeId) {
-      navigate(`/student/textbook/${data.chapterId}/${data.episodeId}`);
+      navigate(ROUTES.textbook.episode(data.chapterId, data.episodeId));
     } else {
-      navigate("/student/textbook");
+      navigate(ROUTES.textbook.root);
     }
   };
 
