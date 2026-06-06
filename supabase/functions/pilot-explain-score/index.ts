@@ -15,12 +15,9 @@ const BodySchema = z.object({
   answer: z.string().min(5).max(3000),
 });
 
-const fallback = {
-  score: 68,
-  band: "Needs one clearer reason",
-  feedback: "Good effort. Add one clear real-life example and say why it proves your idea.",
-  next_step: "Use: idea → example → why it matters.",
-};
+// No silent fake-score fallback. If the AI gateway fails we surface a real
+// error so the UI can show "scoring unavailable, try again" — never a made-up score.
+
 
 function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
