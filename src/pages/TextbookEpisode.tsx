@@ -40,6 +40,7 @@ import AdaptiveConceptBlock from "@/components/textbook/AdaptiveConceptBlock";
 import AdaptiveReasoningBlock from "@/components/textbook/AdaptiveReasoningBlock";
 import { EpisodeDayProvider, useEpisodeDay } from "@/contexts/EpisodeDayContext";
 import StageTopbar from "@/components/episode/StageTopbar";
+import FirstThoughtAnchor from "@/components/episode/FirstThoughtAnchor";
 import Day1Spark from "@/components/episode/Day1Spark";
 import DevDayToggle from "@/components/episode/DevDayToggle";
 import Day2Build from "@/components/episode/Day2Build";
@@ -1742,6 +1743,10 @@ const DayGatedEpisode = ({
         dayProgress={dayProgress}
         viewDay={viewDay}
         onChangeDay={(d) => setViewDay(d)}
+      />
+      <FirstThoughtAnchor
+        conceptKey={pilot.conceptKey ?? episodeKey}
+        viewDay={viewDay as 1 | 2 | 3}
       />
       {hasInterestVariants && interest && (
         <div className="max-w-4xl mx-auto px-4 pt-2 flex items-center justify-end gap-2 text-[11px] text-muted-foreground flex-wrap">
