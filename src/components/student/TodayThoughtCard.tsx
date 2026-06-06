@@ -98,7 +98,7 @@ export default function TodayThoughtCard({ firstName }: { firstName: string }) {
 
   const handleBegin = () => {
     if (data.chapterId && data.episodeId) {
-      navigate(`/textbook/${data.chapterId}/${data.episodeId}`);
+      navigate(`/student/textbook/${data.chapterId}/${data.episodeId}`);
     } else {
       navigate("/student/textbook");
     }
@@ -190,7 +190,7 @@ export default function TodayThoughtCard({ firstName }: { firstName: string }) {
           current={nextLayer}
           onPick={(layer) => {
             if (data.chapterId && data.episodeId) {
-              navigate(`/textbook/${data.chapterId}/${data.episodeId}?layer=${layer.key}`);
+              navigate(`/student/textbook/${data.chapterId}/${data.episodeId}?layer=${layer.key}`);
             } else {
               navigate("/student/textbook");
             }

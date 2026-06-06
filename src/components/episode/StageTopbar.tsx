@@ -108,14 +108,8 @@ const StageTopbar = ({
         </div>
       </div>
 
-      {/* Row 2 — Curiosity Ladder (the visible spine) */}
-      <CuriosityLadder
-        viewDay={day}
-        dayProgress={dayProgress}
-        doneDays={doneDays}
-        onJumpToDay={onChangeDay}
-        depthTrack={depthTrack}
-      />
+      {/* Row 2 (removed) — legacy 5-rung Curiosity Ladder. The 7-layer spine on
+          TodayThoughtCard is the new visible progression. */}
     </header>
   );
 };
