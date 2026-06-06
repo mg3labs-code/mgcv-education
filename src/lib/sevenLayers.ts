@@ -31,11 +31,21 @@ export const LAYERS: Layer[] = [
   { key: "implications", index: 7, name: "Implications", caption: "What follows from this?",             hue: 270 },
 ];
 
-/** Map legacy `current_rung` (1..5) onto the 7 layers. */
+/**
+ * Map `current_rung` onto the 7 layers. Accepts either a direct layer index (1..7),
+ * written by the textbook full-reader flow, or the legacy 1..5 confidence-ladder
+ * rung, in which case it expands via the historical mapping.
+ */
 export function rungToLayer(rung: number | null | undefined): Layer {
-  const r = Math.max(1, Math.min(5, rung ?? 1));
-  const map: Record<number, number> = { 1: 1, 2: 2, 3: 4, 4: 5, 5: 7 };
-  return LAYERS[(map[r] ?? 1) - 1];
+  const r = rung ?? 1;
+  if (r >= 1 && r <= 7 && r > 5) return LAYERS[r - 1];
+  const clamped = Math.max(1, Math.min(7, r));
+  if (clamped <= 5) {
+    // Legacy 5-rung pacing → 7-layer spine
+    const map: Record<number, number> = { 1: 1, 2: 2, 3: 4, 4: 5, 5: 7 };
+    return LAYERS[(map[clamped] ?? 1) - 1];
+  }
+  return LAYERS[clamped - 1];
 }
 
 export function layerByIndex(i: number): Layer {
