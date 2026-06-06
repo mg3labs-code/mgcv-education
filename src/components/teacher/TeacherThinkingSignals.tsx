@@ -152,6 +152,9 @@ const TeacherThinkingSignals = ({ className }: Props) => {
     };
   }, [ids.join(",")]);
 
+  const isDemo = signals.length === 0;
+  const displaySignals = isDemo ? (DEMO_SIGNALS as Signal[]) : signals;
+
   return (
     <Card className="p-5 sm:p-6">
       <div className="flex items-center gap-2 mb-1">
@@ -159,50 +162,44 @@ const TeacherThinkingSignals = ({ className }: Props) => {
         <h2 className="text-lg font-semibold text-foreground">Thinking Signals · Live</h2>
         <span className="ml-auto inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-emerald-600">
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-          Live
+          {isDemo ? "Demo" : "Live"}
         </span>
       </div>
       <p className="text-xs text-muted-foreground mb-4">
         Rung climbs, first thoughts and vibe-checks from {className} as they happen.
       </p>
-      {signals.length === 0 ? (
-        <div className="text-xs text-muted-foreground py-6 text-center">
-          Waiting for the first signal… open a student session to test.
-        </div>
-      ) : (
-        <ul className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
-          <AnimatePresence initial={false}>
-            {signals.map((s) => {
-              const m = KIND_META[s.kind];
-              return (
-                <motion.li
-                  key={s.id}
-                  layout
-                  initial={{ opacity: 0, y: -8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  className="flex items-start gap-3 p-3 rounded-xl border border-border bg-card"
-                >
-                  <div className={`h-9 w-9 rounded-xl flex items-center justify-center shrink-0 ${m.bg}`}>
-                    <m.Icon className={`h-4 w-4 ${m.color}`} />
+      <ul className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
+        <AnimatePresence initial={false}>
+          {displaySignals.map((s) => {
+            const m = KIND_META[s.kind];
+            return (
+              <motion.li
+                key={s.id}
+                layout
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="flex items-start gap-3 p-3 rounded-xl border border-border bg-card hover:bg-muted/30 transition-colors"
+              >
+                <div className={`h-9 w-9 rounded-xl flex items-center justify-center shrink-0 ${m.bg}`}>
+                  <m.Icon className={`h-4 w-4 ${m.color}`} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold text-foreground truncate">{s.studentName}</span>
+                    <span className={`text-[10px] font-bold uppercase tracking-wide ${m.color}`}>{m.label}</span>
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold text-foreground truncate">{s.studentName}</span>
-                      <span className={`text-[10px] font-bold uppercase tracking-wide ${m.color}`}>{m.label}</span>
-                    </div>
-                    <div className="text-sm text-foreground/90 line-clamp-2">{s.text}</div>
-                    <div className="text-[11px] text-muted-foreground mt-0.5">
-                      {s.meta ? <span className="mr-2">{s.meta}</span> : null}
-                      {formatDistanceToNow(new Date(s.at), { addSuffix: true })}
-                    </div>
+                  <div className="text-sm text-foreground/90 line-clamp-2">{s.text}</div>
+                  <div className="text-[11px] text-muted-foreground mt-0.5">
+                    {s.meta ? <span className="mr-2">{s.meta}</span> : null}
+                    {formatDistanceToNow(new Date(s.at), { addSuffix: true })}
                   </div>
-                </motion.li>
-              );
-            })}
-          </AnimatePresence>
-        </ul>
-      )}
+                </div>
+              </motion.li>
+            );
+          })}
+        </AnimatePresence>
+      </ul>
     </Card>
   );
 };
