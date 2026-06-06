@@ -585,10 +585,7 @@ const StudentDashboard = () => {
                 <WeeklyInterestSummary />
               </FadeSlide>
 
-              {/* Parent weekly note preview — what gets sent home on Sunday */}
-              <FadeSlide delay={90}>
-                <ParentWeeklyNote />
-              </FadeSlide>
+              {/* Parent weekly note removed from student view — sent privately to parents */}
 
               {/* PHASE 4: Inner OS as hero */}
               <FadeSlide show={phase >= 4} delay={0}>
