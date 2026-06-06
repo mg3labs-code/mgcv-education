@@ -38,7 +38,7 @@ const TextbookChapter = () => {
       <PageLayout role="student">
         <div className="text-center py-20">
           <p className="text-muted-foreground">Chapter not found.</p>
-          <Button variant="outline" className="mt-4" onClick={() => navigate("/student/textbook")}>
+          <Button variant="outline" className="mt-4" onClick={() => navigate(ROUTES.textbook.root)}>
             Back to Textbook
           </Button>
         </div>
