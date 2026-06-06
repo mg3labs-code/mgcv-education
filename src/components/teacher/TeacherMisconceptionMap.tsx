@@ -144,6 +144,11 @@ const TeacherMisconceptionMap = ({ className }: Props) => {
       <div className="flex items-center gap-2 mb-1">
         <Target className="h-5 w-5 text-rose-500" aria-hidden="true" />
         <h2 className="text-lg font-semibold text-foreground">Misconception Map</h2>
+        {isDemo && (
+          <span className="ml-auto text-[10px] font-bold uppercase tracking-wide text-amber-600 bg-amber-500/10 px-2 py-0.5 rounded-full">
+            Demo
+          </span>
+        )}
       </div>
       <p className="text-xs text-muted-foreground mb-4">
         Where {className} is getting stuck — filter to pinpoint what to address next.
