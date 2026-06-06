@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Activity, Radio, Target, Layers, Lightbulb, Sparkles } from "lucide-react";
+import { Activity, CalendarClock, Brain, Users, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
@@ -16,16 +16,19 @@ interface Props {
 }
 
 /**
- * Premium "command center" wrapper for the four live teacher widgets.
- * Hero gradient + live class pulse stats + tabbed organization so each
- * surface gets full breathing room instead of a long scroll of cards.
+ * Live Intelligence Hub — collapsed to 3 clean tabs:
+ *   Today      → tomorrow's openers + live thinking signals
+ *   Class Mind → misconceptions by 7-layer
+ *   Each Student → depth/layer progression per student
+ *
+ * No demo-data fallback in hero stats — when a class is empty,
+ * the band shows a neutral "no signals yet" line instead of fake numbers.
  */
 const LiveIntelligenceHub = ({ className }: Props) => {
   const { user } = useAuth();
   const [pulse, setPulse] = useState(0);
 
-  // Class-scoped quick stats for the hero band
-  const { data: stats } = useQuery({
+  const { data: stats, isLoading } = useQuery({
     queryKey: ["live-hub-stats", user?.id, className, pulse],
     enabled: !!user,
     queryFn: async () => {
@@ -34,8 +37,7 @@ const LiveIntelligenceHub = ({ className }: Props) => {
         .select("user_id")
         .eq("class_name", className);
       const ids = (students ?? []).map((s) => s.user_id);
-      const empty = { students: ids.length, activeNow: 0, signals24h: 0, stuckCount: 0, climbing: 0 };
-      if (!ids.length) return empty;
+      if (!ids.length) return { students: 0, activeNow: 0, signals24h: 0, stuckCount: 0, climbing: 0 };
 
       const sinceLive = new Date(Date.now() - 5 * 60 * 1000).toISOString();
       const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
@@ -69,28 +71,25 @@ const LiveIntelligenceHub = ({ className }: Props) => {
     },
   });
 
-  // refresh stats every 10s for live feel
   useEffect(() => {
     const t = setInterval(() => setPulse((p) => p + 1), 10000);
     return () => clearInterval(t);
   }, []);
 
-  const noLiveData = !stats || (stats.students === 0 && stats.signals24h === 0);
-  const demoStats = { students: 22, activeNow: 7, signals24h: 184, climbing: 12, stuckCount: 5 };
-  const liveStats = noLiveData ? demoStats : stats!;
+  const s = stats ?? { students: 0, activeNow: 0, signals24h: 0, stuckCount: 0, climbing: 0 };
+  const hasAnySignal = s.signals24h > 0 || s.activeNow > 0;
 
   const heroStats = [
-    { label: "Live now", value: liveStats.activeNow, color: "from-emerald-400 to-teal-500", glow: "shadow-emerald-500/30" },
-    { label: "Signals · 24h", value: liveStats.signals24h, color: "from-violet-400 to-fuchsia-500", glow: "shadow-violet-500/30" },
-    { label: "Climbing ↑", value: liveStats.climbing, color: "from-sky-400 to-blue-500", glow: "shadow-sky-500/30" },
-    { label: "Stuck moments", value: liveStats.stuckCount, color: "from-rose-400 to-orange-500", glow: "shadow-rose-500/30" },
+    { label: "Live now", value: s.activeNow, color: "from-emerald-400 to-teal-500", glow: "shadow-emerald-500/30" },
+    { label: "Signals · 24h", value: s.signals24h, color: "from-violet-400 to-fuchsia-500", glow: "shadow-violet-500/30" },
+    { label: "Climbing ↑", value: s.climbing, color: "from-sky-400 to-blue-500", glow: "shadow-sky-500/30" },
+    { label: "Stuck moments", value: s.stuckCount, color: "from-rose-400 to-orange-500", glow: "shadow-rose-500/30" },
   ];
 
   return (
     <Card className="overflow-hidden border-border/60 shadow-lg">
       {/* HERO BAND */}
-      <div className="relative bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 px-5 sm:px-6 pt-5 pb-6 text-white">
-        {/* ambient glow */}
+      <div className="relative bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950 px-5 sm:px-6 pt-5 pb-6 text-white">
         <div
           aria-hidden
           className="absolute inset-0 opacity-40 pointer-events-none"
@@ -118,21 +117,20 @@ const LiveIntelligenceHub = ({ className }: Props) => {
           </span>
         </div>
 
-        {/* stat tiles */}
         <div className="relative grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mt-4">
-          {heroStats.map((s, i) => (
+          {heroStats.map((stat, i) => (
             <motion.div
-              key={s.label}
+              key={stat.label}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
-              className={`rounded-xl bg-white/5 backdrop-blur-md ring-1 ring-white/10 p-3 shadow-lg ${s.glow}`}
+              className={`rounded-xl bg-white/5 backdrop-blur-md ring-1 ring-white/10 p-3 shadow-lg ${stat.glow}`}
             >
-              <div className={`text-[10px] uppercase tracking-wider font-bold bg-gradient-to-r ${s.color} bg-clip-text text-transparent`}>
-                {s.label}
+              <div className={`text-[10px] uppercase tracking-wider font-bold bg-gradient-to-r ${stat.color} bg-clip-text text-transparent`}>
+                {stat.label}
               </div>
               <div className="text-2xl sm:text-3xl font-bold tabular-nums mt-0.5 text-white">
-                {s.value}
+                {stat.value}
               </div>
             </motion.div>
           ))}
@@ -140,19 +138,26 @@ const LiveIntelligenceHub = ({ className }: Props) => {
 
         <div className="relative mt-3 flex items-center gap-1.5 text-[10px] text-white/50">
           <Sparkles className="h-3 w-3" />
-          <span>{liveStats.students} students in {className} · stats refresh every 10s{noLiveData ? " · demo data" : ""}</span>
+          <span>
+            {isLoading
+              ? "Loading class…"
+              : s.students === 0
+                ? `${className} has no students linked yet`
+                : hasAnySignal
+                  ? `${s.students} students in ${className} · stats refresh every 10s`
+                  : `${s.students} students in ${className} · waiting for first signals…`}
+          </span>
         </div>
       </div>
 
-      {/* TABS */}
-      <Tabs defaultValue="signals" className="w-full">
+      {/* TABS — collapsed to 3 */}
+      <Tabs defaultValue="today" className="w-full">
         <div className="px-3 sm:px-4 pt-3 border-b border-border bg-muted/30">
-          <TabsList className="bg-transparent p-0 h-auto gap-1 w-full grid grid-cols-4">
+          <TabsList className="bg-transparent p-0 h-auto gap-1 w-full grid grid-cols-3">
             {[
-              { v: "signals", Icon: Radio, label: "Live Signals" },
-              { v: "miscon", Icon: Target, label: "Misconceptions" },
-              { v: "depth", Icon: Layers, label: "Depth Map" },
-              { v: "hooks", Icon: Lightbulb, label: "Hooks" },
+              { v: "today", Icon: CalendarClock, label: "Today" },
+              { v: "mind",  Icon: Brain,         label: "Class Mind" },
+              { v: "each",  Icon: Users,         label: "Each Student" },
             ].map((t) => (
               <TabsTrigger
                 key={t.v}
@@ -166,18 +171,18 @@ const LiveIntelligenceHub = ({ className }: Props) => {
           </TabsList>
         </div>
 
-        <div className="p-2 sm:p-3 bg-card">
-          <TabsContent value="signals" className="mt-0">
+        <div className="p-2 sm:p-3 bg-card space-y-3">
+          <TabsContent value="today" className="mt-0 space-y-3">
+            <TeacherSuggestedHooks className={className} />
             <TeacherThinkingSignals className={className} />
           </TabsContent>
-          <TabsContent value="miscon" className="mt-0">
+
+          <TabsContent value="mind" className="mt-0">
             <TeacherMisconceptionMap className={className} />
           </TabsContent>
-          <TabsContent value="depth" className="mt-0">
+
+          <TabsContent value="each" className="mt-0">
             <ClassDepthProgression className={className} />
-          </TabsContent>
-          <TabsContent value="hooks" className="mt-0">
-            <TeacherSuggestedHooks className={className} />
           </TabsContent>
         </div>
       </Tabs>
