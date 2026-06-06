@@ -15,8 +15,7 @@ import { useVoiceGuide } from "@/hooks/useVoiceGuide";
 import ExamAlertBanner from "@/components/student/ExamAlertBanner";
 import { useDiscoveryToasts } from "@/hooks/useDiscoveryToasts";
 import DashboardGreeting from "@/components/DashboardGreeting";
-import WeeklyInterestSummary from "@/components/student/WeeklyInterestSummary";
-// ParentWeeklyNote removed from student dashboard (parents receive it privately)
+import TodayThoughtCard from "@/components/student/TodayThoughtCard";
 
 interface ScheduleItem {
   type: string;
@@ -580,12 +579,10 @@ const StudentDashboard = () => {
                 <DashboardGreeting firstName={firstName} subline={greeting} />
               </FadeSlide>
 
-              {/* Weekly summary — how the interest lens is shifting metrics */}
+              {/* Today's one thought — concept · interest lens · next layer · echo */}
               <FadeSlide delay={60}>
-                <WeeklyInterestSummary />
+                <TodayThoughtCard firstName={firstName} />
               </FadeSlide>
-
-              {/* Parent weekly note removed from student view — sent privately to parents */}
 
               {/* PHASE 4: Inner OS as hero */}
               <FadeSlide show={phase >= 4} delay={0}>
