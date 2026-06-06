@@ -1,0 +1,1 @@
+ALTER TABLE public.student_rung_state ADD COLUMN IF NOT EXISTS depth_track text NOT NULL DEFAULT 'core';
