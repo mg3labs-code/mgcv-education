@@ -4,6 +4,9 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import ThinkingNetwork from "@/components/ThinkingNetwork";
 import ClassDepthProgression from "@/components/teacher/ClassDepthProgression";
+import TeacherThinkingSignals from "@/components/teacher/TeacherThinkingSignals";
+import TeacherMisconceptionMap from "@/components/teacher/TeacherMisconceptionMap";
+import TeacherSuggestedHooks from "@/components/teacher/TeacherSuggestedHooks";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
@@ -186,6 +189,16 @@ const TeacherDashboard = () => {
 
           {/* Depth Progression — per-student per-episode adaptive track */}
           <ClassDepthProgression className={selectedClass} />
+
+          {/* Two-column live thinking + misconception map */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <TeacherThinkingSignals className={selectedClass} />
+            <TeacherMisconceptionMap className={selectedClass} />
+          </div>
+
+          {/* Suggested hooks for tomorrow */}
+          <TeacherSuggestedHooks className={selectedClass} />
+
 
           {/* Today's Classes */}
 
