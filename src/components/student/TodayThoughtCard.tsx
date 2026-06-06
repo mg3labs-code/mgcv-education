@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { LAYERS, rungToLayer, type Layer } from "@/lib/sevenLayers";
+import { ROUTES } from "@/lib/routes";
 
 /**
  * TodayThoughtCard
