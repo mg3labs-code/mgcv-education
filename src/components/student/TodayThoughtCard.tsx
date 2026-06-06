@@ -186,33 +186,45 @@ export default function TodayThoughtCard({ firstName }: { firstName: string }) {
         </div>
 
         {/* RIGHT — the 7-layer spine */}
-        <LayerSpine current={nextLayer} />
+        <LayerSpine
+          current={nextLayer}
+          onPick={(layer) => {
+            if (data.chapterId && data.episodeId) {
+              navigate(`/textbook/${data.chapterId}/${data.episodeId}?layer=${layer.key}`);
+            } else {
+              navigate("/student/textbook");
+            }
+          }}
+        />
       </div>
     </article>
   );
 }
 
-function LayerSpine({ current }: { current: Layer }) {
+function LayerSpine({ current, onPick }: { current: Layer; onPick?: (l: Layer) => void }) {
   return (
     <aside
       aria-label="Seven layers of understanding"
-      className="hidden min-w-[180px] flex-col gap-1.5 rounded-xl border border-border/60 bg-background/50 p-3 backdrop-blur-sm md:flex"
+      className="hidden min-w-[200px] flex-col gap-1.5 rounded-xl border border-border/60 bg-background/50 p-3 backdrop-blur-sm md:flex"
     >
       <p className="px-1 pb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-        The 7 layers
+        The 7 layers · tap to jump
       </p>
       {LAYERS.map((l) => {
         const reached = l.index <= current.index;
         const isNow = l.index === current.index;
         return (
-          <div
+          <button
             key={l.key}
-            className={`flex items-center gap-2.5 rounded-lg px-2 py-1.5 transition ${
+            type="button"
+            onClick={() => onPick?.(l)}
+            aria-current={isNow ? "step" : undefined}
+            className={`group flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left transition hover:bg-foreground/[0.04] active:scale-[0.98] ${
               isNow ? "bg-foreground/5 ring-1 ring-foreground/10" : ""
             }`}
           >
             <span
-              className="grid h-6 w-6 shrink-0 place-items-center rounded-md text-[11px] font-bold"
+              className="grid h-6 w-6 shrink-0 place-items-center rounded-md text-[11px] font-bold transition group-hover:scale-105"
               style={{
                 background: reached ? `hsl(${l.hue} 65% 45%)` : "hsl(0 0% 92%)",
                 color: reached ? "white" : "hsl(0 0% 55%)",
@@ -228,7 +240,7 @@ function LayerSpine({ current }: { current: Layer }) {
             >
               {l.name}
             </span>
-          </div>
+          </button>
         );
       })}
     </aside>
