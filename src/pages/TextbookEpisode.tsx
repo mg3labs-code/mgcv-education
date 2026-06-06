@@ -426,8 +426,15 @@ const TextbookEpisode = () => {
     if (!layerParam || !navBlocks || navBlocks.length === 0) return;
     const timer = setTimeout(() => {
       const targetSet = layerParam === "deep" ? MASTER_BLOCKS : layerParam === "quiz" ? new Set(["recall", "assessment", "explain"]) : null;
-      if (!targetSet) return;
-      const idx = navBlocks.findIndex(b => targetSet.has(b.type));
+      let idx = -1;
+      if (targetSet) {
+        idx = navBlocks.findIndex(b => targetSet.has(b.type));
+      } else {
+        // 7-layer key (definition, mechanism, reasoning, ...) → first block whose
+        // blockToLayer matches. Lets the TodayThoughtCard spine deep-link into the
+        // right block of any episode.
+        idx = navBlocks.findIndex(b => blockToLayer(b.type).key === layerParam);
+      }
       if (idx >= 0) goToBlock(idx);
     }, 500);
     return () => clearTimeout(timer);
