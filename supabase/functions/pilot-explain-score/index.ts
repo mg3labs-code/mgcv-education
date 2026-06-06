@@ -115,22 +115,32 @@ Rules:
       if (response.status === 429) return json({ error: "AI scoring is busy. Try again in a moment." }, 429);
       if (response.status === 402) return json({ error: "AI scoring needs workspace credits." }, 402);
       console.error("pilot-explain-score gateway error", response.status, await response.text());
-      return json(fallback);
+      return json({ error: "Scoring is unavailable right now. Please try again." }, 502);
     }
 
     const data = await response.json();
     const args = data.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
-    const result = args ? JSON.parse(args) : fallback;
-    const score = Math.max(0, Math.min(100, Math.round(Number(result.score) || fallback.score)));
+    if (!args) {
+      console.error("pilot-explain-score: no tool_call in response", JSON.stringify(data).slice(0, 500));
+      return json({ error: "Scoring returned no result. Please try again." }, 502);
+    }
+    let result: { score: number; band: string; feedback: string; next_step: string };
+    try {
+      result = JSON.parse(args);
+    } catch {
+      console.error("pilot-explain-score: bad JSON from tool_call", args);
+      return json({ error: "Scoring returned an invalid result. Please try again." }, 502);
+    }
+    const score = Math.max(0, Math.min(100, Math.round(Number(result.score) || 0)));
 
     return json({
       score,
-      band: String(result.band || fallback.band).slice(0, 40),
-      feedback: String(result.feedback || fallback.feedback).slice(0, 140),
-      next_step: String(result.next_step || fallback.next_step).slice(0, 120),
+      band: String(result.band || "").slice(0, 40),
+      feedback: String(result.feedback || "").slice(0, 140),
+      next_step: String(result.next_step || "").slice(0, 120),
     });
   } catch (error) {
     console.error("pilot-explain-score error", error);
-    return json(fallback);
+    return json({ error: "Scoring is unavailable right now. Please try again." }, 500);
   }
 });
