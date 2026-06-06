@@ -140,7 +140,7 @@ const LiveIntelligenceHub = ({ className }: Props) => {
 
         <div className="relative mt-3 flex items-center gap-1.5 text-[10px] text-white/50">
           <Sparkles className="h-3 w-3" />
-          <span>{stats?.students ?? 0} students in {className} · stats refresh every 10s</span>
+          <span>{liveStats.students} students in {className} · stats refresh every 10s{noLiveData ? " · demo data" : ""}</span>
         </div>
       </div>
 
