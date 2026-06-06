@@ -609,8 +609,8 @@ const StudentDashboard = () => {
                       items={todayScheduleItems}
                       onOpenTopic={(topic) => {
                         const match = findTextbookMatch(topic);
-                        if (match?.episodeId) navigate(`/student/textbook/${match.chapterId}/${match.episodeId}`);
-                        else navigate("/student/textbook");
+                        if (match?.episodeId) navigate(ROUTES.textbook.episode(match.chapterId, match.episodeId));
+                        else navigate(ROUTES.textbook.root);
                       }}
                     />
                   )}
