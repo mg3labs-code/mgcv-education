@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { DetailSkeleton } from "@/components/PageSkeleton";
 import { getPilotContent } from "@/data/dayPilotContent";
+import { ROUTES } from "@/lib/routes";
 
 const typeIcons: Record<string, string> = {
   Concept: "💡",
