@@ -51,6 +51,7 @@ import { getPilotContent, getPilotInterestOverride, hasPilotInterestOverrides, P
 import PreEpisodeCuriosityPrompt from "@/components/curiosity/PreEpisodeCuriosityPrompt";
 import InterestArcLive from "@/components/curiosity/InterestArcLive";
 import { getArcLens } from "@/data/interestArcLenses";
+import { blockToLayer } from "@/lib/sevenLayers";
 
 const LANGUAGE_SUBJECTS = new Set(["Telugu", "Hindi"]);
 
