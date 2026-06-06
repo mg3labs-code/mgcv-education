@@ -723,7 +723,7 @@ const TextbookEpisode = () => {
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
               This page is protected from showing the wrong subject. Open Episode 1 for Mathematics, Physics, Chemistry, or Biology.
             </p>
-            <Button className="mt-5" onClick={() => navigate(`/student/textbook/${chapterId}`)}>
+            <Button className="mt-5" onClick={() => navigate(ROUTES.textbook.chapter(chapterId!))}>
               Back to chapter
             </Button>
           </div>
@@ -808,7 +808,7 @@ const TextbookEpisode = () => {
   const defaultMeta = { border: "border-l-primary", bg: "", dotColor: "bg-primary", badge: undefined, badgeColor: undefined } as const;
 
   const handleExit = () => {
-    navigate(`/student/textbook/${chapterId}`);
+    navigate(ROUTES.textbook.chapter(chapterId!));
   };
 
   const handleFinish = () => {
@@ -929,7 +929,7 @@ const TextbookEpisode = () => {
             </>
           )}
           {nextEpisode ? (
-            <button onClick={() => navigate(`/student/textbook/${chapterId}/${nextEpisode.id}`)} style={{
+            <button onClick={() => navigate(ROUTES.textbook.episode(chapterId!, nextEpisode.id))} style={{
               width: "100%", padding: "14px 32px", borderRadius: 14, border: "none",
               background: "linear-gradient(135deg, #0D9488, #14B8A6)", color: "white", fontSize: 15, fontWeight: 700,
               cursor: "pointer", boxShadow: "0 4px 14px rgba(13,148,136,0.4)",
@@ -1780,8 +1780,8 @@ const DayGatedEpisode = ({
     <div className="min-h-screen bg-background">
       <StageTopbar
         episodeTitle={episodeTitle}
-        pilotPractice2To={chapterId && episodeId ? `/student/textbook/${chapterId}/${episodeId}?mode=pilot2` : undefined}
-        fullReaderTo={chapterId && episodeId ? `/student/textbook/${chapterId}/${episodeId}?mode=full` : undefined}
+        pilotPractice2To={chapterId && episodeId ? ROUTES.textbook.episodeWithMode(chapterId, episodeId, "pilot2") : undefined}
+        fullReaderTo={chapterId && episodeId ? ROUTES.textbook.episodeWithMode(chapterId, episodeId, "full") : undefined}
         dayProgress={dayProgress}
         viewDay={viewDay}
         onChangeDay={(d) => setViewDay(d)}
