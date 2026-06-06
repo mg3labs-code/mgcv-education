@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { ListSkeleton } from "@/components/PageSkeleton";
 import EmptyState from "@/components/EmptyState";
 import { useState } from "react";
+import { ROUTES } from "@/lib/routes";
 
 const JOURNEY_STEPS = [
   { label: "Dashboard", emoji: "🧠", desc: "See your Inner OS" },
