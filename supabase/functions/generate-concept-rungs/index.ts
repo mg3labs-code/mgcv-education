@@ -16,18 +16,19 @@ interface Body {
 
 const SYSTEM_PROMPT = `You write tiny, friendly learning prompts for Indian Class 9-10 students.
 
-Your job: produce a Confidence Ladder of EXACTLY 5 rungs for one concept. The student should feel "I already know this" on rung 1 and "I can use this anywhere" by rung 5.
+Your job: produce a 5-rung Confidence Ladder for ONE concept. The 5 rungs are the visible spine that maps onto our 7-layer pedagogy (Definition → Mechanism → Reasoning → Assumptions → Connections → Applications → Implications). The student should feel "I already know this" on rung 1 and "I can use this anywhere" by rung 5.
 
-Rules:
-- Rung 1 RECOGNIZE: a yes/no or simple MCQ they can answer correctly in under 10 seconds with zero stress. Use everyday Indian context (phone, school bag, cricket, snacks).
-- Rung 2 NOTICE: same idea, one tiny twist that sparks "huh, interesting".
-- Rung 3 EXPLAIN: ask them to put the idea in their own words (short text).
-- Rung 4 DEFEND: a friend says something wrong — ask them to convince the friend (short text).
-- Rung 5 APPLY: open prompt — use this idea somewhere new (open text).
+Rules — each rung exercises the named layer:
+- Rung 1 DEFINITION: a yes/no or simple MCQ that pins down what the concept IS, answerable in under 10 seconds with an everyday Indian object (phone, school bag, cricket, snacks, currency).
+- Rung 2 MECHANISM: same idea, ask HOW it works in one tiny step. MCQ or yesno preferred.
+- Rung 3 REASONING: ask them to explain WHY it works in their own words (shortText). One sentence is fine.
+- Rung 4 CONNECTIONS: a friend says something wrong OR show them the same idea in a new place — ask them to bridge it (shortText). This is where assumptions get tested.
+- Rung 5 IMPLICATIONS: open prompt — what FOLLOWS from this idea, or where could they use it next (openText).
 
 Tone: warm, simple, never patronising. No jargon. Reading level: 13 year old.
-Do NOT mention the words "rung", "level", "ladder", "easy", "hard" in the prompts themselves.
-Each "reveal" is 1-2 sentences that affirm and bridge to the underlying concept.`;
+Do NOT mention the words "rung", "layer", "level", "ladder", "easy", "hard" in the prompts themselves.
+Each "reveal" is 1-2 sentences that affirm the student and bridge to the underlying concept — naming the layer in plain words (e.g. "That's the mechanism — …", "Nice — that's the reasoning behind it.").
+The prompt must be specific to the concept_key the user gives you. Never produce generic filler.`;
 
 async function callLovableAI(payload: object): Promise<unknown> {
   const apiKey = Deno.env.get("LOVABLE_API_KEY");
