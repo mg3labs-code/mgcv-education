@@ -222,7 +222,6 @@ const TextbookEpisode = () => {
   }, []);
 
   const { data: chapter, isLoading: chapterLoading } = useChapterEpisodes(chapterId);
-  const depthTrack = useEpisodeDepthTrack(chapterId, episodeId);
   const { data: dbBlocks, isLoading: blocksLoading } = useEpisodeBlocks(chapterId, episodeId, jeeMode ? "all" : "board");
 
   const episode = chapter?.episodes.find((e) => e.id === episodeId);
@@ -1439,6 +1438,7 @@ const DayGatedEpisode = ({
   const { user } = useAuth();
   const { info, isLoading } = useEpisodeDay();
   const { data: dbBlocks } = useEpisodeBlocks(chapterId, episodeId, "board");
+  const depthTrack = useEpisodeDepthTrack(chapterId, episodeId);
 
   const episodeKey = `${chapterId ?? "?"}::${episodeId ?? "?"}`;
   const [dayProgress, setDayProgress] = useState<number>(0);
