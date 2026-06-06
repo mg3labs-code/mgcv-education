@@ -90,7 +90,7 @@ export default function TodayThoughtCard({ firstName }: { firstName: string }) {
   // Empty / first-time state
   if (!data) {
     return (
-      <FirstTimeCard firstName={firstName} onBegin={() => navigate("/student/textbook")} />
+      <FirstTimeCard firstName={firstName} onBegin={() => navigate(ROUTES.textbook.root)} />
     );
   }
 
