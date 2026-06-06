@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Mail, Sparkles } from "lucide-react";
+import { Heart, Sparkles } from "lucide-react";
 
 interface Bundle {
   fullName: string;
@@ -9,20 +9,18 @@ interface Bundle {
   firstThought: string | null;
   conceptLabel: string | null;
   episodesAfter: number;
-  highRiskAfter: number;
-  firstTryPct: number;
   streakDays: number;
 }
 
-const EMOJI: Record<string, string> = {
-  cricket: "🏏", food: "🍔", movies: "🎬", gaming: "🎮",
-  music: "🎵", travel: "✈️", tech: "💻", nature: "🌧",
+const INTEREST_LABEL: Record<string, string> = {
+  cricket: "cricket", food: "cooking", movies: "films", gaming: "games",
+  music: "music", travel: "travel", tech: "technology", nature: "the natural world",
 };
 
 /**
- * ParentWeeklyNote — a read-only preview of the note the student's parent
- * would receive this week. Auto-composed from existing arc + activity data.
- * Lives on the student dashboard so the student can see what's shared.
+ * ParentWeeklyNote — a warm, jargon-free weekly note for the parent.
+ * No scores, no risk labels, no percentages. Celebrates curiosity and effort.
+ * Intended for the parent-facing channel (email / parent portal), not the student view.
  */
 export default function ParentWeeklyNote() {
   const { user } = useAuth();
@@ -63,74 +61,83 @@ export default function ParentWeeklyNote() {
         firstThought: (arc.data?.day1_first_thought as string) ?? null,
         conceptLabel,
         episodesAfter: Number(sRow?.episodes_after ?? 0),
-        highRiskAfter: Number(sRow?.high_risk_after ?? 0),
-        firstTryPct: Math.round(Number(sRow?.first_try_rate_after ?? 0) * 100),
         streakDays: Number(streak.data ?? 0),
       };
     },
   });
 
-  if (!data || (!data.firstThought && data.episodesAfter === 0)) return null;
+  if (!data) return null;
 
   const firstName = data.fullName.split(" ")[0] || "Your child";
-  const interestEmoji = data.topInterest ? (EMOJI[data.topInterest] ?? "✨") : "✨";
-  const interestLabel = data.topInterest ?? "their interests";
+  const interest = data.topInterest ? (INTEREST_LABEL[data.topInterest] ?? data.topInterest) : null;
 
   return (
     <div
       style={{
-        background: "linear-gradient(135deg, #F0F9FF 0%, #EFF6FF 100%)",
-        border: "1px solid #BFDBFE",
+        background: "linear-gradient(135deg, #FFF7ED 0%, #FEF3C7 100%)",
+        border: "1px solid #FDE68A",
         borderRadius: 16,
         padding: 20,
-        marginTop: 16,
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <Mail className="h-4 w-4" style={{ color: "#1D4ED8" }} />
-          <p style={{ fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.06em", color: "#1E3A8A", margin: 0 }}>
-            What your parent sees this week
+          <Heart className="h-4 w-4" style={{ color: "#B45309" }} />
+          <p style={{ fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "#92400E", margin: 0 }}>
+            A note for {firstName}'s family
           </p>
         </div>
-        <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, fontWeight: 700, color: "#1D4ED8", background: "#DBEAFE", padding: "3px 8px", borderRadius: 999 }}>
-          <Sparkles className="h-3 w-3" /> Preview
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, fontWeight: 700, color: "#B45309", background: "#FEF3C7", padding: "3px 8px", borderRadius: 999 }}>
+          <Sparkles className="h-3 w-3" /> This week
         </span>
       </div>
 
-      <div style={{ background: "white", borderRadius: 12, padding: 16, border: "1px solid #DBEAFE" }}>
-        <p style={{ fontSize: 13, fontWeight: 700, color: "#1C1917", margin: "0 0 8px" }}>
-          Hello! Here's how {firstName} learned this week.
+      <div style={{ background: "white", borderRadius: 12, padding: 18, border: "1px solid #FDE68A" }}>
+        <p style={{ fontSize: 14, fontWeight: 600, color: "#1C1917", margin: "0 0 10px", lineHeight: 1.5 }}>
+          Dear Parent,
         </p>
-        <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 6, fontSize: 13, color: "#44403C", lineHeight: 1.55 }}>
-          {data.firstThought && data.conceptLabel && (
-            <li>
-              • {firstName} started <strong>{data.conceptLabel}</strong> by wondering:{" "}
-              <em>"{data.firstThought}"</em>
-            </li>
+        <p style={{ fontSize: 13.5, color: "#44403C", lineHeight: 1.7, margin: "0 0 10px" }}>
+          We wanted to share a small moment from {firstName}'s week of learning.
+        </p>
+
+        <p style={{ fontSize: 13.5, color: "#44403C", lineHeight: 1.7, margin: "0 0 10px" }}>
+          {data.firstThought && data.conceptLabel ? (
+            <>
+              While exploring <strong>{data.conceptLabel}</strong>, {firstName} paused to wonder,{" "}
+              <em>"{data.firstThought}"</em> — exactly the kind of curiosity that turns into deep understanding.
+            </>
+          ) : (
+            <>{firstName} brought a quiet curiosity into class this week, asking thoughtful questions along the way.</>
           )}
-          {data.topInterest && (
-            <li>
-              • Learning is being connected to <strong>{interestEmoji} {interestLabel}</strong> — what {firstName} naturally cares about.
-            </li>
-          )}
-          <li>
-            • {data.episodesAfter > 0 ? `Finished ${data.episodesAfter} learning ${data.episodesAfter === 1 ? "episode" : "episodes"}` : "Just getting started"}
-            {data.firstTryPct > 0 ? ` · ${data.firstTryPct}% answered right on the first try` : ""}.
-          </li>
-          {data.streakDays >= 2 && (
-            <li>
-              • On a <strong>{data.streakDays}-day streak</strong> — showing up regularly.
-            </li>
-          )}
-          {data.highRiskAfter > 0 && (
-            <li>
-              • {data.highRiskAfter} concept{data.highRiskAfter > 1 ? "s" : ""} we'll revisit next week so it stays in long-term memory.
-            </li>
-          )}
-        </ul>
-        <p style={{ marginTop: 10, fontSize: 11, color: "#78716C", fontStyle: "italic" }}>
-          Auto-generated · sent to your parent every Sunday.
+        </p>
+
+        {interest && (
+          <p style={{ fontSize: 13.5, color: "#44403C", lineHeight: 1.7, margin: "0 0 10px" }}>
+            We're gently weaving lessons into things {firstName} naturally enjoys — like <strong>{interest}</strong> — so learning feels close to life, not separate from it.
+          </p>
+        )}
+
+        {data.streakDays >= 2 ? (
+          <p style={{ fontSize: 13.5, color: "#44403C", lineHeight: 1.7, margin: "0 0 10px" }}>
+            {firstName} showed up to learn on <strong>{data.streakDays} different days</strong> this week. Consistency like this is something to be proud of.
+          </p>
+        ) : data.episodesAfter > 0 ? (
+          <p style={{ fontSize: 13.5, color: "#44403C", lineHeight: 1.7, margin: "0 0 10px" }}>
+            {firstName} took meaningful steps forward this week — every effort counts, and we noticed.
+          </p>
+        ) : null}
+
+        <p style={{ fontSize: 13.5, color: "#44403C", lineHeight: 1.7, margin: "0 0 14px" }}>
+          You don't need to do anything with this note. We just wanted you to know — your child is learning, and we're cheering them on.
+        </p>
+
+        <p style={{ fontSize: 13.5, fontWeight: 600, color: "#1C1917", margin: 0 }}>
+          With warmth,<br />
+          <span style={{ color: "#92400E" }}>{firstName}'s learning team</span>
+        </p>
+
+        <p style={{ marginTop: 14, paddingTop: 12, borderTop: "1px dashed #FDE68A", fontSize: 11, color: "#A8A29E", fontStyle: "italic" }}>
+          A short note, sent quietly each Sunday. No scores, no rankings — just a glimpse of the week.
         </p>
       </div>
     </div>
