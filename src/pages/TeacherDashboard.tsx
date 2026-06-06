@@ -184,7 +184,11 @@ const TeacherDashboard = () => {
             </div>
           </Card>
 
+          {/* Depth Progression — per-student per-episode adaptive track */}
+          <ClassDepthProgression className={selectedClass} />
+
           {/* Today's Classes */}
+
           <Card className="p-5 sm:p-6">
             <div className="flex items-center gap-2 mb-4">
               <Calendar className="h-5 w-5 text-primary" aria-hidden="true" />
