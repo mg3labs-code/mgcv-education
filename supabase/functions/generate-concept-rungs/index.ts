@@ -81,13 +81,13 @@ Deno.serve(async (req) => {
       .eq("concept_key", conceptKey)
       .maybeSingle();
 
-    // Only serve from cache if it was produced with the current 7-layer prompt
-    // (source === "ai-generated-7layer"). Older rows are regenerated on demand.
+    // Only serve from cache if it was produced with the current quality prompt.
+    // Older rows are regenerated on demand.
     if (
       existing &&
       existing.rung_1 &&
       (existing.rung_1 as { prompt?: string }).prompt &&
-      existing.source === "ai-generated-7layer"
+      existing.source === RUNG_SOURCE
     ) {
       return new Response(
         JSON.stringify({
@@ -103,7 +103,7 @@ Deno.serve(async (req) => {
 Concept key: ${conceptKey}
 Region flavor (only for rungs 1-2, optional): ${region ?? "none"}
 
-Produce the 5-rung ladder for this concept.`;
+Produce the 5-step interaction set for this concept.`;
 
     const aiResp = await callLovableAI({
       model: "google/gemini-2.5-flash",
@@ -116,7 +116,7 @@ Produce the 5-rung ladder for this concept.`;
           type: "function",
           function: {
             name: "emit_rungs",
-            description: "Return the 5-rung Confidence Ladder.",
+            description: "Return the 5-step 7-layer interaction set.",
             parameters: {
               type: "object",
               properties: {
@@ -170,13 +170,13 @@ Produce the 5-rung ladder for this concept.`;
           rung_3: r3,
           rung_4: r4,
           rung_5: r5,
-          source: "ai-generated-7layer",
+          source: RUNG_SOURCE,
         },
         { onConflict: "chapter_id,episode_id,concept_key" },
       );
 
     return new Response(
-      JSON.stringify({ rungs: parsed.rungs, source: "ai-generated-7layer", cached: false }),
+      JSON.stringify({ rungs: parsed.rungs, source: RUNG_SOURCE, cached: false }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (err) {
