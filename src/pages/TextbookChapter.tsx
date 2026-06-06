@@ -178,7 +178,7 @@ const TextbookChapter = () => {
                           variant="outline"
                           size="sm"
                           className="justify-center"
-                          onClick={() => navigate(`/student/textbook/${chapterId}/${episode.id}?mode=full`)}
+                          onClick={() => navigate(ROUTES.textbook.episodeWithMode(chapterId!, episode.id, "full"))}
                         >
                           Full practice
                         </Button>
