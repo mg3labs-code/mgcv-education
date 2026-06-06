@@ -15,9 +15,18 @@ const RUNGS: { id: RungId; label: string; day: DayNumber }[] = [
 ];
 
 const TRACK_META: Record<DepthTrack, { label: string; cls: string }> = {
-  foundation: { label: "Foundation", cls: "bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-500/30" },
-  core: { label: "Core", cls: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30" },
-  advanced: { label: "Advanced", cls: "bg-violet-500/15 text-violet-700 dark:text-violet-300 border-violet-500/30" },
+  foundation: {
+    label: "Foundation",
+    cls: "bg-sky-500 text-white border-sky-600 shadow-sm shadow-sky-500/30 dark:bg-sky-500/90",
+  },
+  core: {
+    label: "Core",
+    cls: "bg-emerald-500 text-white border-emerald-600 shadow-sm shadow-emerald-500/30 dark:bg-emerald-500/90",
+  },
+  advanced: {
+    label: "Advanced",
+    cls: "bg-violet-500 text-white border-violet-600 shadow-sm shadow-violet-500/30 dark:bg-violet-500/90",
+  },
 };
 
 interface Props {
@@ -129,7 +138,7 @@ const CuriosityLadder = ({ viewDay, dayProgress, doneDays, onJumpToDay, depthTra
                     initial={{ opacity: 0, y: -2 }}
                     animate={{ opacity: 1, y: 0 }}
                     className={[
-                      "mt-1 inline-flex items-center gap-1 px-2 py-[2px] rounded-full text-[10px] font-bold uppercase tracking-wide border",
+                      "mt-1.5 inline-flex items-center gap-1 px-2.5 py-[3px] rounded-full text-[10px] font-bold uppercase tracking-[0.06em] border whitespace-nowrap leading-none",
                       track.cls,
                     ].join(" ")}
                   >

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import ThinkingNetwork from "@/components/ThinkingNetwork";
+import ClassDepthProgression from "@/components/teacher/ClassDepthProgression";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
@@ -183,7 +184,11 @@ const TeacherDashboard = () => {
             </div>
           </Card>
 
+          {/* Depth Progression — per-student per-episode adaptive track */}
+          <ClassDepthProgression className={selectedClass} />
+
           {/* Today's Classes */}
+
           <Card className="p-5 sm:p-6">
             <div className="flex items-center gap-2 mb-4">
               <Calendar className="h-5 w-5 text-primary" aria-hidden="true" />
