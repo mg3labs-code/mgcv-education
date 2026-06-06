@@ -1,8 +1,10 @@
-import { Check } from "lucide-react";
-import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import { Check, Sparkles } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import type { DayNumber } from "@/lib/childFriendlyLabels";
 
 export type RungId = 1 | 2 | 3 | 4 | 5;
+export type DepthTrack = "foundation" | "core" | "advanced";
 
 const RUNGS: { id: RungId; label: string; day: DayNumber }[] = [
   { id: 1, label: "Connect", day: 1 },
@@ -12,23 +14,21 @@ const RUNGS: { id: RungId; label: string; day: DayNumber }[] = [
   { id: 5, label: "Think Deeper", day: 3 },
 ];
 
+const TRACK_META: Record<DepthTrack, { label: string; cls: string }> = {
+  foundation: { label: "Foundation", cls: "bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-500/30" },
+  core: { label: "Core", cls: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30" },
+  advanced: { label: "Advanced", cls: "bg-violet-500/15 text-violet-700 dark:text-violet-300 border-violet-500/30" },
+};
+
 interface Props {
-  /** Current day the student is viewing (1-3). */
   viewDay: DayNumber;
-  /** 0-1 progress through the current day. */
   dayProgress: number;
-  /** Completion flags per day. */
   doneDays: { 1: boolean; 2: boolean; 3: boolean };
-  /** Jump to a different day when a rung is tapped. */
   onJumpToDay?: (day: DayNumber) => void;
+  /** Optional adaptive depth track for the current rung. */
+  depthTrack?: DepthTrack;
 }
 
-/**
- * Resolve the active rung from viewDay + dayProgress.
- * Day 1 → rungs 1,2 (split at 0.5)
- * Day 2 → rungs 3,4 (split at 0.5)
- * Day 3 → rung 5
- */
 export function resolveActiveRung(viewDay: DayNumber, dayProgress: number): RungId {
   const p = Math.max(0, Math.min(1, dayProgress));
   if (viewDay === 1) return p < 0.5 ? 1 : 2;
@@ -38,21 +38,30 @@ export function resolveActiveRung(viewDay: DayNumber, dayProgress: number): Rung
 
 /**
  * CuriosityLadder — the visible spine of the episode.
- * Shows 5 rungs of thinking depth (Connect → Explain → Trap → Apply → Think Deeper)
- * instead of a calendar. Day labels become a quiet sub-line.
+ * 5 rungs of thinking depth, with an optional depth-track badge on the active rung,
+ * and a brief sparkle celebration when the rung changes.
  */
-const CuriosityLadder = ({ viewDay, dayProgress, doneDays, onJumpToDay }: Props) => {
+const CuriosityLadder = ({ viewDay, dayProgress, doneDays, onJumpToDay, depthTrack = "core" }: Props) => {
   const active = resolveActiveRung(viewDay, dayProgress);
+  const [celebrate, setCelebrate] = useState<RungId | null>(null);
+
+  // Trigger a 1.5s sparkle when the active rung changes.
+  useEffect(() => {
+    setCelebrate(active);
+    const t = setTimeout(() => setCelebrate(null), 1500);
+    return () => clearTimeout(t);
+  }, [active]);
 
   const isRungDone = (r: RungId) => {
     if (r === 1 || r === 2) return doneDays[1];
     if (r === 3 || r === 4) return doneDays[2];
-    return doneDays[5 as never] ?? doneDays[3];
+    return doneDays[3];
   };
+
+  const track = TRACK_META[depthTrack];
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-3 pb-4">
-      {/* Rail */}
       <div className="relative">
         {/* base line */}
         <div className="absolute left-5 right-5 top-5 h-[2px] bg-border" aria-hidden />
@@ -72,25 +81,40 @@ const CuriosityLadder = ({ viewDay, dayProgress, doneDays, onJumpToDay }: Props)
             const upcoming = r.id > active;
             return (
               <li key={r.id} className="flex flex-col items-center">
-                <button
-                  type="button"
-                  onClick={() => onJumpToDay?.(r.day)}
-                  aria-current={isActive ? "step" : undefined}
-                  aria-label={`Rung ${r.id} · ${r.label} (Day ${r.day})`}
-                  className={[
-                    "relative z-10 h-10 w-10 rounded-full flex items-center justify-center font-bold text-sm transition-all",
-                    "border-2",
-                    isActive
-                      ? "bg-foreground text-background border-foreground shadow-lg scale-110"
-                      : done
-                        ? "bg-emerald-500 text-white border-emerald-500"
-                        : upcoming
-                          ? "bg-background text-muted-foreground border-border"
-                          : "bg-background text-foreground border-foreground/40",
-                  ].join(" ")}
-                >
-                  {done ? <Check className="h-4 w-4" /> : r.id}
-                </button>
+                <div className="relative">
+                  {/* celebration ring on active rung change */}
+                  <AnimatePresence>
+                    {isActive && celebrate === r.id && (
+                      <motion.span
+                        key="ring"
+                        initial={{ scale: 0.6, opacity: 0.9 }}
+                        animate={{ scale: 1.9, opacity: 0 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 1.1, ease: "easeOut" }}
+                        className="absolute inset-0 -m-1 rounded-full border-2 border-emerald-400/70 pointer-events-none"
+                        aria-hidden
+                      />
+                    )}
+                  </AnimatePresence>
+                  <button
+                    type="button"
+                    onClick={() => onJumpToDay?.(r.day)}
+                    aria-current={isActive ? "step" : undefined}
+                    aria-label={`Rung ${r.id} · ${r.label} (Day ${r.day})`}
+                    className={[
+                      "relative z-10 h-10 w-10 rounded-full flex items-center justify-center font-bold text-sm transition-all border-2",
+                      isActive
+                        ? "bg-foreground text-background border-foreground shadow-lg scale-110"
+                        : done
+                          ? "bg-emerald-500 text-white border-emerald-500"
+                          : upcoming
+                            ? "bg-background text-muted-foreground border-border"
+                            : "bg-background text-foreground border-foreground/40",
+                    ].join(" ")}
+                  >
+                    {done ? <Check className="h-4 w-4" /> : r.id}
+                  </button>
+                </div>
                 <span
                   className={[
                     "mt-2 text-[11px] sm:text-xs font-semibold text-center leading-tight",
@@ -99,6 +123,20 @@ const CuriosityLadder = ({ viewDay, dayProgress, doneDays, onJumpToDay }: Props)
                 >
                   {r.label}
                 </span>
+                {/* Depth track badge only under the active rung */}
+                {isActive && (
+                  <motion.span
+                    initial={{ opacity: 0, y: -2 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={[
+                      "mt-1 inline-flex items-center gap-1 px-2 py-[2px] rounded-full text-[10px] font-bold uppercase tracking-wide border",
+                      track.cls,
+                    ].join(" ")}
+                  >
+                    <Sparkles className="h-2.5 w-2.5" />
+                    {track.label}
+                  </motion.span>
+                )}
               </li>
             );
           })}

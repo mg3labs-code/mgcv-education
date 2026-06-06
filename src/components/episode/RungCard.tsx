@@ -8,9 +8,9 @@ import type { Signal } from "@/hooks/useRungPacing";
 type VibeResponse = "easy" | "right" | "hard";
 
 const vibeCopy: Record<VibeResponse, { prefix: string; cta: string }> = {
-  easy: { prefix: "😌 You found the last one smooth — try this stretch.", cta: "Try the stretch" },
-  right: { prefix: "🙂 Good pace. Same idea, one step forward.", cta: "Take the next step" },
-  hard: { prefix: "😣 No rush. Let's make the same idea feel safer.", cta: "Try a softer one" },
+  easy: { prefix: "😌 That one felt easy — let's stretch a bit further.", cta: "Try the stretch" },
+  right: { prefix: "🙂 Nice rhythm. Same idea, one step deeper.", cta: "Take the next step" },
+  hard: { prefix: "🤝 Totally fair — let's come at it from a friendlier angle.", cta: "Try a softer one" },
 };
 
 interface Props {
@@ -73,7 +73,7 @@ const RungCard = ({ rung, eyebrow, onSubmit, onContinue, continueLabel = "Contin
         // For choice questions: let them try again, only reveal on second wrong or correct.
         if (wrongAttempts === 0) {
           setPicked(null);
-          setNudge("Not that one. Pick once more — now you know what to watch for.");
+          setNudge("Close — you're on the right trail. Give it one more look.");
           return;
         }
       }
@@ -81,7 +81,7 @@ const RungCard = ({ rung, eyebrow, onSubmit, onContinue, continueLabel = "Contin
       // open/short text: no objective correct/wrong, treat as "engaged" if reasonable length
       correct = text.trim().split(/\s+/).filter(Boolean).length >= 3;
       if (!correct) {
-        setNudge("Add a few more words — even a simple guess is enough.");
+        setNudge("A few more words is all we need — your first guess is perfect.");
         return;
       }
     }
@@ -148,7 +148,7 @@ const RungCard = ({ rung, eyebrow, onSubmit, onContinue, continueLabel = "Contin
       {!revealed && (
         <div className="mt-5 flex flex-col items-end gap-2">
           <p className="min-h-5 text-right text-xs text-muted-foreground">
-            {nudge ?? (!canSubmit ? (isChoice ? "Pick one option first." : "Type your thought first.") : "")}
+            {nudge ?? (!canSubmit ? (isChoice ? "Pick the one that feels closest." : "Even a half-thought is enough to start.") : "")}
           </p>
           <Button onClick={handleSubmit} disabled={!canSubmit} size="lg" className="rounded-full">
             Check my answer <ArrowRight className="ml-1 h-4 w-4" />
@@ -160,7 +160,7 @@ const RungCard = ({ rung, eyebrow, onSubmit, onContinue, continueLabel = "Contin
         <div className="mt-5 rounded-2xl border border-primary/20 bg-primary/5 p-4 text-sm sm:text-base leading-relaxed text-foreground/90">
           <div className="mb-1.5 flex items-center gap-2 text-primary font-semibold">
             {wasCorrect ? <CheckCircle2 className="h-4 w-4" /> : <RotateCcw className="h-4 w-4" />}
-            {wasCorrect ? "Nice." : "Worth a closer look."}
+            {wasCorrect ? "Yes — exactly that." : "Good attempt — here's the angle we wanted you to see."}
           </div>
           {rung.reveal}
         </div>
