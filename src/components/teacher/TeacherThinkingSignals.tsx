@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
+import { DEMO_SIGNALS } from "./demoData";
 
 interface Props {
   className: string;
