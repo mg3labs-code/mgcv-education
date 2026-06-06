@@ -213,10 +213,6 @@ const TeacherMisconceptionMap = ({ className }: Props) => {
 
       {isLoading ? (
         <div className="text-xs text-muted-foreground">Loading…</div>
-      ) : top.length === 0 ? (
-        <div className="text-xs text-muted-foreground py-6 text-center">
-          No misconception patterns matching these filters.
-        </div>
       ) : (
         <>
           {/* Top struggle chart */}
@@ -256,7 +252,7 @@ const TeacherMisconceptionMap = ({ className }: Props) => {
           </div>
 
           <ul className="space-y-2">
-            {top.map((g) => {
+            {displayTop.map((g: any) => {
               const h = heatColor(g.stuckRate);
               return (
                 <li
