@@ -33,6 +33,7 @@ const TRACK_COLORS: Record<Row["depth_track"], { bg: string; text: string; ring:
  */
 const ClassDepthProgression = ({ className }: Props) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const { data, isLoading } = useQuery({
     queryKey: ["class-depth-progression", user?.id, className],
