@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { DetailSkeleton } from "@/components/PageSkeleton";
 import { getPilotContent } from "@/data/dayPilotContent";
+import { ROUTES } from "@/lib/routes";
 
 const typeIcons: Record<string, string> = {
   Concept: "💡",
@@ -37,7 +38,7 @@ const TextbookChapter = () => {
       <PageLayout role="student">
         <div className="text-center py-20">
           <p className="text-muted-foreground">Chapter not found.</p>
-          <Button variant="outline" className="mt-4" onClick={() => navigate("/student/textbook")}>
+          <Button variant="outline" className="mt-4" onClick={() => navigate(ROUTES.textbook.root)}>
             Back to Textbook
           </Button>
         </div>
@@ -46,8 +47,8 @@ const TextbookChapter = () => {
   }
 
   const breadcrumbs = [
-    { label: "Dashboard", href: "/student" },
-    { label: "Textbook", href: "/student/textbook" },
+    { label: "Dashboard", href: ROUTES.student.root },
+    { label: "Textbook", href: ROUTES.textbook.root },
     { label: chapter.title },
   ];
 
@@ -94,7 +95,7 @@ const TextbookChapter = () => {
             </div>
             <Button
               size="sm"
-              onClick={() => navigate(`/student/textbook/${chapterId}/${chProg.resumeEpisodeSlug}`)}
+              onClick={() => navigate(ROUTES.textbook.episode(chapterId!, chProg.resumeEpisodeSlug))}
             >
               Resume
             </Button>
@@ -129,7 +130,7 @@ const TextbookChapter = () => {
                   </div>
                   <button
                     type="button"
-                    onClick={() => navigate(`/student/textbook/${chapterId}/${episode.id}`)}
+                    onClick={() => navigate(ROUTES.textbook.episode(chapterId!, episode.id))}
                     className="flex-1 min-w-0 text-left"
                   >
                     <div className="flex items-center gap-2 flex-wrap">
@@ -168,7 +169,7 @@ const TextbookChapter = () => {
                           variant="secondary"
                           size="sm"
                           className="gap-1 justify-center"
-                          onClick={() => navigate(`/student/textbook/${chapterId}/${episode.id}?mode=pilot2`)}
+                          onClick={() => navigate(ROUTES.textbook.episodeWithMode(chapterId!, episode.id, "pilot2"))}
                         >
                           <Layers className="h-3.5 w-3.5" /> 7-layer lesson
                         </Button>
@@ -177,7 +178,7 @@ const TextbookChapter = () => {
                           variant="outline"
                           size="sm"
                           className="justify-center"
-                          onClick={() => navigate(`/student/textbook/${chapterId}/${episode.id}?mode=full`)}
+                          onClick={() => navigate(ROUTES.textbook.episodeWithMode(chapterId!, episode.id, "full"))}
                         >
                           Full practice
                         </Button>
@@ -185,7 +186,7 @@ const TextbookChapter = () => {
                     )}
                     <button
                       type="button"
-                      onClick={() => navigate(`/student/textbook/${chapterId}/${episode.id}`)}
+                      onClick={() => navigate(ROUTES.textbook.episode(chapterId!, episode.id))}
                       className={`h-10 w-full rounded-lg sm:h-9 sm:w-9 sm:rounded-full flex items-center justify-center transition-colors ${
                         isDone ? "bg-success/10 text-success" : "bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white"
                       }`}

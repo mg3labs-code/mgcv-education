@@ -16,6 +16,7 @@ import ExamAlertBanner from "@/components/student/ExamAlertBanner";
 import { useDiscoveryToasts } from "@/hooks/useDiscoveryToasts";
 import DashboardGreeting from "@/components/DashboardGreeting";
 import TodayThoughtCard from "@/components/student/TodayThoughtCard";
+import { ROUTES } from "@/lib/routes";
 
 interface ScheduleItem {
   type: string;
@@ -608,8 +609,8 @@ const StudentDashboard = () => {
                       items={todayScheduleItems}
                       onOpenTopic={(topic) => {
                         const match = findTextbookMatch(topic);
-                        if (match?.episodeId) navigate(`/student/textbook/${match.chapterId}/${match.episodeId}`);
-                        else navigate("/student/textbook");
+                        if (match?.episodeId) navigate(ROUTES.textbook.episode(match.chapterId, match.episodeId));
+                        else navigate(ROUTES.textbook.root);
                       }}
                     />
                   )}
@@ -619,7 +620,7 @@ const StudentDashboard = () => {
               {/* ALWAYS: Continue Learning */}
               <div style={{ marginTop: 16 }}>
                 <FadeSlide delay={100}>
-                  <ContinueLearning onContinue={() => navigate("/student/textbook/ch1")} />
+                  <ContinueLearning onContinue={() => navigate(ROUTES.textbook.chapter("ch1"))} />
                 </FadeSlide>
               </div>
 

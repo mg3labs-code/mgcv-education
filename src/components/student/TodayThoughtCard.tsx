@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { LAYERS, rungToLayer, type Layer } from "@/lib/sevenLayers";
+import { ROUTES } from "@/lib/routes";
 
 /**
  * TodayThoughtCard
@@ -89,7 +90,7 @@ export default function TodayThoughtCard({ firstName }: { firstName: string }) {
   // Empty / first-time state
   if (!data) {
     return (
-      <FirstTimeCard firstName={firstName} onBegin={() => navigate("/student/textbook")} />
+      <FirstTimeCard firstName={firstName} onBegin={() => navigate(ROUTES.textbook.root)} />
     );
   }
 
@@ -98,9 +99,9 @@ export default function TodayThoughtCard({ firstName }: { firstName: string }) {
 
   const handleBegin = () => {
     if (data.chapterId && data.episodeId) {
-      navigate(`/student/textbook/${data.chapterId}/${data.episodeId}`);
+      navigate(ROUTES.textbook.episode(data.chapterId, data.episodeId));
     } else {
-      navigate("/student/textbook");
+      navigate(ROUTES.textbook.root);
     }
   };
 
@@ -190,9 +191,9 @@ export default function TodayThoughtCard({ firstName }: { firstName: string }) {
           current={nextLayer}
           onPick={(layer) => {
             if (data.chapterId && data.episodeId) {
-              navigate(`/student/textbook/${data.chapterId}/${data.episodeId}?layer=${layer.key}`);
+              navigate(ROUTES.textbook.episodeWithLayer(data.chapterId, data.episodeId, layer.key));
             } else {
-              navigate("/student/textbook");
+              navigate(ROUTES.textbook.root);
             }
           }}
         />

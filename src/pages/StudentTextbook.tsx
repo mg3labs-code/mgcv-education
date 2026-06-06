@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { ListSkeleton } from "@/components/PageSkeleton";
 import EmptyState from "@/components/EmptyState";
 import { useState } from "react";
+import { ROUTES } from "@/lib/routes";
 
 const JOURNEY_STEPS = [
   { label: "Dashboard", emoji: "🧠", desc: "See your Inner OS" },
@@ -109,9 +110,9 @@ const StudentTextbook = () => {
               const handleClick = () => {
                 if (!hasEpisodes) return;
                 if (showResume && chProg.resumeEpisodeSlug) {
-                  navigate(`/student/textbook/${chapter.id}/${chProg.resumeEpisodeSlug}`);
+                  navigate(ROUTES.textbook.episode(chapter.id, chProg.resumeEpisodeSlug));
                 } else {
-                  navigate(`/student/textbook/${chapter.id}`);
+                  navigate(ROUTES.textbook.chapter(chapter.id));
                 }
               };
 

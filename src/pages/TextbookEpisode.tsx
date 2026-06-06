@@ -52,6 +52,7 @@ import PreEpisodeCuriosityPrompt from "@/components/curiosity/PreEpisodeCuriosit
 import InterestArcLive from "@/components/curiosity/InterestArcLive";
 import { getArcLens } from "@/data/interestArcLenses";
 import { blockToLayer } from "@/lib/sevenLayers";
+import { ROUTES } from "@/lib/routes";
 
 const LANGUAGE_SUBJECTS = new Set(["Telugu", "Hindi"]);
 
@@ -683,7 +684,7 @@ const TextbookEpisode = () => {
       <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "#F9FAFB" }}>
         <div className="text-center">
           <p className="text-muted-foreground mb-4">Episode not found.</p>
-          <Button variant="outline" onClick={() => navigate("/student/textbook")}>Back to Textbook</Button>
+          <Button variant="outline" onClick={() => navigate(ROUTES.textbook.root)}>Back to Textbook</Button>
         </div>
       </div>
     );
@@ -703,7 +704,7 @@ const TextbookEpisode = () => {
             subject={chapter?.title ?? null}
             chapterSlug={chapterId ?? null}
             nextEpisodeTitle={nextEpisode?.title}
-            onNextEpisode={() => nextEpisode && navigate(`/student/textbook/${chapterId}/${nextEpisode.id}`)}
+            onNextEpisode={() => nextEpisode && navigate(ROUTES.textbook.episode(chapterId!, nextEpisode.id))}
           />
         </EpisodeDayProvider>
       </DifficultyProvider>
@@ -722,7 +723,7 @@ const TextbookEpisode = () => {
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
               This page is protected from showing the wrong subject. Open Episode 1 for Mathematics, Physics, Chemistry, or Biology.
             </p>
-            <Button className="mt-5" onClick={() => navigate(`/student/textbook/${chapterId}`)}>
+            <Button className="mt-5" onClick={() => navigate(ROUTES.textbook.chapter(chapterId!))}>
               Back to chapter
             </Button>
           </div>
@@ -807,7 +808,7 @@ const TextbookEpisode = () => {
   const defaultMeta = { border: "border-l-primary", bg: "", dotColor: "bg-primary", badge: undefined, badgeColor: undefined } as const;
 
   const handleExit = () => {
-    navigate(`/student/textbook/${chapterId}`);
+    navigate(ROUTES.textbook.chapter(chapterId!));
   };
 
   const handleFinish = () => {
@@ -928,7 +929,7 @@ const TextbookEpisode = () => {
             </>
           )}
           {nextEpisode ? (
-            <button onClick={() => navigate(`/student/textbook/${chapterId}/${nextEpisode.id}`)} style={{
+            <button onClick={() => navigate(ROUTES.textbook.episode(chapterId!, nextEpisode.id))} style={{
               width: "100%", padding: "14px 32px", borderRadius: 14, border: "none",
               background: "linear-gradient(135deg, #0D9488, #14B8A6)", color: "white", fontSize: 15, fontWeight: 700,
               cursor: "pointer", boxShadow: "0 4px 14px rgba(13,148,136,0.4)",
@@ -1779,8 +1780,8 @@ const DayGatedEpisode = ({
     <div className="min-h-screen bg-background">
       <StageTopbar
         episodeTitle={episodeTitle}
-        pilotPractice2To={chapterId && episodeId ? `/student/textbook/${chapterId}/${episodeId}?mode=pilot2` : undefined}
-        fullReaderTo={chapterId && episodeId ? `/student/textbook/${chapterId}/${episodeId}?mode=full` : undefined}
+        pilotPractice2To={chapterId && episodeId ? ROUTES.textbook.episodeWithMode(chapterId, episodeId, "pilot2") : undefined}
+        fullReaderTo={chapterId && episodeId ? ROUTES.textbook.episodeWithMode(chapterId, episodeId, "full") : undefined}
         dayProgress={dayProgress}
         viewDay={viewDay}
         onChangeDay={(d) => setViewDay(d)}
