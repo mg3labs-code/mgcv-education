@@ -17,5 +17,7 @@ export const ROUTES = {
       `/student/textbook/${chapterId}/${episodeId}?layer=${layer}`,
     episodeWithMode: (chapterId: string, episodeId: string, mode: string) =>
       `/student/textbook/${chapterId}/${episodeId}?mode=${mode}`,
+    sevenLayer: (chapterId: string, episodeId: string, layer?: string) =>
+      `/student/textbook/${chapterId}/${episodeId}?mode=seven-layer${layer ? `&layer=${layer}` : ""}`,
   },
 } as const;

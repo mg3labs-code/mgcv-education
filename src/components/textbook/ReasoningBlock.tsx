@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef } from "react";
 import { ReasoningContent } from "@/data/textbookData";
-import { Lightbulb, ChevronUp, Send } from "lucide-react";
+import { AlertCircle, CheckCircle2, Lightbulb, ChevronUp, Send, Loader2, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { motion, AnimatePresence } from "framer-motion";
@@ -8,16 +8,39 @@ import { STEP_META } from "./reasoning/stepConfig";
 import ThinkFirstGate from "./reasoning/ThinkFirstGate";
 import Step1ThinkBox from "./reasoning/Step1ThinkBox";
 import CompanionVoiceInput from "@/components/student/CompanionVoiceInput";
+import { supabase } from "@/integrations/supabase/client";
 
-const ReasoningBlock = ({ content }: { content: ReasoningContent }) => {
+const ReasoningBlock = ({
+  content,
+  topic,
+  onComplete,
+  onDebugEvent,
+}: {
+  content: ReasoningContent;
+  topic?: string;
+  onComplete?: () => void;
+  onDebugEvent?: (event: string, details?: Record<string, unknown>) => void;
+}) => {
   const [activeStep, setActiveStep] = useState(0);
   const [revealedInsights, setRevealedInsights] = useState<Record<number, boolean>>({});
+  const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
   const direction = useRef(1);
 
   const goToStep = useCallback((next: number) => {
     direction.current = next > activeStep ? 1 : -1;
     setActiveStep(next);
-  }, [activeStep]);
+    onDebugEvent?.("reasoning_step_change", { from: activeStep + 1, to: next + 1 });
+  }, [activeStep, onDebugEvent]);
+
+  const markStepComplete = useCallback((step: number) => {
+    setCompletedSteps((prev) => {
+      const next = new Set(prev);
+      next.add(step);
+      if (next.size >= 4) onComplete?.();
+      return next;
+    });
+    onDebugEvent?.("reasoning_step_complete", { step });
+  }, [onComplete, onDebugEvent]);
 
   const questions = content.whyQuestions || [];
 
@@ -82,13 +105,21 @@ const ReasoningBlock = ({ content }: { content: ReasoningContent }) => {
                 {/* Step content */}
                 <div className="p-4">
                   {activeStep === 0 ? (
-                    <Step1ThinkBox centralQuestion={content.centralQuestion} />
+                    <Step1ThinkBox
+                      centralQuestion={content.centralQuestion}
+                      topic={topic}
+                      onComplete={() => markStepComplete(1)}
+                      onDebugEvent={onDebugEvent}
+                    />
                   ) : (
                     <StepContent
                       question={questions[activeStep - 1]}
                       stepIdx={activeStep}
+                      topic={topic}
                       revealed={!!revealedInsights[activeStep - 1]}
                       onToggleInsight={() => toggleInsight(activeStep - 1)}
+                      onComplete={() => markStepComplete(activeStep + 1)}
+                      onDebugEvent={onDebugEvent}
                     />
                   )}
                 </div>
@@ -119,16 +150,49 @@ const ReasoningBlock = ({ content }: { content: ReasoningContent }) => {
 const StepContent = ({
   question,
   stepIdx,
+  topic,
   revealed,
   onToggleInsight,
+  onComplete,
+  onDebugEvent,
 }: {
   question?: { question: string; hint?: string; deeperInsight?: string };
   stepIdx: number;
+  topic?: string;
   revealed: boolean;
   onToggleInsight: () => void;
+  onComplete?: () => void;
+  onDebugEvent?: (event: string, details?: Record<string, unknown>) => void;
 }) => {
   const [answer, setAnswer] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [feedback, setFeedback] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async () => {
+    if (answer.trim().length < 5 || loading || !question) return;
+    setLoading(true);
+    setError(null);
+    onDebugEvent?.("reasoning_submit_start", { step: stepIdx + 1, prompt: question.question, answerLength: answer.trim().length });
+    try {
+      const { data, error: evalError } = await supabase.functions.invoke("inline-evaluate", {
+        body: { topic: topic || "Reasoning", prompt: question.question, answer },
+      });
+      if (evalError) throw evalError;
+      const nextFeedback = data?.feedback || "Good effort. Add one example or cause-and-effect link to make it stronger.";
+      setFeedback(nextFeedback);
+      setSubmitted(true);
+      onComplete?.();
+      onDebugEvent?.("reasoning_submit_success", { step: stepIdx + 1, feedbackLength: nextFeedback.length });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Evaluation failed";
+      setError(message);
+      onDebugEvent?.("reasoning_submit_error", { step: stepIdx + 1, message });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (!question) {
     return (
@@ -173,14 +237,35 @@ const StepContent = ({
               />
             </div>
           </div>
-          <Button size="sm" onClick={() => setSubmitted(true)} disabled={answer.trim().length < 5} className="w-full">
-            <Send className="h-3.5 w-3.5 mr-2" /> Submit my thinking
+          {error && (
+            <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+              <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+              <span>Evaluation did not run: {error}</span>
+            </div>
+          )}
+          <Button size="sm" onClick={handleSubmit} disabled={answer.trim().length < 5 || loading} className="w-full">
+            {loading ? <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" /> : <Send className="h-3.5 w-3.5 mr-2" />}
+            {loading ? "Evaluating..." : "Submit and evaluate"}
           </Button>
         </div>
       ) : (
-        <div className="rounded-lg bg-blue-50/60 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-700 p-3">
-          <p className="text-xs font-bold text-blue-700 dark:text-blue-400 mb-0.5">✅ Your thinking:</p>
-          <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap">{answer}</p>
+        <div className="rounded-lg bg-card border border-primary/30 p-3 space-y-3">
+          <div>
+            <p className="text-xs font-bold text-primary mb-0.5">Your thinking:</p>
+            <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap">{answer}</p>
+          </div>
+          {feedback && (
+            <div className="rounded-lg bg-primary/10 border border-primary/20 p-3">
+              <div className="flex items-center gap-2 text-primary mb-1">
+                <CheckCircle2 className="h-4 w-4" />
+                <p className="text-xs font-bold">AI feedback</p>
+              </div>
+              <p className="text-sm text-foreground leading-relaxed whitespace-pre-line">{feedback}</p>
+            </div>
+          )}
+          <Button variant="ghost" size="sm" onClick={() => { setSubmitted(false); setFeedback(null); }}>
+            <RotateCcw className="h-3 w-3 mr-1" /> Improve answer
+          </Button>
         </div>
       )}
 

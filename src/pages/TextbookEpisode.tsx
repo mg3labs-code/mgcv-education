@@ -56,6 +56,73 @@ import { ROUTES } from "@/lib/routes";
 
 const LANGUAGE_SUBJECTS = new Set(["Telugu", "Hindi"]);
 
+type SevenLayerDebugEvent = {
+  time: string;
+  event: string;
+  details?: Record<string, unknown>;
+};
+
+const formatDebugValue = (value: unknown) => {
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  if (value == null) return "—";
+  try { return JSON.stringify(value); } catch { return String(value); }
+};
+
+const SevenLayerDebugPanel = ({
+  rows,
+  events = [],
+  onClear,
+}: {
+  rows: Array<[string, unknown]>;
+  events?: SevenLayerDebugEvent[];
+  onClear?: () => void;
+}) => {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="fixed left-3 bottom-20 z-[130] w-[min(420px,calc(100vw-24px))] rounded-xl border border-border bg-card/95 shadow-2xl backdrop-blur">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-xs font-bold text-foreground"
+      >
+        <span>🧪 7-layer debug</span>
+        <span className="text-muted-foreground">{open ? "hide" : "show"}</span>
+      </button>
+      {open && (
+        <div className="max-h-[48vh] overflow-auto border-t border-border px-3 py-2 text-[11px]">
+          <div className="grid grid-cols-[120px_1fr] gap-x-2 gap-y-1">
+            {rows.map(([label, value]) => (
+              <React.Fragment key={label}>
+                <span className="font-semibold text-muted-foreground">{label}</span>
+                <span className="break-all font-mono text-foreground">{formatDebugValue(value)}</span>
+              </React.Fragment>
+            ))}
+          </div>
+          <div className="mt-3 flex items-center justify-between">
+            <p className="font-bold text-foreground">Events</p>
+            {onClear && <button type="button" onClick={onClear} className="text-primary underline">clear</button>}
+          </div>
+          <div className="mt-1 space-y-1">
+            {events.length === 0 ? (
+              <p className="text-muted-foreground">No events yet.</p>
+            ) : events.map((entry, index) => (
+              <div key={`${entry.time}-${index}`} className="rounded-lg bg-muted/50 p-2">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-bold text-foreground">{entry.event}</span>
+                  <span className="font-mono text-muted-foreground">{entry.time}</span>
+                </div>
+                {entry.details && <pre className="mt-1 whitespace-pre-wrap break-words font-mono text-muted-foreground">{formatDebugValue(entry.details)}</pre>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const getSubjectFromSlug = (slug?: string): string | null => {
   if (!slug) return null;
   if (slug.startsWith("tel-")) return "Telugu";
@@ -124,9 +191,11 @@ const TextbookEpisode = () => {
   const [searchParams] = useSearchParams();
   const layerParam = searchParams.get("layer");
   const modeParam = searchParams.get("mode");
-  const forceFullReader = modeParam === "pilot2" || modeParam === "seven-layer" || modeParam === "lesson" || modeParam === "content" || modeParam === "full" || modeParam === "practice" || modeParam === "legacy";
+  const isSevenLayerMode = modeParam === "seven-layer";
+  const forceFullReader = modeParam === "pilot2" || isSevenLayerMode || modeParam === "lesson" || modeParam === "content" || modeParam === "full" || modeParam === "practice" || modeParam === "legacy";
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [debugEvents, setDebugEvents] = useState<SevenLayerDebugEvent[]>([]);
   const [showDefense, setShowDefense] = useState(false);
   const [showFirstPrinciples, setShowFirstPrinciples] = useState(false);
   const [activeBlock, setActiveBlock] = useState(0);
@@ -153,6 +222,20 @@ const TextbookEpisode = () => {
   const contentRef = useRef<HTMLDivElement>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const totalBlocksRef = useRef(0);
+
+  const debugLog = useCallback((event: string, details: Record<string, unknown> = {}) => {
+    const entry: SevenLayerDebugEvent = {
+      time: new Date().toLocaleTimeString(),
+      event,
+      details: { modeParam, layerParam, chapterId, episodeId, ...details },
+    };
+    console.info("[7-layer debug]", entry.event, entry.details);
+    setDebugEvents((prev) => {
+      const next = [...prev, entry].slice(-30);
+      try { localStorage.setItem("mgcv:seven-layer-debug:last", JSON.stringify(next)); } catch { /* ignore */ }
+      return next;
+    });
+  }, [chapterId, episodeId, layerParam, modeParam]);
 
   // Reset all state when episode changes
   useEffect(() => {
@@ -199,7 +282,8 @@ const TextbookEpisode = () => {
       next.add(index);
       return next;
     });
-  }, []);
+    debugLog("block_interacted", { index });
+  }, [debugLog]);
 
   const { data: chapter, isLoading: chapterLoading } = useChapterEpisodes(chapterId);
   const { data: dbBlocks, isLoading: blocksLoading } = useEpisodeBlocks(chapterId, episodeId, jeeMode ? "all" : "board");
@@ -209,6 +293,10 @@ const TextbookEpisode = () => {
 
   // Filter out visual_aid blocks from navigation
   const navBlocks = useMemo(() => allBlocks.filter(b => b.type !== "visual_aid"), [allBlocks]);
+
+  useEffect(() => {
+    debugLog("route_open", { forceFullReader, isSevenLayerMode, dbBlocks: dbBlocks?.length ?? 0, navBlocks: navBlocks.length });
+  }, [debugLog, forceFullReader, isSevenLayerMode, dbBlocks?.length, navBlocks.length]);
 
   const INTERACTIVE_TYPES = useMemo(() => new Set(["activity", "recall", "explain", "assessment", "exercise"]), []);
 
@@ -279,6 +367,7 @@ const TextbookEpisode = () => {
   const isBlockLocked = useCallback((index: number) => {
     const block = navBlocks[index];
     if (!block) return false;
+    if (isSevenLayerMode) return false;
     const type = block.type;
 
     // Understand phase is always unlocked
@@ -315,7 +404,7 @@ const TextbookEpisode = () => {
     }
 
     return false;
-  }, [navBlocks, understoodBlocks, phaseIndices, isLanguage]);
+  }, [navBlocks, understoodBlocks, phaseIndices, isLanguage, isSevenLayerMode]);
 
   // Phase unlock toasts — fire once per episode when a phase transitions from locked to available
   const prevUnlockRef = useRef<{ prove: boolean; master: boolean }>({ prove: false, master: false });
@@ -349,7 +438,8 @@ const TextbookEpisode = () => {
         }
         if (data?.completed_at) {
           setAlreadyCompleted(true);
-          setShowCompletion(true);
+          setShowCompletion(!isSevenLayerMode);
+          debugLog("progress_completed_found", { reopenedSevenLayer: isSevenLayerMode, completedAt: data.completed_at });
         }
         // Restore last active block from localStorage
         const lastBlockKey = `last_block_${chapterId}_${episodeId}`;
@@ -359,7 +449,7 @@ const TextbookEpisode = () => {
           if (!isNaN(idx) && idx >= 0) setActiveBlock(idx);
         }
       });
-  }, [user, chapterId, episodeId]);
+  }, [user, chapterId, episodeId, isSevenLayerMode, debugLog]);
 
   // Persist last active block to localStorage
   useEffect(() => {
@@ -372,6 +462,7 @@ const TextbookEpisode = () => {
     if (isBlockLocked(index)) {
       const block = navBlocks[index];
       const blockType = block?.type || "";
+      debugLog("jump_blocked", { targetIndex: index, blockType, understood: Array.from(understoodBlocks), completed: Array.from(blockCompleted) });
       if (PROVE_BLOCKS.has(blockType)) {
         const remaining = (phaseIndices[0]?.indices ?? []).filter(i => !understoodBlocks.has(i)).length;
         toast.error(`Complete ${remaining} more Understand section${remaining > 1 ? "s" : ""} to unlock 🔒`);
@@ -393,8 +484,9 @@ const TextbookEpisode = () => {
     setVisitedBlocks(prev => { const n = new Set(prev); n.add(blockKey); return n; });
     
     setActiveBlock(index);
+    debugLog("jump_success", { from: activeBlock, to: index, blockType: navBlocks[index]?.type });
     contentRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-  }, [isBlockLocked, sectionStartTime, activeBlock, chapterId, episodeId]);
+  }, [isBlockLocked, sectionStartTime, activeBlock, chapterId, episodeId, navBlocks, understoodBlocks, blockCompleted, debugLog]);
 
   const scrollToActivity = useCallback(() => {
     const actIdx = navBlocks.findIndex(b => b.type === "activity");
@@ -415,6 +507,7 @@ const TextbookEpisode = () => {
         idx = navBlocks.findIndex(b => blockToLayer(b.type).key === layerParam);
       }
       if (idx >= 0) goToBlock(idx);
+      debugLog("layer_param_resolved", { layerParam, targetIndex: idx, targetType: idx >= 0 ? navBlocks[idx]?.type : null });
     }, 500);
     return () => clearTimeout(timer);
   }, [layerParam, navBlocks, goToBlock]);
@@ -438,6 +531,7 @@ const TextbookEpisode = () => {
     const comp = comprehensionResults[blockIndex];
     const wrong = wrongAttempts[blockIndex] || 0;
     try {
+      debugLog("persist_interaction_start", { blockIndex, blockType: block.type, timeSpent, wrong });
       await supabase.from("episode_interactions" as any).upsert({
         user_id: user.id,
         chapter_id: chapterId,
@@ -483,10 +577,12 @@ const TextbookEpisode = () => {
           },
         }, { onConflict: "user_id,chapter_id,episode_id,concept_key" });
       }
+      debugLog("persist_interaction_success", { blockIndex, layer: blockToLayer(block.type).key });
     } catch (e) {
       console.error("Failed to persist interaction:", e);
+      debugLog("persist_interaction_error", { blockIndex, message: e instanceof Error ? e.message : String(e) });
     }
-  }, [user, chapterId, episodeId, navBlocks, sectionTimings, comprehensionResults, wrongAttempts, answerChanges]);
+  }, [user, chapterId, episodeId, navBlocks, sectionTimings, comprehensionResults, wrongAttempts, answerChanges, debugLog]);
 
   // Persist time on unmount for the current active block
   useEffect(() => {
@@ -528,6 +624,7 @@ const TextbookEpisode = () => {
 
   // Helper: advance with celebration
   const advanceWithCelebration = useCallback((nextIndex: number) => {
+    debugLog("continue_clicked", { activeBlock, blockType: navBlocks[activeBlock]?.type, nextIndex, isLast: activeBlock === navBlocks.length - 1 });
     // Record final time for current section
     const timeSpent = Math.round((Date.now() - sectionStartTime) / 1000);
     setSectionTimings(prev => ({ ...prev, [activeBlock]: (prev[activeBlock] || 0) + timeSpent }));
@@ -561,7 +658,7 @@ const TextbookEpisode = () => {
 
     // Show celebration then move
     setShowCelebration(true);
-  }, [activeBlock, persistUnderstood, markBlockInteracted, persistInteraction, sectionStartTime, navBlocks, SKILL_TOASTS, checkReasoningGate]);
+  }, [activeBlock, persistUnderstood, markBlockInteracted, persistInteraction, sectionStartTime, navBlocks, SKILL_TOASTS, checkReasoningGate, debugLog]);
 
   const handleCelebrationDone = useCallback(() => {
     setShowCelebration(false);
@@ -739,10 +836,13 @@ const TextbookEpisode = () => {
               blockId={(block as any).id}
               content={block.content as ReasoningContent}
               cachedSimplified={(block.content as any)?.simplified}
+              topic={episode.title}
+              onComplete={onBlockComplete}
+              onDebugEvent={debugLog}
             />
           );
         }
-        return <ReasoningBlock content={block.content as ReasoningContent} />;
+        return <ReasoningBlock content={block.content as ReasoningContent} topic={episode.title} onComplete={onBlockComplete} onDebugEvent={debugLog} />;
       case "assumptions": return <AssumptionsBlock content={block.content as AssumptionsContent} onStartDefense={() => setShowDefense(true)} />;
       case "connections": return <ConnectionsBlock content={block.content as ConnectionsContent} />;
       case "application": return <ApplicationBlock content={block.content as ApplicationContent} />;
@@ -902,9 +1002,29 @@ const TextbookEpisode = () => {
   const isUnderstood = understoodBlocks.has(activeBlock);
   const isLastBlock = activeBlock === navBlocks.length - 1;
   const currentPhase = block ? getPhaseForBlock(block.type) : phases[0];
+  const debugRows: Array<[string, unknown]> = [
+    ["route", `${chapterId}/${episodeId}`],
+    ["mode", modeParam || "default"],
+    ["layer", layerParam || "none"],
+    ["reader", forceFullReader ? "full/seven-layer" : "day-gated"],
+    ["active", `${activeBlock + 1}/${navBlocks.length}`],
+    ["block", block ? `${block.type} · ${block.title}` : "none"],
+    ["locked", block ? isBlockLocked(activeBlock) : false],
+    ["continue gated", isContinueGated],
+    ["gate reason", continueHint || "none"],
+    ["completed", Array.from(blockCompleted)],
+    ["understood", Array.from(understoodBlocks)],
+  ];
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col" style={{ background: "#F9FAFB", fontFamily: "'DM Sans', sans-serif" }}>
+      {isSevenLayerMode && (
+        <SevenLayerDebugPanel
+          rows={debugRows}
+          events={debugEvents}
+          onClear={() => setDebugEvents([])}
+        />
+      )}
 
       {/* ═══ TOP BAR ═══ */}
       <div style={{
