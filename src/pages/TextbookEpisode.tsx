@@ -191,9 +191,11 @@ const TextbookEpisode = () => {
   const [searchParams] = useSearchParams();
   const layerParam = searchParams.get("layer");
   const modeParam = searchParams.get("mode");
-  const forceFullReader = modeParam === "pilot2" || modeParam === "seven-layer" || modeParam === "lesson" || modeParam === "content" || modeParam === "full" || modeParam === "practice" || modeParam === "legacy";
+  const isSevenLayerMode = modeParam === "seven-layer";
+  const forceFullReader = modeParam === "pilot2" || isSevenLayerMode || modeParam === "lesson" || modeParam === "content" || modeParam === "full" || modeParam === "practice" || modeParam === "legacy";
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [debugEvents, setDebugEvents] = useState<SevenLayerDebugEvent[]>([]);
   const [showDefense, setShowDefense] = useState(false);
   const [showFirstPrinciples, setShowFirstPrinciples] = useState(false);
   const [activeBlock, setActiveBlock] = useState(0);
@@ -220,6 +222,20 @@ const TextbookEpisode = () => {
   const contentRef = useRef<HTMLDivElement>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const totalBlocksRef = useRef(0);
+
+  const debugLog = useCallback((event: string, details: Record<string, unknown> = {}) => {
+    const entry: SevenLayerDebugEvent = {
+      time: new Date().toLocaleTimeString(),
+      event,
+      details: { modeParam, layerParam, chapterId, episodeId, ...details },
+    };
+    console.info("[7-layer debug]", entry.event, entry.details);
+    setDebugEvents((prev) => {
+      const next = [...prev, entry].slice(-30);
+      try { localStorage.setItem("mgcv:seven-layer-debug:last", JSON.stringify(next)); } catch { /* ignore */ }
+      return next;
+    });
+  }, [chapterId, episodeId, layerParam, modeParam]);
 
   // Reset all state when episode changes
   useEffect(() => {
