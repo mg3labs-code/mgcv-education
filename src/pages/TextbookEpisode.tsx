@@ -292,7 +292,36 @@ const TextbookEpisode = () => {
   const allBlocks = dbBlocks && dbBlocks.length > 0 ? dbBlocks : (episode?.blocks || []);
 
   // Filter out visual_aid blocks from navigation
-  const navBlocks = useMemo(() => allBlocks.filter(b => b.type !== "visual_aid"), [allBlocks]);
+  const navBlocks = useMemo(() => {
+    const base = allBlocks.filter(b => b.type !== "visual_aid");
+    if (!isSevenLayerMode) return base;
+    // 7-layer reader: one canonical block per layer, in layer order.
+    // Pick the first block whose blockToLayer mapping matches each layer key.
+    // If a layer has no native match, synthesize a lightweight placeholder so
+    // the 7-layer spine is always exactly 7 stops — never a fallback into the
+    // full practice list.
+    const picked: ContentBlock[] = [];
+    const usedIds = new Set<string>();
+    for (const layer of LAYERS) {
+      const match = base.find(b => !usedIds.has(b.id) && blockToLayer(b.type).key === layer.key);
+      if (match) {
+        usedIds.add(match.id);
+        picked.push(match);
+      } else {
+        picked.push({
+          id: `seven-layer-${layer.key}`,
+          type: "concept",
+          title: `${layer.index}. ${layer.name}`,
+          content: {
+            heading: `${layer.name}`,
+            body: layer.caption,
+            keyPoints: [layer.caption],
+          } as unknown as ConceptContent,
+        } as ContentBlock);
+      }
+    }
+    return picked;
+  }, [allBlocks, isSevenLayerMode]);
 
   useEffect(() => {
     debugLog("route_open", { forceFullReader, isSevenLayerMode, dbBlocks: dbBlocks?.length ?? 0, navBlocks: navBlocks.length });
