@@ -1002,9 +1002,29 @@ const TextbookEpisode = () => {
   const isUnderstood = understoodBlocks.has(activeBlock);
   const isLastBlock = activeBlock === navBlocks.length - 1;
   const currentPhase = block ? getPhaseForBlock(block.type) : phases[0];
+  const debugRows: Array<[string, unknown]> = [
+    ["route", `${chapterId}/${episodeId}`],
+    ["mode", modeParam || "default"],
+    ["layer", layerParam || "none"],
+    ["reader", forceFullReader ? "full/seven-layer" : "day-gated"],
+    ["active", `${activeBlock + 1}/${navBlocks.length}`],
+    ["block", block ? `${block.type} · ${block.title}` : "none"],
+    ["locked", block ? isBlockLocked(activeBlock) : false],
+    ["continue gated", isContinueGated],
+    ["gate reason", continueHint || "none"],
+    ["completed", Array.from(blockCompleted)],
+    ["understood", Array.from(understoodBlocks)],
+  ];
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col" style={{ background: "#F9FAFB", fontFamily: "'DM Sans', sans-serif" }}>
+      {isSevenLayerMode && (
+        <SevenLayerDebugPanel
+          rows={debugRows}
+          events={debugEvents}
+          onClear={() => setDebugEvents([])}
+        />
+      )}
 
       {/* ═══ TOP BAR ═══ */}
       <div style={{
