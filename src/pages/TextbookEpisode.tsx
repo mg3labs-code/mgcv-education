@@ -836,10 +836,13 @@ const TextbookEpisode = () => {
               blockId={(block as any).id}
               content={block.content as ReasoningContent}
               cachedSimplified={(block.content as any)?.simplified}
+              topic={episode.title}
+              onComplete={onBlockComplete}
+              onDebugEvent={debugLog}
             />
           );
         }
-        return <ReasoningBlock content={block.content as ReasoningContent} />;
+        return <ReasoningBlock content={block.content as ReasoningContent} topic={episode.title} onComplete={onBlockComplete} onDebugEvent={debugLog} />;
       case "assumptions": return <AssumptionsBlock content={block.content as AssumptionsContent} onStartDefense={() => setShowDefense(true)} />;
       case "connections": return <ConnectionsBlock content={block.content as ConnectionsContent} />;
       case "application": return <ApplicationBlock content={block.content as ApplicationContent} />;
