@@ -282,8 +282,8 @@ const TextbookEpisode = () => {
       next.add(index);
       return next;
     });
-    debugLog("block_interacted", { index, blockType: navBlocks[index]?.type });
-  }, []);
+    debugLog("block_interacted", { index });
+  }, [debugLog]);
 
   const { data: chapter, isLoading: chapterLoading } = useChapterEpisodes(chapterId);
   const { data: dbBlocks, isLoading: blocksLoading } = useEpisodeBlocks(chapterId, episodeId, jeeMode ? "all" : "board");
