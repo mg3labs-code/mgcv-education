@@ -367,6 +367,7 @@ const TextbookEpisode = () => {
   const isBlockLocked = useCallback((index: number) => {
     const block = navBlocks[index];
     if (!block) return false;
+    if (isSevenLayerMode) return false;
     const type = block.type;
 
     // Understand phase is always unlocked
@@ -403,7 +404,7 @@ const TextbookEpisode = () => {
     }
 
     return false;
-  }, [navBlocks, understoodBlocks, phaseIndices, isLanguage]);
+  }, [navBlocks, understoodBlocks, phaseIndices, isLanguage, isSevenLayerMode]);
 
   // Phase unlock toasts — fire once per episode when a phase transitions from locked to available
   const prevUnlockRef = useRef<{ prove: boolean; master: boolean }>({ prove: false, master: false });
