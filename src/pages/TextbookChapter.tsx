@@ -162,27 +162,25 @@ const TextbookChapter = () => {
                     )}
                   </button>
                   <div className="grid w-full grid-cols-1 gap-2 sm:w-auto sm:flex sm:shrink-0 sm:items-center">
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      className="gap-1 justify-center"
+                      onClick={() => navigate(ROUTES.textbook.episodeWithMode(chapterId!, episode.id, "seven-layer"))}
+                    >
+                      <Layers className="h-3.5 w-3.5" /> 7-layer lesson
+                    </Button>
                     {hasPilot && (
-                      <>
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          size="sm"
-                          className="gap-1 justify-center"
-                          onClick={() => navigate(ROUTES.textbook.episodeWithMode(chapterId!, episode.id, "seven-layer"))}
-                        >
-                          <Layers className="h-3.5 w-3.5" /> 7-layer lesson
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="justify-center"
-                          onClick={() => navigate(ROUTES.textbook.episodeWithMode(chapterId!, episode.id, "full"))}
-                        >
-                          Full practice
-                        </Button>
-                      </>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="justify-center"
+                        onClick={() => navigate(ROUTES.textbook.episodeWithMode(chapterId!, episode.id, "full"))}
+                      >
+                        Full practice
+                      </Button>
                     )}
                     <button
                       type="button"
