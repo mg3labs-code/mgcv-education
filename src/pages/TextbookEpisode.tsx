@@ -460,6 +460,7 @@ const TextbookEpisode = () => {
     if (isBlockLocked(index)) {
       const block = navBlocks[index];
       const blockType = block?.type || "";
+      debugLog("jump_blocked", { targetIndex: index, blockType, understood: Array.from(understoodBlocks), completed: Array.from(blockCompleted) });
       if (PROVE_BLOCKS.has(blockType)) {
         const remaining = (phaseIndices[0]?.indices ?? []).filter(i => !understoodBlocks.has(i)).length;
         toast.error(`Complete ${remaining} more Understand section${remaining > 1 ? "s" : ""} to unlock 🔒`);
@@ -481,8 +482,9 @@ const TextbookEpisode = () => {
     setVisitedBlocks(prev => { const n = new Set(prev); n.add(blockKey); return n; });
     
     setActiveBlock(index);
+    debugLog("jump_success", { from: activeBlock, to: index, blockType: navBlocks[index]?.type });
     contentRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-  }, [isBlockLocked, sectionStartTime, activeBlock, chapterId, episodeId]);
+  }, [isBlockLocked, sectionStartTime, activeBlock, chapterId, episodeId, navBlocks, understoodBlocks, blockCompleted, debugLog]);
 
   const scrollToActivity = useCallback(() => {
     const actIdx = navBlocks.findIndex(b => b.type === "activity");
@@ -503,6 +505,7 @@ const TextbookEpisode = () => {
         idx = navBlocks.findIndex(b => blockToLayer(b.type).key === layerParam);
       }
       if (idx >= 0) goToBlock(idx);
+      debugLog("layer_param_resolved", { layerParam, targetIndex: idx, targetType: idx >= 0 ? navBlocks[idx]?.type : null });
     }, 500);
     return () => clearTimeout(timer);
   }, [layerParam, navBlocks, goToBlock]);
