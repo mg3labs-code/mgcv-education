@@ -12,6 +12,9 @@ interface Props {
   blockId?: string;
   content: ReasoningContent;
   cachedSimplified?: ReasoningSimplifiedPayload;
+  topic?: string;
+  onComplete?: () => void;
+  onDebugEvent?: (event: string, details?: Record<string, unknown>) => void;
 }
 
 const sourceLabel: Record<string, string> = {
@@ -28,7 +31,7 @@ const sourceColor: Record<string, string> = {
     "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border-emerald-200",
 };
 
-export default function AdaptiveReasoningBlock({ blockId, content, cachedSimplified }: Props) {
+export default function AdaptiveReasoningBlock({ blockId, content, cachedSimplified, topic, onComplete, onDebugEvent }: Props) {
   const { mode } = useDifficulty();
   const { content: adapted, source, emoji, isLoading } = useAdaptiveReasoning(
     blockId,
@@ -60,7 +63,7 @@ export default function AdaptiveReasoningBlock({ blockId, content, cachedSimplif
         </Badge>
       </div>
 
-      <ReasoningBlock content={adapted} />
+      <ReasoningBlock content={adapted} topic={topic} onComplete={onComplete} onDebugEvent={onDebugEvent} />
 
       {mode !== "master" && (
         <details className="mt-4 group">
@@ -69,7 +72,7 @@ export default function AdaptiveReasoningBlock({ blockId, content, cachedSimplif
             Show full reasoning version
           </summary>
           <div className="mt-3 pl-4 border-l-2 border-border">
-            <ReasoningBlock content={content} />
+            <ReasoningBlock content={content} topic={topic} onComplete={onComplete} onDebugEvent={onDebugEvent} />
           </div>
         </details>
       )}
