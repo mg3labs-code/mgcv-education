@@ -437,7 +437,8 @@ const TextbookEpisode = () => {
         }
         if (data?.completed_at) {
           setAlreadyCompleted(true);
-          setShowCompletion(true);
+          setShowCompletion(!isSevenLayerMode);
+          debugLog("progress_completed_found", { reopenedSevenLayer: isSevenLayerMode, completedAt: data.completed_at });
         }
         // Restore last active block from localStorage
         const lastBlockKey = `last_block_${chapterId}_${episodeId}`;
@@ -447,7 +448,7 @@ const TextbookEpisode = () => {
           if (!isNaN(idx) && idx >= 0) setActiveBlock(idx);
         }
       });
-  }, [user, chapterId, episodeId]);
+  }, [user, chapterId, episodeId, isSevenLayerMode, debugLog]);
 
   // Persist last active block to localStorage
   useEffect(() => {
