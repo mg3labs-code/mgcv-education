@@ -529,6 +529,7 @@ const TextbookEpisode = () => {
     const comp = comprehensionResults[blockIndex];
     const wrong = wrongAttempts[blockIndex] || 0;
     try {
+      debugLog("persist_interaction_start", { blockIndex, blockType: block.type, timeSpent, wrong });
       await supabase.from("episode_interactions" as any).upsert({
         user_id: user.id,
         chapter_id: chapterId,
@@ -574,10 +575,12 @@ const TextbookEpisode = () => {
           },
         }, { onConflict: "user_id,chapter_id,episode_id,concept_key" });
       }
+      debugLog("persist_interaction_success", { blockIndex, layer: blockToLayer(block.type).key });
     } catch (e) {
       console.error("Failed to persist interaction:", e);
+      debugLog("persist_interaction_error", { blockIndex, message: e instanceof Error ? e.message : String(e) });
     }
-  }, [user, chapterId, episodeId, navBlocks, sectionTimings, comprehensionResults, wrongAttempts, answerChanges]);
+  }, [user, chapterId, episodeId, navBlocks, sectionTimings, comprehensionResults, wrongAttempts, answerChanges, debugLog]);
 
   // Persist time on unmount for the current active block
   useEffect(() => {
@@ -619,6 +622,7 @@ const TextbookEpisode = () => {
 
   // Helper: advance with celebration
   const advanceWithCelebration = useCallback((nextIndex: number) => {
+    debugLog("continue_clicked", { activeBlock, blockType: navBlocks[activeBlock]?.type, nextIndex, isLast: activeBlock === navBlocks.length - 1 });
     // Record final time for current section
     const timeSpent = Math.round((Date.now() - sectionStartTime) / 1000);
     setSectionTimings(prev => ({ ...prev, [activeBlock]: (prev[activeBlock] || 0) + timeSpent }));
@@ -652,7 +656,7 @@ const TextbookEpisode = () => {
 
     // Show celebration then move
     setShowCelebration(true);
-  }, [activeBlock, persistUnderstood, markBlockInteracted, persistInteraction, sectionStartTime, navBlocks, SKILL_TOASTS, checkReasoningGate]);
+  }, [activeBlock, persistUnderstood, markBlockInteracted, persistInteraction, sectionStartTime, navBlocks, SKILL_TOASTS, checkReasoningGate, debugLog]);
 
   const handleCelebrationDone = useCallback(() => {
     setShowCelebration(false);
