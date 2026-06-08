@@ -56,6 +56,73 @@ import { ROUTES } from "@/lib/routes";
 
 const LANGUAGE_SUBJECTS = new Set(["Telugu", "Hindi"]);
 
+type SevenLayerDebugEvent = {
+  time: string;
+  event: string;
+  details?: Record<string, unknown>;
+};
+
+const formatDebugValue = (value: unknown) => {
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  if (value == null) return "—";
+  try { return JSON.stringify(value); } catch { return String(value); }
+};
+
+const SevenLayerDebugPanel = ({
+  rows,
+  events = [],
+  onClear,
+}: {
+  rows: Array<[string, unknown]>;
+  events?: SevenLayerDebugEvent[];
+  onClear?: () => void;
+}) => {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="fixed left-3 bottom-20 z-[130] w-[min(420px,calc(100vw-24px))] rounded-xl border border-border bg-card/95 shadow-2xl backdrop-blur">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-xs font-bold text-foreground"
+      >
+        <span>🧪 7-layer debug</span>
+        <span className="text-muted-foreground">{open ? "hide" : "show"}</span>
+      </button>
+      {open && (
+        <div className="max-h-[48vh] overflow-auto border-t border-border px-3 py-2 text-[11px]">
+          <div className="grid grid-cols-[120px_1fr] gap-x-2 gap-y-1">
+            {rows.map(([label, value]) => (
+              <React.Fragment key={label}>
+                <span className="font-semibold text-muted-foreground">{label}</span>
+                <span className="break-all font-mono text-foreground">{formatDebugValue(value)}</span>
+              </React.Fragment>
+            ))}
+          </div>
+          <div className="mt-3 flex items-center justify-between">
+            <p className="font-bold text-foreground">Events</p>
+            {onClear && <button type="button" onClick={onClear} className="text-primary underline">clear</button>}
+          </div>
+          <div className="mt-1 space-y-1">
+            {events.length === 0 ? (
+              <p className="text-muted-foreground">No events yet.</p>
+            ) : events.map((entry, index) => (
+              <div key={`${entry.time}-${index}`} className="rounded-lg bg-muted/50 p-2">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-bold text-foreground">{entry.event}</span>
+                  <span className="font-mono text-muted-foreground">{entry.time}</span>
+                </div>
+                {entry.details && <pre className="mt-1 whitespace-pre-wrap break-words font-mono text-muted-foreground">{formatDebugValue(entry.details)}</pre>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const getSubjectFromSlug = (slug?: string): string | null => {
   if (!slug) return null;
   if (slug.startsWith("tel-")) return "Telugu";
