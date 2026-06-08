@@ -301,23 +301,21 @@ const TextbookEpisode = () => {
     // the 7-layer spine is always exactly 7 stops — never a fallback into the
     // full practice list.
     const picked: ContentBlock[] = [];
-    const usedIds = new Set<string>();
+    const usedIdx = new Set<number>();
     for (const layer of LAYERS) {
-      const match = base.find(b => !usedIds.has(b.id) && blockToLayer(b.type).key === layer.key);
-      if (match) {
-        usedIds.add(match.id);
-        picked.push(match);
+      const idx = base.findIndex((b, i) => !usedIdx.has(i) && blockToLayer(b.type).key === layer.key);
+      if (idx >= 0) {
+        usedIdx.add(idx);
+        picked.push(base[idx]);
       } else {
         picked.push({
-          id: `seven-layer-${layer.key}`,
           type: "concept",
           title: `${layer.index}. ${layer.name}`,
+          icon: "📘",
           content: {
-            heading: `${layer.name}`,
-            body: layer.caption,
-            keyPoints: [layer.caption],
-          } as unknown as ConceptContent,
-        } as ContentBlock);
+            sections: [{ heading: layer.name, body: layer.caption }],
+          } as ConceptContent,
+        });
       }
     }
     return picked;
