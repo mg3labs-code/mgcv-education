@@ -40,7 +40,7 @@ const ReasoningBlock = ({
       return next;
     });
     onDebugEvent?.("reasoning_step_complete", { step });
-  }, [activeStep]);
+  }, [onComplete, onDebugEvent]);
 
   const questions = content.whyQuestions || [];
 
@@ -150,8 +150,11 @@ const ReasoningBlock = ({
 const StepContent = ({
   question,
   stepIdx,
+  topic,
   revealed,
   onToggleInsight,
+  onComplete,
+  onDebugEvent,
 }: {
   question?: { question: string; hint?: string; deeperInsight?: string };
   stepIdx: number;
