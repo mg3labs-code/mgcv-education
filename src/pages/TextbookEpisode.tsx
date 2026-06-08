@@ -282,6 +282,7 @@ const TextbookEpisode = () => {
       next.add(index);
       return next;
     });
+    debugLog("block_interacted", { index, blockType: navBlocks[index]?.type });
   }, []);
 
   const { data: chapter, isLoading: chapterLoading } = useChapterEpisodes(chapterId);
@@ -292,6 +293,10 @@ const TextbookEpisode = () => {
 
   // Filter out visual_aid blocks from navigation
   const navBlocks = useMemo(() => allBlocks.filter(b => b.type !== "visual_aid"), [allBlocks]);
+
+  useEffect(() => {
+    debugLog("route_open", { forceFullReader, isSevenLayerMode, dbBlocks: dbBlocks?.length ?? 0, navBlocks: navBlocks.length });
+  }, [debugLog, forceFullReader, isSevenLayerMode, dbBlocks?.length, navBlocks.length]);
 
   const INTERACTIVE_TYPES = useMemo(() => new Set(["activity", "recall", "explain", "assessment", "exercise"]), []);
 
