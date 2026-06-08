@@ -99,7 +99,7 @@ export default function TodayThoughtCard({ firstName }: { firstName: string }) {
 
   const handleBegin = () => {
     if (data.chapterId && data.episodeId) {
-      navigate(ROUTES.textbook.episode(data.chapterId, data.episodeId));
+      navigate(ROUTES.textbook.sevenLayer(data.chapterId, data.episodeId, nextLayer.key));
     } else {
       navigate(ROUTES.textbook.root);
     }
@@ -191,7 +191,7 @@ export default function TodayThoughtCard({ firstName }: { firstName: string }) {
           current={nextLayer}
           onPick={(layer) => {
             if (data.chapterId && data.episodeId) {
-              navigate(ROUTES.textbook.episodeWithLayer(data.chapterId, data.episodeId, layer.key));
+              navigate(ROUTES.textbook.sevenLayer(data.chapterId, data.episodeId, layer.key));
             } else {
               navigate(ROUTES.textbook.root);
             }
