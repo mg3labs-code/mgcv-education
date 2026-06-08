@@ -1070,6 +1070,69 @@ const TextbookEpisode = () => {
         </div>
       </div>
 
+      {isSevenLayerMode && (
+        <div style={{
+          background: "linear-gradient(90deg, hsl(200 80% 97%), hsl(270 70% 97%))",
+          borderBottom: "1px solid #E7E5E4", padding: "10px 16px", flexShrink: 0,
+        }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, maxWidth: 1280, margin: "0 auto" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+              <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase" as const, color: "#6B7280" }}>
+                7-Layer Lesson
+              </span>
+              {block && (() => {
+                const cur = blockToLayer(block.type);
+                return (
+                  <span style={{
+                    display: "inline-flex", alignItems: "center", gap: 6, padding: "3px 10px",
+                    borderRadius: 999, background: `hsl(${cur.hue} 65% 45%)`, color: "white",
+                    fontSize: 12, fontWeight: 700,
+                  }}>
+                    {cur.index}. {cur.name}
+                    <span style={{ opacity: 0.85, fontWeight: 500 }}>· {cur.caption}</span>
+                  </span>
+                );
+              })()}
+            </div>
+            <div style={{ display: "flex", gap: 4, flexWrap: "wrap", justifyContent: "flex-end" }}>
+              {LAYERS.map((l) => {
+                const idx = navBlocks.findIndex(b => blockToLayer(b.type).key === l.key);
+                const isCurrent = block && blockToLayer(block.type).key === l.key;
+                const reachable = idx >= 0;
+                return (
+                  <button
+                    key={l.key}
+                    type="button"
+                    disabled={!reachable}
+                    onClick={() => {
+                      if (idx >= 0) {
+                        goToBlock(idx);
+                        navigate(ROUTES.textbook.sevenLayer(chapterId!, episodeId!, l.key), { replace: true });
+                      }
+                    }}
+                    title={`${l.name} — ${l.caption}`}
+                    style={{
+                      display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 10px",
+                      borderRadius: 999, border: isCurrent ? `2px solid hsl(${l.hue} 65% 45%)` : "1px solid #E5E7EB",
+                      background: isCurrent ? `hsl(${l.hue} 85% 95%)` : reachable ? "white" : "#F5F5F4",
+                      color: reachable ? "#1F2937" : "#9CA3AF",
+                      fontSize: 11, fontWeight: 600, cursor: reachable ? "pointer" : "not-allowed",
+                    }}
+                  >
+                    <span style={{
+                      width: 16, height: 16, borderRadius: 4, display: "inline-grid", placeItems: "center",
+                      background: reachable ? `hsl(${l.hue} 65% 45%)` : "#D1D5DB", color: "white",
+                      fontSize: 10, fontWeight: 800,
+                    }}>{l.index}</span>
+                    <span className="hidden sm:inline">{l.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
       <>
       {/* ═══ PHASE BADGE — hidden on small mobile, merged into top bar via color ═══ */}
       <div className="hidden sm:flex" style={{
