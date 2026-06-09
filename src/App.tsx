@@ -55,6 +55,7 @@ const PreviewBC = lazy(() => import("./pages/PreviewBC"));
 const CuriosityArc = lazy(() => import("./pages/CuriosityArc"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const PreviewMockups = lazy(() => import("./pages/PreviewMockups"));
+const Pitch = lazy(() => import("./pages/Pitch"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -106,6 +107,7 @@ const App = () => (
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 <Route path="/" element={<Index />} />
+                <Route path="/pitch" element={<Pitch />} />
                 <Route path="/install" element={<Install />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/attraction-demo" element={<AttractionDemo />} />
