@@ -110,7 +110,7 @@ function RetentionPanel() {
       ) : (
         <ul className="space-y-2">
           {top.map((p) => {
-            const risk = Math.round((p.risk_score ?? 0) * 100);
+            const risk = Math.round(p.risk_score ?? 0);
             const tone =
               risk >= 70
                 ? { bg: "bg-rose-500/10",   ring: "ring-rose-500/30",   txt: "text-rose-600 dark:text-rose-400",   label: "High" }
