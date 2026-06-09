@@ -6,7 +6,8 @@ import LiveIntelligenceHub from "@/components/teacher/LiveIntelligenceHub";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
-import { Eye, Brain, Target, Heart } from "lucide-react";
+import { Eye, Brain, Target, Heart, Globe2, ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const CLASS_OPTIONS = ["Class 10", "Class 9", "Class 8"];
 
@@ -112,6 +113,22 @@ const TeacherDashboard = () => {
             scores={classMetrics.map((d) => ({ label: d.label, score: d.score }))}
             studentCount={studentCount}
           />
+
+          {/* Know Your World teaser */}
+          <Link to="/teacher/know-your-world" className="block group">
+            <Card className="p-4 sm:p-5 flex items-center gap-4 bg-gradient-to-r from-teal-500/10 via-emerald-500/10 to-transparent border-teal-500/30 hover:border-teal-500/60 transition-colors">
+              <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center shrink-0">
+                <Globe2 className="h-6 w-6 text-white" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-sm sm:text-base font-bold text-foreground">Know Your World · weekly digest</div>
+                <p className="text-xs text-muted-foreground line-clamp-1">
+                  Real-world updates & classroom hooks for every subject you teach.
+                </p>
+              </div>
+              <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-foreground group-hover:translate-x-0.5 transition-all" />
+            </Card>
+          </Link>
 
           {/* Live Intelligence Hub — 3-tab command center */}
           <LiveIntelligenceHub className={selectedClass} />
