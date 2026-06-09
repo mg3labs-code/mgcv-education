@@ -1302,6 +1302,7 @@ function S13_Ask() {
 /* ================================================================== */
 const SLIDES = [
   { id: "01-cover",       label: "Cover" },
+  { id: "01b-two-tracks", label: "Two Tracks" },
   { id: "02-problem",     label: "Problem" },
   { id: "03-why-fails",   label: "Why edtech fails" },
   { id: "04-thesis",      label: "Our thesis" },
