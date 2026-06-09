@@ -450,7 +450,7 @@ const StudentOnboarding = () => {
 
               <div className="flex gap-2 pt-2">
                 <button
-                  onClick={() => setStep(1)}
+                  onClick={() => setStep(2)}
                   className="px-6 py-3 rounded-xl text-sm font-semibold text-white/50 bg-white/5 border border-white/10 hover:text-white/70 transition-all"
                 >
                   ← Back
@@ -472,6 +472,7 @@ const StudentOnboarding = () => {
             </div>
 
             <div className="flex justify-center gap-2 mt-6">
+              <div className="w-2 h-2 rounded-full bg-white/20" />
               <div className="w-2 h-2 rounded-full bg-white/20" />
               <div className="w-2 h-2 rounded-full bg-white/20" />
               <div className="w-8 h-2 rounded-full bg-teal-500" />
