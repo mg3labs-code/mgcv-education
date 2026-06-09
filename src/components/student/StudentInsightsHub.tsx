@@ -130,8 +130,8 @@ function RetentionPanel() {
                     {p.concept_label ?? p.concept_key}
                   </div>
                   <div className="text-[11px] text-muted-foreground">
-                    {p.next_review_date
-                      ? `Best reviewed by ${new Date(p.next_review_date).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}`
+                    {p.predicted_for_date
+                      ? `Best reviewed by ${new Date(p.predicted_for_date).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}`
                       : "Quick refresher recommended"}
                   </div>
                 </div>
