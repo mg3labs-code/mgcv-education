@@ -306,12 +306,96 @@ const StudentOnboarding = () => {
               <div className="w-2 h-2 rounded-full bg-white/20" />
               <div className="w-8 h-2 rounded-full bg-teal-500" />
               <div className="w-2 h-2 rounded-full bg-white/20" />
+              <div className="w-2 h-2 rounded-full bg-white/20" />
             </div>
           </div>
         )}
 
-        {/* Step 2: Ready to go! */}
+        {/* Step 2: Pick interest worlds (drives 3-Day Arc visuals) */}
         {step === 2 && (
+          <div className="animate-fade-in">
+            <div className="text-center mb-8">
+              <span className="text-5xl block mb-3">🌈</span>
+              <h1 className="text-2xl font-bold text-white">
+                What worlds do you live in?
+              </h1>
+              <p className="text-teal-400 text-sm mt-1">
+                Pick 1–3. Every lesson hook will use these.
+              </p>
+            </div>
+
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                {PILOT_INTEREST_OPTIONS.map(d => {
+                  const isSelected = selectedDomains.includes(d.tag);
+                  const atLimit = !isSelected && selectedDomains.length >= 3;
+                  return (
+                    <button
+                      key={d.tag}
+                      onClick={() => toggleDomain(d.tag)}
+                      disabled={atLimit}
+                      className={`relative py-4 px-3 rounded-xl text-left transition-all border ${
+                        isSelected
+                          ? 'border-teal-400 bg-teal-500/15 text-white shadow-lg shadow-teal-500/10'
+                          : atLimit
+                            ? 'border-white/5 bg-white/[0.02] text-white/25 cursor-not-allowed'
+                            : 'border-white/10 bg-white/5 text-white/60 hover:border-white/20'
+                      }`}
+                    >
+                      {isSelected && (
+                        <span className="absolute top-1.5 right-2 text-[10px] font-bold text-teal-300">
+                          {selectedDomains.indexOf(d.tag) + 1}
+                        </span>
+                      )}
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-2xl">{d.emoji}</span>
+                        <span className="text-sm font-semibold">{d.label}</span>
+                      </div>
+                      <span className="text-[11px] text-white/45 block leading-snug">
+                        {d.sub}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <p className="text-[11px] text-white/40 flex items-center gap-1.5">
+                <Heart className="h-3 w-3" />
+                {selectedDomains.length}/3 picked · first one becomes your default
+              </p>
+
+              <div className="flex gap-2 pt-2">
+                <button
+                  onClick={() => setStep(1)}
+                  className="px-6 py-3 rounded-xl text-sm font-semibold text-white/50 bg-white/5 border border-white/10 hover:text-white/70 transition-all"
+                >
+                  ← Back
+                </button>
+                <button
+                  onClick={() => setStep(3)}
+                  disabled={!canContinueStep2}
+                  className={`flex-1 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all ${
+                    canContinueStep2
+                      ? 'bg-teal-500 text-white hover:bg-teal-400 shadow-lg shadow-teal-500/20'
+                      : 'bg-white/5 text-white/20 cursor-not-allowed'
+                  }`}
+                >
+                  Continue <ArrowRight className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+
+            <div className="flex justify-center gap-2 mt-6">
+              <div className="w-2 h-2 rounded-full bg-white/20" />
+              <div className="w-2 h-2 rounded-full bg-white/20" />
+              <div className="w-8 h-2 rounded-full bg-teal-500" />
+              <div className="w-2 h-2 rounded-full bg-white/20" />
+            </div>
+          </div>
+        )}
+
+        {/* Step 3: Ready to go! */}
+        {step === 3 && (
           <div className="animate-fade-in">
             <div className="text-center mb-8">
               <span className="text-5xl block mb-3">🚀</span>
