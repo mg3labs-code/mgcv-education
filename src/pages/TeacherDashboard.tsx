@@ -85,35 +85,19 @@ const TeacherDashboard = () => {
             </div>
           </header>
 
-          {/* Class average metric strip */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            {classMetrics.map((m) => (
-              <Card key={m.label} className="p-4 flex items-center gap-3">
-                <div
-                  className="h-10 w-10 md:h-12 md:w-12 rounded-xl flex items-center justify-center shrink-0"
-                  style={{ background: `${m.color}15` }}
-                  aria-hidden="true"
-                >
-                  <m.Icon className="h-5 w-5 md:h-6 md:w-6" style={{ color: m.color }} />
-                </div>
-                <div className="min-w-0">
-                  <div className="text-xs font-medium text-muted-foreground truncate">
-                    Avg {m.label}
-                  </div>
-                  <div className="text-xl md:text-2xl font-bold text-foreground tabular-nums">
-                    {m.score}
-                    <span className="text-sm font-semibold text-muted-foreground ml-0.5">%</span>
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
+          {/* Polished insights hub: skills · retention · weekly summary */}
+          <TeacherInsightsHub
+            className={selectedClass}
+            studentCount={studentCount}
+            classMetrics={classMetrics}
+          />
 
-          {/* Class Cognitive Profile — radar */}
+          {/* Class Cognitive Profile — radar (deeper view) */}
           <ClassCognitiveProfile
             scores={classMetrics.map((d) => ({ label: d.label, score: d.score }))}
             studentCount={studentCount}
           />
+
 
           {/* Know Your World teaser */}
           <Link to="/teacher/know-your-world" className="block group">
