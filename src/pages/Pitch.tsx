@@ -196,6 +196,107 @@ function BrainMark() {
 }
 
 /* ================================================================== */
+/*  SLIDE 01B — TWO PARALLEL TRACKS (platform shape at a glance)       */
+/* ================================================================== */
+function S01B_TwoTracks() {
+  const t1 = [
+    { i: Lightbulb,     t: "interest-based hooks" },
+    { i: Zap,           t: "5-minute daily arc" },
+    { i: MessageSquare, t: "never-say-no feedback" },
+    { i: Compass,       t: "yesterday-you-thought memory" },
+    { i: Heart,         t: "voice or text expression" },
+  ];
+  const t2 = [
+    { i: Users,         t: "teacher productivity" },
+    { i: Eye,           t: "misconception visibility" },
+    { i: MessageSquare, t: "parent communication" },
+    { i: School,        t: "school branding" },
+    { i: LineChart,     t: "analytics dashboards" },
+  ];
+  return (
+    <Slide id="01b-two-tracks" kicker="Platform at a glance" bg={cream}
+           title="Student curiosity on the front end. School intelligence on the back end.">
+      <div className="grid lg:grid-cols-2 gap-6">
+        <div className="rounded-3xl p-7" style={{ background: `${teal}0E`, border: `1px solid ${teal}33` }}>
+          <span className="text-[10px] tracking-[0.2em] uppercase font-bold" style={{ color: tealDark }}>Track 1</span>
+          <h3 className="font-serif text-[26px] mb-5 mt-1">Student Curiosity Engine</h3>
+          <ul className="space-y-2.5">
+            {t1.map(({ i: Icon, t }) => (
+              <li key={t} className="flex items-center gap-3 p-2.5 rounded-xl" style={{ background: "white", border: `1px solid ${line}` }}>
+                <span className="w-8 h-8 rounded-full grid place-items-center" style={{ background: `${teal}1A` }}>
+                  <Icon className="w-4 h-4" style={{ color: tealDark }} />
+                </span>
+                <span className="text-[14px] font-medium">{t}</span>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-5 text-[12px] opacity-70">Makes students open, think, speak, and return.</div>
+        </div>
+        <div className="rounded-3xl p-7" style={{ background: `${indigo}0E`, border: `1px solid ${indigo}33` }}>
+          <span className="text-[10px] tracking-[0.2em] uppercase font-bold" style={{ color: indigo }}>Track 2</span>
+          <h3 className="font-serif text-[26px] mb-5 mt-1">School Intelligence Platform</h3>
+          <ul className="space-y-2.5">
+            {t2.map(({ i: Icon, t }) => (
+              <li key={t} className="flex items-center gap-3 p-2.5 rounded-xl" style={{ background: "white", border: `1px solid ${line}` }}>
+                <span className="w-8 h-8 rounded-full grid place-items-center" style={{ background: `${indigo}1A` }}>
+                  <Icon className="w-4 h-4" style={{ color: indigo }} />
+                </span>
+                <span className="text-[14px] font-medium">{t}</span>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-5 text-[12px] opacity-70">Helps schools, teachers, and parents see, decide, and act.</div>
+        </div>
+      </div>
+
+      <div className="mt-10 rounded-3xl p-7" style={{ background: "white", border: `1px solid ${line}` }}>
+        <div className="text-[11px] tracking-[0.22em] uppercase font-bold mb-4" style={{ color: tealDark }}>
+          Built in 3 product layers
+        </div>
+        <div className="grid md:grid-cols-3 gap-5">
+          {[
+            { c: teal,   n: "Layer 1", t: "Student Engagement Core", icon: Layers,
+              items: ["Day 1 Spark", "Day 2 Build", "Day 3 Master", "7 invisible layers", "silent adaptation"] },
+            { c: gold,   n: "Layer 2", t: "Teacher Intelligence", icon: Brain,
+              items: ["concept dashboard", "misconception detection", "lesson plans", "worksheets", "real-world examples"] },
+            { c: indigo, n: "Layer 3", t: "School Operating System", icon: School,
+              items: ["branded app", "management insights", "communication", "parent reporting", "enterprise customisation"] },
+          ].map(L => (
+            <div key={L.n} className="rounded-2xl p-5" style={{ background: `${L.c}08`, border: `1px solid ${L.c}33` }}>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="w-7 h-7 rounded-full grid place-items-center" style={{ background: L.c, color: "white" }}>
+                  <L.icon className="w-3.5 h-3.5" />
+                </span>
+                <div>
+                  <div className="text-[10px] tracking-[0.18em] uppercase font-bold" style={{ color: L.c }}>{L.n}</div>
+                  <div className="text-[14px] font-semibold">{L.t}</div>
+                </div>
+              </div>
+              <ul className="mt-3 grid gap-1.5">
+                {L.items.map(it => (
+                  <li key={it} className="flex items-center gap-2 text-[12px]">
+                    <CheckCircle2 className="w-3 h-3" style={{ color: L.c }} />
+                    {it}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-6 rounded-2xl p-5 flex items-center gap-4" style={{ background: ink, color: cream }}>
+        <Target className="w-5 h-5" style={{ color: gold }} />
+        <div>
+          <div className="text-[10px] tracking-[0.2em] uppercase font-bold" style={{ color: gold }}>Pitch in one line</div>
+          <div className="text-[15px] font-semibold">Not another content app. A student growth platform for students, teachers, and schools.</div>
+        </div>
+      </div>
+    </Slide>
+  );
+}
+
+/* ================================================================== */
 /*  SLIDE 02 — THE REAL PROBLEM                                        */
 /* ================================================================== */
 function S02_Problem() {
@@ -409,90 +510,184 @@ function S05_SevenLayer() {
 /* ================================================================== */
 /*  SLIDE 06 — STUDENT EXPERIENCE                                      */
 /* ================================================================== */
-function S06_Student() {
-  const arc = [
-    { step: "Hook",         line: "Can a cricket team’s run-rate go negative?", t: "0:00" },
-    { step: "Tap a guess",  line: "Yes · No · Depends — no shame, no wrong",     t: "0:30" },
-    { step: "First thought", line: "“Negative means losing.” — captured silently", t: "1:00" },
-    { step: "Build",        line: "Negative = direction, not badness. Below zero, debt, loss.", t: "2:30" },
-    { step: "Teach back",   line: "Explain it to a younger friend in 1 line.", t: "4:30" },
-  ];
+/* ---- Phone frame used by the 3-Day Arc ------------------------------ */
+function PhoneFrame({
+  day, label, color, headline, visual, caption, hookCaption,
+}: {
+  day: 1 | 2 | 3; label: string; color: string;
+  headline: string; visual: string; caption: string; hookCaption: string;
+}) {
   return (
-    <Slide id="06-student" kicker="What the student opens" bg={paper}
-           title="A 5-minute daily arc the student actually wants to open.">
-      <div className="grid lg:grid-cols-12 gap-8">
-        {/* Phone-like arc */}
-        <div className="lg:col-span-7">
-          <div className="rounded-[28px] p-6" style={{ background: "white", border: `1px solid ${line}` }}>
-            <div className="flex items-center justify-between mb-5">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full grid place-items-center" style={{ background: `${teal}18` }}>
-                  <BookOpen className="w-4 h-4" style={{ color: teal }} />
-                </div>
-                <div>
-                  <div className="text-[13px] font-semibold">Real Numbers · Day 1</div>
-                  <div className="text-[11px] opacity-60">Class 10 · 5 min</div>
-                </div>
-              </div>
-              <Pill color={teal}>Spark</Pill>
-            </div>
-            <ol className="space-y-3">
-              {arc.map((a, i) => (
-                <li key={i} className="flex gap-4 items-start p-3 rounded-xl"
-                    style={{ background: i === 2 ? `${gold}10` : "transparent",
-                             border: i === 2 ? `1px dashed ${gold}` : "1px solid transparent" }}>
-                  <div className="w-10 text-[11px] font-mono opacity-60 pt-0.5">{a.t}</div>
-                  <div className="w-24 text-[12px] font-semibold tracking-wide uppercase" style={{ color: tealDark }}>
-                    {a.step}
-                  </div>
-                  <div className="flex-1 text-[14px]">{a.line}
-                    {i === 2 && (
-                      <div className="mt-1 text-[11px] font-semibold" style={{ color: gold }}>
-                        ↳ stored as first-thought anchor for tomorrow
-                      </div>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ol>
+    <div className="relative mx-auto" style={{ maxWidth: 280 }}>
+      {/* day chip floating above */}
+      <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10 px-3 py-1 rounded-full text-[10px] font-bold tracking-[0.18em] uppercase shadow-sm"
+           style={{ background: color, color: "white" }}>
+        Day {day} · {label}
+      </div>
+      {/* phone shell */}
+      <div className="rounded-[34px] p-2 shadow-xl"
+           style={{ background: ink, border: `1px solid ${ink}` }}>
+        <div className="rounded-[28px] overflow-hidden" style={{ background: "white" }}>
+          {/* status bar */}
+          <div className="flex items-center justify-between px-4 py-1.5 text-[9px] font-semibold" style={{ background: "#F6F4EF", color: ink }}>
+            <span>9:41</span>
+            <span className="flex items-center gap-1">
+              <span className="w-1 h-1 rounded-full" style={{ background: ink }} />
+              <span className="w-1 h-1 rounded-full" style={{ background: ink }} />
+              <span className="w-1 h-1 rounded-full" style={{ background: ink }} />
+            </span>
           </div>
-        </div>
-
-        {/* Memory + depth bands */}
-        <div className="lg:col-span-5 space-y-5">
-          <Card accent={gold}>
-            <div className="text-[11px] tracking-[0.2em] uppercase font-semibold mb-2" style={{ color: gold }}>
-              Day 2 opening screen
+          {/* topline */}
+          <div className="px-4 pt-3 pb-2 flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <div className="w-5 h-5 rounded-full grid place-items-center" style={{ background: `${color}22` }}>
+                <BookOpen className="w-3 h-3" style={{ color }} />
+              </div>
+              <span className="text-[10px] font-semibold">Real Numbers</span>
             </div>
-            <p className="font-serif italic text-[22px] leading-snug">
-              “Yesterday you thought <span style={{ color: gold }}>negative means losing</span>.
-              Interesting. Let’s see why mathematicians disagree…”
+            <span className="text-[9px] font-mono opacity-50">{day}/3</span>
+          </div>
+          {/* headline */}
+          <div className="px-4 pb-2">
+            <p className="font-serif text-[15px] leading-snug" style={{ color: ink }}>
+              {headline}
             </p>
-            <p className="mt-3 text-[12px] opacity-70">No app does this. It’s why students come back.</p>
-          </Card>
-          <Card accent={teal}>
-            <div className="text-[13px] font-semibold mb-3">Same concept · 3 silent depths</div>
-            {[
-              { l: "Foundational", w: "55%", t: "visual + hint chips + voice" },
-              { l: "Guided",       w: "80%", t: "questions + scaffolded reasoning" },
-              { l: "Challenge",    w: "100%", t: "proof, transfer, system thinking" },
-            ].map(b => (
-              <div key={b.l} className="mb-3 last:mb-0">
-                <div className="flex justify-between text-[12px] mb-1">
-                  <span className="font-semibold">{b.l}</span>
-                  <span className="opacity-60">{b.t}</span>
-                </div>
-                <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(15,23,42,.08)" }}>
-                  <div className="h-full rounded-full" style={{ width: b.w, background: teal }} />
-                </div>
+          </div>
+          {/* hero visual */}
+          <div className="relative mx-3 mb-3 rounded-2xl overflow-hidden" style={{ aspectRatio: "4/3", background: "#EFEBE2" }}>
+            <img src={visual} alt={hookCaption} className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
+            <div className="absolute bottom-1.5 left-1.5 right-1.5 px-2 py-1 rounded-md text-[9px] font-semibold"
+                 style={{ background: "rgba(15,23,42,.78)", color: cream, backdropFilter: "blur(4px)" }}>
+              {hookCaption}
+            </div>
+          </div>
+          {/* tap row */}
+          <div className="px-3 pb-3 flex gap-1.5">
+            {(day === 1 ? ["Yes", "No", "Depends"] : day === 2 ? ["Believe", "Doubt"] : ["Record", "Type"]).map(t => (
+              <div key={t} className="flex-1 text-center py-1.5 rounded-lg text-[10px] font-semibold"
+                   style={{ background: `${color}14`, color, border: `1px solid ${color}33` }}>
+                {t}
               </div>
             ))}
-            <p className="mt-2 text-[11px] opacity-60">No labels shown to students. Zero embarrassment.</p>
-          </Card>
+          </div>
+          {/* caption strip */}
+          <div className="px-4 py-2 text-[9px] leading-snug border-t" style={{ borderColor: line, color: "rgba(15,23,42,.6)" }}>
+            {caption}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function S06_Student() {
+  const days = [
+    {
+      day: 1 as const, label: "Spark", color: teal,
+      headline: "Can a cricket team's run-rate go negative?",
+      visual: day1SparkCricket.url,
+      hookCaption: "Hook · cricket scene the child already knows",
+      caption: "Tap a guess → first thought captured silently. No wrong answer.",
+      time: "0:00 → 4:00",
+    },
+    {
+      day: 2 as const, label: "Build", color: gold,
+      headline: "Yesterday you thought negative = losing. Mathematicians disagree.",
+      visual: ahaReveal.url,
+      hookCaption: "Aha · concept emerges from the child's own guess",
+      caption: "Believe-or-doubt + sort-the-rebels. Concept feels discovered.",
+      time: "Day 2 · 6 min",
+    },
+    {
+      day: 3 as const, label: "Master", color: indigo,
+      headline: "Teach it back — explain it to a younger friend in 1 line.",
+      visual: teachItBack.url,
+      hookCaption: "Teach-back · proof of mastery, not memorisation",
+      caption: "Voice or text. Concept bridges to football, rockets, daily life.",
+      time: "Day 3 · 8 min",
+    },
+  ];
+
+  return (
+    <Slide id="06-student" kicker="What the student opens" bg={paper}
+           title="A 3-day curiosity arc — Spark, Build, Master.">
+      <p className="text-[15px] opacity-70 max-w-[68ch] -mt-4 mb-10">
+        Same concept, three deliberate visits. Each day opens with an engagement hook the child
+        actually recognises — cricket, an aha image, teach-a-friend — so the textbook never feels like a textbook.
+      </p>
+
+      <div className="grid lg:grid-cols-3 gap-10 mb-12">
+        {days.map(d => (
+          <div key={d.day} className="space-y-5">
+            <PhoneFrame
+              day={d.day} label={d.label} color={d.color}
+              headline={d.headline} visual={d.visual}
+              caption={d.caption} hookCaption={d.hookCaption}
+            />
+            <div className="text-center text-[10px] tracking-[0.2em] uppercase font-mono opacity-50">
+              {d.time}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Rung trajectory */}
+      <div className="rounded-2xl p-6 mb-6" style={{ background: "white", border: `1px solid ${line}` }}>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <div className="text-[11px] tracking-[0.2em] uppercase font-semibold" style={{ color: tealDark }}>
+              The curiosity ladder
+            </div>
+            <div className="text-[14px] font-semibold mt-0.5">5 invisible rungs across the 3 days</div>
+          </div>
+          <Pill color={teal}>Visible to teachers · invisible to students</Pill>
+        </div>
+        <div className="relative">
+          <div className="absolute left-5 right-5 top-5 h-[2px]" style={{ background: line }} />
+          <div className="absolute left-5 top-5 h-[2px] rounded-full"
+               style={{ width: "100%", background: `linear-gradient(90deg, ${teal}, ${gold}, ${indigo})` }} />
+          <div className="grid grid-cols-5 gap-2 relative">
+            {[
+              { n: 1, label: "Connect", day: 1 },
+              { n: 2, label: "Explain", day: 1 },
+              { n: 3, label: "Trap",    day: 2 },
+              { n: 4, label: "Apply",   day: 2 },
+              { n: 5, label: "Deeper",  day: 3 },
+            ].map((r, i) => (
+              <div key={r.n} className="flex flex-col items-center">
+                <div className="w-10 h-10 rounded-full grid place-items-center font-bold text-[13px] z-10 shadow-sm"
+                     style={{ background: ink, color: cream, border: `2px solid ${i < 2 ? teal : i < 4 ? gold : indigo}` }}>
+                  {r.n}
+                </div>
+                <div className="mt-2 text-[11px] font-semibold">{r.label}</div>
+                <div className="text-[10px] opacity-50">Day {r.day}</div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
-      <ExploreLive to="/student" label="Open the live student dashboard" />
+      {/* Silent depth bands */}
+      <div className="grid md:grid-cols-3 gap-4">
+        {[
+          { l: "Foundational", w: "55%", t: "visual + hint chips + voice", c: teal },
+          { l: "Guided",       w: "80%", t: "questions + scaffolded reasoning", c: gold },
+          { l: "Challenge",    w: "100%", t: "proof, transfer, system thinking", c: indigo },
+        ].map(b => (
+          <div key={b.l} className="rounded-xl p-4" style={{ background: "white", border: `1px solid ${line}` }}>
+            <div className="flex justify-between text-[12px] mb-2">
+              <span className="font-semibold">{b.l}</span>
+              <span className="opacity-60">{b.t}</span>
+            </div>
+            <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(15,23,42,.08)" }}>
+              <div className="h-full rounded-full" style={{ width: b.w, background: b.c }} />
+            </div>
+          </div>
+        ))}
+      </div>
+      <p className="mt-3 text-[11px] opacity-60">Same concept · 3 silent depths · no labels shown to students. Zero embarrassment.</p>
+
+      <ExploreLive to="/student" label="Open the live student dashboard" hint="The phones above are real screens — try one." />
     </Slide>
   );
 }
@@ -1107,6 +1302,7 @@ function S13_Ask() {
 /* ================================================================== */
 const SLIDES = [
   { id: "01-cover",       label: "Cover" },
+  { id: "01b-two-tracks", label: "Two Tracks" },
   { id: "02-problem",     label: "Problem" },
   { id: "03-why-fails",   label: "Why edtech fails" },
   { id: "04-thesis",      label: "Our thesis" },
@@ -1186,6 +1382,7 @@ export default function Pitch() {
       <SideNav active={active} />
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
         <S01_Cover />
+        <S01B_TwoTracks />
         <S02_Problem />
         <S03_WhyFails />
         <S04_Thesis />
