@@ -1382,6 +1382,7 @@ export default function Pitch() {
       <SideNav active={active} />
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
         <S01_Cover />
+        <S01B_TwoTracks />
         <S02_Problem />
         <S03_WhyFails />
         <S04_Thesis />
