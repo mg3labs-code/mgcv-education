@@ -132,6 +132,7 @@ export default function CuriosityArc() {
         {step === "hook" && (
           <HookShortCard
             hook={hook}
+            interestTag={progress.interestTag}
             onPickedAndContinue={(picked, correct) => {
               update({
                 day1Guess: picked,
