@@ -5,6 +5,21 @@ import {
   Users, School, GraduationCap, LineChart, MessageSquare, Lightbulb,
   CheckCircle2, AlertTriangle, TrendingUp, Layers, Compass, Rocket,
 } from "lucide-react";
+import ProblemFeatureGrid, { type PFECard } from "@/components/pitch/ProblemFeatureGrid";
+
+// HD screen captures from the Demo Problem→Solution→Screen reference doc.
+import interestPicker     from "@/assets/pitch/interest-picker.png.asset.json";
+import day1SparkCricket   from "@/assets/pitch/day1-spark-cricket.png.asset.json";
+import hookShortCard      from "@/assets/pitch/hook-short-card.png.asset.json";
+import hook60s            from "@/assets/pitch/hook-60s.png.asset.json";
+import ahaReveal          from "@/assets/pitch/aha-reveal.png.asset.json";
+import sort90s            from "@/assets/pitch/sort-90s.png.asset.json";
+import spotTheTrap        from "@/assets/pitch/spot-the-trap.png.asset.json";
+import day1Done           from "@/assets/pitch/day1-done.png.asset.json";
+import layer2Mechanism    from "@/assets/pitch/layer2-mechanism.png.asset.json";
+import teachItBack        from "@/assets/pitch/teach-it-back.png.asset.json";
+import conceptBridge      from "@/assets/pitch/concept-bridge.png.asset.json";
+
 
 /* ------------------------------------------------------------------ */
 /*  Design tokens (scoped to this deck, not leaked to the app)        */
@@ -483,9 +498,110 @@ function S06_Student() {
 }
 
 /* ================================================================== */
+/*  SLIDE 06B — STUDENT · PROBLEM → FEATURE → SCREEN → EFFECTIVENESS    */
+/* ================================================================== */
+function S06B_StudentPFE() {
+  const cards: PFECard[] = [
+    {
+      problem: "Generic content feels like everyone else's textbook — irrelevant.",
+      feature: "Interest Engine — child picks what they love (cricket, food, gaming, music). Every concept gets a personal way in.",
+      image: interestPicker.url,
+      outcome: "Personal hook lifts engagement before content is shown.",
+      evidence: "ASER 2024: 76% kids use phones for social media vs 57% for learning — we redirect that pull.",
+      status: "live", exploreHref: "/student",
+    },
+    {
+      problem: "Same lesson, same boring entry, for 60 different children.",
+      feature: "One concept, 8 entry points. The textbook stays — the hook changes per child.",
+      image: day1SparkCricket.url,
+      outcome: "Same concept, 8 doors in — no labels, no shame.",
+      evidence: "NEP 2020: recognise each learner's unique capabilities.",
+      status: "live", exploreHref: "/student",
+    },
+    {
+      problem: "The “wait — why?” moment never happens in class.",
+      feature: "Short-style Hook Card — one familiar image, an 8-word question, tap to commit.",
+      image: hookShortCard.url,
+      outcome: "Curiosity before content. Student is already leaning in.",
+      status: "live", exploreHref: "/student",
+    },
+    {
+      problem: "Students disengage in 2 minutes, and are afraid of being wrong.",
+      feature: "Day 1 Hook + first guess in own words (type or voice). No wrong answer.",
+      image: hook60s.url,
+      outcome: "First thought captured — the most valuable signal in class.",
+      evidence: "NEP 2020: shift from rote testing to formative, expression-based learning.",
+      status: "live", exploreHref: "/student",
+    },
+    {
+      problem: "Explanations feel like a lecture the child didn't ask for.",
+      feature: "Aha reveal — the concept emerges from the child's own guess, not a teacher talking at them.",
+      image: ahaReveal.url,
+      outcome: "Concept feels discovered, not delivered.",
+      status: "live", exploreHref: "/student",
+    },
+    {
+      problem: "Passive watching — no actual thinking happens.",
+      feature: "90-second tap activity — sort real things above and below zero.",
+      image: sort90s.url,
+      outcome: "Thinking, not scrolling. Visible reasoning per child.",
+      status: "live", exploreHref: "/student",
+    },
+    {
+      problem: "Children accept whatever they're told, without questioning.",
+      feature: "Spot-the-Trap / Believe-or-Doubt — child must challenge an assumption.",
+      image: spotTheTrap.url,
+      outcome: "Critical-thinking move built into the daily loop.",
+      evidence: "NEP 2020: critical thinking & inquiry as core competency.",
+      status: "live", exploreHref: "/student",
+    },
+    {
+      problem: "They finish today and never come back tomorrow.",
+      feature: "Finish screen + tomorrow's teaser — “Yesterday you guessed…”",
+      image: day1Done.url,
+      outcome: "Return hook set on Day 1. Voluntary next-day open.",
+      status: "live", exploreHref: "/student",
+    },
+    {
+      problem: "Concept forgotten in 48 hours; the “why” is never understood.",
+      feature: "Hidden 7-layer engine — Mechanism → Reasoning on a real puzzle the child wants to solve.",
+      image: layer2Mechanism.url,
+      outcome: "Layer-by-layer mastery — every layer active, none blank.",
+      evidence: "ASER 2024: only 30.7% of Class 5 can do basic division. Recall ≠ understanding.",
+      status: "live", exploreHref: "/student/textbook",
+    },
+    {
+      problem: "Memorises the answer but can't explain it.",
+      feature: "Teach-it-back on Day 3 — child explains it in own words (voice or text).",
+      image: teachItBack.url,
+      outcome: "Proof of mastery, not proof of memorisation.",
+      status: "live", exploreHref: "/student",
+    },
+    {
+      problem: "Doesn't see why any of it matters beyond the exam.",
+      feature: "Concept bridge — same idea shown in football, rockets, daily life.",
+      image: conceptBridge.url,
+      outcome: "Learning connects to the world the child already lives in.",
+      status: "live", exploreHref: "/student",
+    },
+  ];
+  return (
+    <Slide id="06b-student-pfe" kicker="Student · live today" bg={paper}
+           title="Every classroom problem → the exact feature → the real screen.">
+      <ProblemFeatureGrid
+        cards={cards}
+        columns={3}
+        caption="Each card is a real classroom problem, the feature that solves it, and the actual screen from the live app. Open one on a phone and let a student try it — the screens sell, the cards reassure."
+      />
+    </Slide>
+  );
+}
+
+/* ================================================================== */
 /*  SLIDE 07 — THE 5 INNER OS DIMENSIONS                              */
 /* ================================================================== */
 const DIMS = [
+
   { name: "Clarity",    icon: Eye,    color: teal,   captures: ["Re-reads same line", "Pauses on key term", "Definition precision"], rolls: "Concept clarity index" },
   { name: "Thinking",   icon: Brain,  color: indigo, captures: ["Multi-step chains", "‘Why’ depth", "Counter-example use"],          rolls: "Reasoning depth" },
   { name: "Attention",  icon: Target, color: gold,   captures: ["Tab switches", "Time on task", "Re-engage after distraction"],     rolls: "Focus index" },
@@ -995,12 +1111,14 @@ const SLIDES = [
   { id: "03-why-fails",   label: "Why edtech fails" },
   { id: "04-thesis",      label: "Our thesis" },
   { id: "05-seven-layer", label: "7-Layer Engine" },
-  { id: "06-student",     label: "Student" },
-  { id: "07-dimensions",  label: "5 Dimensions" },
-  { id: "08-growth",      label: "Growth measured" },
-  { id: "09-teacher",     label: "Teacher" },
-  { id: "10-school",      label: "School OS" },
-  { id: "11-nep",         label: "NEP 2020" },
+  { id: "06-student",       label: "Student" },
+  { id: "06b-student-pfe",  label: "Student · P→F→Screen" },
+  { id: "07-dimensions",    label: "5 Dimensions" },
+  { id: "08-growth",        label: "Growth measured" },
+  { id: "09-teacher",       label: "Teacher" },
+  { id: "10-school",        label: "School OS" },
+  { id: "11-nep",           label: "NEP 2020" },
+
   { id: "12-rollout",     label: "Rollout" },
   { id: "13-ask",         label: "The Ask" },
 ];
@@ -1073,7 +1191,9 @@ export default function Pitch() {
         <S04_Thesis />
         <S05_SevenLayer />
         <S06_Student />
+        <S06B_StudentPFE />
         <S07_Dimensions />
+
         <S08_Growth />
         <S09_Teacher />
         <S10_School />
