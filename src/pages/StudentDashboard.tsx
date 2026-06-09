@@ -693,6 +693,11 @@ const StudentDashboard = () => {
           {/* ===== GROWTH TAB ===== */}
           {activeTab === "growth" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <StudentInsightsHub
+                innerOS={innerOS as never}
+                streakDays={streakDays}
+                episodeCount={episodeCount ?? 0}
+              />
               {user?.id && <InnerOSAnalytics userId={user.id} />}
               <GrowthTab
                 dimensionScores={dimensionScores}
