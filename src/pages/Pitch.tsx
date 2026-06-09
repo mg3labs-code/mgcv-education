@@ -196,6 +196,107 @@ function BrainMark() {
 }
 
 /* ================================================================== */
+/*  SLIDE 01B — TWO PARALLEL TRACKS (platform shape at a glance)       */
+/* ================================================================== */
+function S01B_TwoTracks() {
+  const t1 = [
+    { i: Lightbulb,     t: "interest-based hooks" },
+    { i: Zap,           t: "5-minute daily arc" },
+    { i: MessageSquare, t: "never-say-no feedback" },
+    { i: Compass,       t: "yesterday-you-thought memory" },
+    { i: Heart,         t: "voice or text expression" },
+  ];
+  const t2 = [
+    { i: Users,         t: "teacher productivity" },
+    { i: Eye,           t: "misconception visibility" },
+    { i: MessageSquare, t: "parent communication" },
+    { i: School,        t: "school branding" },
+    { i: LineChart,     t: "analytics dashboards" },
+  ];
+  return (
+    <Slide id="01b-two-tracks" kicker="Platform at a glance" bg={cream}
+           title="Student curiosity on the front end. School intelligence on the back end.">
+      <div className="grid lg:grid-cols-2 gap-6">
+        <div className="rounded-3xl p-7" style={{ background: `${teal}0E`, border: `1px solid ${teal}33` }}>
+          <span className="text-[10px] tracking-[0.2em] uppercase font-bold" style={{ color: tealDark }}>Track 1</span>
+          <h3 className="font-serif text-[26px] mb-5 mt-1">Student Curiosity Engine</h3>
+          <ul className="space-y-2.5">
+            {t1.map(({ i: Icon, t }) => (
+              <li key={t} className="flex items-center gap-3 p-2.5 rounded-xl" style={{ background: "white", border: `1px solid ${line}` }}>
+                <span className="w-8 h-8 rounded-full grid place-items-center" style={{ background: `${teal}1A` }}>
+                  <Icon className="w-4 h-4" style={{ color: tealDark }} />
+                </span>
+                <span className="text-[14px] font-medium">{t}</span>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-5 text-[12px] opacity-70">Makes students open, think, speak, and return.</div>
+        </div>
+        <div className="rounded-3xl p-7" style={{ background: `${indigo}0E`, border: `1px solid ${indigo}33` }}>
+          <span className="text-[10px] tracking-[0.2em] uppercase font-bold" style={{ color: indigo }}>Track 2</span>
+          <h3 className="font-serif text-[26px] mb-5 mt-1">School Intelligence Platform</h3>
+          <ul className="space-y-2.5">
+            {t2.map(({ i: Icon, t }) => (
+              <li key={t} className="flex items-center gap-3 p-2.5 rounded-xl" style={{ background: "white", border: `1px solid ${line}` }}>
+                <span className="w-8 h-8 rounded-full grid place-items-center" style={{ background: `${indigo}1A` }}>
+                  <Icon className="w-4 h-4" style={{ color: indigo }} />
+                </span>
+                <span className="text-[14px] font-medium">{t}</span>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-5 text-[12px] opacity-70">Helps schools, teachers, and parents see, decide, and act.</div>
+        </div>
+      </div>
+
+      <div className="mt-10 rounded-3xl p-7" style={{ background: "white", border: `1px solid ${line}` }}>
+        <div className="text-[11px] tracking-[0.22em] uppercase font-bold mb-4" style={{ color: tealDark }}>
+          Built in 3 product layers
+        </div>
+        <div className="grid md:grid-cols-3 gap-5">
+          {[
+            { c: teal,   n: "Layer 1", t: "Student Engagement Core", icon: Layers,
+              items: ["Day 1 Spark", "Day 2 Build", "Day 3 Master", "7 invisible layers", "silent adaptation"] },
+            { c: gold,   n: "Layer 2", t: "Teacher Intelligence", icon: Brain,
+              items: ["concept dashboard", "misconception detection", "lesson plans", "worksheets", "real-world examples"] },
+            { c: indigo, n: "Layer 3", t: "School Operating System", icon: School,
+              items: ["branded app", "management insights", "communication", "parent reporting", "enterprise customisation"] },
+          ].map(L => (
+            <div key={L.n} className="rounded-2xl p-5" style={{ background: `${L.c}08`, border: `1px solid ${L.c}33` }}>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="w-7 h-7 rounded-full grid place-items-center" style={{ background: L.c, color: "white" }}>
+                  <L.icon className="w-3.5 h-3.5" />
+                </span>
+                <div>
+                  <div className="text-[10px] tracking-[0.18em] uppercase font-bold" style={{ color: L.c }}>{L.n}</div>
+                  <div className="text-[14px] font-semibold">{L.t}</div>
+                </div>
+              </div>
+              <ul className="mt-3 grid gap-1.5">
+                {L.items.map(it => (
+                  <li key={it} className="flex items-center gap-2 text-[12px]">
+                    <CheckCircle2 className="w-3 h-3" style={{ color: L.c }} />
+                    {it}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-6 rounded-2xl p-5 flex items-center gap-4" style={{ background: ink, color: cream }}>
+        <Target className="w-5 h-5" style={{ color: gold }} />
+        <div>
+          <div className="text-[10px] tracking-[0.2em] uppercase font-bold" style={{ color: gold }}>Pitch in one line</div>
+          <div className="text-[15px] font-semibold">Not another content app. A student growth platform for students, teachers, and schools.</div>
+        </div>
+      </div>
+    </Slide>
+  );
+}
+
+/* ================================================================== */
 /*  SLIDE 02 — THE REAL PROBLEM                                        */
 /* ================================================================== */
 function S02_Problem() {
