@@ -1,4 +1,4 @@
-import { Lock, Check } from "lucide-react";
+import { Lock, Check, RotateCcw } from "lucide-react";
 
 interface Props {
   currentDay: 1 | 2 | 3;
@@ -7,17 +7,19 @@ interface Props {
   interestEmoji: string;
   interestLabel: string;
   estLabel?: string;       // e.g. "~5 min"
+  maxUnlockedDay?: 1 | 2 | 3;
+  onJumpDay?: (d: 1 | 2 | 3) => void;
 }
 
 const dayClasses = (d: 1 | 2 | 3, active: boolean, done: boolean, locked: boolean) => {
-  if (locked) return "bg-muted/40 text-muted-foreground border-border opacity-50";
+  if (locked) return "bg-muted/40 text-muted-foreground border-border opacity-50 cursor-not-allowed";
   if (done) {
-    if (d === 1) return "bg-amber-100 text-amber-700 border-amber-300";
-    if (d === 2) return "bg-sky-100 text-sky-700 border-sky-300";
-    return "bg-emerald-100 text-emerald-700 border-emerald-300";
+    if (d === 1) return "bg-amber-100 text-amber-700 border-amber-300 hover:bg-amber-200";
+    if (d === 2) return "bg-sky-100 text-sky-700 border-sky-300 hover:bg-sky-200";
+    return "bg-emerald-100 text-emerald-700 border-emerald-300 hover:bg-emerald-200";
   }
   if (active) return "bg-foreground text-background border-foreground";
-  return "bg-card text-muted-foreground border-border";
+  return "bg-card text-muted-foreground border-border hover:bg-muted";
 };
 
 export default function ArcTopbar({
