@@ -96,6 +96,7 @@ const StudentOnboarding = () => {
         user_id: user.id,
         grade: gradeNum,
         interests: selectedSubjects,
+        interest_domains: selectedDomains,
         onboarding_completed: true,
         difficulty_level: 'medium',
         preferred_language: 'en',
