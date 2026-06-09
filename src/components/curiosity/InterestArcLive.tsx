@@ -850,7 +850,21 @@ const CSS = `
 .cricket-arc .arc-day.d1c{background:#FEF3C7;border-color:#F59E0B;color:#B45309}
 .cricket-arc .arc-day.d2c{background:#E0F2FE;border-color:#38BDF8;color:#0C4A6E}
 .cricket-arc .arc-day.d3c{background:#F0FDF4;border-color:#22C55E;color:#14532D}
+.cricket-arc .arc-day.active{box-shadow:0 0 0 2px rgba(28,25,23,0.12);transform:translateY(-1px)}
+.cricket-arc .arc-day.done{border-style:solid}
+.cricket-arc .arc-day span{margin-left:3px;font-size:8px;text-transform:uppercase;letter-spacing:.6px;opacity:.72}
 .cricket-arc .arc-interest{margin-left:auto;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;border:0.5px solid}
+
+.cricket-arc .completed-topics{margin:0 14px 12px;padding:10px;border-radius:14px;background:#fff;border:0.5px solid #E7E5E4;box-shadow:0 10px 28px rgba(28,25,23,.05)}
+.cricket-arc .ct-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;font-size:9px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:#78716C}
+.cricket-arc .ct-list{display:grid;gap:7px}
+.cricket-arc .ct-item{display:flex;align-items:center;gap:9px;width:100%;padding:9px 10px;border-radius:11px;border:1px solid #F1EFE9;background:#F8F7F4;text-align:left;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
+.cricket-arc .ct-item:hover{transform:translateY(-1px);box-shadow:0 8px 18px rgba(28,25,23,.07)}
+.cricket-arc .ct-item.active{border-color:#1C1917;background:#fff}
+.cricket-arc .ct-item.d1c .ct-check{background:#FEF3C7;color:#B45309}.cricket-arc .ct-item.d2c .ct-check{background:#E0F2FE;color:#0C4A6E}.cricket-arc .ct-item.d3c .ct-check{background:#DCFCE7;color:#15803D}
+.cricket-arc .ct-check{width:22px;height:22px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;flex-shrink:0}
+.cricket-arc .ct-copy{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1}.cricket-arc .ct-copy strong{font-size:12px;color:#1C1917;line-height:1.2}.cricket-arc .ct-copy small{font-size:10px;color:#78716C;line-height:1.25}
+.cricket-arc .ct-action{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:#0D9488;background:#F0FDFA;border:1px solid #99F6E4;border-radius:999px;padding:4px 7px;flex-shrink:0}
 
 .cricket-arc .topbar{position:sticky;top:0;z-index:9;background:#fff;border-bottom:0.5px solid #F1EFE9;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
 .cricket-arc .tb-left{display:flex;align-items:center;gap:8px}
