@@ -600,6 +600,20 @@ const StudentDashboard = () => {
                 )}
               </FadeSlide>
 
+              {/* Polished insights hub: skills · retention · weekly summary */}
+              <FadeSlide show={phase >= 2} delay={120}>
+                {phase >= 2 && (
+                  <div style={{ marginTop: 20 }}>
+                    <StudentInsightsHub
+                      innerOS={innerOS as never}
+                      streakDays={streakDays}
+                      episodeCount={episodeCount ?? 0}
+                    />
+                  </div>
+                )}
+              </FadeSlide>
+
+
               {/* ALWAYS: Today's Schedule */}
               <div style={{ marginTop: 20 }}>
                 <FadeSlide delay={50}>
