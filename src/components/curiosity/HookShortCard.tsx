@@ -74,16 +74,22 @@ export default function HookShortCard({ hook, interestTag, onPickedAndContinue }
         />
         <div className="relative z-10 p-4 sm:p-5 space-y-3">
           <span
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wide"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wide backdrop-blur-sm"
             style={{
-              background: "rgba(34,197,94,0.22)",
-              color: "#86EFAC",
-              border: "0.5px solid rgba(134,239,172,0.4)",
+              background: v.accentSoft,
+              color: v.accent,
+              border: `0.5px solid ${v.accent}66`,
             }}
           >
-            <span aria-hidden="true">{hook.emoji}</span>
-            {hook.badgeLabel}
+            <span aria-hidden="true">{v.emoji}</span>
+            {v.label} · {hook.badgeLabel}
           </span>
+          <p
+            className="text-[12px] text-white/90 font-medium leading-snug"
+            style={{ textShadow: "0 2px 8px rgba(0,0,0,0.6)" }}
+          >
+            {v.scenes[1].caption}
+          </p>
 
           <h2 className="arc-display text-[19px] sm:text-[22px] font-extrabold text-white leading-tight">
             {hook.mcq.question}
