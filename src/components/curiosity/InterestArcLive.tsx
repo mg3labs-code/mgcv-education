@@ -100,6 +100,11 @@ export default function InterestArcLive({ lens, conceptKey, chapterId, episodeId
   const [d2Step, setD2Step] = useState<"a" | "b" | "c" | "d" | "done">("a");
   const [d3Step, setD3Step] = useState<"a" | "b" | "c" | "d">("a");
   const topRef = useRef<HTMLDivElement>(null);
+  const completedTopics = [
+    { day: 1 as const, title: "Spark", detail: "Hook · Aha · Trap", done: !!persisted.day1CompletedAt },
+    { day: 2 as const, title: "Build", detail: "Recall · Sort · Explain", done: !!persisted.day2CompletedAt },
+    { day: 3 as const, title: "Master", detail: "Case · Teach · Growth", done: !!persisted.day3CompletedAt },
+  ].filter((topic) => topic.done);
 
   // Apply persisted state once it loads
   useEffect(() => {
@@ -112,9 +117,14 @@ export default function InterestArcLive({ lens, conceptKey, chapterId, episodeId
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [persisted.loaded]);
 
-  const goDay = (d: Day) => {
+  const goDay = (d: Day, fromStart = false) => {
     setDay(d);
-    const step = d === 1 ? `d1:${d1Step}` : d === 2 ? `d2:${d2Step}` : `d3:${d3Step}`;
+    let step = d === 1 ? `d1:${d1Step}` : d === 2 ? `d2:${d2Step}` : `d3:${d3Step}`;
+    if (fromStart) {
+      if (d === 1) { setD1Step(0); step = "d1:0"; }
+      if (d === 2) { setD2Step("a"); step = "d2:a"; }
+      if (d === 3) { setD3Step("a"); step = "d3:a"; }
+    }
     void persist({ current_day: d, current_step: step });
     setTimeout(() => topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 30);
   };
@@ -129,14 +139,35 @@ export default function InterestArcLive({ lens, conceptKey, chapterId, episodeId
       <div className="g">
         <div className="arc-bar">
           <div className="arc-days">
-            <button className="arc-day d1c" onClick={() => goDay(1)}>Day 1 {persisted.day1CompletedAt ? "✓" : ""}</button>
-            <button className="arc-day d2c" onClick={() => goDay(2)}>Day 2 {persisted.day2CompletedAt ? "✓" : ""}</button>
-            <button className="arc-day d3c" onClick={() => goDay(3)}>Day 3 {persisted.day3CompletedAt ? "✓" : ""}</button>
+            <button className={`arc-day d1c${day === 1 ? " active" : ""}${persisted.day1CompletedAt ? " done" : ""}`} onClick={() => goDay(1, !!persisted.day1CompletedAt)}>Day 1 <span>{persisted.day1CompletedAt ? "Review" : day === 1 ? "Now" : "Open"}</span></button>
+            <button className={`arc-day d2c${day === 2 ? " active" : ""}${persisted.day2CompletedAt ? " done" : ""}`} onClick={() => goDay(2, !!persisted.day2CompletedAt)}>Day 2 <span>{persisted.day2CompletedAt ? "Review" : day === 2 ? "Now" : "Open"}</span></button>
+            <button className={`arc-day d3c${day === 3 ? " active" : ""}${persisted.day3CompletedAt ? " done" : ""}`} onClick={() => goDay(3, !!persisted.day3CompletedAt)}>Day 3 <span>{persisted.day3CompletedAt ? "Review" : day === 3 ? "Now" : "Open"}</span></button>
           </div>
           <div className="arc-interest" style={{ background: lens.pillBg, color: lens.pillFg, borderColor: lens.pillFg }}>
             {lens.emoji} {lens.label}
           </div>
         </div>
+
+        {completedTopics.length > 0 && (
+          <div className="completed-topics" aria-label="Completed arc topics">
+            <div className="ct-head">
+              <span>Completed topics</span>
+              <span>{completedTopics.length}/3 saved</span>
+            </div>
+            <div className="ct-list">
+              {completedTopics.map((topic) => (
+                <button key={topic.day} className={`ct-item d${topic.day}c${day === topic.day ? " active" : ""}`} onClick={() => goDay(topic.day, true)}>
+                  <span className="ct-check">✓</span>
+                  <span className="ct-copy">
+                    <strong>Day {topic.day} · {topic.title}</strong>
+                    <small>{topic.detail}</small>
+                  </span>
+                  <span className="ct-action">Review</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {day === 1 && (
           <Day1Flow
@@ -181,7 +212,7 @@ export default function InterestArcLive({ lens, conceptKey, chapterId, episodeId
               setPersisted((p) => ({ ...p, day3CompletedAt: ts }));
               void persist({ day3_completed_at: ts });
             }}
-            onRestart={() => goDay(1)}
+            onRestart={() => goDay(1, true)}
           />
         )}
       </div>
@@ -819,7 +850,21 @@ const CSS = `
 .cricket-arc .arc-day.d1c{background:#FEF3C7;border-color:#F59E0B;color:#B45309}
 .cricket-arc .arc-day.d2c{background:#E0F2FE;border-color:#38BDF8;color:#0C4A6E}
 .cricket-arc .arc-day.d3c{background:#F0FDF4;border-color:#22C55E;color:#14532D}
+.cricket-arc .arc-day.active{box-shadow:0 0 0 2px rgba(28,25,23,0.12);transform:translateY(-1px)}
+.cricket-arc .arc-day.done{border-style:solid}
+.cricket-arc .arc-day span{margin-left:3px;font-size:8px;text-transform:uppercase;letter-spacing:.6px;opacity:.72}
 .cricket-arc .arc-interest{margin-left:auto;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;border:0.5px solid}
+
+.cricket-arc .completed-topics{margin:0 14px 12px;padding:10px;border-radius:14px;background:#fff;border:0.5px solid #E7E5E4;box-shadow:0 10px 28px rgba(28,25,23,.05)}
+.cricket-arc .ct-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;font-size:9px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:#78716C}
+.cricket-arc .ct-list{display:grid;gap:7px}
+.cricket-arc .ct-item{display:flex;align-items:center;gap:9px;width:100%;padding:9px 10px;border-radius:11px;border:1px solid #F1EFE9;background:#F8F7F4;text-align:left;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
+.cricket-arc .ct-item:hover{transform:translateY(-1px);box-shadow:0 8px 18px rgba(28,25,23,.07)}
+.cricket-arc .ct-item.active{border-color:#1C1917;background:#fff}
+.cricket-arc .ct-item.d1c .ct-check{background:#FEF3C7;color:#B45309}.cricket-arc .ct-item.d2c .ct-check{background:#E0F2FE;color:#0C4A6E}.cricket-arc .ct-item.d3c .ct-check{background:#DCFCE7;color:#15803D}
+.cricket-arc .ct-check{width:22px;height:22px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;flex-shrink:0}
+.cricket-arc .ct-copy{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1}.cricket-arc .ct-copy strong{font-size:12px;color:#1C1917;line-height:1.2}.cricket-arc .ct-copy small{font-size:10px;color:#78716C;line-height:1.25}
+.cricket-arc .ct-action{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:#0D9488;background:#F0FDFA;border:1px solid #99F6E4;border-radius:999px;padding:4px 7px;flex-shrink:0}
 
 .cricket-arc .topbar{position:sticky;top:0;z-index:9;background:#fff;border-bottom:0.5px solid #F1EFE9;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
 .cricket-arc .tb-left{display:flex;align-items:center;gap:8px}
