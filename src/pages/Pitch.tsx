@@ -5,6 +5,21 @@ import {
   Users, School, GraduationCap, LineChart, MessageSquare, Lightbulb,
   CheckCircle2, AlertTriangle, TrendingUp, Layers, Compass, Rocket,
 } from "lucide-react";
+import ProblemFeatureGrid, { type PFECard } from "@/components/pitch/ProblemFeatureGrid";
+
+// HD screen captures from the Demo Problem→Solution→Screen reference doc.
+import interestPicker     from "@/assets/pitch/interest-picker.png.asset.json";
+import day1SparkCricket   from "@/assets/pitch/day1-spark-cricket.png.asset.json";
+import hookShortCard      from "@/assets/pitch/hook-short-card.png.asset.json";
+import hook60s            from "@/assets/pitch/hook-60s.png.asset.json";
+import ahaReveal          from "@/assets/pitch/aha-reveal.png.asset.json";
+import sort90s            from "@/assets/pitch/sort-90s.png.asset.json";
+import spotTheTrap        from "@/assets/pitch/spot-the-trap.png.asset.json";
+import day1Done           from "@/assets/pitch/day1-done.png.asset.json";
+import layer2Mechanism    from "@/assets/pitch/layer2-mechanism.png.asset.json";
+import teachItBack        from "@/assets/pitch/teach-it-back.png.asset.json";
+import conceptBridge      from "@/assets/pitch/concept-bridge.png.asset.json";
+
 
 /* ------------------------------------------------------------------ */
 /*  Design tokens (scoped to this deck, not leaked to the app)        */
