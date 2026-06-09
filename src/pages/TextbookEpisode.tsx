@@ -297,10 +297,33 @@ const TextbookEpisode = () => {
     const base = allBlocks.filter(b => b.type !== "visual_aid");
     if (!isSevenLayerMode) return base;
     const topic = episode?.title || "this concept";
+
+    // Consider a block "substantive" only if it carries renderable content.
+    // Empty/placeholder native blocks should not consume a layer slot —
+    // we fall back to the synthesizer so the layer is never inactive.
+    const isSubstantive = (b: ContentBlock | undefined): boolean => {
+      if (!b) return false;
+      const c: any = b.content;
+      if (!c || typeof c !== "object") return false;
+      if (Array.isArray(c.sections) && c.sections.some((s: any) => (s?.body || s?.heading || "").toString().trim().length > 0)) return true;
+      if (Array.isArray(c.questions) && c.questions.length > 0) return true;
+      if (Array.isArray(c.whyQuestions) && c.whyQuestions.length > 0) return true;
+      if (Array.isArray(c.hiddenAssumptions) && c.hiddenAssumptions.length > 0) return true;
+      if (Array.isArray(c.connections) && c.connections.length > 0) return true;
+      if (Array.isArray(c.implications) && c.implications.length > 0) return true;
+      if (Array.isArray(c.reflectionPrompts) && c.reflectionPrompts.length > 0) return true;
+      if (typeof c.scenario === "string" && c.scenario.trim().length > 0) return true;
+      if (typeof c.prompt === "string" && c.prompt.trim().length > 0) return true;
+      if (typeof c.instruction === "string" && c.instruction.trim().length > 0) return true;
+      if (typeof c.essayPrompt === "string" && c.essayPrompt.trim().length > 0) return true;
+      if (typeof c.whatIfQuestion === "string" && c.whatIfQuestion.trim().length > 0) return true;
+      return false;
+    };
+
     const picked: ContentBlock[] = [];
     const usedIdx = new Set<number>();
     for (const layer of LAYERS) {
-      const idx = base.findIndex((b, i) => !usedIdx.has(i) && blockToLayer(b.type).key === layer.key);
+      const idx = base.findIndex((b, i) => !usedIdx.has(i) && blockToLayer(b.type).key === layer.key && isSubstantive(b));
       if (idx >= 0) {
         usedIdx.add(idx);
         picked.push(base[idx]);
