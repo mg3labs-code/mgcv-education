@@ -420,7 +420,7 @@ const StudentOnboarding = () => {
                   <span className="text-sm text-white/50">Board</span>
                   <span className="text-sm font-semibold text-white">{selectedBoard}</span>
                 </div>
-                <div className="flex items-center justify-between py-2">
+                <div className="flex items-center justify-between py-2 border-b border-white/5">
                   <span className="text-sm text-white/50">Subjects</span>
                   <div className="flex flex-wrap gap-1 justify-end">
                     {selectedSubjects.map(s => {
@@ -428,6 +428,19 @@ const StudentOnboarding = () => {
                       return (
                         <span key={s} className="text-xs bg-teal-500/20 text-teal-300 px-2 py-0.5 rounded-full">
                           {opt?.icon} {s}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div className="flex items-start justify-between py-2">
+                  <span className="text-sm text-white/50">Worlds</span>
+                  <div className="flex flex-wrap gap-1 justify-end max-w-[60%]">
+                    {selectedDomains.map(d => {
+                      const opt = PILOT_INTEREST_OPTIONS.find(o => o.tag === d);
+                      return (
+                        <span key={d} className="text-xs bg-amber-500/20 text-amber-200 px-2 py-0.5 rounded-full">
+                          {opt?.emoji} {opt?.label}
                         </span>
                       );
                     })}
