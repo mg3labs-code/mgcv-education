@@ -29,25 +29,35 @@ export default function ArcTopbar({
   interestEmoji,
   interestLabel,
   estLabel = "~5 min",
+  maxUnlockedDay,
+  onJumpDay,
 }: Props) {
   const days = [1, 2, 3] as const;
+  const reachable = maxUnlockedDay ?? currentDay;
   return (
     <div className="arc-shell sticky top-0 z-20 bg-background/95 backdrop-blur border-b border-border">
       <div className="max-w-[480px] mx-auto px-4 py-2.5 flex items-center gap-2">
         <ol className="flex items-center gap-1.5" aria-label={`Day ${currentDay} of 3`}>
           {days.map((d) => {
-            const done = d < currentDay;
+            const done = d < reachable;
             const active = d === currentDay;
-            const locked = d > currentDay;
+            const locked = d > reachable;
+            const clickable = !locked && !!onJumpDay && d !== currentDay;
+            const Tag: any = clickable ? "button" : "span";
             return (
-              <li
-                key={d}
-                aria-current={active ? "step" : undefined}
-                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full border text-[10px] font-bold ${dayClasses(d, active, done, locked)}`}
-              >
-                {done && <Check className="h-3 w-3" aria-hidden="true" />}
-                {locked && <Lock className="h-2.5 w-2.5" aria-hidden="true" />}
-                Day {d}
+              <li key={d}>
+                <Tag
+                  type={clickable ? "button" : undefined}
+                  onClick={clickable ? () => onJumpDay!(d) : undefined}
+                  aria-current={active ? "step" : undefined}
+                  aria-label={clickable ? `Re-open Day ${d}` : `Day ${d}`}
+                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full border text-[10px] font-bold transition-colors ${dayClasses(d, active, done, locked)}`}
+                >
+                  {done && <Check className="h-3 w-3" aria-hidden="true" />}
+                  {locked && <Lock className="h-2.5 w-2.5" aria-hidden="true" />}
+                  Day {d}
+                  {done && clickable && <RotateCcw className="h-2.5 w-2.5 ml-0.5 opacity-70" aria-hidden="true" />}
+                </Tag>
               </li>
             );
           })}
