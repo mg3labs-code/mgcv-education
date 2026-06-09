@@ -129,6 +129,19 @@ export default function CuriosityArc() {
           interestEmoji={hook.emoji}
           interestLabel={hook.badgeLabel}
           estLabel={EST_LABEL[day]}
+          maxUnlockedDay={
+            progress.day2CompletedAt || progress.day3CompletedAt
+              ? 3
+              : progress.day1CompletedAt
+              ? 2
+              : 1
+          }
+          onJumpDay={(d) => {
+            clearStep(step);
+            const firstStep =
+              d === 1 ? "hook" : d === 2 ? "yesterday_echo" : "mini_cases";
+            update({ currentDay: d, currentStep: firstStep as any });
+          }}
         />
       )}
 
