@@ -116,6 +116,7 @@ const StudentOnboarding = () => {
             .update({
               grade: preferencesPayload.grade,
               interests: preferencesPayload.interests,
+              interest_domains: preferencesPayload.interest_domains,
               onboarding_completed: preferencesPayload.onboarding_completed,
               difficulty_level: preferencesPayload.difficulty_level,
               preferred_language: preferencesPayload.preferred_language,
