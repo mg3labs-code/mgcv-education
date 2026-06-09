@@ -34,14 +34,24 @@ const StudentOnboarding = () => {
   const [selectedClass, setSelectedClass] = useState('');
   const [selectedBoard, setSelectedBoard] = useState('');
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
+  const [selectedDomains, setSelectedDomains] = useState<PilotInterest[]>([]);
   const [saving, setSaving] = useState(false);
 
   const canContinueStep0 = name.trim().length > 0 && selectedClass && selectedBoard;
   const canContinueStep1 = selectedSubjects.length > 0;
+  const canContinueStep2 = selectedDomains.length > 0;
 
   const toggleSubject = (id: string) => {
     setSelectedSubjects(prev =>
       prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]
+    );
+  };
+
+  const toggleDomain = (id: PilotInterest) => {
+    setSelectedDomains(prev =>
+      prev.includes(id)
+        ? prev.filter(d => d !== id)
+        : prev.length >= 3 ? prev : [...prev, id]
     );
   };
 
