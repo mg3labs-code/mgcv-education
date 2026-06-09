@@ -4,7 +4,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
-import { BookOpen, Sparkles, ArrowRight } from 'lucide-react';
+import { BookOpen, Sparkles, ArrowRight, Heart } from 'lucide-react';
+import { PILOT_INTEREST_OPTIONS, type PilotInterest } from '@/data/dayPilotContent';
 
 const CLASS_OPTIONS = ['Class 8', 'Class 9', 'Class 10'];
 const BOARD_OPTIONS = [
