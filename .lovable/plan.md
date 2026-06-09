@@ -1,171 +1,116 @@
 
-# Final Audit Report + Rework Plan
+# MGCV Executive Pitch — In-App Slide Route
 
-You asked me to stop polishing and **rethink**: re-read the R&D docs, compare them honestly with what is actually shipped, and write a real report on what is wrong, missing, fake-feeling, and confusing — then propose a focused fix. Here it is.
+A private, link-only route inside the existing app (`/pitch`) that presents MGCV to school principals & management. Built like a product homepage — full-bleed, designed slides — not a generic PPT. Every feature slide pairs a **polished mock visual** (so the busy principal "gets it" in 3 seconds) with an **"Explore this live →"** button that jumps to the real working screen in the app.
 
----
+## What gets built
 
-## 1. What the docs promise
+### 1. New route `/pitch` (unlisted, no nav link)
+- Single-page deck, vertical scroll-snap between slides (also ←/→ keyboard + dot nav).
+- Fixed-resolution 1920×1080 design system using the slides-app scaling pattern (semantic typography tokens: `.slide-title`, `.slide-body`, etc.).
+- Cream / dark-slate enterprise theme + teal accents (matches existing brand memory).
+- Top-right utility chip: "Present mode" (fullscreen), "Download PDF" (print stylesheet), language toggle stub.
+- Bottom-right persistent CTA on every slide: **"Explore this in the live product →"** linking to the relevant in-app route.
 
-Pulled from `foundational-charter.md`, `textbook-7-layer-framework.md`, `attraction-system-design.md`, `sport-to-syllabus-system.md`, `teacher-dashboard-design.md`.
-
-**Student promise — "Inner OS":** reduce mental noise, build thinking infrastructure (clarity, reasoning, attention, momentum), grow inner guidance (self-trust, value compass, reflection). Not marks, not streaks, not gamified dopamine.
-
-**Pedagogy promise — 7-Layer Treatment per concept:** Definition → Mechanism → Reasoning → Assumptions → Connections → Applications → Implications. Plus elite methods: Oxford tutorial defense, First Principles, Harvard cases, cross-domain synthesis.
-
-**Hook promise — Sport/Interest → Syllabus:** every concept opens through the student's real-life interest (cricket, food, music…) as a *bridge into the textbook*, not decoration.
-
-**Teacher promise — Command Centre:** curriculum WHY, character growth, pedagogy guidance ("use Tutorial Defense for reasoning"), behavioural insights (hesitation, avoidance), community wisdom, smart per-student alerts.
-
----
-
-## 2. What is actually shipped (honest read)
-
-### Student dashboard (screenshot you sent)
-- Header: `Hi, hari! · bright minds shine brighter`
-- "Your week with Cricket Lens" → 4 KPI tiles: **Episodes 0 · vs 2 · −2**, **First-try 60% · vs 98% · −38%**, **Avg time 0m**, **High-risk concepts 0**
-- Today's Classes strip
-- Below the fold: tabs (Learn / Tasks / Calendar / My Growth) + Inner OS analytics + Thinking Network + Weekly Interest Summary
-
-### Teacher dashboard
-- Live Intelligence Hub (hero + 4 tabs: Signals / Misconceptions / Depth / Hooks) with demo-data fallbacks
-- Class Cognitive Profile (radar chart, deterministic mock deltas)
-- Plus ~8 separate teacher pages (Analytics, Insights, Performance, Daily Todo, Schedule, Attendance, Assignments, Parent Connect)
-
----
-
-## 3. Honest issues — what is wrong
-
-### A. The data feels fake, and a student will *see* it instantly
-The very first card a student sees says **"Episodes 0, First-try 60% vs 98%, −38%, Avg time 0m"**. The numbers contradict themselves (0 episodes but 60% accuracy), the deltas are negative on day 1, and units are zero. This is the opposite of authentic — it tells the student "this product is broken or judging me before I started."
-
-Root cause: KPI tiles render before the student has any history, and use placeholder math (`vs 98%`) that does not exist.
-
-### B. The student view violates the charter
-Charter says: reduce mental noise, no fear, no comparison, no scoreboard. What we render: percentages, deltas, ↓ arrows, "high-risk concepts", "vs 2". That is exactly the scoreboard-anxiety pattern the charter forbids. **A 13-year-old does not need a stock-ticker about themselves.**
-
-### C. The 7-Layer pedagogy is invisible
-The whole product thesis is the 7 layers (Definition → … → Implications). Nowhere on the student dashboard, episode card, or progress view does the student see *which layer they are on, which they have mastered, which is next*. The depth ladder we built (`current_rung`) is generic 1–5 numbers, not the 7 named layers from the doc. So the differentiator the doc sells to schools (`"this is just a digital textbook" → no, it is Oxford 7-layer`) is not visible in the UI.
-
-### D. The interest/sport bridge is decorative, not load-bearing
-"Your week with Cricket Lens" is a label on a KPI box. The doc describes interest as the *opening move of every concept* — a 30-second hook that re-frames Pythagoras as a cricket pitch diagonal, then dissolves into the real concept. In UI today, "Cricket Lens" never bridges into a concept; it just colors a stats card.
-
-### E. Teacher dashboard is impressive on the surface, hollow underneath
-- Live Intelligence Hub looks premium, but the headline numbers ("Live now 7, Signals 184") fall back to demo data the moment a real class is loaded. Teachers will catch this in their first session.
-- 8 sibling teacher pages duplicate concepts (Analytics vs Insights vs Performance). A teacher has to guess where to click.
-- The charter's actual teacher value — *"which student is stuck on which Layer, and what should I do tomorrow?"* — is not the primary surface. The primary surface is generic stats.
-
-### F. ParentWeeklyNote (the thing you said: just kill it)
-Still exists as a file and a parent-channel concept. You said pitch it. Removing the file and any remaining import is part of this plan.
-
-### G. UI craft, on a second look
-- Mixed styling systems: most cards use inline styles with hard-coded hex (`#E7E5E4`, `#0D9488`) instead of the design tokens defined in `index.css` / `tailwind.config.ts`. This is why "everything looks slightly off" on mobile and dark mode — tokens are not flowing.
-- Two fonts ("Source Serif 4" + "DM Sans") are inlined per component, fighting the global typography.
-- Emoji-as-icons (📐🔬📖🌍) on what is sold as a Harvard/Oxford-grade product reads as a primary-school app, not a thinking platform.
-
-### H. Real-data plumbing is partial
-The data does not feel authentic because most surfaces query real tables but silently fall back to demo arrays when empty. That hides whether the underlying signals (`episode_interactions`, `student_rung_state`, `curiosity_arc_progress`) are actually being written. A 20-student simulation script exists (`scripts/simulate-class.sh`) but its output is not visibly connected to the dashboards in any verifiable way.
-
----
-
-## 4. What the docs say should exist that does not (the real gap list)
-
-From a clean read of the 7-layer and teacher-dashboard docs vs. the codebase:
-
-| Doc commitment | In product? |
-|---|---|
-| 7 named layers visible to student | No — replaced by generic 1–5 rung |
-| Tutorial Defense (defend an assumption) | Hooked into one edge function, no UI prompt for students |
-| First Principles breakdown view | Edge function exists, no student-facing surface |
-| Harvard case / Apply Mini Cases | Component exists (`ApplyMiniCases`) but not on any dashboard journey |
-| Cross-domain Connections (Layer 5) | Not surfaced |
-| Assumptions exercise (Layer 4) | Not surfaced |
-| Curriculum WHY card for teacher | Not present |
-| Per-student behavioural alert ("Priya — Attention −40%") | Not present, replaced by generic signals feed |
-| Pedagogy guidance ("try Layer 5 here") | Not present |
-| Community/peer-teacher tips | Not present |
-| Parent channel: warm, private, weekly | Present, you've asked to remove |
-
----
-
-## 5. The reframe (what we should build instead)
-
-Three big moves. Nothing else until these are right.
-
-### Move 1 — Student dashboard: from "scoreboard" to "today's one thought"
-Replace the 4 KPI tiles + Cricket-Lens stats with a **single hero card**:
+### 2. The 13 slides (executive-tight, principal-first)
 
 ```text
-Today, you're meeting:  Pythagoras Theorem
-Through your lens:       🏏 a cricket pitch is a perfect rectangle
-Your next layer:         ② Mechanism — how the rule actually works
-                         [ Begin · 6 min ]
-Yesterday you wondered:  "does this work for any triangle?"  ← echoed back
+01  Cover            Who we are — one line + school logo lockup placeholder
+02  The real problem 3 columns: Student / Teacher / School pain (in their words)
+03  Why current      Why videos + quizzes + LMS + AI chat aren't moving the needle
+    edtech fails
+04  Our thesis       "Curiosity before content. Thinking before testing."
+                     One sentence + NEP 2020 alignment ribbon (5 pillars mapped)
+05  The 7-Layer      The IP slide. Visual spine: Definition → Mechanism → Reasoning
+    Concept Engine   → Assumptions → Connections → Applications → Implications
+                     Each layer = 1 line of what student does + 1 line of signal captured
+                     CTA: Explore a live 7-layer episode →
+06  Student          5-min daily arc mock. Hook → Guess → First Thought → Build → Teach
+    experience       "Yesterday you thought…" memory card. Three depth bands (silent).
+                     CTA: Open student dashboard →
+07  The 5 Inner OS   Pentagon visual: Clarity · Thinking · Attention · Momentum · Values
+    Dimensions      Per dimension table: what we capture (micro-signals) → how it rolls up
+                     Example row: "Re-reads same line 3×" → Attention −2
+                     CTA: See a student's growth profile →
+08  How growth is    Misconception → Detection → Remediation → Re-test → Growth loop.
+    actually         Sample misconception map screenshot. "We don't just track marks;
+    measured         we track the breaks in thinking."
+                     CTA: Open teacher misconception map →
+09  Teacher          Class cognitive profile mock + suggested hooks + lesson plan card.
+    co-pilot         "Reduces invisible workload, surfaces who understood vs. who clicked."
+                     CTA: Open teacher dashboard →
+10  School OS        Principal dashboard mock: engagement, weak-area heatmap, parent
+    & parent         report sample. White-label / branded app callout.
+    visibility       CTA: Open admin dashboard →
+11  NEP 2020 fit     Side-by-side: NEP pillar (Competency / Critical thinking / Experiential
+                     / Multilingual / Holistic report card) ↔ MGCV feature that delivers it.
+12  Phased rollout   Pilot (6 wks) → Full Class 6–10 → School OS. Success metrics per phase.
+13  The ask /        What we want from this school (pilot class, 1 teacher champion,
+    next step        parent comms slot). Contact card.
 ```
 
-- No percentages. No deltas. No "vs 2".
-- One progress visual: the 7 layers as a vertical spine on the right, lit up to where the student is, with the next layer pulsing.
-- "My Growth" tab keeps numbers — but framed as *reflection*, not judgement ("you asked 4 new questions this week").
+### 3. Per-feature visuals — the key craft point
 
-### Move 2 — Teacher dashboard: collapse to one screen that answers "what do I do tomorrow?"
-- Kill the 8-page sprawl into 3 tabs: **Today · Class Mind · Each Student**.
-- **Today** = ranked action list: "Aanya is stuck on Layer 4 of Real Numbers — run the Assumptions prompt", "Arjun ready for Layer 7 essay", "5 students avoided Tutorial Defense — try Mr. Gupta's worked example".
-- **Class Mind** = the radar + 7-layer heatmap across the class (which layer the class is weakest on for each chapter). One chart, not four widgets.
-- **Each Student** = per-student card with the 7-layer spine, their last thought, last misconception, and one suggested next move.
-- All numbers come from real tables; if a class has zero data, show an *empty state with a "seed demo class" button* instead of silent demo-data fallback. This restores trust.
+For each feature slide (05–10), we render a **polished in-deck visual** (not a screenshot) so it looks intentional even before the principal clicks anything:
 
-### Move 3 — Make the 7 layers the spine of the whole app
-- Rename `current_rung` UI everywhere to the 7 named layers.
-- Episode flow renders the active layer's name + a one-line "what you are doing here" caption.
-- Misconception map groups by layer, not by block type.
-- Hook bridge (cricket → Pythagoras) becomes the *first 30 seconds of Layer 1*, not a separate dashboard tile.
+- Built as real React components inside `src/components/pitch/visuals/` — same design tokens as the app — so they stay crisp at any zoom and never look like stale PNGs.
+- Each visual is a **stylized, simplified version** of the real feature: fewer rows, larger type, annotated callouts ("← signal captured here", "← rolls into Thinking dimension").
+- Hover/scroll reveals a subtle highlight on the captured-signal annotations.
+- Underneath: pill button **"Explore this in the live product →"** that deep-links to the real route (e.g. `/textbook/.../episode/...?mode=seven-layer`, `/teacher`, `/admin`).
 
-### Plus the cleanups
-- Delete `src/components/student/ParentWeeklyNote.tsx`.
-- Replace inline-style cards with token-based components from `src/components/ui/*` so dark mode + mobile become consistent.
-- Replace emoji-as-icon with `lucide-react` icons everywhere on adult-facing surfaces (teacher, parent). Keep emojis only inside playful student micro-moments.
-- Remove all demo-data fallbacks; show real empty states. Wire the 20-student simulation script's output to a visible "demo class" the teacher can toggle on, so authenticity is preserved.
+### 4. Linking strategy
+- Links target the **current preview** routes (per your answer), opening in a new tab so the deck stays in place.
+- A small "Demo account auto-login" hint chip on slides whose target requires auth, so principals viewing on their own device land on a populated screen, not a login wall. (We'll wire actual auto-login only if you confirm; otherwise the chip just says "Login: demo / demo".)
+
+### 5. Print / share
+- `@media print` stylesheet → each slide one landscape page → `Cmd+P → Save as PDF` produces a clean handout matching the on-screen design (per the slides-app skill guidance).
+- `/pitch?print` route forces all slides stacked for the PDF export.
+
+## Files to be created / touched
+
+```text
+src/pages/Pitch.tsx                          # route shell, scroll-snap, keyboard nav
+src/components/pitch/SlideFrame.tsx          # 1920×1080 scaled slide wrapper
+src/components/pitch/ExploreLiveButton.tsx   # persistent CTA → opens app route
+src/components/pitch/slides/
+  01_Cover.tsx
+  02_Problem.tsx
+  03_WhyEdtechFails.tsx
+  04_Thesis.tsx
+  05_SevenLayer.tsx
+  06_StudentExperience.tsx
+  07_FiveDimensions.tsx
+  08_GrowthMeasurement.tsx
+  09_TeacherCopilot.tsx
+  10_SchoolOS.tsx
+  11_NEP2020.tsx
+  12_Rollout.tsx
+  13_Ask.tsx
+src/components/pitch/visuals/
+  SevenLayerSpine.tsx
+  DailyArcMock.tsx
+  YesterdayThoughtCard.tsx
+  DimensionPentagon.tsx
+  SignalCaptureTable.tsx
+  MisconceptionLoop.tsx
+  TeacherClassProfileMock.tsx
+  PrincipalDashboardMock.tsx
+  NEPMappingGrid.tsx
+src/index.css                                # add .slide-* semantic typography tokens
+src/App.tsx                                  # register /pitch route (unlisted)
+```
+
+No backend, no DB, no auth changes. Pure presentation layer.
+
+## Out of scope (call out so we don't drift)
+- Real white-label theming engine (slide just shows the *capability*).
+- Multilingual deck (English first; structure ready for i18n later).
+- Auto-login for demo accounts (only if you say yes — adds risk).
+- Real analytics in the dashboard mocks (visuals are designed, not data-driven).
+
+## Open question I'll need answered before building slide 13
+Who's the signatory / contact on the "Ask" slide — your name, email, phone, and the school logo (or "Your School Logo" placeholder)? I can ship with placeholders and you swap later.
 
 ---
 
-## 6. Suggested order of work (if you approve)
-
-1. **Demolition pass** (small, fast)
-   - Delete `ParentWeeklyNote.tsx` + any remaining import.
-   - Strip the 4 KPI tiles from `StudentDashboard.tsx`.
-   - Remove silent demo-data fallbacks from the four teacher widgets; introduce a single `useDemoMode()` toggle.
-
-2. **Student "Today's one thought" hero** (one new component)
-   - `TodayThoughtCard.tsx` — hero with concept · interest lens · next layer · echo of yesterday.
-   - Right-rail `SevenLayerSpine.tsx` — vertical, themed, no numbers.
-
-3. **7-layer rename + plumbing**
-   - Map `current_rung 1..5` → 7-layer names with a single helper; ship a migration only if we need to widen the column.
-
-4. **Teacher dashboard collapse**
-   - New `TeacherDashboard.tsx` with `Today · Class Mind · Each Student` tabs.
-   - `ClassLayerHeatmap.tsx` (chapter × layer) replaces the four-widget tab strip.
-   - `StudentMindCard.tsx` per student.
-   - Quietly retire (don't delete yet) `TeacherAnalytics / Insights / Performance / DailyTodo` and link them under "More" for now.
-
-5. **Hook bridge becomes Layer 1's first beat**
-   - Move the cricket/food/music lens out of dashboard tiles into the first screen of every episode.
-
-6. **Authenticity pass**
-   - Run `scripts/simulate-class.sh` against a real demo class; verify every widget shows the simulated data with **no fallback**.
-
-7. **Visual unification pass**
-   - Replace inline styles with `Card` from `ui/card`, design tokens, lucide icons, one font pair.
-
----
-
-## 7. What I am NOT changing (guardrails)
-- No new backend tables unless step 3 forces it.
-- No change to auth, episodes content, or the simulation script logic.
-- Parent channel: removed from product surface entirely as you asked. We can revisit later as an *email-only* artifact, not a dashboard component.
-
----
-
-## 8. One question before I start
-
-If you approve this direction, do you want me to **start with Moves 1+3 (student-facing 7-layer reframe)**, or with **Move 2 (teacher dashboard collapse)** first? They are independent and either can ship without the other.
+If this plan looks right, hit **Implement plan** and I'll build it end-to-end. If you want fewer/more slides, a different slide order, or any visual swapped, tell me and I'll revise.
