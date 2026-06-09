@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useArcProgress } from "@/hooks/useArcProgress";
 import { realNumbers, type InterestTag, type MiniCase } from "@/data/curiosityConcepts/realNumbers";
+import { useStudentInterestDomains } from "@/hooks/useStudentInterestDomains";
 import InterestPicker from "@/components/curiosity/InterestPicker";
 import HookShortCard from "@/components/curiosity/HookShortCard";
 import ReflectInput from "@/components/curiosity/ReflectInput";
@@ -59,11 +60,26 @@ const EST_LABEL: Record<1 | 2 | 3, string> = {
 
 export default function CuriosityArc() {
   const { progress, update, goBack, canGoBack, loaded } = useArcProgress(CONCEPT.conceptKey);
+  const { primary: savedDomain, loaded: domainsLoaded } = useStudentInterestDomains();
 
   // local per-step interaction flags (drive the gated Next button)
   const [stepDone, setStepDone] = useState<Record<string, boolean>>({});
   const markDone = (s: string) => setStepDone((d) => ({ ...d, [s]: true }));
   const clearStep = (s: string) => setStepDone((d) => ({ ...d, [s]: false }));
+
+  // Seed arc with the student's onboarding-picked primary domain so the
+  // visuals auto-sync. Only runs when no tag exists yet AND we're parked
+  // on the interest step.
+  useEffect(() => {
+    if (!loaded || !domainsLoaded) return;
+    if (progress.interestTag) return;
+    if (!savedDomain) return;
+    update({
+      interestTag: savedDomain,
+      currentStep: progress.currentStep === "interest" ? "hook" : progress.currentStep,
+      currentDay: progress.currentDay || 1,
+    });
+  }, [loaded, domainsLoaded, savedDomain, progress.interestTag, progress.currentStep, progress.currentDay, update]);
 
   const hook = useMemo(() => {
     const tag = (progress.interestTag as InterestTag) || "cricket";

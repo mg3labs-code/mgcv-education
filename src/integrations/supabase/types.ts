@@ -908,6 +908,7 @@ export type Database = {
           difficulty_level: string
           grade: number | null
           id: string
+          interest_domains: string[]
           interests: string[] | null
           learning_style: string | null
           milestones_seen: Json | null
@@ -921,6 +922,7 @@ export type Database = {
           difficulty_level?: string
           grade?: number | null
           id?: string
+          interest_domains?: string[]
           interests?: string[] | null
           learning_style?: string | null
           milestones_seen?: Json | null
@@ -934,6 +936,7 @@ export type Database = {
           difficulty_level?: string
           grade?: number | null
           id?: string
+          interest_domains?: string[]
           interests?: string[] | null
           learning_style?: string | null
           milestones_seen?: Json | null
