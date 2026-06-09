@@ -10,6 +10,7 @@ import LearnTab from "@/components/student/LearnTab";
 import ThinkingNetwork from "@/components/ThinkingNetwork";
 import TasksTab from "@/components/student/TasksTab";
 import GrowthTab from "@/components/student/GrowthTab";
+import StudentInsightsHub from "@/components/student/StudentInsightsHub";
 import InnerOSAnalytics from "@/components/student/InnerOSAnalytics";
 import { useVoiceGuide } from "@/hooks/useVoiceGuide";
 import ExamAlertBanner from "@/components/student/ExamAlertBanner";
