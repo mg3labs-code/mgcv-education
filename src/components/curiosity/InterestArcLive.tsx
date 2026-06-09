@@ -100,6 +100,11 @@ export default function InterestArcLive({ lens, conceptKey, chapterId, episodeId
   const [d2Step, setD2Step] = useState<"a" | "b" | "c" | "d" | "done">("a");
   const [d3Step, setD3Step] = useState<"a" | "b" | "c" | "d">("a");
   const topRef = useRef<HTMLDivElement>(null);
+  const completedTopics = [
+    { day: 1 as const, title: "Spark", detail: "Hook · Aha · Trap", done: !!persisted.day1CompletedAt },
+    { day: 2 as const, title: "Build", detail: "Recall · Sort · Explain", done: !!persisted.day2CompletedAt },
+    { day: 3 as const, title: "Master", detail: "Case · Teach · Growth", done: !!persisted.day3CompletedAt },
+  ].filter((topic) => topic.done);
 
   // Apply persisted state once it loads
   useEffect(() => {
@@ -112,9 +117,14 @@ export default function InterestArcLive({ lens, conceptKey, chapterId, episodeId
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [persisted.loaded]);
 
-  const goDay = (d: Day) => {
+  const goDay = (d: Day, fromStart = false) => {
     setDay(d);
-    const step = d === 1 ? `d1:${d1Step}` : d === 2 ? `d2:${d2Step}` : `d3:${d3Step}`;
+    let step = d === 1 ? `d1:${d1Step}` : d === 2 ? `d2:${d2Step}` : `d3:${d3Step}`;
+    if (fromStart) {
+      if (d === 1) { setD1Step(0); step = "d1:0"; }
+      if (d === 2) { setD2Step("a"); step = "d2:a"; }
+      if (d === 3) { setD3Step("a"); step = "d3:a"; }
+    }
     void persist({ current_day: d, current_step: step });
     setTimeout(() => topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 30);
   };
@@ -129,14 +139,35 @@ export default function InterestArcLive({ lens, conceptKey, chapterId, episodeId
       <div className="g">
         <div className="arc-bar">
           <div className="arc-days">
-            <button className="arc-day d1c" onClick={() => goDay(1)}>Day 1 {persisted.day1CompletedAt ? "✓" : ""}</button>
-            <button className="arc-day d2c" onClick={() => goDay(2)}>Day 2 {persisted.day2CompletedAt ? "✓" : ""}</button>
-            <button className="arc-day d3c" onClick={() => goDay(3)}>Day 3 {persisted.day3CompletedAt ? "✓" : ""}</button>
+            <button className={`arc-day d1c${day === 1 ? " active" : ""}${persisted.day1CompletedAt ? " done" : ""}`} onClick={() => goDay(1, !!persisted.day1CompletedAt)}>Day 1 <span>{persisted.day1CompletedAt ? "Review" : day === 1 ? "Now" : "Open"}</span></button>
+            <button className={`arc-day d2c${day === 2 ? " active" : ""}${persisted.day2CompletedAt ? " done" : ""}`} onClick={() => goDay(2, !!persisted.day2CompletedAt)}>Day 2 <span>{persisted.day2CompletedAt ? "Review" : day === 2 ? "Now" : "Open"}</span></button>
+            <button className={`arc-day d3c${day === 3 ? " active" : ""}${persisted.day3CompletedAt ? " done" : ""}`} onClick={() => goDay(3, !!persisted.day3CompletedAt)}>Day 3 <span>{persisted.day3CompletedAt ? "Review" : day === 3 ? "Now" : "Open"}</span></button>
           </div>
           <div className="arc-interest" style={{ background: lens.pillBg, color: lens.pillFg, borderColor: lens.pillFg }}>
             {lens.emoji} {lens.label}
           </div>
         </div>
+
+        {completedTopics.length > 0 && (
+          <div className="completed-topics" aria-label="Completed arc topics">
+            <div className="ct-head">
+              <span>Completed topics</span>
+              <span>{completedTopics.length}/3 saved</span>
+            </div>
+            <div className="ct-list">
+              {completedTopics.map((topic) => (
+                <button key={topic.day} className={`ct-item d${topic.day}c${day === topic.day ? " active" : ""}`} onClick={() => goDay(topic.day, true)}>
+                  <span className="ct-check">✓</span>
+                  <span className="ct-copy">
+                    <strong>Day {topic.day} · {topic.title}</strong>
+                    <small>{topic.detail}</small>
+                  </span>
+                  <span className="ct-action">Review</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {day === 1 && (
           <Day1Flow
@@ -181,7 +212,7 @@ export default function InterestArcLive({ lens, conceptKey, chapterId, episodeId
               setPersisted((p) => ({ ...p, day3CompletedAt: ts }));
               void persist({ day3_completed_at: ts });
             }}
-            onRestart={() => goDay(1)}
+            onRestart={() => goDay(1, true)}
           />
         )}
       </div>
