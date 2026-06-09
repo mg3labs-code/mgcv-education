@@ -245,6 +245,7 @@ const StudentOnboarding = () => {
               <div className="w-8 h-2 rounded-full bg-teal-500" />
               <div className="w-2 h-2 rounded-full bg-white/20" />
               <div className="w-2 h-2 rounded-full bg-white/20" />
+              <div className="w-2 h-2 rounded-full bg-white/20" />
             </div>
           </div>
         )}
