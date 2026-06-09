@@ -28,6 +28,7 @@ const TeacherAttendance = lazy(() => import("./pages/TeacherAttendance"));
 const TeacherPerformance = lazy(() => import("./pages/TeacherPerformance"));
 const TeacherDailyTodo = lazy(() => import("./pages/TeacherDailyTodo"));
 const TeacherInsights = lazy(() => import("./pages/TeacherInsights"));
+const TeacherKnowYourWorld = lazy(() => import("./pages/TeacherKnowYourWorld"));
 const TeacherStudentDeepDive = lazy(() => import("./pages/TeacherStudentDeepDive"));
 const StudentExamRoom = lazy(() => import("./pages/StudentExamRoom"));
 const StudentTextbook = lazy(() => import("./pages/StudentTextbook"));
@@ -154,6 +155,7 @@ const App = () => (
                 <Route path="/teacher/quiz" element={<ProtectedRoute><TeacherDashboard /></ProtectedRoute>} />
                 <Route path="/teacher/insights" element={<ProtectedRoute><TeacherInsights /></ProtectedRoute>} />
                 <Route path="/teacher/student/:studentId" element={<ProtectedRoute><TeacherStudentDeepDive /></ProtectedRoute>} />
+                <Route path="/teacher/know-your-world" element={<ProtectedRoute><TeacherKnowYourWorld /></ProtectedRoute>} />
                 <Route path="/teacher/exam-room" element={<ProtectedRoute><StudentExamRoom /></ProtectedRoute>} />
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/admin/schools" element={<AdminDashboard />} />

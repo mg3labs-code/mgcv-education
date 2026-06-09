@@ -1253,6 +1253,36 @@ export type Database = {
         }
         Relationships: []
       }
+      teacher_world_digests: {
+        Row: {
+          board: string
+          class_name: string
+          expires_at: string
+          generated_at: string
+          id: string
+          payload: Json
+          subject: string
+        }
+        Insert: {
+          board?: string
+          class_name: string
+          expires_at?: string
+          generated_at?: string
+          id?: string
+          payload: Json
+          subject: string
+        }
+        Update: {
+          board?: string
+          class_name?: string
+          expires_at?: string
+          generated_at?: string
+          id?: string
+          payload?: Json
+          subject?: string
+        }
+        Relationships: []
+      }
       teaching_schedules: {
         Row: {
           chapters_data: Json
