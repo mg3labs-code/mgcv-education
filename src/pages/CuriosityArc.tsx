@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useArcProgress } from "@/hooks/useArcProgress";
 import { realNumbers, type InterestTag, type MiniCase } from "@/data/curiosityConcepts/realNumbers";
+import { useStudentInterestDomains } from "@/hooks/useStudentInterestDomains";
 import InterestPicker from "@/components/curiosity/InterestPicker";
 import HookShortCard from "@/components/curiosity/HookShortCard";
 import ReflectInput from "@/components/curiosity/ReflectInput";
