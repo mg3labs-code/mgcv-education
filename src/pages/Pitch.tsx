@@ -1191,7 +1191,9 @@ export default function Pitch() {
         <S04_Thesis />
         <S05_SevenLayer />
         <S06_Student />
+        <S06B_StudentPFE />
         <S07_Dimensions />
+
         <S08_Growth />
         <S09_Teacher />
         <S10_School />
