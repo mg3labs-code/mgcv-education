@@ -52,6 +52,7 @@ import PreEpisodeCuriosityPrompt from "@/components/curiosity/PreEpisodeCuriosit
 import InterestArcLive from "@/components/curiosity/InterestArcLive";
 import { getArcLens } from "@/data/interestArcLenses";
 import { blockToLayer, LAYERS } from "@/lib/sevenLayers";
+import { synthesizeLayerBlock } from "@/lib/synthesizeLayerBlock";
 import { ROUTES } from "@/lib/routes";
 
 const LANGUAGE_SUBJECTS = new Set(["Telugu", "Hindi"]);
