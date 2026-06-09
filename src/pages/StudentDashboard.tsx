@@ -10,6 +10,7 @@ import LearnTab from "@/components/student/LearnTab";
 import ThinkingNetwork from "@/components/ThinkingNetwork";
 import TasksTab from "@/components/student/TasksTab";
 import GrowthTab from "@/components/student/GrowthTab";
+import StudentInsightsHub from "@/components/student/StudentInsightsHub";
 import InnerOSAnalytics from "@/components/student/InnerOSAnalytics";
 import { useVoiceGuide } from "@/hooks/useVoiceGuide";
 import ExamAlertBanner from "@/components/student/ExamAlertBanner";
@@ -599,6 +600,20 @@ const StudentDashboard = () => {
                 )}
               </FadeSlide>
 
+              {/* Polished insights hub: skills · retention · weekly summary */}
+              <FadeSlide show={phase >= 2} delay={120}>
+                {phase >= 2 && (
+                  <div style={{ marginTop: 20 }}>
+                    <StudentInsightsHub
+                      innerOS={innerOS as never}
+                      streakDays={streakDays}
+                      episodeCount={episodeCount ?? 0}
+                    />
+                  </div>
+                )}
+              </FadeSlide>
+
+
               {/* ALWAYS: Today's Schedule */}
               <div style={{ marginTop: 20 }}>
                 <FadeSlide delay={50}>
@@ -678,6 +693,11 @@ const StudentDashboard = () => {
           {/* ===== GROWTH TAB ===== */}
           {activeTab === "growth" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <StudentInsightsHub
+                innerOS={innerOS as never}
+                streakDays={streakDays}
+                episodeCount={episodeCount ?? 0}
+              />
               {user?.id && <InnerOSAnalytics userId={user.id} />}
               <GrowthTab
                 dimensionScores={dimensionScores}
