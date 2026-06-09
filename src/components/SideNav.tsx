@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { LucideIcon, LayoutDashboard, BookOpen, BarChart3, Users, Settings, LogOut, GraduationCap, CalendarDays, ClipboardList, School, Brain, ListTodo, FlaskConical, Menu, Sparkles, Globe2 } from "lucide-react";
+import { LucideIcon, LayoutDashboard, BookOpen, BarChart3, Users, Settings, LogOut, GraduationCap, CalendarDays, ClipboardList, School, Brain, ListTodo, FlaskConical, Menu, Sparkles, Globe2, Library } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
@@ -29,6 +29,7 @@ const teacherNav: NavItem[] = [
   { label: "Annual Schedule", icon: CalendarDays, path: "/teacher/schedule" },
   { label: "Assignments", icon: ClipboardList, path: "/teacher/assignments" },
   { label: "Class Insights", icon: Brain, path: "/teacher/insights" },
+  { label: "Question Bank", icon: Library, path: "/teacher/question-bank" },
   { label: "Exam Room", icon: School, path: "/teacher/exam-room" },
   { label: "Students", icon: Users, path: "/teacher/students" },
   { label: "Analytics", icon: BarChart3, path: "/teacher/analytics" },
