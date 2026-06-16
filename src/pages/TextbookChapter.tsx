@@ -108,7 +108,7 @@ const TextbookChapter = () => {
             const { status, pct } = getEpisodeStatus(progressMap, chapter.id, episode.id);
             const isDone = status === "completed";
             const isInProg = status === "in-progress";
-            const hasPilot = !!getPilotContent(chapter.id, episode.id);
+            const hasPilot = !!getPilotContent(chapter.id, episode.id, episode.title);
             return (
               <div
                 key={episode.id}
@@ -174,12 +174,12 @@ const TextbookChapter = () => {
                     {hasPilot && (
                       <Button
                         type="button"
-                        variant="outline"
+                        variant="default"
                         size="sm"
-                        className="justify-center"
-                        onClick={() => navigate(ROUTES.textbook.episodeWithMode(chapterId!, episode.id, "full"))}
+                        className="justify-center gap-1"
+                        onClick={() => navigate(ROUTES.textbook.episode(chapterId!, episode.id))}
                       >
-                        Full practice
+                        <Sparkles className="h-3.5 w-3.5" /> Curiosity Arc
                       </Button>
                     )}
                     <button
