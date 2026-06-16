@@ -124,18 +124,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (isAppRole(metadata.role) && metadata.role === "teacher") {
           syncTeacherAssignmentsFromMetadata(session.user.id, metadata);
         }
-        setLoading(false);
-      }
-    );
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        const metadata = session.user.user_metadata ?? {};
-        setRole(isAppRole(metadata.role) ? metadata.role : null);
-        setFullName(typeof metadata.full_name === "string" ? metadata.full_name : "");
-        fetchUserData(session.user.id, metadata);
       } else {
         setRole(null);
         setFullName("");
