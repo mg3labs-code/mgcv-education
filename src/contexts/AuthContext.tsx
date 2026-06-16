@@ -101,21 +101,46 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, name: string, selectedRole: AppRole, className?: string, schoolName?: string) => {
-    const { error } = await supabase.auth.signUp({
+  const signUp = async (
+    email: string,
+    password: string,
+    name: string,
+    selectedRole: AppRole,
+    className?: string,
+    schoolName?: string,
+    teacherAssignments?: { class_name: string; subject: string }[],
+  ) => {
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { 
-          full_name: name, 
-          role: selectedRole, 
+        data: {
+          full_name: name,
+          role: selectedRole,
           class_name: selectedRole === 'teacher' ? '' : (className || ''),
           school_name: schoolName || '',
+          teacher_assignments: selectedRole === 'teacher' ? (teacherAssignments || []) : [],
         },
         emailRedirectTo: window.location.origin,
       },
     });
     if (error) throw error;
+
+    // If session was returned immediately (email confirmation disabled),
+    // persist teacher class/subject pairs into the teacher_assignments table.
+    if (selectedRole === 'teacher' && teacherAssignments && teacherAssignments.length > 0 && data.user) {
+      const rows = teacherAssignments.map(a => ({
+        teacher_id: data.user!.id,
+        school_name: schoolName || null,
+        class_name: a.class_name,
+        subject: a.subject,
+      }));
+      // RLS allows the teacher to insert their own rows; safe to ignore conflicts.
+      await supabase.from('teacher_assignments').upsert(rows, {
+        onConflict: 'teacher_id,class_name,subject',
+        ignoreDuplicates: true,
+      });
+    }
   };
 
   const signIn = async (email: string, password: string) => {
