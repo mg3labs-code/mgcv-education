@@ -149,7 +149,12 @@ function generateSchedule(chapters: ChapterDef[]): Record<string, ScheduleItem> 
     }
   };
 
-  let currentDate = new Date("2025-06-30T12:00:00Z");
+  // Anchor to the start of the current academic year (June 1).
+  // If we're already past June, use this calendar year; otherwise the previous one.
+  const _today = new Date();
+  const _ayYear = _today.getUTCMonth() >= 5 ? _today.getUTCFullYear() : _today.getUTCFullYear() - 1;
+  // Use May 31 so the first getNextSlot() lands on the first working day of June.
+  let currentDate = new Date(Date.UTC(_ayYear, 4, 31, 12, 0, 0));
 
   chapters.forEach((chapter) => {
     for (let i = 0; i < chapter.teachingDays; i++) {
