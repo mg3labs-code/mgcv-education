@@ -6,57 +6,51 @@ import { useTeacherAssignments } from "@/hooks/useTeacherAssignments";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import type { TeacherAssignment } from "@/data/teacherSubjects";
+import type { TeachingMapEntry } from "@/data/teacherSubjects";
+
+const keyOf = (e: TeachingMapEntry) => `${e.subject}::${e.board}::${e.grade}::${e.section}`;
 
 const TeacherSettings = () => {
   const { user } = useAuth();
-  const { assignments, refetch, loading } = useTeacherAssignments();
-  const [value, setValue] = useState<TeacherAssignment[]>([]);
+  const { entries, refetch, loading } = useTeacherAssignments();
+  const [value, setValue] = useState<TeachingMapEntry[]>([]);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    setValue(assignments);
-  }, [assignments]);
+  useEffect(() => { setValue(entries); }, [entries]);
 
   const save = async () => {
     if (!user) return;
     if (value.length === 0) {
-      toast({ title: "Pick at least one class & subject", variant: "destructive" });
+      toast({ title: "Add at least one teaching preference", variant: "destructive" });
       return;
     }
     setSaving(true);
     try {
-      // Diff existing vs desired.
-      const existingKeys = new Set(assignments.map(a => `${a.class_name}::${a.subject}`));
-      const desiredKeys = new Set(value.map(a => `${a.class_name}::${a.subject}`));
+      const existing = new Set(entries.map(keyOf));
+      const desired = new Set(value.map(keyOf));
 
-      const toAdd = value.filter(a => !existingKeys.has(`${a.class_name}::${a.subject}`));
-      const toRemove = assignments.filter(a => !desiredKeys.has(`${a.class_name}::${a.subject}`));
+      const toAdd = value.filter(e => !existing.has(keyOf(e)));
+      const toRemove = entries.filter(e => !desired.has(keyOf(e)));
 
-      const gradeOf = (cn: string) => parseInt(cn.replace(/\D/g, ""), 10) || 9;
       if (toAdd.length > 0) {
         const { error } = await (supabase as any).from("teacher_teaching_map").insert(
-          toAdd.map(a => ({
-            teacher_id: user.id,
-            subject: a.subject,
-            board: "CBSE",
-            grade: gradeOf(a.class_name),
-            section: "A",
-          }))
+          toAdd.map(e => ({ teacher_id: user.id, ...e })),
         );
         if (error) throw error;
       }
-      for (const a of toRemove) {
+      for (const e of toRemove) {
         const { error } = await (supabase as any)
           .from("teacher_teaching_map")
           .delete()
           .eq("teacher_id", user.id)
-          .eq("grade", gradeOf(a.class_name))
-          .eq("subject", a.subject);
+          .eq("subject", e.subject)
+          .eq("board", e.board)
+          .eq("grade", e.grade)
+          .eq("section", e.section);
         if (error) throw error;
       }
       await refetch();
-      toast({ title: "Saved ✓", description: "Your class & subject access is up to date." });
+      toast({ title: "Saved ✓", description: "Your teaching access is up to date." });
     } catch (e: any) {
       toast({ title: "Save failed", description: e.message, variant: "destructive" });
     } finally {
@@ -69,7 +63,9 @@ const TeacherSettings = () => {
       <main className="p-4 md:p-8 max-w-3xl mx-auto space-y-6">
         <div>
           <h1 className="text-2xl font-bold">Teacher Settings</h1>
-          <p className="text-sm text-muted-foreground">Classes & subjects you teach. Access to schedules, assignments, and attendance is scoped to these pairs.</p>
+          <p className="text-sm text-muted-foreground">
+            Subjects, boards, grades, and sections you teach. Calendar, assignments, and attendance access is scoped to these rows.
+          </p>
         </div>
 
         {loading ? (
