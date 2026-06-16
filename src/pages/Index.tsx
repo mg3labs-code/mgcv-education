@@ -12,6 +12,8 @@ import ResearchProvenMethods from "@/components/landing/ResearchProvenMethods";
 import LoadingScreen from "@/components/LoadingScreen";
 import { Menu, X, ArrowRight, GraduationCap, BookOpen } from "lucide-react";
 import ImageTextEffect from "@/components/landing/ImageTextEffect";
+import TeacherClassSubjectMatrix from "@/components/teacher/TeacherClassSubjectMatrix";
+import type { TeacherAssignment } from "@/data/teacherSubjects";
 import { motion, AnimatePresence } from "framer-motion";
 import heroStudents from "@/assets/hero-students.webp";
 import heroFutureLearning from "@/assets/hero-future-learning.jpg";
