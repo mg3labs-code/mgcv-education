@@ -65,29 +65,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // After sign-in, if this user is a teacher and their metadata carries
-  // assignments selected during signup, persist them to teacher_assignments.
-  // Idempotent thanks to the (teacher_id, class_name, subject) unique key.
-  const syncTeacherAssignmentsFromMetadata = async (userId: string, metadata: any) => {
-    try {
-      const raw = metadata?.teacher_assignments;
-      if (!Array.isArray(raw) || raw.length === 0) return;
-      const rows = raw
-        .filter((r: any) => r && typeof r.class_name === "string" && typeof r.subject === "string")
-        .map((r: any) => ({
-          teacher_id: userId,
-          class_name: r.class_name,
-          subject: r.subject,
-          school_name: typeof metadata?.school_name === "string" ? metadata.school_name : null,
-        }));
-      if (rows.length === 0) return;
-      await supabase.from("teacher_assignments").upsert(rows, {
-        onConflict: "teacher_id,class_name,subject",
-        ignoreDuplicates: true,
-      });
-    } catch (e) {
-      console.error("Failed to sync teacher assignments from metadata", e);
-    }
+  // Teacher assignments are persisted server-side by the signup trigger
+  // (handle_new_user reads `teaching_map` from user_metadata). This client-side
+  // sync is a no-op fallback retained for older sessions that signed up before
+  // the trigger existed; it now does nothing.
+  const syncTeacherAssignmentsFromMetadata = async (_userId: string, _metadata: any) => {
+    return;
   };
 
   useEffect(() => {
