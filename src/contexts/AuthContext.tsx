@@ -126,6 +126,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     schoolName?: string,
     teacherAssignments?: { class_name: string; subject: string }[],
   ) => {
+    // Convert legacy { class_name, subject } pairs to the new teaching_map shape
+    // that the server-side handle_new_user trigger consumes.
+    const teachingMap =
+      selectedRole === 'teacher' && Array.isArray(teacherAssignments)
+        ? teacherAssignments.map(a => ({
+            subject: a.subject,
+            board: 'CBSE',
+            grade: parseInt((a.class_name || '').replace(/\D/g, ''), 10) || 9,
+            section: 'A',
+          }))
+        : [];
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -135,6 +147,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           role: selectedRole,
           class_name: selectedRole === 'teacher' ? '' : (className || ''),
           school_name: schoolName || '',
+          // New schema: server trigger reads `teaching_map` to populate teacher_teaching_map.
+          teaching_map: teachingMap,
+          // Legacy alias kept so older edge functions or jobs that still look for
+          // `teacher_assignments` in metadata don't crash; not used by the trigger.
           teacher_assignments: selectedRole === 'teacher' ? (teacherAssignments || []) : [],
         },
         emailRedirectTo: window.location.origin,
@@ -142,21 +158,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
     if (error) throw error;
 
-    // If session was returned immediately (email confirmation disabled),
-    // persist teacher class/subject pairs into the teacher_assignments table.
-    if (selectedRole === 'teacher' && teacherAssignments && teacherAssignments.length > 0 && data.user) {
-      const rows = teacherAssignments.map(a => ({
-        teacher_id: data.user!.id,
-        school_name: schoolName || null,
-        class_name: a.class_name,
-        subject: a.subject,
-      }));
-      // RLS allows the teacher to insert their own rows; safe to ignore conflicts.
-      await supabase.from('teacher_assignments').upsert(rows, {
-        onConflict: 'teacher_id,class_name,subject',
-        ignoreDuplicates: true,
-      });
-    }
+    // No client-side insert needed: the database trigger handle_new_user inserts
+    // the teacher_teaching_map rows from the metadata above when the auth user
+    // is created. Keeps RLS simple and avoids duplicate writes.
+    void data;
   };
 
   const signIn = async (email: string, password: string) => {
