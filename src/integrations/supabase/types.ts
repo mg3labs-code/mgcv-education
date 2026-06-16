@@ -894,6 +894,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "student_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "assignment_questions_student"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "student_answers_submission_id_fkey"
             columns: ["submission_id"]
             isOneToOne: false
@@ -1456,7 +1463,41 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      assignment_questions_student: {
+        Row: {
+          assignment_id: string | null
+          created_at: string | null
+          id: string | null
+          max_score: number | null
+          question_number: number | null
+          question_text: string | null
+        }
+        Insert: {
+          assignment_id?: string | null
+          created_at?: string | null
+          id?: string | null
+          max_score?: number | null
+          question_number?: number | null
+          question_text?: string | null
+        }
+        Update: {
+          assignment_id?: string | null
+          created_at?: string | null
+          id?: string | null
+          max_score?: number | null
+          question_number?: number | null
+          question_text?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignment_questions_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       get_class_averages: {
