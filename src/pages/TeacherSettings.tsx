@@ -66,10 +66,7 @@ const TeacherSettings = () => {
   // Debounced auto-save on any change
   const onChange = (next: TeachingMapEntry[]) => {
     setValue(next);
-    if (!initialized.current) {
-      initialized.current = true;
-      return;
-    }
+    if (!hydrated.current) return; // ignore changes before first server hydration
     if (timer.current) window.clearTimeout(timer.current);
     timer.current = window.setTimeout(() => persist(next), 700);
   };
