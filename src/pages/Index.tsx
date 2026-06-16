@@ -12,6 +12,8 @@ import ResearchProvenMethods from "@/components/landing/ResearchProvenMethods";
 import LoadingScreen from "@/components/LoadingScreen";
 import { Menu, X, ArrowRight, GraduationCap, BookOpen } from "lucide-react";
 import ImageTextEffect from "@/components/landing/ImageTextEffect";
+import TeacherClassSubjectMatrix from "@/components/teacher/TeacherClassSubjectMatrix";
+import type { TeacherAssignment } from "@/data/teacherSubjects";
 import { motion, AnimatePresence } from "framer-motion";
 import heroStudents from "@/assets/hero-students.webp";
 import heroFutureLearning from "@/assets/hero-future-learning.jpg";
@@ -48,6 +50,7 @@ const Index = () => {
   const [schoolName, setSchoolName] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [teacherAssignments, setTeacherAssignments] = useState<TeacherAssignment[]>([]);
   const [loginError, setLoginError] = useState<{ message: string; code?: string; suggestion: string } | null>(null);
   const [heroIndex, setHeroIndex] = useState(0);
   const [scrollY, setScrollY] = useState(0);
@@ -112,6 +115,7 @@ const Index = () => {
     setFullName("");
     setClassName("");
     setSchoolName("");
+    setTeacherAssignments([]);
     setLoginError(null);
   }, []);
 
@@ -151,7 +155,12 @@ const Index = () => {
     try {
       if (authMode === "signup") {
         const selectedRole = loginType === "teacher" ? "teacher" : "student";
-        await signUp(email, password, fullName, selectedRole as any, className, schoolName);
+        if (selectedRole === "teacher" && teacherAssignments.length === 0) {
+          setLoginError({ message: "Please select at least one class & subject you teach.", suggestion: "Tick the boxes in the matrix below for every class/subject you teach." });
+          setSubmitting(false);
+          return;
+        }
+        await signUp(email, password, fullName, selectedRole as any, className, schoolName, selectedRole === "teacher" ? teacherAssignments : undefined);
         toast({ title: "Account created!", description: "Please check your email to verify your account." });
         closeModal();
       } else {
@@ -655,8 +664,22 @@ const Index = () => {
                           <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} required
                             placeholder="Full name" className={inputClass} />
                           {loginType === "teacher" && (
-                            <input type="text" value={schoolName} onChange={(e) => setSchoolName(e.target.value)}
-                              placeholder="School name" className={inputClass} />
+                            <>
+                              <input type="text" value={schoolName} onChange={(e) => setSchoolName(e.target.value)}
+                                placeholder="School name" className={inputClass} />
+                              <div className="text-left">
+                                <p className="text-xs font-semibold text-foreground mb-2">Which classes & subjects do you teach?</p>
+                                <TeacherClassSubjectMatrix
+                                  value={teacherAssignments}
+                                  onChange={setTeacherAssignments}
+                                />
+                                {teacherAssignments.length > 0 && (
+                                  <p className="text-[11px] text-muted-foreground mt-2">
+                                    Selected: {teacherAssignments.length} {teacherAssignments.length === 1 ? "pair" : "pairs"}
+                                  </p>
+                                )}
+                              </div>
+                            </>
                           )}
                         </>
                       )}

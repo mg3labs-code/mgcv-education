@@ -64,22 +64,89 @@ const StudentCalendar = () => {
   const [monthIndex, setMonthIndex] = useState(now.getMonth());
   const [year, setYear] = useState(now.getFullYear());
 
-  useEffect(() => {
-    const fetchSchedules = async () => {
-      if (!user) return;
-      const { data: profile } = await supabase.from("profiles").select("class_name").eq("user_id", user.id).maybeSingle();
-      if (!profile?.class_name) { setLoading(false); return; }
-      const { data: schedules } = await supabase.from("teaching_schedules").select("subject, schedule_data, chapters_data").eq("class_name", profile.class_name);
-      if (schedules) {
-        setSubjectSchedules(schedules.map((s) => ({
-          subject: s.subject,
-          schedule: s.schedule_data as unknown as Record<string, ScheduleItem>,
-          chapters: (s.chapters_data as unknown as { id: string; name: string; colorHex: string }[]) || [],
-        })));
+  // Refetch helper extracted so realtime callbacks can re-run it.
+  const refetchSchedules = async () => {
+    if (!user) return;
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("class_name")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (!profile?.class_name) { setLoading(false); return; }
+    const classNameRaw = profile.class_name;
+
+    // 1. Legacy JSONB schedules (one row per (teacher, class) keyed by subject).
+    const { data: legacy } = await supabase
+      .from("teaching_schedules")
+      .select("subject, schedule_data, chapters_data")
+      .eq("class_name", classNameRaw);
+
+    const bySubject: Record<string, SubjectSchedule> = {};
+    (legacy ?? []).forEach((s) => {
+      bySubject[s.subject] = {
+        subject: s.subject,
+        schedule: (s.schedule_data as unknown as Record<string, ScheduleItem>) ?? {},
+        chapters: (s.chapters_data as unknown as { id: string; name: string; colorHex: string }[]) || [],
+      };
+    });
+
+    // 2. New per-date calendar rows (overrides the JSONB on a per-date basis,
+    //    so teacher reschedule / extend / delete actions surface here live).
+    const { data: rows } = await supabase
+      .from("calendar")
+      .select("subject, date, entry_type, chapter_id, chapter_name, chapter_color, topic_key, topic_title, label, is_national_holiday")
+      .eq("class_name", classNameRaw);
+
+    (rows ?? []).forEach((r: any) => {
+      const subj = r.subject as string;
+      if (!bySubject[subj]) bySubject[subj] = { subject: subj, schedule: {}, chapters: [] };
+      bySubject[subj].schedule[r.date] = {
+        type: r.entry_type,
+        title: r.topic_title || r.label || undefined,
+        label: r.label || undefined,
+        chapterId: r.chapter_id || undefined,
+        isNational: r.is_national_holiday,
+      };
+      if (r.chapter_id && !bySubject[subj].chapters.find(c => c.id === r.chapter_id)) {
+        bySubject[subj].chapters.push({
+          id: r.chapter_id,
+          name: r.chapter_name || r.chapter_id,
+          colorHex: r.chapter_color || "#6b7280",
+        });
       }
-      setLoading(false);
+    });
+
+    setSubjectSchedules(Object.values(bySubject));
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    refetchSchedules();
+
+    if (!user) return;
+    // Live updates when the teacher changes calendar rows for this student's class.
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    (async () => {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("class_name")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (!profile?.class_name) return;
+      channel = supabase
+        .channel(`calendar-${profile.class_name}`)
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "calendar", filter: `class_name=eq.${profile.class_name}` },
+          () => { refetchSchedules(); }
+        )
+        .subscribe();
+    })();
+
+    return () => {
+      if (channel) supabase.removeChannel(channel);
     };
-    fetchSchedules();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const todayKey = now.toISOString().split("T")[0];

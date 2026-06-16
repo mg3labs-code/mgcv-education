@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { NATIONAL_HOLIDAYS } from "@/data/nationalHolidays";
 
 // ── Types ──
 export interface ChapterDef {
@@ -110,28 +111,7 @@ const getDefaultChapters = (): ChapterDef[] => [
   },
 ];
 
-const nationalHolidays: Record<string, string> = {
-  "2025-01-26": "Republic Day",
-  "2025-02-26": "Maha Shivaratri",
-  "2025-03-14": "Holi",
-  "2025-03-31": "Eid-ul-Fitr",
-  "2025-04-18": "Good Friday",
-  "2025-05-12": "Buddha Purnima",
-  "2025-06-07": "Eid al-Adha",
-  "2025-07-07": "Muharram",
-  "2025-08-15": "Independence Day",
-  "2025-08-19": "Raksha Bandhan",
-  "2025-08-26": "Janmashtami",
-  "2025-10-02": "Gandhi Jayanti",
-  "2025-10-20": "Dussehra",
-  "2025-10-21": "Diwali",
-  "2025-11-15": "Guru Nanak Jayanti",
-  "2025-12-25": "Christmas Day",
-  "2026-01-26": "Republic Day",
-  "2026-08-15": "Independence Day",
-  "2026-10-02": "Gandhi Jayanti",
-  "2026-12-25": "Christmas Day",
-};
+const nationalHolidays: Record<string, string> = NATIONAL_HOLIDAYS;
 
 const toKey = (date: Date) => date.toISOString().split("T")[0];
 const fromKey = (key: string) => new Date(key + "T12:00:00Z");

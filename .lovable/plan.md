@@ -1,116 +1,148 @@
+## Goals
 
-# MGCV Executive Pitch — In-App Slide Route
-
-A private, link-only route inside the existing app (`/pitch`) that presents MGCV to school principals & management. Built like a product homepage — full-bleed, designed slides — not a generic PPT. Every feature slide pairs a **polished mock visual** (so the busy principal "gets it" in 3 seconds) with an **"Explore this live →"** button that jumps to the real working screen in the app.
-
-## What gets built
-
-### 1. New route `/pitch` (unlisted, no nav link)
-- Single-page deck, vertical scroll-snap between slides (also ←/→ keyboard + dot nav).
-- Fixed-resolution 1920×1080 design system using the slides-app scaling pattern (semantic typography tokens: `.slide-title`, `.slide-body`, etc.).
-- Cream / dark-slate enterprise theme + teal accents (matches existing brand memory).
-- Top-right utility chip: "Present mode" (fullscreen), "Download PDF" (print stylesheet), language toggle stub.
-- Bottom-right persistent CTA on every slide: **"Explore this in the live product →"** linking to the relevant in-app route.
-
-### 2. The 13 slides (executive-tight, principal-first)
-
-```text
-01  Cover            Who we are — one line + school logo lockup placeholder
-02  The real problem 3 columns: Student / Teacher / School pain (in their words)
-03  Why current      Why videos + quizzes + LMS + AI chat aren't moving the needle
-    edtech fails
-04  Our thesis       "Curiosity before content. Thinking before testing."
-                     One sentence + NEP 2020 alignment ribbon (5 pillars mapped)
-05  The 7-Layer      The IP slide. Visual spine: Definition → Mechanism → Reasoning
-    Concept Engine   → Assumptions → Connections → Applications → Implications
-                     Each layer = 1 line of what student does + 1 line of signal captured
-                     CTA: Explore a live 7-layer episode →
-06  Student          5-min daily arc mock. Hook → Guess → First Thought → Build → Teach
-    experience       "Yesterday you thought…" memory card. Three depth bands (silent).
-                     CTA: Open student dashboard →
-07  The 5 Inner OS   Pentagon visual: Clarity · Thinking · Attention · Momentum · Values
-    Dimensions      Per dimension table: what we capture (micro-signals) → how it rolls up
-                     Example row: "Re-reads same line 3×" → Attention −2
-                     CTA: See a student's growth profile →
-08  How growth is    Misconception → Detection → Remediation → Re-test → Growth loop.
-    actually         Sample misconception map screenshot. "We don't just track marks;
-    measured         we track the breaks in thinking."
-                     CTA: Open teacher misconception map →
-09  Teacher          Class cognitive profile mock + suggested hooks + lesson plan card.
-    co-pilot         "Reduces invisible workload, surfaces who understood vs. who clicked."
-                     CTA: Open teacher dashboard →
-10  School OS        Principal dashboard mock: engagement, weak-area heatmap, parent
-    & parent         report sample. White-label / branded app callout.
-    visibility       CTA: Open admin dashboard →
-11  NEP 2020 fit     Side-by-side: NEP pillar (Competency / Critical thinking / Experiential
-                     / Multilingual / Holistic report card) ↔ MGCV feature that delivers it.
-12  Phased rollout   Pilot (6 wks) → Full Class 6–10 → School OS. Success metrics per phase.
-13  The ask /        What we want from this school (pilot class, 1 teacher champion,
-    next step        parent comms slot). Contact card.
-```
-
-### 3. Per-feature visuals — the key craft point
-
-For each feature slide (05–10), we render a **polished in-deck visual** (not a screenshot) so it looks intentional even before the principal clicks anything:
-
-- Built as real React components inside `src/components/pitch/visuals/` — same design tokens as the app — so they stay crisp at any zoom and never look like stale PNGs.
-- Each visual is a **stylized, simplified version** of the real feature: fewer rows, larger type, annotated callouts ("← signal captured here", "← rolls into Thinking dimension").
-- Hover/scroll reveals a subtle highlight on the captured-signal annotations.
-- Underneath: pill button **"Explore this in the live product →"** that deep-links to the real route (e.g. `/textbook/.../episode/...?mode=seven-layer`, `/teacher`, `/admin`).
-
-### 4. Linking strategy
-- Links target the **current preview** routes (per your answer), opening in a new tab so the deck stays in place.
-- A small "Demo account auto-login" hint chip on slides whose target requires auth, so principals viewing on their own device land on a populated screen, not a login wall. (We'll wire actual auto-login only if you confirm; otherwise the chip just says "Login: demo / demo".)
-
-### 5. Print / share
-- `@media print` stylesheet → each slide one landscape page → `Cmd+P → Save as PDF` produces a clean handout matching the on-screen design (per the slides-app skill guidance).
-- `/pitch?print` route forces all slides stacked for the PDF export.
-
-## Files to be created / touched
-
-```text
-src/pages/Pitch.tsx                          # route shell, scroll-snap, keyboard nav
-src/components/pitch/SlideFrame.tsx          # 1920×1080 scaled slide wrapper
-src/components/pitch/ExploreLiveButton.tsx   # persistent CTA → opens app route
-src/components/pitch/slides/
-  01_Cover.tsx
-  02_Problem.tsx
-  03_WhyEdtechFails.tsx
-  04_Thesis.tsx
-  05_SevenLayer.tsx
-  06_StudentExperience.tsx
-  07_FiveDimensions.tsx
-  08_GrowthMeasurement.tsx
-  09_TeacherCopilot.tsx
-  10_SchoolOS.tsx
-  11_NEP2020.tsx
-  12_Rollout.tsx
-  13_Ask.tsx
-src/components/pitch/visuals/
-  SevenLayerSpine.tsx
-  DailyArcMock.tsx
-  YesterdayThoughtCard.tsx
-  DimensionPentagon.tsx
-  SignalCaptureTable.tsx
-  MisconceptionLoop.tsx
-  TeacherClassProfileMock.tsx
-  PrincipalDashboardMock.tsx
-  NEPMappingGrid.tsx
-src/index.css                                # add .slide-* semantic typography tokens
-src/App.tsx                                  # register /pitch route (unlisted)
-```
-
-No backend, no DB, no auth changes. Pure presentation layer.
-
-## Out of scope (call out so we don't drift)
-- Real white-label theming engine (slide just shows the *capability*).
-- Multilingual deck (English first; structure ready for i18n later).
-- Auto-login for demo accounts (only if you say yes — adds risk).
-- Real analytics in the dashboard mocks (visuals are designed, not data-driven).
-
-## Open question I'll need answered before building slide 13
-Who's the signatory / contact on the "Ask" slide — your name, email, phone, and the school logo (or "Your School Logo" placeholder)? I can ship with placeholders and you swap later.
+1. Restrict teachers to only the (class, subject) pairs they teach — multi-select via checkboxes.
+2. Replace the JSONB `teaching_schedules.schedule_data` blob with a row-per-date `calendar` table so a single topic can be moved, inserted, or deleted without rewriting the whole month.
+3. Refresh national holidays for academic year June 2025 → May 2026.
+4. Give teachers explicit instance-level actions on the annual schedule: **Reschedule**, **Extend** (push following dates by N days), **Insert**, **Delete**, **Add holiday**.
 
 ---
 
-If this plan looks right, hit **Implement plan** and I'll build it end-to-end. If you want fewer/more slides, a different slide order, or any visual swapped, tell me and I'll revise.
+## 1. Database changes (one migration)
+
+### 1a. `subjects_catalog` (seed list)
+Lightweight enum-like table: `id`, `key` (math, science, social, english, hindi, telugu…), `label`. Used to populate checkboxes.
+
+### 1b. `teacher_assignments`
+Columns: `id`, `teacher_id` (FK auth.users), `school_name`, `class_name`, `subject`, `created_at`.
+Unique `(teacher_id, class_name, subject)`. One row per (class, subject) pair so a teacher who teaches Class 9 Math + Class 10 Math + Class 10 Science has 3 rows.
+
+GRANT to `authenticated` + `service_role`. RLS: teacher reads/writes their own rows. Admins manage all via `has_role`.
+
+### 1c. `teacher_teaches()` SECURITY DEFINER helper
+`teacher_teaches(_teacher_id uuid, _class_name text, _subject text) returns boolean` — used in RLS on every teacher-writable table.
+
+### 1d. New `calendar` table (replaces JSONB)
+Columns:
+- `id` uuid PK
+- `teacher_id` uuid (FK auth.users)
+- `school_name` text
+- `class_name` text
+- `subject` text
+- `date` date NOT NULL
+- `entry_type` text CHECK in ('topic','practice','test','assignment','holiday')
+- `chapter_id` text NULL
+- `chapter_name` text NULL
+- `chapter_color` text NULL
+- `topic_key` text NULL
+- `topic_title` text NULL
+- `label` text NULL  (e.g. "Diwali", "Mid-term Test")
+- `is_national_holiday` boolean default false
+- `notes` text NULL
+- `created_at` / `updated_at`
+
+Unique `(class_name, subject, date, entry_type)` — one schedule entry per slot. (Holidays from teacher view are class-agnostic but we still scope per class so each teacher manages their own.)
+
+Indexes: `(class_name, subject, date)`, `(teacher_id, date)`.
+
+RLS:
+- Teacher INSERT/UPDATE/DELETE: `teacher_teaches(auth.uid(), class_name, subject)`
+- Teacher SELECT: same
+- Student SELECT: `class_name = get_user_class(auth.uid())`
+
+GRANTs: SELECT, INSERT, UPDATE, DELETE → `authenticated`; ALL → `service_role`.
+
+### 1e. Tighten RLS on existing tables
+Replace permissive teacher policies on `teaching_schedules`, `assignments`, `attendance`, `teacher_alerts`, `assignment_questions` so writes require `teacher_teaches(auth.uid(), class_name, subject)`. Reads stay scoped to assigned (class, subject) for teachers, and `get_user_class()` for students.
+
+### 1f. Holiday seed data
+Insert national holidays Jun 2025 → May 2026 into `calendar` per (teacher, class, subject) **lazily** — actually better: keep a separate `national_holidays(date, label)` reference table, and the calendar UI reads it as a read-only overlay. Holidays added by teachers (school-specific) live in `calendar`.
+
+`national_holidays` seeded with:
+```
+2025-08-15 Independence Day · 2025-08-19 Raksha Bandhan · 2025-08-26 Janmashtami
+2025-10-02 Gandhi Jayanti · 2025-10-20 Dussehra · 2025-10-21 Diwali
+2025-11-15 Guru Nanak Jayanti · 2025-12-25 Christmas Day
+2026-01-26 Republic Day · 2026-02-15 Maha Shivaratri · 2026-03-04 Holi
+2026-03-20 Eid-ul-Fitr · 2026-04-03 Good Friday · 2026-05-01 Buddha Purnima
+2026-05-27 Bakrid
+```
+Public read for `authenticated` and `anon`.
+
+---
+
+## 2. Signup + profile changes
+
+`src/pages/StudentOnboarding.tsx` / signup flow (teacher branch):
+
+- After basic info, show a 2-column matrix: **Classes (Class 6 → Class 10)** × **Subjects** (Math, Science, Social, English, Hindi/Telugu).
+- Each cell is a checkbox. Selected cells → batch `INSERT` into `teacher_assignments`.
+- Minimum 1 selection required.
+
+`AuthContext.signUp` extended to accept `assignments: {class_name, subject}[]` for teachers, inserted post-confirm.
+
+Add `src/pages/TeacherSettings.tsx` (or extend existing settings page) with the same matrix to edit later.
+
+---
+
+## 3. Calendar refactor
+
+### 3a. Teacher (`TeachingCalendar.tsx` + `TeacherSchedule.tsx`)
+- Top toolbar: **Class dropdown** (only assigned classes) + **Subject dropdown** (only subjects for that class).
+- Replace single Save with per-cell actions. Click a date cell → context menu/popover:
+  - **Add topic** (from chapter's topic list)
+  - **Add practice / test / assignment**
+  - **Add holiday** (label input)
+  - **Reschedule** (move this entry to another date — date picker)
+  - **Extend** (push this entry + all later entries by N days)
+  - **Delete**
+- Each action = one row INSERT/UPDATE/DELETE on `calendar`. No more bulk JSONB upsert.
+- "Auto-fill year" button: generates topic rows day-by-day skipping Sundays + national holidays, based on `getDefaultChapters()` teachingDays/practiceDays/testDays.
+- Default chapters list lives in `src/data/defaultMathChapters.ts` (extract from current component).
+
+### 3b. Student (`StudentCalendar.tsx` + `ScheduleCalendar.tsx`)
+- Fetch `calendar` rows where `class_name = get_user_class()` for the visible month range, optionally filtered by subject dropdown.
+- Overlay national holidays from `national_holidays`.
+- Realtime: subscribe to `calendar` filtered by class for live updates when teacher reschedules.
+
+### 3c. National holiday update
+Replace hardcoded `nationalHolidays` object in `TeachingCalendar.tsx` and student calendar with a fetched list from `national_holidays`. Cached on mount.
+
+---
+
+## 4. Affected files
+
+```
+supabase/migrations/<new>.sql          (all schema + RLS + seeds)
+src/contexts/AuthContext.tsx           (signUp accepts teacher assignments)
+src/pages/StudentOnboarding.tsx        (teacher branch: class×subject matrix)
+src/pages/TeacherSettings.tsx          (new — edit assignments)
+src/data/defaultMathChapters.ts        (new — extracted constants)
+src/data/nationalHolidays.ts           (new — fallback list)
+src/hooks/useTeacherAssignments.ts     (new — list teacher's (class,subject))
+src/hooks/useCalendar.ts               (new — CRUD + realtime on calendar table)
+src/components/teacher/TeachingCalendar.tsx   (rewire to row-based CRUD + actions popover)
+src/pages/TeacherSchedule.tsx          (drop bulk save; pass class/subject; new toolbar)
+src/components/student/ScheduleCalendar.tsx   (read rows + holidays overlay)
+src/pages/StudentCalendar.tsx          (fetch from calendar table + subject filter)
+src/integrations/supabase/types.ts     (auto-regenerated after migration)
+```
+
+---
+
+## 5. Order of work
+
+1. Submit migration (tables, RLS, helper fn, holiday seeds). Wait for approval.
+2. Build signup matrix + AuthContext changes.
+3. Extract chapters constants and build `useCalendar` hook.
+4. Refactor teacher calendar UI with action popover (reschedule / extend / insert / delete / holiday).
+5. Refactor student calendar to read rows + subscribe realtime.
+6. Add TeacherSettings page to edit assignments later.
+7. Smoke-test: create teacher, assign Class 10 Math + Class 9 Science, schedule a topic, reschedule, delete, verify student of Class 10 sees only Class 10 math rows.
+
+---
+
+## 6. Risks / migration notes
+
+- Existing `teaching_schedules` rows will not be auto-migrated to `calendar`. Acceptable since we're early — teachers re-publish via "Auto-fill year". If you want a one-time backfill SQL, say so and I'll add it.
+- Tightening RLS on `assignments`/`attendance`/`teacher_alerts` may break any code that writes those tables without a subject. We'll default `subject` to the teacher's first assignment when the legacy code omits it, with a TODO to thread subject through.
+- Realtime subscription on `calendar` filtered by `class_name` is cheap; one channel per logged-in student.
