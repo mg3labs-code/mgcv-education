@@ -222,16 +222,23 @@ interface TeachingCalendarProps {
   isSaving?: boolean;
   selectedClass?: string;
   onClassChange?: (className: string) => void;
+  selectedSubject?: string;
+  onSubjectChange?: (subject: string) => void;
+  availableClasses?: string[];
+  availableSubjects?: string[];
 }
 
-const CLASSES = [
+const DEFAULT_CLASSES = [
   "Class 9",
   "Class 10",
   "Class 11",
   "Class 12"
 ];
 
-const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange }: TeachingCalendarProps) => {
+const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, selectedSubject, onSubjectChange, availableClasses, availableSubjects }: TeachingCalendarProps) => {
+  const CLASSES = availableClasses && availableClasses.length > 0 ? availableClasses : DEFAULT_CLASSES;
+  const SUBJECTS = availableSubjects && availableSubjects.length > 0 ? availableSubjects : [];
+
 
   const now = new Date();
   const [monthIndex, setMonthIndex] = useState(now.getMonth());
