@@ -454,10 +454,22 @@ export const dayPilotContent: Record<string, DayPilotContent> = {
   }, "real numbers"),
 };
 
-export function getPilotContent(chapterId?: string, episodeId?: string): DayPilotContent | null {
+const topicFromSlug = (slug: string) =>
+  slug
+    .replace(/^(sci|phy|chem|bio)-ch\d+-ep\d+$/i, "")
+    .replace(/-?ep\d+$/i, "")
+    .replace(/[-_]+/g, " ")
+    .trim();
+
+export function getPilotContent(chapterId?: string, episodeId?: string, episodeTitle?: string): DayPilotContent | null {
   if (!chapterId || !episodeId) return null;
   const exactPilot = dayPilotContent[`${chapterId}::${episodeId}`];
   if (exactPilot) return exactPilot;
+  const isTopicOne = /(^|-)ep1$/.test(episodeId) || /parichay|parichayam|altitude|himalayas/.test(episodeId);
+  if (isTopicOne && episodeTitle) {
+    const topic = episodeTitle.replace(/^(introduction to|what is)\s+/i, "").trim() || topicFromSlug(episodeId) || "this topic";
+    return makeChapterPilot(topic, `${topic} becomes easier when you first notice it in a real situation.`, chapterId);
+  }
   return null;
 }
 
