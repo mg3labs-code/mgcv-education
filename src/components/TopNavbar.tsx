@@ -56,6 +56,7 @@ const TopNavbar = ({ role, phase = 4, activeTab, onTabChange }: TopNavbarProps) 
     { label: "Annual Schedule", path: "/teacher/schedule", type: "nav" as const },
     { label: "Daily Plan", path: "/teacher/daily-todo", type: "nav" as const },
     { label: "Metrics", path: "/teacher/analytics", type: "nav" as const },
+    { label: "My Profile", path: "/teacher/settings", type: "nav" as const },
     { label: "Message Bar", modal: "message", type: "modal" as const },
   ];
 
