@@ -50,7 +50,7 @@ const Index = () => {
   const [schoolName, setSchoolName] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [teacherAssignments, setTeacherAssignments] = useState<TeacherAssignment[]>([]);
+  const [teacherAssignments, setTeacherAssignments] = useState<TeachingMapEntry[]>([]);
   const [loginError, setLoginError] = useState<{ message: string; code?: string; suggestion: string } | null>(null);
   const [heroIndex, setHeroIndex] = useState(0);
   const [scrollY, setScrollY] = useState(0);
