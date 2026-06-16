@@ -1,19 +1,16 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { HookVariant } from "@/data/curiosityConcepts/realNumbers";
-import { getInterestVisual } from "@/data/interestVisuals";
 
 interface Props {
   hook: HookVariant;
-  interestTag?: string | null;
   onPickedAndContinue: (pickedLabel: string, wasCorrect: boolean) => void;
 }
 
-// Short-style vertical hook card with interest-themed photo backdrop.
-// Photo → overlay → motifs → big scene emoji → glass MCQ panel.
-export default function HookShortCard({ hook, interestTag, onPickedAndContinue }: Props) {
+// Short-style vertical hook card mirroring engagement_hook_cards_with_concept_flow.
+// Dark gradient, interest badge, big question, 3 choice chips, inline reveal.
+export default function HookShortCard({ hook, onPickedAndContinue }: Props) {
   const [pickedIdx, setPickedIdx] = useState<number | null>(null);
-  const v = getInterestVisual(interestTag ?? hook.tag);
 
   const picked = pickedIdx !== null ? hook.mcq.choices[pickedIdx] : null;
 
@@ -26,70 +23,41 @@ export default function HookShortCard({ hook, interestTag, onPickedAndContinue }
       </div>
 
       <div
-        className="relative overflow-hidden rounded-2xl mb-3 flex flex-col justify-end shadow-2xl"
-        style={{ aspectRatio: "9 / 13", minHeight: 460 }}
+        className="relative overflow-hidden rounded-2xl mb-3 flex flex-col justify-end"
+        style={{
+          background:
+            "linear-gradient(160deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)",
+          aspectRatio: "9 / 13",
+          minHeight: 460,
+        }}
       >
-        {/* interest-themed photo */}
-        <img
-          src={v.image}
-          alt={`${v.label} scene`}
-          loading="lazy"
-          className="absolute inset-0 w-full h-full object-cover scale-105"
-        />
-        {/* gradient overlay tuned per interest */}
-        <div aria-hidden className="absolute inset-0" style={{ background: v.overlay }} />
-        {/* motif confetti */}
-        <div aria-hidden className="absolute inset-0 pointer-events-none">
-          {v.motifs.map((m, i) => (
-            <span
-              key={i}
-              className="absolute opacity-25 select-none"
-              style={{
-                fontSize: `${26 + i * 5}px`,
-                top: `${8 + (i * 21) % 60}%`,
-                left: `${(i * 29) % 78 + 4}%`,
-                transform: `rotate(${(i * 19) % 40 - 20}deg)`,
-                filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.45))",
-              }}
-            >
-              {m}
-            </span>
-          ))}
-        </div>
-        {/* big scene emoji */}
+        {/* big background emoji */}
         <div
           aria-hidden="true"
-          className="absolute inset-0 flex items-center justify-center opacity-30 text-[160px] select-none"
-          style={{ filter: "drop-shadow(0 8px 24px rgba(0,0,0,0.5))" }}
+          className="absolute inset-0 flex items-center justify-center opacity-20 text-[180px] select-none"
         >
-          {v.scenes[1].emoji || hook.emoji}
+          {hook.emoji}
         </div>
         <div
           aria-hidden="true"
           className="absolute inset-0"
           style={{
             background:
-              "linear-gradient(180deg, rgba(0,0,0,0.05) 30%, rgba(0,0,0,0.88) 78%)",
+              "linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.85) 70%)",
           }}
         />
         <div className="relative z-10 p-4 sm:p-5 space-y-3">
           <span
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wide backdrop-blur-sm"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wide"
             style={{
-              background: v.accentSoft,
-              color: v.accent,
-              border: `0.5px solid ${v.accent}66`,
+              background: "rgba(34,197,94,0.22)",
+              color: "#86EFAC",
+              border: "0.5px solid rgba(134,239,172,0.4)",
             }}
           >
-            <span aria-hidden="true">{v.emoji}</span>
-            {v.label} · {hook.badgeLabel}
+            <span aria-hidden="true">{hook.emoji}</span>
+            {hook.badgeLabel}
           </span>
-          <p
-            className="text-[12px] text-white/90 font-medium leading-snug"
-            style={{ textShadow: "0 2px 8px rgba(0,0,0,0.6)" }}
-          >
-            {v.scenes[1].caption}
-          </p>
 
           <h2 className="arc-display text-[19px] sm:text-[22px] font-extrabold text-white leading-tight">
             {hook.mcq.question}

@@ -1,2 +1,0 @@
-ALTER TABLE public.student_preferences ADD COLUMN IF NOT EXISTS interest_domains text[] NOT NULL DEFAULT '{}';
-COMMENT ON COLUMN public.student_preferences.interest_domains IS 'Student-picked engagement domains (cricket, food, movies, gaming, music, travel, tech, nature) used by the Curiosity Arc visual layer.';

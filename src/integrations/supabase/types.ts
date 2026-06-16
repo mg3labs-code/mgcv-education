@@ -908,7 +908,6 @@ export type Database = {
           difficulty_level: string
           grade: number | null
           id: string
-          interest_domains: string[]
           interests: string[] | null
           learning_style: string | null
           milestones_seen: Json | null
@@ -922,7 +921,6 @@ export type Database = {
           difficulty_level?: string
           grade?: number | null
           id?: string
-          interest_domains?: string[]
           interests?: string[] | null
           learning_style?: string | null
           milestones_seen?: Json | null
@@ -936,7 +934,6 @@ export type Database = {
           difficulty_level?: string
           grade?: number | null
           id?: string
-          interest_domains?: string[]
           interests?: string[] | null
           learning_style?: string | null
           milestones_seen?: Json | null
@@ -1253,36 +1250,6 @@ export type Database = {
           teacher_id?: string
           title?: string
           updated_at?: string
-        }
-        Relationships: []
-      }
-      teacher_world_digests: {
-        Row: {
-          board: string
-          class_name: string
-          expires_at: string
-          generated_at: string
-          id: string
-          payload: Json
-          subject: string
-        }
-        Insert: {
-          board?: string
-          class_name: string
-          expires_at?: string
-          generated_at?: string
-          id?: string
-          payload: Json
-          subject: string
-        }
-        Update: {
-          board?: string
-          class_name?: string
-          expires_at?: string
-          generated_at?: string
-          id?: string
-          payload?: Json
-          subject?: string
         }
         Relationships: []
       }

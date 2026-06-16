@@ -808,7 +808,7 @@ const TextbookEpisode = () => {
   // ═══ 3-DAY UNLOCK GAME LOOP ═══
   // Pilot runs only when Chapter 1 pilot content can be resolved for this episode.
   // Missing pilot content automatically falls through to the existing full practice reader.
-  const pilotContent = forceFullReader ? null : getPilotContent(chapterId, episodeId, episode.title);
+  const pilotContent = forceFullReader ? null : getPilotContent(chapterId, episodeId);
   if (pilotContent) {
     return (
       <DifficultyProvider>
