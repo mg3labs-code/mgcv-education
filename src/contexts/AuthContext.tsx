@@ -163,7 +163,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           teaching_map: teachingMap,
           // Legacy alias kept so older edge functions or jobs that still look for
           // `teacher_assignments` in metadata don't crash; not used by the trigger.
-          teacher_assignments: selectedRole === 'teacher' ? (teacherAssignments || []) : [],
+          teacher_assignments: selectedRole === 'teacher' ? (teachingMapInput || []) : [],
         },
         emailRedirectTo: window.location.origin,
       },
