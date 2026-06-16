@@ -17,12 +17,16 @@ const TeacherSettings = () => {
   const [value, setValue] = useState<TeachingMapEntry[]>([]);
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const timer = useRef<number | null>(null);
-  const initialized = useRef(false);
+  const hydrated = useRef(false);
 
+  // Hydrate local state from the server only on the FIRST successful load.
+  // Subsequent refetches (after auto-save) must not overwrite the user's in-progress edits.
   useEffect(() => {
+    if (hydrated.current) return;
+    if (loading) return;
     setValue(entries);
-    initialized.current = false; // skip first autosave after a fresh load
-  }, [entries]);
+    hydrated.current = true;
+  }, [entries, loading]);
 
   const persist = async (next: TeachingMapEntry[]) => {
     if (!user) return;
