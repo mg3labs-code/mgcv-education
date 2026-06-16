@@ -13,7 +13,7 @@ interface AuthContextType {
   role: AppRole | null;
   fullName: string;
   loading: boolean;
-  signUp: (email: string, password: string, fullName: string, role: AppRole, className?: string, schoolName?: string) => Promise<void>;
+  signUp: (email: string, password: string, fullName: string, role: AppRole, className?: string, schoolName?: string, teacherAssignments?: { class_name: string; subject: string }[]) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signInWithPhone: (phone: string) => Promise<void>;
   verifyPhoneOtp: (phone: string, token: string) => Promise<void>;
