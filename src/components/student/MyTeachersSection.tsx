@@ -50,14 +50,17 @@ const MyTeachersSection = () => {
         .select("user_id, full_name, phone, school_name")
         .in("user_id", ids);
 
-      const byId = new Map((profs ?? []).map((p: any) => [p.user_id, p]));
-      const rows: TeacherRow[] = (maps ?? []).map((m: any) => ({
-        teacher_id: m.teacher_id,
-        subject: m.subject,
-        full_name: byId.get(m.teacher_id)?.full_name ?? "Teacher",
-        phone: byId.get(m.teacher_id)?.phone ?? null,
-        school_name: byId.get(m.teacher_id)?.school_name ?? null,
-      }));
+      const byId = new Map<string, any>((profs ?? []).map((p: any) => [p.user_id, p]));
+      const rows: TeacherRow[] = (maps ?? []).map((m: any) => {
+        const p = byId.get(m.teacher_id);
+        return {
+          teacher_id: m.teacher_id,
+          subject: m.subject,
+          full_name: p?.full_name ?? "Teacher",
+          phone: p?.phone ?? null,
+          school_name: p?.school_name ?? null,
+        };
+      });
       if (!cancelled) { setTeachers(rows); setLoading(false); }
     };
     load();
