@@ -141,6 +141,7 @@ export type Database = {
           id: string
           status: string
           student_id: string
+          subject: string | null
           teacher_id: string
           updated_at: string
         }
@@ -151,6 +152,7 @@ export type Database = {
           id?: string
           status?: string
           student_id: string
+          subject?: string | null
           teacher_id: string
           updated_at?: string
         }
@@ -161,7 +163,68 @@ export type Database = {
           id?: string
           status?: string
           student_id?: string
+          subject?: string | null
           teacher_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      calendar: {
+        Row: {
+          chapter_color: string | null
+          chapter_id: string | null
+          chapter_name: string | null
+          class_name: string
+          created_at: string
+          date: string
+          entry_type: string
+          id: string
+          is_national_holiday: boolean
+          label: string | null
+          notes: string | null
+          school_name: string | null
+          subject: string
+          teacher_id: string
+          topic_key: string | null
+          topic_title: string | null
+          updated_at: string
+        }
+        Insert: {
+          chapter_color?: string | null
+          chapter_id?: string | null
+          chapter_name?: string | null
+          class_name: string
+          created_at?: string
+          date: string
+          entry_type: string
+          id?: string
+          is_national_holiday?: boolean
+          label?: string | null
+          notes?: string | null
+          school_name?: string | null
+          subject: string
+          teacher_id: string
+          topic_key?: string | null
+          topic_title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          chapter_color?: string | null
+          chapter_id?: string | null
+          chapter_name?: string | null
+          class_name?: string
+          created_at?: string
+          date?: string
+          entry_type?: string
+          id?: string
+          is_national_holiday?: boolean
+          label?: string | null
+          notes?: string | null
+          school_name?: string | null
+          subject?: string
+          teacher_id?: string
+          topic_key?: string | null
+          topic_title?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -575,6 +638,24 @@ export type Database = {
           method_type?: string
           score?: number | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      national_holidays: {
+        Row: {
+          created_at: string
+          date: string
+          label: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          label: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          label?: string
         }
         Relationships: []
       }
@@ -1185,6 +1266,7 @@ export type Database = {
           is_read: boolean
           message: string
           student_id: string
+          subject: string | null
           suggested_action: string | null
           teacher_id: string
           title: string
@@ -1198,6 +1280,7 @@ export type Database = {
           is_read?: boolean
           message: string
           student_id: string
+          subject?: string | null
           suggested_action?: string | null
           teacher_id: string
           title: string
@@ -1211,9 +1294,40 @@ export type Database = {
           is_read?: boolean
           message?: string
           student_id?: string
+          subject?: string | null
           suggested_action?: string | null
           teacher_id?: string
           title?: string
+        }
+        Relationships: []
+      }
+      teacher_assignments: {
+        Row: {
+          class_name: string
+          created_at: string
+          id: string
+          school_name: string | null
+          subject: string
+          teacher_id: string
+          updated_at: string
+        }
+        Insert: {
+          class_name: string
+          created_at?: string
+          id?: string
+          school_name?: string | null
+          subject: string
+          teacher_id: string
+          updated_at?: string
+        }
+        Update: {
+          class_name?: string
+          created_at?: string
+          id?: string
+          school_name?: string | null
+          subject?: string
+          teacher_id?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -1294,6 +1408,7 @@ export type Database = {
           id: string
           schedule_data: Json
           subject: string
+          subject_norm: string | null
           teacher_id: string
           updated_at: string
         }
@@ -1304,6 +1419,7 @@ export type Database = {
           id?: string
           schedule_data?: Json
           subject?: string
+          subject_norm?: string | null
           teacher_id: string
           updated_at?: string
         }
@@ -1314,6 +1430,7 @@ export type Database = {
           id?: string
           schedule_data?: Json
           subject?: string
+          subject_norm?: string | null
           teacher_id?: string
           updated_at?: string
         }
@@ -1386,6 +1503,10 @@ export type Database = {
       recalculate_retention_predictions: { Args: never; Returns: number }
       teacher_manages_class: {
         Args: { _class_name: string; _teacher_id: string }
+        Returns: boolean
+      }
+      teacher_teaches: {
+        Args: { _class_name: string; _subject: string; _teacher_id: string }
         Returns: boolean
       }
     }
