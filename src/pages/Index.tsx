@@ -115,6 +115,7 @@ const Index = () => {
     setFullName("");
     setClassName("");
     setSchoolName("");
+    setTeacherAssignments([]);
     setLoginError(null);
   }, []);
 
