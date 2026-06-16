@@ -533,18 +533,33 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
         <div className="bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white text-center py-6 px-8">
           <h2 className="text-2xl font-light mb-1">Mathematics Teaching Schedule</h2>
           <div className="flex flex-col items-center gap-2 mt-1">
-            <Select value={selectedClass} onValueChange={onClassChange}>
-              <SelectTrigger className="w-[180px] bg-white/20 border-white/30 text-white h-8 text-sm">
-                <SelectValue placeholder="Select class..." />
-              </SelectTrigger>
-              <SelectContent className="bg-white">
-                {CLASSES.map((c) => (
-                  <SelectItem key={c} value={c}>{c}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <Select value={selectedClass} onValueChange={onClassChange}>
+                <SelectTrigger className="w-[160px] bg-white/20 border-white/30 text-white h-8 text-sm">
+                  <SelectValue placeholder="Select class..." />
+                </SelectTrigger>
+                <SelectContent className="bg-white">
+                  {CLASSES.map((c) => (
+                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {SUBJECTS.length > 0 && (
+                <Select value={selectedSubject} onValueChange={onSubjectChange}>
+                  <SelectTrigger className="w-[160px] bg-white/20 border-white/30 text-white h-8 text-sm">
+                    <SelectValue placeholder="Select subject..." />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white">
+                    {SUBJECTS.map((s) => (
+                      <SelectItem key={s} value={s}>{s}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
             <p className="text-xs opacity-80 uppercase tracking-wider font-medium">CBSE • 2025–26</p>
           </div>
+
 
           <div className="flex justify-center gap-3 mt-5 flex-wrap">
             <button onClick={() => { setActiveModal("extend"); setSubSection(null); }} className="bg-white/20 text-white border-2 border-green-400/60 px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-white/30 hover:-translate-y-0.5 transition-all cursor-pointer backdrop-blur-sm">
