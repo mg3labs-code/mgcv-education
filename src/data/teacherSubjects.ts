@@ -2,11 +2,9 @@
 // and to scope content access in the rest of the app.
 
 export const TEACHER_CLASSES = [
-  "Class 6",
   "Class 7",
   "Class 8",
   "Class 9",
-  "Class 10",
 ] as const;
 
 export const TEACHER_SUBJECTS = [

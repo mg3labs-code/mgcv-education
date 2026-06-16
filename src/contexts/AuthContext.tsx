@@ -65,29 +65,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // After sign-in, if this user is a teacher and their metadata carries
-  // assignments selected during signup, persist them to teacher_assignments.
-  // Idempotent thanks to the (teacher_id, class_name, subject) unique key.
-  const syncTeacherAssignmentsFromMetadata = async (userId: string, metadata: any) => {
-    try {
-      const raw = metadata?.teacher_assignments;
-      if (!Array.isArray(raw) || raw.length === 0) return;
-      const rows = raw
-        .filter((r: any) => r && typeof r.class_name === "string" && typeof r.subject === "string")
-        .map((r: any) => ({
-          teacher_id: userId,
-          class_name: r.class_name,
-          subject: r.subject,
-          school_name: typeof metadata?.school_name === "string" ? metadata.school_name : null,
-        }));
-      if (rows.length === 0) return;
-      await supabase.from("teacher_assignments").upsert(rows, {
-        onConflict: "teacher_id,class_name,subject",
-        ignoreDuplicates: true,
-      });
-    } catch (e) {
-      console.error("Failed to sync teacher assignments from metadata", e);
-    }
+  // Teacher assignments are persisted server-side by the signup trigger
+  // (handle_new_user reads `teaching_map` from user_metadata). This client-side
+  // sync is a no-op fallback retained for older sessions that signed up before
+  // the trigger existed; it now does nothing.
+  const syncTeacherAssignmentsFromMetadata = async (_userId: string, _metadata: any) => {
+    return;
   };
 
   useEffect(() => {
@@ -143,6 +126,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     schoolName?: string,
     teacherAssignments?: { class_name: string; subject: string }[],
   ) => {
+    // Convert legacy { class_name, subject } pairs to the new teaching_map shape
+    // that the server-side handle_new_user trigger consumes.
+    const teachingMap =
+      selectedRole === 'teacher' && Array.isArray(teacherAssignments)
+        ? teacherAssignments.map(a => ({
+            subject: a.subject,
+            board: 'CBSE',
+            grade: parseInt((a.class_name || '').replace(/\D/g, ''), 10) || 9,
+            section: 'A',
+          }))
+        : [];
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -152,6 +147,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           role: selectedRole,
           class_name: selectedRole === 'teacher' ? '' : (className || ''),
           school_name: schoolName || '',
+          // New schema: server trigger reads `teaching_map` to populate teacher_teaching_map.
+          teaching_map: teachingMap,
+          // Legacy alias kept so older edge functions or jobs that still look for
+          // `teacher_assignments` in metadata don't crash; not used by the trigger.
           teacher_assignments: selectedRole === 'teacher' ? (teacherAssignments || []) : [],
         },
         emailRedirectTo: window.location.origin,
@@ -159,21 +158,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
     if (error) throw error;
 
-    // If session was returned immediately (email confirmation disabled),
-    // persist teacher class/subject pairs into the teacher_assignments table.
-    if (selectedRole === 'teacher' && teacherAssignments && teacherAssignments.length > 0 && data.user) {
-      const rows = teacherAssignments.map(a => ({
-        teacher_id: data.user!.id,
-        school_name: schoolName || null,
-        class_name: a.class_name,
-        subject: a.subject,
-      }));
-      // RLS allows the teacher to insert their own rows; safe to ignore conflicts.
-      await supabase.from('teacher_assignments').upsert(rows, {
-        onConflict: 'teacher_id,class_name,subject',
-        ignoreDuplicates: true,
-      });
-    }
+    // No client-side insert needed: the database trigger handle_new_user inserts
+    // the teacher_teaching_map rows from the metadata above when the auth user
+    // is created. Keeps RLS simple and avoids duplicate writes.
+    void data;
   };
 
   const signIn = async (email: string, password: string) => {

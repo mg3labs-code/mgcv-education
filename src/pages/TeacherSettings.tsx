@@ -33,18 +33,25 @@ const TeacherSettings = () => {
       const toAdd = value.filter(a => !existingKeys.has(`${a.class_name}::${a.subject}`));
       const toRemove = assignments.filter(a => !desiredKeys.has(`${a.class_name}::${a.subject}`));
 
+      const gradeOf = (cn: string) => parseInt(cn.replace(/\D/g, ""), 10) || 9;
       if (toAdd.length > 0) {
-        const { error } = await supabase.from("teacher_assignments").insert(
-          toAdd.map(a => ({ teacher_id: user.id, class_name: a.class_name, subject: a.subject }))
+        const { error } = await (supabase as any).from("teacher_teaching_map").insert(
+          toAdd.map(a => ({
+            teacher_id: user.id,
+            subject: a.subject,
+            board: "CBSE",
+            grade: gradeOf(a.class_name),
+            section: "A",
+          }))
         );
         if (error) throw error;
       }
       for (const a of toRemove) {
-        const { error } = await supabase
-          .from("teacher_assignments")
+        const { error } = await (supabase as any)
+          .from("teacher_teaching_map")
           .delete()
           .eq("teacher_id", user.id)
-          .eq("class_name", a.class_name)
+          .eq("grade", gradeOf(a.class_name))
           .eq("subject", a.subject);
         if (error) throw error;
       }
