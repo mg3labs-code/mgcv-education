@@ -111,7 +111,6 @@ const getDefaultChapters = (): ChapterDef[] => [
   },
 ];
 
-import { NATIONAL_HOLIDAYS } from "@/data/nationalHolidays";
 const nationalHolidays: Record<string, string> = NATIONAL_HOLIDAYS;
 
 const toKey = (date: Date) => date.toISOString().split("T")[0];
