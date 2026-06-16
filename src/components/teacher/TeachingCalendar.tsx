@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { NATIONAL_HOLIDAYS } from "@/data/nationalHolidays";
 
 // ── Types ──
 export interface ChapterDef {
