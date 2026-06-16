@@ -1,43 +1,38 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import type { TeacherAssignment } from "@/data/teacherSubjects";
+import type { TeachingMapEntry } from "@/data/teacherSubjects";
 
-// Reads from the new teacher_teaching_map table and projects rows into the legacy
-// { class_name, subject } shape that the existing UI consumes.
 export function useTeacherAssignments() {
   const { user } = useAuth();
-  const [assignments, setAssignments] = useState<TeacherAssignment[]>([]);
+  const [entries, setEntries] = useState<TeachingMapEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
   const refetch = useCallback(async () => {
-    if (!user) { setAssignments([]); setLoading(false); return; }
+    if (!user) { setEntries([]); setLoading(false); return; }
     setLoading(true);
     const { data } = await (supabase as any)
       .from("teacher_teaching_map")
-      .select("subject, grade")
+      .select("subject, board, grade, section")
       .eq("teacher_id", user.id);
-    const rows = (data ?? []) as Array<{ subject: string; grade: number }>;
-    // Deduplicate (subject, grade) since the new table also keys on board+section.
-    const seen = new Set<string>();
-    const mapped: TeacherAssignment[] = [];
-    for (const r of rows) {
-      const class_name = `Class ${r.grade}`;
-      const key = `${class_name}::${r.subject}`;
-      if (seen.has(key)) continue;
-      seen.add(key);
-      mapped.push({ class_name, subject: r.subject });
-    }
-    mapped.sort((a, b) => a.class_name.localeCompare(b.class_name));
-    setAssignments(mapped);
+    setEntries(((data ?? []) as TeachingMapEntry[]).slice());
     setLoading(false);
   }, [user]);
 
   useEffect(() => { refetch(); }, [refetch]);
 
-  const classes = Array.from(new Set(assignments.map(a => a.class_name)));
-  const subjectsForClass = (className: string) =>
-    assignments.filter(a => a.class_name === className).map(a => a.subject);
+  // Derived legacy helpers — used by TeachingCalendar/TeacherSchedule that key on "Class N".
+  const classes = Array.from(new Set(entries.map(e => `Class ${e.grade}`))).sort();
+  const subjectsForClass = (className: string) => {
+    const g = parseInt(className.replace(/\D/g, ""), 10);
+    return Array.from(new Set(entries.filter(e => e.grade === g).map(e => e.subject)));
+  };
+  // Legacy shape used by some older callers.
+  const assignments = Array.from(
+    new Map(
+      entries.map(e => [`${e.grade}::${e.subject}`, { class_name: `Class ${e.grade}`, subject: e.subject }]),
+    ).values(),
+  );
 
-  return { assignments, classes, subjectsForClass, loading, refetch };
+  return { entries, assignments, classes, subjectsForClass, loading, refetch };
 }

@@ -19,6 +19,7 @@ const LearningEpisode = lazy(() => import("./pages/LearningEpisode"));
 const TeacherDashboard = lazy(() => import("./pages/TeacherDashboard"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const StudentOnboarding = lazy(() => import("./pages/StudentOnboarding"));
+const AdminOnboarding = lazy(() => import("./pages/AdminOnboarding"));
 const TeacherSchedule = lazy(() => import("./pages/TeacherSchedule"));
 const TeacherSettings = lazy(() => import("./pages/TeacherSettings"));
 const TeacherAnalytics = lazy(() => import("./pages/TeacherAnalytics"));
@@ -158,6 +159,7 @@ const App = () => (
                 <Route path="/teacher/student/:studentId" element={<ProtectedRoute><TeacherStudentDeepDive /></ProtectedRoute>} />
                 <Route path="/teacher/exam-room" element={<ProtectedRoute><StudentExamRoom /></ProtectedRoute>} />
                 <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/admin/onboarding" element={<ProtectedRoute><AdminOnboarding /></ProtectedRoute>} />
                 <Route path="/admin/schools" element={<AdminDashboard />} />
                 <Route path="/admin/analytics" element={<AdminDashboard />} />
                 <Route path="/admin/settings" element={<AdminDashboard />} />
