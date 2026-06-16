@@ -17,6 +17,7 @@ import { useDiscoveryToasts } from "@/hooks/useDiscoveryToasts";
 import DashboardGreeting from "@/components/DashboardGreeting";
 import TodayThoughtCard from "@/components/student/TodayThoughtCard";
 import { ROUTES } from "@/lib/routes";
+import MyTeachersSection from "@/components/student/MyTeachersSection";
 
 interface ScheduleItem {
   type: string;
@@ -807,6 +808,8 @@ const StudentDashboard = () => {
                   🔄 Reset to Defaults
                 </button>
               </div>
+
+              <MyTeachersSection />
             </div>
           )}
         </div>
