@@ -310,32 +310,60 @@ const TopNavbar = ({ role, phase = 4, activeTab, onTabChange }: TopNavbarProps) 
           )}
         </div>
 
-        <div className="flex items-center gap-3 lg:gap-4">
-          <button className="lg:hidden text-white bg-transparent border-none cursor-pointer" onClick={() => setMenuOpen(!menuOpen)} aria-label="Toggle menu">
-            {menuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+        {/* Profile circle dropdown — no hamburger, no separate logout button */}
+        <div ref={profileRef} className="relative">
+          <button
+            onClick={() => setProfileOpen(!profileOpen)}
+            aria-label="Open profile menu"
+            className="flex items-center gap-2 bg-transparent border-none cursor-pointer p-1 rounded-full hover:bg-white/10 transition"
+          >
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-400 to-pink-600 flex items-center justify-center text-white font-bold text-base">
+              {initials}
+            </div>
+            <ChevronDown className="h-4 w-4 text-white/70 hidden sm:block" style={{ transform: profileOpen ? "rotate(180deg)" : "rotate(0)", transition: "transform .2s" }} />
           </button>
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-400 to-pink-600 flex items-center justify-center text-white font-bold text-base">{initials}</div>
-          <button onClick={handleSignOut} className="bg-red-400 text-white border-none py-2 px-4 lg:py-2.5 lg:px-5 rounded-lg cursor-pointer font-medium transition-all hover:bg-red-500 hover:-translate-y-0.5 text-sm lg:text-base">Logout</button>
-        </div>
-      </nav>
 
-      {menuOpen && (
-        <div className="lg:hidden bg-[#0f1419]/98 border-b-2 border-blue-500/30 px-4 py-3 flex flex-col gap-2 sticky top-[73px] z-[999] animate-slide-down">
-          {items.map((item) =>
-            item.type === "nav" ? (
-              <button key={item.label} onClick={() => { navigate(item.path!); setMenuOpen(false); }}
-                className={`text-left text-white py-3 px-4 rounded-lg transition-all bg-transparent border-none text-base ${isActive(item.path) ? "bg-blue-500/20 font-semibold" : "hover:bg-white/10"}`}>
-                {item.label}
+          {profileOpen && (
+            <div className="absolute right-0 top-[calc(100%+8px)] bg-[#1a2230] border border-white/10 rounded-xl shadow-2xl min-w-[220px] p-2 z-[1100]">
+              <div className="px-3 py-2 border-b border-white/10 mb-1">
+                <div className="text-sm font-semibold text-white truncate">{fullName || "Teacher"}</div>
+                <div className="text-xs text-white/50 capitalize mt-0.5">{role}</div>
+              </div>
+
+              {/* Mobile fallback: surface nav items here when the top bar hides them, so nothing is unreachable without a hamburger */}
+              <div className="lg:hidden">
+                {items.map((item) =>
+                  item.type === "nav" ? (
+                    <button
+                      key={item.label}
+                      onClick={() => { navigate(item.path!); setProfileOpen(false); }}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-sm text-white/90 hover:bg-white/10 ${isActive(item.path) ? "bg-blue-500/20 font-semibold" : ""}`}
+                    >
+                      {item.label}
+                    </button>
+                  ) : (
+                    <button
+                      key={item.label}
+                      onClick={() => { setActiveModal(item.modal!); setProfileOpen(false); }}
+                      className="w-full text-left px-3 py-2 rounded-lg text-sm text-white/90 hover:bg-white/10"
+                    >
+                      {item.label}
+                    </button>
+                  )
+                )}
+                <div className="border-t border-white/10 my-1" />
+              </div>
+
+              <button
+                onClick={() => { setProfileOpen(false); handleSignOut(); }}
+                className="w-full text-left px-3 py-2 rounded-lg text-sm text-red-300 hover:bg-red-500/10 font-medium"
+              >
+                🚪 Logout
               </button>
-            ) : (
-              <button key={item.label} onClick={() => { setActiveModal(item.modal!); setMenuOpen(false); }}
-                className="text-left text-white py-3 px-4 rounded-lg transition-all bg-transparent border-none text-base hover:bg-white/10">
-                {item.label}
-              </button>
-            )
+            </div>
           )}
         </div>
-      )}
+      </nav>
 
       {role === "teacher" && (
         <MessageModal open={activeModal === "message"} onOpenChange={(o) => !o && closeModal()} />
