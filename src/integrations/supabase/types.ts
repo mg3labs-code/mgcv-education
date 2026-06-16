@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_profiles: {
+        Row: {
+          boards: string[]
+          created_at: string
+          full_name: string
+          grades: number[]
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          boards?: string[]
+          created_at?: string
+          full_name?: string
+          grades?: number[]
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          boards?: string[]
+          created_at?: string
+          full_name?: string
+          grades?: number[]
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       app_config: {
         Row: {
           created_at: string
@@ -78,6 +108,7 @@ export type Database = {
       }
       assignments: {
         Row: {
+          board: string | null
           class_name: string
           created_at: string
           description: string | null
@@ -88,6 +119,7 @@ export type Database = {
           max_total_score: number | null
           schedule_date: string | null
           schedule_topic_key: string | null
+          section: string | null
           source: string
           subject: string
           teacher_id: string
@@ -96,6 +128,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          board?: string | null
           class_name: string
           created_at?: string
           description?: string | null
@@ -106,6 +139,7 @@ export type Database = {
           max_total_score?: number | null
           schedule_date?: string | null
           schedule_topic_key?: string | null
+          section?: string | null
           source?: string
           subject?: string
           teacher_id: string
@@ -114,6 +148,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          board?: string | null
           class_name?: string
           created_at?: string
           description?: string | null
@@ -124,6 +159,7 @@ export type Database = {
           max_total_score?: number | null
           schedule_date?: string | null
           schedule_topic_key?: string | null
+          section?: string | null
           source?: string
           subject?: string
           teacher_id?: string
@@ -135,10 +171,12 @@ export type Database = {
       }
       attendance: {
         Row: {
+          board: string | null
           class_name: string
           created_at: string
           date: string
           id: string
+          section: string | null
           status: string
           student_id: string
           subject: string | null
@@ -146,10 +184,12 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          board?: string | null
           class_name: string
           created_at?: string
           date?: string
           id?: string
+          section?: string | null
           status?: string
           student_id: string
           subject?: string | null
@@ -157,10 +197,12 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          board?: string | null
           class_name?: string
           created_at?: string
           date?: string
           id?: string
+          section?: string | null
           status?: string
           student_id?: string
           subject?: string | null
@@ -169,8 +211,27 @@ export type Database = {
         }
         Relationships: []
       }
+      boards: {
+        Row: {
+          code: string
+          name: string
+          sort_order: number
+        }
+        Insert: {
+          code: string
+          name: string
+          sort_order?: number
+        }
+        Update: {
+          code?: string
+          name?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
       calendar: {
         Row: {
+          board: string | null
           chapter_color: string | null
           chapter_id: string | null
           chapter_name: string | null
@@ -183,6 +244,7 @@ export type Database = {
           label: string | null
           notes: string | null
           school_name: string | null
+          section: string | null
           subject: string
           teacher_id: string
           topic_key: string | null
@@ -190,6 +252,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          board?: string | null
           chapter_color?: string | null
           chapter_id?: string | null
           chapter_name?: string | null
@@ -202,6 +265,7 @@ export type Database = {
           label?: string | null
           notes?: string | null
           school_name?: string | null
+          section?: string | null
           subject: string
           teacher_id: string
           topic_key?: string | null
@@ -209,6 +273,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          board?: string | null
           chapter_color?: string | null
           chapter_id?: string | null
           chapter_name?: string | null
@@ -221,6 +286,7 @@ export type Database = {
           label?: string | null
           notes?: string | null
           school_name?: string | null
+          section?: string | null
           subject?: string
           teacher_id?: string
           topic_key?: string | null
@@ -569,6 +635,21 @@ export type Database = {
         }
         Relationships: []
       }
+      grades: {
+        Row: {
+          grade: number
+          label: string
+        }
+        Insert: {
+          grade: number
+          label: string
+        }
+        Update: {
+          grade?: number
+          label?: string
+        }
+        Relationships: []
+      }
       language_progress: {
         Row: {
           created_at: string
@@ -692,51 +773,6 @@ export type Database = {
         }
         Relationships: []
       }
-      profiles: {
-        Row: {
-          city: string | null
-          class_name: string | null
-          created_at: string
-          full_name: string
-          id: string
-          interest_tag: string | null
-          interests: string[]
-          interests_set_at: string | null
-          region: string | null
-          school_name: string | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          city?: string | null
-          class_name?: string | null
-          created_at?: string
-          full_name?: string
-          id?: string
-          interest_tag?: string | null
-          interests?: string[]
-          interests_set_at?: string | null
-          region?: string | null
-          school_name?: string | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          city?: string | null
-          class_name?: string | null
-          created_at?: string
-          full_name?: string
-          id?: string
-          interest_tag?: string | null
-          interests?: string[]
-          interests_set_at?: string | null
-          region?: string | null
-          school_name?: string | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       reasoning_visuals: {
         Row: {
           created_at: string
@@ -821,6 +857,24 @@ export type Database = {
           signals?: Json
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      sections: {
+        Row: {
+          code: string
+          is_default: boolean
+          school_name: string | null
+        }
+        Insert: {
+          code: string
+          is_default?: boolean
+          school_name?: string | null
+        }
+        Update: {
+          code?: string
+          is_default?: boolean
+          school_name?: string | null
         }
         Relationships: []
       }
@@ -1035,6 +1089,42 @@ export type Database = {
         }
         Relationships: []
       }
+      student_profiles: {
+        Row: {
+          board: string
+          created_at: string
+          full_name: string
+          grade: number
+          phone: string | null
+          school_name: string | null
+          section: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          board: string
+          created_at?: string
+          full_name?: string
+          grade: number
+          phone?: string | null
+          school_name?: string | null
+          section: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          board?: string
+          created_at?: string
+          full_name?: string
+          grade?: number
+          phone?: string | null
+          school_name?: string | null
+          section?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       student_rung_state: {
         Row: {
           chapter_id: string
@@ -1155,6 +1245,24 @@ export type Database = {
           grade?: number
           icon?: string | null
           id?: string
+          name?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
+      subjects_catalog: {
+        Row: {
+          code: string
+          name: string
+          sort_order: number
+        }
+        Insert: {
+          code: string
+          name: string
+          sort_order?: number
+        }
+        Update: {
+          code?: string
           name?: string
           sort_order?: number
         }
@@ -1308,33 +1416,63 @@ export type Database = {
         }
         Relationships: []
       }
-      teacher_assignments: {
+      teacher_profiles: {
         Row: {
-          class_name: string
           created_at: string
-          id: string
+          full_name: string
+          phone: string | null
           school_name: string | null
-          subject: string
-          teacher_id: string
+          sections: string[]
           updated_at: string
+          user_id: string
         }
         Insert: {
-          class_name: string
           created_at?: string
-          id?: string
+          full_name?: string
+          phone?: string | null
           school_name?: string | null
-          subject: string
-          teacher_id: string
+          sections?: string[]
           updated_at?: string
+          user_id: string
         }
         Update: {
-          class_name?: string
           created_at?: string
-          id?: string
+          full_name?: string
+          phone?: string | null
           school_name?: string | null
+          sections?: string[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      teacher_teaching_map: {
+        Row: {
+          board: string
+          created_at: string
+          grade: number
+          id: string
+          section: string
+          subject: string
+          teacher_id: string
+        }
+        Insert: {
+          board: string
+          created_at?: string
+          grade: number
+          id?: string
+          section: string
+          subject: string
+          teacher_id: string
+        }
+        Update: {
+          board?: string
+          created_at?: string
+          grade?: number
+          id?: string
+          section?: string
           subject?: string
           teacher_id?: string
-          updated_at?: string
         }
         Relationships: []
       }
@@ -1409,33 +1547,39 @@ export type Database = {
       }
       teaching_schedules: {
         Row: {
+          board: string | null
           chapters_data: Json
           class_name: string
           created_at: string
           id: string
           schedule_data: Json
+          section: string | null
           subject: string
           subject_norm: string | null
           teacher_id: string
           updated_at: string
         }
         Insert: {
+          board?: string | null
           chapters_data?: Json
           class_name?: string
           created_at?: string
           id?: string
           schedule_data?: Json
+          section?: string | null
           subject?: string
           subject_norm?: string | null
           teacher_id: string
           updated_at?: string
         }
         Update: {
+          board?: string | null
           chapters_data?: Json
           class_name?: string
           created_at?: string
           id?: string
           schedule_data?: Json
+          section?: string | null
           subject?: string
           subject_norm?: string | null
           teacher_id?: string
@@ -1498,6 +1642,17 @@ export type Database = {
           },
         ]
       }
+      my_teachers: {
+        Row: {
+          board: string | null
+          full_name: string | null
+          grade: number | null
+          section: string | null
+          subject: string | null
+          teacher_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       get_class_averages: {
@@ -1542,6 +1697,24 @@ export type Database = {
         Returns: boolean
       }
       recalculate_retention_predictions: { Args: never; Returns: number }
+      student_context: {
+        Args: { _user_id: string }
+        Returns: {
+          board: string
+          grade: number
+          section: string
+        }[]
+      }
+      teacher_covers: {
+        Args: {
+          _board: string
+          _grade: number
+          _section: string
+          _subject: string
+          _teacher_id: string
+        }
+        Returns: boolean
+      }
       teacher_manages_class: {
         Args: { _class_name: string; _teacher_id: string }
         Returns: boolean
