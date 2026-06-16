@@ -132,18 +132,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     selectedRole: AppRole,
     className?: string,
     schoolName?: string,
-    teacherAssignments?: { class_name: string; subject: string }[],
+    teachingMapInput?: Array<{ subject: string; board: string; grade: number; section: string } | { class_name: string; subject: string }>,
   ) => {
-    // Convert legacy { class_name, subject } pairs to the new teaching_map shape
-    // that the server-side handle_new_user trigger consumes.
+    // Accept both the new TeachingMapEntry shape and the legacy { class_name, subject }
+    // shape so older callers keep working.
     const teachingMap =
-      selectedRole === 'teacher' && Array.isArray(teacherAssignments)
-        ? teacherAssignments.map(a => ({
-            subject: a.subject,
-            board: 'CBSE',
-            grade: parseInt((a.class_name || '').replace(/\D/g, ''), 10) || 9,
-            section: 'A',
-          }))
+      selectedRole === 'teacher' && Array.isArray(teachingMapInput)
+        ? teachingMapInput.map((a: any) =>
+            'board' in a
+              ? { subject: a.subject, board: a.board, grade: Number(a.grade), section: a.section }
+              : {
+                  subject: a.subject,
+                  board: 'CBSE',
+                  grade: parseInt((a.class_name || '').replace(/\D/g, ''), 10) || 9,
+                  section: 'A',
+                },
+          )
         : [];
 
     const { data, error } = await supabase.auth.signUp({
