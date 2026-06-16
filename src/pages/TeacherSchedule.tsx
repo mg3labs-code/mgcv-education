@@ -212,29 +212,9 @@ const TeacherSchedule = () => {
   return (
     <DashboardLayout role="teacher" breadcrumbItems={[{ label: "Dashboard", href: "/teacher" }, { label: "Schedule" }]}>
       <main className="p-4 md:p-8 max-w-[1400px] mx-auto">
-        {/* Class & Subject + Auto Homework Toggle */}
+        {/* Auto Homework Toggle + Manage classes link */}
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Class</span>
-              <Select value={className} onValueChange={setClassName}>
-                <SelectTrigger className="w-[140px] h-9"><SelectValue placeholder="Select class" /></SelectTrigger>
-                <SelectContent>
-                  {classes.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Subject</span>
-              <Select value={subject} onValueChange={setSubject}>
-                <SelectTrigger className="w-[160px] h-9"><SelectValue placeholder="Select subject" /></SelectTrigger>
-                <SelectContent>
-                  {subjectsForCurrent.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <Link to="/teacher/settings" className="text-xs text-primary hover:underline">Manage classes…</Link>
-          </div>
+          <Link to="/teacher/settings" className="text-xs text-primary hover:underline">Manage classes…</Link>
 
           <label className="flex items-center gap-2 cursor-pointer select-none">
             <span className="text-sm text-muted-foreground font-medium">
@@ -260,8 +240,13 @@ const TeacherSchedule = () => {
           isSaving={isSaving}
           selectedClass={className}
           onClassChange={setClassName}
+          selectedSubject={subject}
+          onSubjectChange={setSubject}
+          availableClasses={classes}
+          availableSubjects={subjectsForCurrent}
         />
       </main>
+
     </DashboardLayout>
   );
 };
