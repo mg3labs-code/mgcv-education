@@ -58,11 +58,12 @@ const StudentAssignments = () => {
       if (!selectedAssignment) return null;
 
       const { data: questions, error: qErr } = await supabase
-        .from("assignment_questions")
+        .from("assignment_questions_student" as any)
         .select("*")
         .eq("assignment_id", selectedAssignment)
         .order("question_number");
       if (qErr) throw qErr;
+
 
       const { data: submission } = await supabase
         .from("student_submissions")
