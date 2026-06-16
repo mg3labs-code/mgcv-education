@@ -664,8 +664,22 @@ const Index = () => {
                           <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} required
                             placeholder="Full name" className={inputClass} />
                           {loginType === "teacher" && (
-                            <input type="text" value={schoolName} onChange={(e) => setSchoolName(e.target.value)}
-                              placeholder="School name" className={inputClass} />
+                            <>
+                              <input type="text" value={schoolName} onChange={(e) => setSchoolName(e.target.value)}
+                                placeholder="School name" className={inputClass} />
+                              <div className="text-left">
+                                <p className="text-xs font-semibold text-foreground mb-2">Which classes & subjects do you teach?</p>
+                                <TeacherClassSubjectMatrix
+                                  value={teacherAssignments}
+                                  onChange={setTeacherAssignments}
+                                />
+                                {teacherAssignments.length > 0 && (
+                                  <p className="text-[11px] text-muted-foreground mt-2">
+                                    Selected: {teacherAssignments.length} {teacherAssignments.length === 1 ? "pair" : "pairs"}
+                                  </p>
+                                )}
+                              </div>
+                            </>
                           )}
                         </>
                       )}
