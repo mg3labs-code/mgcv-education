@@ -99,10 +99,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           const metadata = session.user.user_metadata ?? {};
           setRole(isAppRole(metadata.role) ? metadata.role : null);
           setFullName(typeof metadata.full_name === "string" ? metadata.full_name : "");
-          setTimeout(() => fetchUserData(session.user.id, metadata), 0);
+          setTimeout(() => {
+            fetchUserData(session.user.id, metadata);
+            if (isAppRole(metadata.role) && metadata.role === "teacher") {
+              syncTeacherAssignmentsFromMetadata(session.user.id, metadata);
+            }
+          }, 0);
         } else {
           setRole(null);
           setFullName("");
+        }
+        setLoading(false);
+      }
+    );
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        const metadata = session.user.user_metadata ?? {};
+        setRole(isAppRole(metadata.role) ? metadata.role : null);
+        setFullName(typeof metadata.full_name === "string" ? metadata.full_name : "");
+        fetchUserData(session.user.id, metadata);
+        if (isAppRole(metadata.role) && metadata.role === "teacher") {
+          syncTeacherAssignmentsFromMetadata(session.user.id, metadata);
         }
         setLoading(false);
       }
