@@ -154,7 +154,12 @@ const Index = () => {
     try {
       if (authMode === "signup") {
         const selectedRole = loginType === "teacher" ? "teacher" : "student";
-        await signUp(email, password, fullName, selectedRole as any, className, schoolName);
+        if (selectedRole === "teacher" && teacherAssignments.length === 0) {
+          setLoginError({ message: "Please select at least one class & subject you teach.", suggestion: "Tick the boxes in the matrix below for every class/subject you teach." });
+          setSubmitting(false);
+          return;
+        }
+        await signUp(email, password, fullName, selectedRole as any, className, schoolName, selectedRole === "teacher" ? teacherAssignments : undefined);
         toast({ title: "Account created!", description: "Please check your email to verify your account." });
         closeModal();
       } else {
