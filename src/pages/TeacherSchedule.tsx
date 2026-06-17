@@ -36,6 +36,19 @@ const TeacherSchedule = () => {
     }
   }, [subjectsForCurrent, subject, className]);
 
+  // Derive (board, grade) for the selected (class, subject) so chapters
+  // can be loaded scoped to THIS class — different classes now see different
+  // schedules instead of every teacher getting the same hardcoded Math one.
+  const gradeNum = useMemo(() => {
+    const n = parseInt(className.replace(/\D/g, ""), 10);
+    return Number.isFinite(n) ? n : undefined;
+  }, [className]);
+  const board = useMemo(() => {
+    const match = entries.find(e => e.grade === gradeNum && e.subject === subject);
+    return match?.board;
+  }, [entries, gradeNum, subject]);
+  const { data: courseChapters } = useChaptersForCourse(board, gradeNum, subject);
+
   /**
    * Sync the in-memory generated schedule into the per-date `calendar` table,
    * replacing all rows for this teacher × class × subject in one shot.
