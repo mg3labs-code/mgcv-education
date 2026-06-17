@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { ChevronLeft, ChevronRight, Undo2, Redo2, Save, RotateCcw } from "lucide-react";
 import {
   Dialog,
