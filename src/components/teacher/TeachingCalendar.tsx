@@ -226,6 +226,12 @@ interface TeachingCalendarProps {
   onSubjectChange?: (subject: string) => void;
   availableClasses?: string[];
   availableSubjects?: string[];
+  /**
+   * Chapters loaded from the DB for the currently-selected (board, class, subject).
+   * When this changes, the calendar rebuilds so each class gets its OWN schedule
+   * instead of every teacher seeing the same hardcoded Math chapters.
+   */
+  initialChapters?: ChapterDef[];
 }
 
 const DEFAULT_CLASSES = [
@@ -235,7 +241,7 @@ const DEFAULT_CLASSES = [
   "Class 12"
 ];
 
-const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, selectedSubject, onSubjectChange, availableClasses, availableSubjects }: TeachingCalendarProps) => {
+const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, selectedSubject, onSubjectChange, availableClasses, availableSubjects, initialChapters }: TeachingCalendarProps) => {
   const CLASSES = availableClasses && availableClasses.length > 0 ? availableClasses : DEFAULT_CLASSES;
   const SUBJECTS = availableSubjects && availableSubjects.length > 0 ? availableSubjects : [];
 
@@ -244,9 +250,10 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
   const [monthIndex, setMonthIndex] = useState(now.getMonth());
   const [year, setYear] = useState(now.getFullYear());
 
-  // Mutable state
-  const [chapters, setChapters] = useState<ChapterDef[]>(() => getDefaultChapters());
-  const [schedule, setSchedule] = useState<Record<string, ScheduleItem>>(() => generateSchedule(getDefaultChapters()));
+  // Mutable state — seeded from initialChapters (DB) if provided, else defaults.
+  const _seedChapters = initialChapters && initialChapters.length > 0 ? initialChapters : getDefaultChapters();
+  const [chapters, setChapters] = useState<ChapterDef[]>(() => _seedChapters);
+  const [schedule, setSchedule] = useState<Record<string, ScheduleItem>>(() => generateSchedule(_seedChapters));
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   // History (undo/redo)
