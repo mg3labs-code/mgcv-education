@@ -5,12 +5,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useTeacherAssignments } from "@/hooks/useTeacherAssignments";
+import { useChaptersForCourse } from "@/hooks/useChaptersForCourse";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link } from "react-router-dom";
 
 const TeacherSchedule = () => {
   const { user } = useAuth();
-  const { assignments, classes, subjectsForClass, loading: loadingAssign } = useTeacherAssignments();
+  const { entries, assignments, classes, subjectsForClass, loading: loadingAssign } = useTeacherAssignments();
   const [isSaving, setIsSaving] = useState(false);
   const [className, setClassName] = useState("");
   const [subject, setSubject] = useState("Mathematics");
@@ -34,6 +35,19 @@ const TeacherSchedule = () => {
       setSubject(subjectsForCurrent[0]);
     }
   }, [subjectsForCurrent, subject, className]);
+
+  // Derive (board, grade) for the selected (class, subject) so chapters
+  // can be loaded scoped to THIS class — different classes now see different
+  // schedules instead of every teacher getting the same hardcoded Math one.
+  const gradeNum = useMemo(() => {
+    const n = parseInt(className.replace(/\D/g, ""), 10);
+    return Number.isFinite(n) ? n : undefined;
+  }, [className]);
+  const board = useMemo(() => {
+    const match = entries.find(e => e.grade === gradeNum && e.subject === subject);
+    return match?.board;
+  }, [entries, gradeNum, subject]);
+  const { data: courseChapters } = useChaptersForCourse(board, gradeNum, subject);
 
   /**
    * Sync the in-memory generated schedule into the per-date `calendar` table,
@@ -244,6 +258,7 @@ const TeacherSchedule = () => {
           onSubjectChange={setSubject}
           availableClasses={classes}
           availableSubjects={subjectsForCurrent}
+          initialChapters={courseChapters}
         />
       </main>
 

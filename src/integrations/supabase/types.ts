@@ -1270,8 +1270,10 @@ export type Database = {
       }
       tb_chapters: {
         Row: {
+          board: string | null
           color: string | null
           created_at: string
+          grade: number | null
           id: string
           is_published: boolean
           number: number
@@ -1284,8 +1286,10 @@ export type Database = {
           title: string
         }
         Insert: {
+          board?: string | null
           color?: string | null
           created_at?: string
+          grade?: number | null
           id?: string
           is_published?: boolean
           number: number
@@ -1298,8 +1302,10 @@ export type Database = {
           title: string
         }
         Update: {
+          board?: string | null
           color?: string | null
           created_at?: string
+          grade?: number | null
           id?: string
           is_published?: boolean
           number?: number
