@@ -260,6 +260,19 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
   const [history, setHistory] = useState<{ chapters: ChapterDef[]; schedule: Record<string, ScheduleItem> }[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
 
+  // When the parent feeds in a fresh set of chapters (e.g. teacher switched
+  // class or subject), rebuild the calendar from those instead of keeping
+  // the previous class's schedule on screen.
+  useEffect(() => {
+    if (!initialChapters || initialChapters.length === 0) return;
+    setChapters(initialChapters);
+    setSchedule(generateSchedule(initialChapters));
+    setHasUnsavedChanges(false);
+    setHistory([]);
+    setHistoryIndex(-1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialChapters]);
+
   // Modal state
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [subSection, setSubSection] = useState<SubSection>(null);
