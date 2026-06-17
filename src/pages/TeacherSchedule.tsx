@@ -5,12 +5,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useTeacherAssignments } from "@/hooks/useTeacherAssignments";
+import { useChaptersForCourse } from "@/hooks/useChaptersForCourse";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link } from "react-router-dom";
 
 const TeacherSchedule = () => {
   const { user } = useAuth();
-  const { assignments, classes, subjectsForClass, loading: loadingAssign } = useTeacherAssignments();
+  const { entries, assignments, classes, subjectsForClass, loading: loadingAssign } = useTeacherAssignments();
   const [isSaving, setIsSaving] = useState(false);
   const [className, setClassName] = useState("");
   const [subject, setSubject] = useState("Mathematics");
