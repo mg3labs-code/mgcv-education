@@ -258,6 +258,7 @@ const TeacherSchedule = () => {
           onSubjectChange={setSubject}
           availableClasses={classes}
           availableSubjects={subjectsForCurrent}
+          initialChapters={courseChapters}
         />
       </main>
 
