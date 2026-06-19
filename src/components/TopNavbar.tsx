@@ -213,12 +213,17 @@ const TopNavbar = ({ role, phase = 4, activeTab, onTabChange }: TopNavbarProps) 
 
                   {/* Menu items */}
                   {[
+                    { icon: "👤", label: "My Profile", tab: "__profile__" },
                     { icon: "💬", label: "Messages", tab: "messages" },
                     { icon: "⚙️", label: "Settings", tab: "personalisation" },
                   ].map((item) => (
                     <button
                       key={item.tab}
-                      onClick={() => { onTabChange(item.tab); setProfileOpen(false); }}
+                      onClick={() => {
+                        setProfileOpen(false);
+                        if (item.tab === "__profile__") { navigate("/student/profile"); return; }
+                        onTabChange(item.tab);
+                      }}
                       style={{
                         display: "flex", alignItems: "center", gap: 10,
                         width: "100%", padding: "10px 12px", borderRadius: 10,
