@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Pencil } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import MyTeachersSection from "@/components/student/MyTeachersSection";
 import ScheduleCalendar from "@/components/student/ScheduleCalendar";
+import { NATIONAL_HOLIDAYS } from "@/data/nationalHolidays";
 
 interface ScheduleItem {
   type: string;
@@ -40,10 +41,10 @@ const StudentProfile = () => {
   const [prefs, setPrefs] = useState<Prefs | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Monthly calendar data
-  const [schedule, setSchedule] = useState<Record<string, ScheduleItem>>({});
-  const [chapters, setChapters] = useState<{ id: string; name: string; colorHex: string }[]>([]);
-  const [calSubject] = useState("Mathematics");
+  // Chapters loaded from tb_chapters for the student's board+grade
+  interface ChapterRow { id: string; title: string; color: string; periods: number; sort_order: number; subject: string }
+  const [allChapters, setAllChapters] = useState<ChapterRow[]>([]);
+  const [calSubject, setCalSubject] = useState<string>("");
 
   useEffect(() => {
     if (!user) return;
@@ -58,33 +59,88 @@ const StudentProfile = () => {
       setPrefs(pref);
 
       if (prof) {
-        const className = `Class ${prof.grade}`;
-        const { data: rows } = await (supabase as any)
-          .from("calendar")
-          .select("subject,date,entry_type,chapter_id,chapter_name,chapter_color,topic_title,label,is_national_holiday")
-          .eq("class_name", className)
-          .eq("subject", calSubject);
+        // Fetch published chapters for this board+grade, join subject name
+        const { data: chRows } = await (supabase as any)
+          .from("tb_chapters")
+          .select("id,title,color,periods,sort_order,subjects:subject_id(name)")
+          .eq("board", prof.board)
+          .eq("grade", prof.grade)
+          .eq("is_published", true)
+          .order("sort_order", { ascending: true });
 
-        const sched: Record<string, ScheduleItem> = {};
-        const chMap = new Map<string, { id: string; name: string; colorHex: string }>();
-        (rows ?? []).forEach((r: any) => {
-          sched[r.date] = {
-            type: r.entry_type,
-            title: r.topic_title || r.label || undefined,
-            label: r.label || undefined,
-            chapterId: r.chapter_id || undefined,
-            isNational: r.is_national_holiday,
-          };
-          if (r.chapter_id && !chMap.has(r.chapter_id)) {
-            chMap.set(r.chapter_id, { id: r.chapter_id, name: r.chapter_name || r.chapter_id, colorHex: r.chapter_color || "#6b7280" });
-          }
-        });
-        setSchedule(sched);
-        setChapters(Array.from(chMap.values()));
+        const rows: ChapterRow[] = (chRows ?? []).map((r: any) => ({
+          id: r.id,
+          title: r.title,
+          color: r.color || "#6b7280",
+          periods: r.periods && r.periods > 0 ? r.periods : 8,
+          sort_order: r.sort_order ?? 0,
+          subject: r.subjects?.name || "General",
+        }));
+        setAllChapters(rows);
+        if (rows.length && !calSubject) {
+          const preferred = rows.find(r => r.subject === "Mathematics")?.subject ?? rows[0].subject;
+          setCalSubject(preferred);
+        }
       }
       setLoading(false);
     })();
-  }, [user, calSubject]);
+  }, [user]);
+
+  // Distinct subject list for the dropdown
+  const subjectOptions = useMemo(
+    () => Array.from(new Set(allChapters.map(c => c.subject))).sort(),
+    [allChapters]
+  );
+
+  // Build year-long schedule from chapters: allocate `periods` school-days per
+  // chapter, skipping Sundays and national holidays. Academic year: Jun 1 → May 31.
+  const { schedule, chapters } = useMemo(() => {
+    const sched: Record<string, ScheduleItem> = {};
+    const chList: { id: string; name: string; colorHex: string }[] = [];
+
+    // Inject national holidays everywhere
+    Object.entries(NATIONAL_HOLIDAYS).forEach(([date, label]) => {
+      sched[date] = { type: "holiday", label, isNational: true };
+    });
+
+    const subjectChapters = allChapters
+      .filter(c => c.subject === calSubject)
+      .sort((a, b) => a.sort_order - b.sort_order);
+    if (!subjectChapters.length) return { schedule: sched, chapters: chList };
+
+    const today = new Date();
+    const yearStart = today.getMonth() >= 5 ? today.getFullYear() : today.getFullYear() - 1;
+    const cursor = new Date(Date.UTC(yearStart, 5, 1)); // Jun 1
+    const yearEnd = new Date(Date.UTC(yearStart + 1, 4, 31));
+
+    const advance = () => { cursor.setUTCDate(cursor.getUTCDate() + 1); };
+    const isSchoolDay = (d: Date) => {
+      if (d.getUTCDay() === 0) return false; // Sunday
+      const key = d.toISOString().split("T")[0];
+      if (NATIONAL_HOLIDAYS[key]) return false;
+      return true;
+    };
+
+    for (const ch of subjectChapters) {
+      chList.push({ id: ch.id, name: ch.title, colorHex: ch.color });
+      let allocated = 0;
+      while (allocated < ch.periods && cursor <= yearEnd) {
+        if (isSchoolDay(cursor)) {
+          const key = cursor.toISOString().split("T")[0];
+          sched[key] = {
+            type: "topic",
+            title: `Ch ${chList.length}: ${ch.title}`,
+            chapterId: ch.id,
+          };
+          allocated++;
+        }
+        advance();
+      }
+      if (cursor > yearEnd) break;
+    }
+    return { schedule: sched, chapters: chList };
+  }, [allChapters, calSubject]);
+
 
   const initials = profile?.full_name
     ? profile.full_name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)
@@ -202,16 +258,37 @@ const StudentProfile = () => {
 
               {/* Monthly calendar */}
               <div style={{ marginTop: 32 }}>
-                <h3 style={{ fontFamily: "'Source Serif 4', serif", fontSize: 20, fontWeight: 700, color: "#1C1917", marginBottom: 12 }}>
-                  📅 Monthly Schedule
-                </h3>
-                <ScheduleCalendar
-                  scheduleData={schedule}
-                  className={profile ? `Class ${profile.grade} ${profile.board}` : "Class"}
-                  subject={calSubject}
-                  chaptersData={chapters}
-                />
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, flexWrap: "wrap", gap: 8 }}>
+                  <h3 style={{ fontFamily: "'Source Serif 4', serif", fontSize: 20, fontWeight: 700, color: "#1C1917", margin: 0 }}>
+                    📅 Monthly Schedule
+                  </h3>
+                  {subjectOptions.length > 0 && (
+                    <select
+                      value={calSubject}
+                      onChange={(e) => setCalSubject(e.target.value)}
+                      style={{
+                        padding: "8px 12px", borderRadius: 10, border: "1.5px solid #E7E5E4",
+                        background: "white", fontSize: 13, fontWeight: 600, color: "#1C1917", cursor: "pointer",
+                      }}
+                    >
+                      {subjectOptions.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  )}
+                </div>
+                {chapters.length === 0 ? (
+                  <div style={{ padding: 24, textAlign: "center", color: "#78716C", background: "white", borderRadius: 12, border: "1px solid #E7E5E4" }}>
+                    No chapters published yet for {profile?.board} Class {profile?.grade} · {calSubject || "this subject"}.
+                  </div>
+                ) : (
+                  <ScheduleCalendar
+                    scheduleData={schedule}
+                    className={profile ? `Class ${profile.grade} ${profile.board}` : "Class"}
+                    subject={calSubject}
+                    chaptersData={chapters}
+                  />
+                )}
               </div>
+
             </>
           )}
         </div>
