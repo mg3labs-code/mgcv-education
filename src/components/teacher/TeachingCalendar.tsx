@@ -763,16 +763,57 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>{[1,2,3,4,5].map(n => <SelectItem key={n} value={String(n)}>{n} Day{n > 1 ? "s" : ""}</SelectItem>)}</SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground">Practice days from the chapter will be converted to extend this topic.</p>
+              <label className="flex items-start gap-2 text-sm cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  className="mt-0.5"
+                  checked={extendToNextDay}
+                  onChange={(e) => setExtendToNextDay(e.target.checked)}
+                />
+                <span>
+                  <strong>Extend to next day.</strong> One Practice Day will be consumed and every following topic
+                  (except Saturdays, Sundays, and holidays) shifts forward by one day.
+                </span>
+              </label>
+              {!extendToNextDay && (
+                <p className="text-xs text-muted-foreground">Practice days from the same chapter will be converted to extend this topic.</p>
+              )}
               <Button className="bg-green-600 hover:bg-green-700" onClick={() => {
-                // Simple extend: increase teaching days
                 if (!selectedTopic) return;
                 const item = schedule[selectedTopic];
                 if (!item) return;
+                const days = parseInt(extendDays, 10);
+
+                // Mode A: date-shift (consume one practice day per added day).
+                if (extendToNextDay) {
+                  const newSchedule = JSON.parse(JSON.stringify(schedule)) as Record<string, ScheduleItem>;
+                  let anchor = selectedTopic;
+                  for (let i = 0; i < days; i++) {
+                    const freed = shiftAndConsumeNextPractice(newSchedule, anchor);
+                    if (!freed) {
+                      alert("Ran out of upcoming Practice Days to absorb the extension.");
+                      return;
+                    }
+                    newSchedule[freed] = {
+                      type: "topic",
+                      title: `${item.title} (Day ${i + 2})`,
+                      cssClass: item.cssClass || "intro",
+                      chapterId: item.chapterId,
+                      key: `${item.key}_ext_${i}`,
+                    };
+                    anchor = freed;
+                  }
+                  setSchedule(newSchedule);
+                  pushHistory(chapters, newSchedule);
+                  setHasUnsavedChanges(true);
+                  closeModal();
+                  return;
+                }
+
+                // Mode B: original chapter-level extension.
                 const newChapters = JSON.parse(JSON.stringify(chapters)) as ChapterDef[];
                 const ch = newChapters.find(c => c.id === item.chapterId);
                 if (!ch) return;
-                const days = parseInt(extendDays, 10);
                 ch.teachingDays += days;
                 for (let i = 0; i < days; i++) {
                   ch.topics.push({ key: `${item.key}_ext_${i}`, title: `${item.title} (Day ${i + 2})`, cssClass: item.cssClass || "intro" });
@@ -811,9 +852,22 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
                 <SelectTrigger><SelectValue placeholder="Assign to chapter..." /></SelectTrigger>
                 <SelectContent>{chapters.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
               </Select>
+              <label className="flex items-start gap-2 text-sm cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  className="mt-0.5"
+                  checked={extendToNextDay}
+                  onChange={(e) => setExtendToNextDay(e.target.checked)}
+                />
+                <span>
+                  <strong>Extend to next day.</strong> One Practice Day will be consumed and every following topic
+                  (except Saturdays, Sundays, and holidays) shifts forward by one day to make room.
+                </span>
+              </label>
               <Button className="bg-green-600 hover:bg-green-700" onClick={handleInsertTopic}>Insert Topic</Button>
             </div>
           )}
+
         </DialogContent>
       </Dialog>
 
