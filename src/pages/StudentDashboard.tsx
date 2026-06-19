@@ -15,7 +15,7 @@ import { useVoiceGuide } from "@/hooks/useVoiceGuide";
 import ExamAlertBanner from "@/components/student/ExamAlertBanner";
 import { useDiscoveryToasts } from "@/hooks/useDiscoveryToasts";
 import DashboardGreeting from "@/components/DashboardGreeting";
-import TodayThoughtCard from "@/components/student/TodayThoughtCard";
+import ContinueJourneyHero from "@/components/student/ContinueJourneyHero";
 import { ROUTES } from "@/lib/routes";
 import MyTeachersSection from "@/components/student/MyTeachersSection";
 
@@ -581,9 +581,9 @@ const StudentDashboard = () => {
                 <DashboardGreeting firstName={firstName} subline={greeting} />
               </FadeSlide>
 
-              {/* Today's one thought — concept · interest lens · next layer · echo */}
+              {/* Personalized "Continue Your Journey" hero */}
               <FadeSlide delay={60}>
-                <TodayThoughtCard firstName={firstName} />
+                <ContinueJourneyHero firstName={firstName} />
               </FadeSlide>
 
               {/* PHASE 4: Inner OS as hero */}
