@@ -457,6 +457,8 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
     setDeleteTopicKey(""); setDeleteChapterId("");
     setHolidayDate(""); setHolidayName("");
     setSwapTopic1(""); setSwapTopic2(""); setSwapChapter1(""); setSwapChapter2("");
+    setExtendToNextDay(false);
+
   };
 
   // ── Action handlers ──
