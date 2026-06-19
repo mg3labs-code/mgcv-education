@@ -35,6 +35,7 @@ interface JourneyData {
 export default function ContinueJourneyHero({ firstName }: { firstName: string }) {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { data: progressMap } = useUserEpisodeProgress();
 
   const { data } = useQuery<JourneyData | null>({
     queryKey: ["continue-journey-hero", user?.id],
