@@ -480,6 +480,33 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
 
   const handleInsertTopic = () => {
     if (!insertTopicName.trim() || !insertTopicChapter) return;
+
+    // Mode A: "Extend to next day" — pure date-level shift, no chapter regen.
+    // This consumes ONE Practice Day after the anchor and frees the next
+    // working-day slot for the new topic. Sat/Sun/holidays are skipped.
+    if (extendToNextDay && insertAfterTopic) {
+      const newSchedule = JSON.parse(JSON.stringify(schedule)) as Record<string, ScheduleItem>;
+      const freed = shiftAndConsumeNextPractice(newSchedule, insertAfterTopic);
+      if (!freed) {
+        alert("No upcoming Practice Day found to absorb the insert. Add a Practice Day first.");
+        return;
+      }
+      const ch = chapters.find(c => c.id === insertTopicChapter);
+      newSchedule[freed] = {
+        type: "topic",
+        title: insertTopicName.trim(),
+        cssClass: ch?.topics[0]?.cssClass || "intro",
+        chapterId: insertTopicChapter,
+        key: `inserted_${Date.now()}`,
+      };
+      setSchedule(newSchedule);
+      pushHistory(chapters, newSchedule);
+      setHasUnsavedChanges(true);
+      closeModal();
+      return;
+    }
+
+    // Mode B: original behaviour — append to chapter and regenerate.
     const newChapters = JSON.parse(JSON.stringify(chapters)) as ChapterDef[];
     const ch = newChapters.find(c => c.id === insertTopicChapter);
     if (!ch) return;
@@ -488,6 +515,7 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
     applyChange(newChapters);
     closeModal();
   };
+
 
   const handleDeleteTopic = () => {
     if (!deleteTopicKey) return;
