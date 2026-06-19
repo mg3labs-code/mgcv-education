@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Pencil } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import MyTeachersSection from "@/components/student/MyTeachersSection";
 import ScheduleCalendar from "@/components/student/ScheduleCalendar";
+import { NATIONAL_HOLIDAYS } from "@/data/nationalHolidays";
 
 interface ScheduleItem {
   type: string;
