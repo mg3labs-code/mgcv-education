@@ -55,6 +55,32 @@ const TextbookChapter = () => {
   const episodeSlugs = chapter.episodes.map((e) => e.id);
   const chProg = getChapterProgress(progressMap, chapter.id, episodeSlugs);
 
+  const episodeStatuses = episodeSlugs.map((slug) => getEpisodeStatus(progressMap, chapter.id, slug));
+  const hasAnyStarted = episodeStatuses.some((s) => s.status !== "not-started");
+  const isAllCompleted = episodeStatuses.every((s) => s.status === "completed");
+
+  let ctaLabel = "";
+  let ctaSubText = "";
+  let ctaButtonText = "";
+  let targetEpisodeSlug: string | null = null;
+
+  if (isAllCompleted) {
+    ctaLabel = "Completed";
+    ctaSubText = "All episodes finished — review anytime";
+    ctaButtonText = "Review";
+    targetEpisodeSlug = episodeSlugs[0] ?? null;
+  } else if (!hasAnyStarted) {
+    ctaLabel = "Start Journey";
+    ctaSubText = chapter.episodes.find((e) => e.id === episodeSlugs[0])?.title ?? "";
+    ctaButtonText = "Start";
+    targetEpisodeSlug = episodeSlugs[0] ?? null;
+  } else {
+    ctaLabel = chProg.hasInProgress ? "Pick up where you left off" : "Continue Journey";
+    ctaSubText = chapter.episodes.find((e) => e.id === chProg.resumeEpisodeSlug)?.title ?? "";
+    ctaButtonText = "Resume";
+    targetEpisodeSlug = chProg.resumeEpisodeSlug;
+  }
+
   return (
     <PageLayout role="student" breadcrumbItems={breadcrumbs}>
       <div className="w-full max-w-[1280px] mx-auto">
@@ -79,25 +105,21 @@ const TextbookChapter = () => {
           </div>
         </div>
 
-        {/* Resume CTA */}
-        {chProg.resumeEpisodeSlug && (
+        {/* Resume / Start / Review CTA */}
+        {episodeSlugs.length > 0 && targetEpisodeSlug && (
           <div className="mb-4 flex items-center justify-between rounded-xl border border-accent/30 bg-accent/5 p-4">
             <div className="flex items-center gap-3 min-w-0">
               <PlayCircle className="h-5 w-5 text-accent shrink-0" />
               <div className="min-w-0">
-                <div className="text-sm font-medium text-foreground">
-                  {chProg.hasInProgress ? "Pick up where you left off" : "Continue your journey"}
-                </div>
-                <div className="text-xs text-muted-foreground truncate">
-                  {chapter.episodes.find((e) => e.id === chProg.resumeEpisodeSlug)?.title}
-                </div>
+                <div className="text-sm font-medium text-foreground">{ctaLabel}</div>
+                <div className="text-xs text-muted-foreground truncate">{ctaSubText}</div>
               </div>
             </div>
             <Button
               size="sm"
-              onClick={() => navigate(ROUTES.textbook.episode(chapterId!, chProg.resumeEpisodeSlug))}
+              onClick={() => navigate(ROUTES.textbook.episode(chapterId!, targetEpisodeSlug!))}
             >
-              Resume
+              {ctaButtonText}
             </Button>
           </div>
         )}
