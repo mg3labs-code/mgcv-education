@@ -52,15 +52,21 @@ const TeacherSchedule = () => {
   /**
    * Sync the in-memory generated schedule into the per-date `calendar` table,
    * replacing all rows for this teacher × class × subject in one shot.
-   * Each schedule entry becomes one row, so individual dates can later be
-   * rescheduled, extended, or deleted via row-level UPDATE/DELETE.
+   *
+   * Chapter metadata (name/color/class/section/subject) is upserted into the
+   * normalized `calendar_chapters` table; each per-date row in `calendar`
+   * stores a `chapter_ref_id` pointing back at that chapter row, so the
+   * student side can resolve chapter identity from the database alone.
+   *
+   * Every date (including Saturdays, Sundays, and holidays) is persisted so
+   * the student calendar renders entirely from backend data.
    */
   const syncCalendarRows = async (
     teacherId: string,
     schedule: Record<string, ScheduleItem>,
     chaptersArr: ChapterDef[],
   ) => {
-    // 1. Wipe prior rows for this (teacher, class, subject) scope.
+    // 1a. Wipe prior per-date rows for this scope.
     await supabase
       .from("calendar")
       .delete()
@@ -68,26 +74,51 @@ const TeacherSchedule = () => {
       .eq("class_name", className)
       .eq("subject", subject);
 
-    // 2. Build row inserts for every meaningful entry (skip empty/sunday filler).
+    // 1b. Upsert chapter metadata rows, then build chapterId -> uuid map.
+    const chapterRows = chaptersArr.map((c, idx) => ({
+      teacher_id: teacherId,
+      class_name: className,
+      subject,
+      board: board ?? null,
+      section: null as string | null,
+      chapter_id: c.id,
+      chapter_name: c.name,
+      chapter_color: c.colorHex,
+      sort_order: idx,
+    }));
+
+    let chapterRefMap: Record<string, string> = {};
+    if (chapterRows.length > 0) {
+      const { data: upserted, error: chErr } = await supabase
+        .from("calendar_chapters")
+        .upsert(chapterRows, { onConflict: "teacher_id,class_name,subject,chapter_id" })
+        .select("id, chapter_id");
+      if (chErr) { console.error("calendar_chapters upsert error", chErr); throw chErr; }
+      chapterRefMap = Object.fromEntries((upserted || []).map((r: any) => [r.chapter_id, r.id]));
+    }
+
+    // 2. Build row inserts for EVERY date — Sat/Sun/holiday entries are
+    //    now persisted so the student view doesn't depend on client-side
+    //    weekday inference.
     const chapterById: Record<string, ChapterDef> = {};
     chaptersArr.forEach(c => { chapterById[c.id] = c; });
 
-    const rows = Object.entries(schedule)
-      .filter(([, item]) => item.type !== "holiday" || item.isNational || item.label !== "Sunday")
-      .map(([date, item]) => ({
-        teacher_id: teacherId,
-        class_name: className,
-        subject,
-        date,
-        entry_type: item.type,
-        chapter_id: item.chapterId ?? null,
-        chapter_name: item.chapterId ? chapterById[item.chapterId]?.name ?? null : null,
-        chapter_color: item.chapterId ? chapterById[item.chapterId]?.colorHex ?? null : null,
-        topic_key: item.key ?? null,
-        topic_title: item.title ?? null,
-        label: item.label ?? null,
-        is_national_holiday: !!item.isNational,
-      }));
+    const rows = Object.entries(schedule).map(([date, item]) => ({
+      teacher_id: teacherId,
+      class_name: className,
+      subject,
+      date,
+      entry_type: item.type,
+      chapter_id: item.chapterId ?? null,
+      chapter_ref_id: item.chapterId ? chapterRefMap[item.chapterId] ?? null : null,
+      chapter_name: item.chapterId ? chapterById[item.chapterId]?.name ?? null : null,
+      chapter_color: item.chapterId ? chapterById[item.chapterId]?.colorHex ?? null : null,
+      topic_key: item.key ?? null,
+      topic_title: item.title ?? null,
+      label: item.label ?? null,
+      is_national_holiday: !!item.isNational,
+    }));
+
 
     if (rows.length === 0) return;
     // Batch insert in chunks of 500 to stay under PostgREST payload size.

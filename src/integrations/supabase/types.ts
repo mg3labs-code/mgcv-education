@@ -235,6 +235,7 @@ export type Database = {
           chapter_color: string | null
           chapter_id: string | null
           chapter_name: string | null
+          chapter_ref_id: string | null
           class_name: string
           created_at: string
           date: string
@@ -256,6 +257,7 @@ export type Database = {
           chapter_color?: string | null
           chapter_id?: string | null
           chapter_name?: string | null
+          chapter_ref_id?: string | null
           class_name: string
           created_at?: string
           date: string
@@ -277,6 +279,7 @@ export type Database = {
           chapter_color?: string | null
           chapter_id?: string | null
           chapter_name?: string | null
+          chapter_ref_id?: string | null
           class_name?: string
           created_at?: string
           date?: string
@@ -291,6 +294,59 @@ export type Database = {
           teacher_id?: string
           topic_key?: string | null
           topic_title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_chapter_ref_id_fkey"
+            columns: ["chapter_ref_id"]
+            isOneToOne: false
+            referencedRelation: "calendar_chapters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      calendar_chapters: {
+        Row: {
+          board: string | null
+          chapter_color: string | null
+          chapter_id: string
+          chapter_name: string
+          class_name: string
+          created_at: string
+          id: string
+          section: string | null
+          sort_order: number
+          subject: string
+          teacher_id: string
+          updated_at: string
+        }
+        Insert: {
+          board?: string | null
+          chapter_color?: string | null
+          chapter_id: string
+          chapter_name: string
+          class_name: string
+          created_at?: string
+          id?: string
+          section?: string | null
+          sort_order?: number
+          subject: string
+          teacher_id: string
+          updated_at?: string
+        }
+        Update: {
+          board?: string | null
+          chapter_color?: string | null
+          chapter_id?: string
+          chapter_name?: string
+          class_name?: string
+          created_at?: string
+          id?: string
+          section?: string | null
+          sort_order?: number
+          subject?: string
+          teacher_id?: string
           updated_at?: string
         }
         Relationships: []
