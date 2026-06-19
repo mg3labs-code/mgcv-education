@@ -1690,6 +1690,8 @@ export type Database = {
           student_count: number
         }[]
       }
+      get_my_student_phone: { Args: never; Returns: string }
+      get_my_teacher_phone: { Args: never; Returns: string }
       get_student_streak: { Args: { _user_id: string }; Returns: number }
       get_user_class: { Args: { _user_id: string }; Returns: string }
       get_user_role: {

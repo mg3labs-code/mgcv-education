@@ -47,7 +47,7 @@ const MyTeachersSection = () => {
 
       const { data: profs } = await (supabase as any)
         .from("teacher_profiles")
-        .select("user_id, full_name, phone, school_name")
+        .select("user_id, full_name, school_name")
         .in("user_id", ids);
 
       const byId = new Map<string, any>((profs ?? []).map((p: any) => [p.user_id, p]));
