@@ -293,6 +293,62 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
   const [swapTopic2, setSwapTopic2] = useState("");
   const [swapChapter1, setSwapChapter1] = useState("");
   const [swapChapter2, setSwapChapter2] = useState("");
+  // "Extend to next day" — when checked, the topic is placed on the next
+  // working day and trailing topics shift forward one slot each until the
+  // next Practice Day is consumed (Sat/Sun/holidays are skipped).
+  const [extendToNextDay, setExtendToNextDay] = useState(false);
+
+  /**
+   * Walk forward from `anchorKey` (exclusive), skipping Sat/Sun/holidays,
+   * and shift each topic/test/assignment one working day to the right until
+   * the next Practice Day slot is reached. That Practice Day is consumed
+   * (overwritten by the previous topic), and the original next-working-day
+   * slot is returned so the caller can place the new/extended item there.
+   *
+   * Returns the date key of the freed slot, or null if no Practice Day is
+   * found in the remainder of the schedule.
+   */
+  const shiftAndConsumeNextPractice = (
+    sched: Record<string, ScheduleItem>,
+    anchorKey: string,
+  ): string | null => {
+    const isWorking = (d: Date) => {
+      const dow = d.getUTCDay();
+      if (dow === 0 || dow === 6) return false;
+      const k = toKey(d);
+      const it = sched[k];
+      return !(it?.type === "holiday");
+    };
+    const nextWorking = (from: Date) => {
+      const d = new Date(from);
+      while (true) {
+        d.setUTCDate(d.getUTCDate() + 1);
+        if (isWorking(d)) return new Date(d);
+      }
+    };
+
+    // Collect the contiguous chain of working-day slots starting after anchor,
+    // up to and INCLUDING the first practice day.
+    const chain: string[] = [];
+    let cursor = fromKey(anchorKey);
+    for (let safety = 0; safety < 400; safety++) {
+      cursor = nextWorking(cursor);
+      const k = toKey(cursor);
+      chain.push(k);
+      if (sched[k]?.type === "practice") break;
+    }
+    if (chain.length === 0) return null;
+    if (sched[chain[chain.length - 1]]?.type !== "practice") return null;
+
+    // Shift right: chain[i+1] = chain[i] for i from end-1 down to 0.
+    // The practice slot gets overwritten; chain[0] becomes empty.
+    for (let i = chain.length - 1; i > 0; i--) {
+      sched[chain[i]] = sched[chain[i - 1]];
+    }
+    delete sched[chain[0]];
+    return chain[0];
+  };
+
 
   const pushHistory = useCallback((newChapters: ChapterDef[], newSchedule: Record<string, ScheduleItem>) => {
     setHistory(prev => {
