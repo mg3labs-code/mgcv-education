@@ -4,6 +4,7 @@ import { ArrowRight, Sparkles, Quote } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { ROUTES } from "@/lib/routes";
+import { useUserEpisodeProgress } from "@/hooks/useEpisodeProgress";
 
 const INTEREST_EMOJI: Record<string, string> = {
   food: "🍳", cricket: "🏏", music: "🎵", gaming: "🎮",
@@ -34,6 +35,7 @@ interface JourneyData {
 export default function ContinueJourneyHero({ firstName }: { firstName: string }) {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { data: progressMap } = useUserEpisodeProgress();
 
   const { data } = useQuery<JourneyData | null>({
     queryKey: ["continue-journey-hero", user?.id],
@@ -99,11 +101,29 @@ export default function ContinueJourneyHero({ firstName }: { firstName: string }
   const hasJourney = !!(data && (data.yesterdayThought || data.episodeId || data.interest));
 
   const onContinue = () => {
+    // 1) Prefer most-recent unfinished episode from episode_progress
+    if (progressMap && progressMap.size > 0) {
+      const rows = Array.from(progressMap.values());
+      const unfinished = rows
+        .filter((r) => !r.completed_at && r.completion_pct < 100)
+        .sort((a, b) => new Date(b.started_at).getTime() - new Date(a.started_at).getTime());
+      const target = unfinished[0];
+      if (target) {
+        navigate(ROUTES.textbook.episode(target.chapter_id, target.episode_id));
+        return;
+      }
+    }
+    // 2) Fall back to rung-state pointer
     if (data?.chapterId && data?.episodeId) {
       navigate(ROUTES.textbook.episode(data.chapterId, data.episodeId));
-    } else {
-      navigate(ROUTES.textbook.root);
+      return;
     }
+    // 3) If we only know the chapter, jump into chapter page (legacy fallback)
+    if (data?.chapterId) {
+      navigate(ROUTES.textbook.chapter(data.chapterId));
+      return;
+    }
+    navigate(ROUTES.textbook.root);
   };
 
   const interestKey = data?.interest ?? "";
