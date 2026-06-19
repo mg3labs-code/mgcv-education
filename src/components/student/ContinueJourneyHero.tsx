@@ -4,6 +4,7 @@ import { ArrowRight, Sparkles, Quote } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { ROUTES } from "@/lib/routes";
+import { useUserEpisodeProgress } from "@/hooks/useEpisodeProgress";
 
 const INTEREST_EMOJI: Record<string, string> = {
   food: "🍳", cricket: "🏏", music: "🎵", gaming: "🎮",
