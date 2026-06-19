@@ -33,7 +33,8 @@ interface Prefs {
 }
 
 const StudentProfile = () => {
-  const { user, email } = useAuth();
+  const { user } = useAuth();
+  const email = user?.email;
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [prefs, setPrefs] = useState<Prefs | null>(null);
