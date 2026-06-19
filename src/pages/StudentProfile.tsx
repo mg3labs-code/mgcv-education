@@ -49,11 +49,12 @@ const StudentProfile = () => {
     if (!user) return;
     (async () => {
       setLoading(true);
-      const [{ data: prof }, { data: pref }] = await Promise.all([
-        (supabase as any).from("student_profiles").select("full_name,board,grade,section,school_name,phone").eq("user_id", user.id).maybeSingle(),
+      const [{ data: prof }, { data: pref }, { data: phone }] = await Promise.all([
+        (supabase as any).from("student_profiles").select("full_name,board,grade,section,school_name").eq("user_id", user.id).maybeSingle(),
         (supabase as any).from("student_preferences").select("preferred_language,difficulty_level,learning_style,interests,interest_domains").eq("user_id", user.id).maybeSingle(),
+        (supabase as any).rpc("get_my_student_phone"),
       ]);
-      setProfile(prof);
+      setProfile(prof ? { ...prof, phone: phone ?? null } : prof);
       setPrefs(pref);
 
       if (prof) {
