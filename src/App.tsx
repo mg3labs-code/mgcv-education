@@ -19,6 +19,7 @@ const LearningEpisode = lazy(() => import("./pages/LearningEpisode"));
 const TeacherDashboard = lazy(() => import("./pages/TeacherDashboard"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const StudentOnboarding = lazy(() => import("./pages/StudentOnboarding"));
+const StudentProfile = lazy(() => import("./pages/StudentProfile"));
 const AdminOnboarding = lazy(() => import("./pages/AdminOnboarding"));
 const TeacherSchedule = lazy(() => import("./pages/TeacherSchedule"));
 const TeacherSettings = lazy(() => import("./pages/TeacherSettings"));
@@ -136,6 +137,7 @@ const App = () => (
                 <Route path="/student" element={<ProtectedRoute><StudentDashboard /></ProtectedRoute>} />
                 <Route path="/student/episode/:id" element={<ProtectedRoute><LearningEpisode /></ProtectedRoute>} />
                 <Route path="/student/onboarding" element={<ProtectedRoute><StudentOnboarding /></ProtectedRoute>} />
+                <Route path="/student/profile" element={<ProtectedRoute><StudentProfile /></ProtectedRoute>} />
                 <Route path="/student/episodes" element={<ProtectedRoute><StudentDashboard /></ProtectedRoute>} />
                 <Route path="/student/progress" element={<ProtectedRoute><StudentDashboard /></ProtectedRoute>} />
                 <Route path="/student/calendar" element={<ProtectedRoute><StudentCalendar /></ProtectedRoute>} />
