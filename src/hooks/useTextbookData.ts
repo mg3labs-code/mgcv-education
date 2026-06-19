@@ -22,14 +22,13 @@ export function useChapters(subjectSlug?: string) {
   return useQuery({
     queryKey: ["tb_chapters", subjectSlug],
     queryFn: async () => {
-      let subjectId: string | null = null;
+      let subjectIds: string[] = [];
       if (subjectSlug) {
-        const { data: subj } = await supabase
+        const { data: subjRows } = await supabase
           .from("subjects")
           .select("id")
-          .ilike("name", subjectSlug)
-          .single();
-        subjectId = subj?.id ?? null;
+          .ilike("name", subjectSlug);
+        subjectIds = (subjRows || []).map((s) => s.id);
       }
 
       let query = supabase
@@ -37,8 +36,8 @@ export function useChapters(subjectSlug?: string) {
         .select("*, tb_episodes(id, slug, number, title, subtitle, duration, type, sort_order, is_published)")
         .order("sort_order");
 
-      if (subjectId) {
-        query = query.eq("subject_id", subjectId);
+      if (subjectIds.length > 0) {
+        query = query.in("subject_id", subjectIds);
       }
 
       const { data, error } = await query;
