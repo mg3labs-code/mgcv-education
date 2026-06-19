@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.97.0";
 import { z } from "https://esm.sh/zod@3.23.8";
 
 const corsHeaders = {
@@ -26,29 +25,18 @@ function json(data: unknown, status = 200) {
   });
 }
 
-function unauthorized(message = "Please sign in to score your answer.") {
-  return json({ error: message }, 401);
-}
-
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const authHeader = req.headers.get("Authorization") ?? "";
-    if (!authHeader.startsWith("Bearer ")) return unauthorized();
-
-    const token = authHeader.slice("Bearer ".length).trim();
-    const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-    );
-    const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
-    if (userError || !userData.user) return unauthorized();
+    // No auth required — this endpoint only scores free-text answers against
+    // the Lovable AI gateway and does not read or write any user data.
 
     const parsed = BodySchema.safeParse(await req.json());
     if (!parsed.success) {
       return json({ error: "Invalid request", details: parsed.error.flatten().fieldErrors }, 400);
     }
+
 
     const { episodeTitle, day, prompt, answer } = parsed.data;
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
