@@ -258,16 +258,37 @@ const StudentProfile = () => {
 
               {/* Monthly calendar */}
               <div style={{ marginTop: 32 }}>
-                <h3 style={{ fontFamily: "'Source Serif 4', serif", fontSize: 20, fontWeight: 700, color: "#1C1917", marginBottom: 12 }}>
-                  📅 Monthly Schedule
-                </h3>
-                <ScheduleCalendar
-                  scheduleData={schedule}
-                  className={profile ? `Class ${profile.grade} ${profile.board}` : "Class"}
-                  subject={calSubject}
-                  chaptersData={chapters}
-                />
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, flexWrap: "wrap", gap: 8 }}>
+                  <h3 style={{ fontFamily: "'Source Serif 4', serif", fontSize: 20, fontWeight: 700, color: "#1C1917", margin: 0 }}>
+                    📅 Monthly Schedule
+                  </h3>
+                  {subjectOptions.length > 0 && (
+                    <select
+                      value={calSubject}
+                      onChange={(e) => setCalSubject(e.target.value)}
+                      style={{
+                        padding: "8px 12px", borderRadius: 10, border: "1.5px solid #E7E5E4",
+                        background: "white", fontSize: 13, fontWeight: 600, color: "#1C1917", cursor: "pointer",
+                      }}
+                    >
+                      {subjectOptions.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  )}
+                </div>
+                {chapters.length === 0 ? (
+                  <div style={{ padding: 24, textAlign: "center", color: "#78716C", background: "white", borderRadius: 12, border: "1px solid #E7E5E4" }}>
+                    No chapters published yet for {profile?.board} Class {profile?.grade} · {calSubject || "this subject"}.
+                  </div>
+                ) : (
+                  <ScheduleCalendar
+                    scheduleData={schedule}
+                    className={profile ? `Class ${profile.grade} ${profile.board}` : "Class"}
+                    subject={calSubject}
+                    chaptersData={chapters}
+                  />
+                )}
               </div>
+
             </>
           )}
         </div>
