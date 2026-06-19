@@ -21,7 +21,13 @@ const StudentTextbook = () => {
   const navigate = useNavigate();
   const { data: rawSubjects, isLoading: subjectsLoading } = useSubjects();
   // Filter out generic "Science" — dedicated Chemistry/Physics/Biology cover it
-  const subjects = rawSubjects?.filter(s => s.name !== "Science");
+  // Deduplicate by subject name so duplicate DB rows don't create duplicate chips
+  const subjects = rawSubjects
+    ?.filter((s) => s.name !== "Science")
+    ?.reduce((acc, s) => {
+      if (!acc.some((x) => x.name === s.name)) acc.push(s);
+      return acc;
+    }, [] as typeof rawSubjects);
   const [selectedSubject, setSelectedSubject] = useState("Mathematics");
   const { data: chapters, isLoading: chaptersLoading } = useChapters(selectedSubject);
   const { data: progressMap } = useUserEpisodeProgress();
