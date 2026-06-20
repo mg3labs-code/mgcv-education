@@ -29,6 +29,10 @@ type LoginType = "student" | "teacher" | "";
 type ModalType = "login" | "about" | "contact" | "";
 type AuthMode = "login" | "signup";
 
+const PASSWORD_RULE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+const PASSWORD_MESSAGE =
+  "Password must contain at least 8 characters, including one uppercase letter, one lowercase letter, and one number.";
+
 const isInIframe = () => {
   try { return window.self !== window.top; } catch { return true; }
 };
@@ -142,8 +146,11 @@ const Index = () => {
     if (msg.includes("User already registered")) {
       return { message: msg, code: "AUTH_USER_EXISTS", suggestion: "An account with this email already exists. Try signing in instead." };
     }
+    if (/weak|pwned|compromised|known to be weak/i.test(msg)) {
+      return { message: PASSWORD_MESSAGE, code: "AUTH_WEAK_PASSWORD", suggestion: PASSWORD_MESSAGE };
+    }
     if (msg.includes("Password should be at least")) {
-      return { message: msg, code: "AUTH_WEAK_PASSWORD", suggestion: "Password must be at least 6 characters long." };
+      return { message: PASSWORD_MESSAGE, code: "AUTH_WEAK_PASSWORD", suggestion: PASSWORD_MESSAGE };
     }
     return { message: msg, code, suggestion: "Something went wrong. Please try again or contact support." };
   };
@@ -157,6 +164,11 @@ const Index = () => {
         const selectedRole = loginType === "teacher" ? "teacher" : "student";
         if (selectedRole === "teacher" && teacherAssignments.length === 0) {
           setLoginError({ message: "Please select at least one class & subject you teach.", suggestion: "Tick the boxes in the matrix below for every class/subject you teach." });
+          setSubmitting(false);
+          return;
+        }
+        if (!PASSWORD_RULE.test(password)) {
+          setLoginError({ message: PASSWORD_MESSAGE, code: "AUTH_WEAK_PASSWORD", suggestion: PASSWORD_MESSAGE });
           setSubmitting(false);
           return;
         }
@@ -685,7 +697,8 @@ const Index = () => {
                       )}
                       <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required
                         placeholder="Email address" className={inputClass} />
-                      <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6}
+                      <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8}
+                        title={PASSWORD_MESSAGE}
                         placeholder="Password" className={inputClass} />
                       <button type="submit" disabled={submitting}
                         className="w-full py-4 rounded-xl bg-primary text-primary-foreground text-sm font-semibold transition-all mt-2 hover:shadow-[0_10px_30px_hsl(162_65%_38%/0.3)] disabled:opacity-50">
