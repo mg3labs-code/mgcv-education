@@ -742,6 +742,105 @@ export type Database = {
         }
         Relationships: []
       }
+      m_calendar: {
+        Row: {
+          board: string
+          calendar_data: Json
+          class_name: string
+          created_at: string
+          id: string
+          section: string
+          subject: string
+          teacher: string
+          updated_at: string
+        }
+        Insert: {
+          board: string
+          calendar_data?: Json
+          class_name: string
+          created_at?: string
+          id?: string
+          section: string
+          subject: string
+          teacher: string
+          updated_at?: string
+        }
+        Update: {
+          board?: string
+          calendar_data?: Json
+          class_name?: string
+          created_at?: string
+          id?: string
+          section?: string
+          subject?: string
+          teacher?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      m_calendar_audit: {
+        Row: {
+          board: string
+          calendar_id: string
+          changed_at: string
+          class_name: string
+          id: number
+          new_data: Json
+          old_data: Json | null
+          section: string
+          subject: string
+          teacher: string
+        }
+        Insert: {
+          board: string
+          calendar_id: string
+          changed_at?: string
+          class_name: string
+          id?: number
+          new_data: Json
+          old_data?: Json | null
+          section: string
+          subject: string
+          teacher: string
+        }
+        Update: {
+          board?: string
+          calendar_id?: string
+          changed_at?: string
+          class_name?: string
+          id?: number
+          new_data?: Json
+          old_data?: Json | null
+          section?: string
+          subject?: string
+          teacher?: string
+        }
+        Relationships: []
+      }
+      m_holidays: {
+        Row: {
+          created_at: string
+          date: string
+          id: number
+          label: string
+          scope: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: number
+          label: string
+          scope?: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: number
+          label?: string
+          scope?: string
+        }
+        Relationships: []
+      }
       method_sessions: {
         Row: {
           chapter_id: string | null
@@ -1704,6 +1803,23 @@ export type Database = {
           },
         ]
       }
+      m_v_calendar_days: {
+        Row: {
+          board: string | null
+          calendar_id: string | null
+          chapter_name: string | null
+          class_name: string | null
+          date: string | null
+          entry_type: string | null
+          notes: string | null
+          section: string | null
+          subject: string | null
+          teacher: string | null
+          topic_title: string | null
+          updated_at: string | null
+        }
+        Relationships: []
+      }
       my_teachers: {
         Row: {
           board: string | null
@@ -1776,6 +1892,56 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      m_fn_validate_calendar_entry: {
+        Args: { p_entry: Json }
+        Returns: boolean
+      }
+      m_generate_weekends: {
+        Args: { p_end_date: string; p_start_date: string }
+        Returns: undefined
+      }
+      m_get_calendar_range: {
+        Args: {
+          p_board: string
+          p_class_name: string
+          p_end_date: string
+          p_section: string
+          p_start_date: string
+          p_subject: string
+          p_teacher: string
+        }
+        Returns: {
+          chapter_name: string
+          date: string
+          entry_type: string
+          holiday_label: string
+          notes: string
+          topic_title: string
+        }[]
+      }
+      m_set_calendar_day: {
+        Args: {
+          p_board: string
+          p_class_name: string
+          p_date: string
+          p_day_entry: Json
+          p_section: string
+          p_subject: string
+          p_teacher: string
+        }
+        Returns: string
+      }
+      m_upsert_calendar: {
+        Args: {
+          p_board: string
+          p_calendar_data: Json
+          p_class_name: string
+          p_section: string
+          p_subject: string
+          p_teacher: string
+        }
+        Returns: string
       }
       recalculate_retention_predictions: { Args: never; Returns: number }
       student_context: {
