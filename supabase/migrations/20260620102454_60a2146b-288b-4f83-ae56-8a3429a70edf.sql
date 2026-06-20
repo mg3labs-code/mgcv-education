@@ -1,0 +1,2 @@
+ALTER TABLE public.calendar DROP CONSTRAINT calendar_class_name_subject_date_entry_type_key;
+ALTER TABLE public.calendar ADD CONSTRAINT calendar_teacher_class_subject_date_entry_type_key UNIQUE (teacher_id, class_name, subject, date, entry_type);
