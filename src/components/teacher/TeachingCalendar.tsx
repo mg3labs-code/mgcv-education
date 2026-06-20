@@ -232,6 +232,14 @@ interface TeachingCalendarProps {
    * instead of every teacher seeing the same hardcoded Math chapters.
    */
   initialChapters?: ChapterDef[];
+  /**
+   * Previously-saved schedule (and the chapters used to build it) loaded
+   * from teaching_schedules for the current (teacher, class, subject).
+   * When present, the calendar hydrates from these instead of regenerating
+   * from chapters — so teacher edits survive a page refresh.
+   */
+  savedSchedule?: Record<string, ScheduleItem> | null;
+  savedChapters?: ChapterDef[] | null;
 }
 
 const DEFAULT_CLASSES = [
