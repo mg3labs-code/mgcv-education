@@ -74,7 +74,7 @@ const TeacherSchedule = () => {
       if (cancelled) return;
       setSavedKey(key);
       if (data?.schedule_data) {
-        setSavedSchedule(data.schedule_data as Record<string, ScheduleItem>);
+        setSavedSchedule(data.schedule_data as unknown as Record<string, ScheduleItem>);
         const ch = data.chapters_data as any;
         setSavedChapters(Array.isArray(ch) && ch.length > 0 ? (ch as ChapterDef[]) : null);
       } else {
