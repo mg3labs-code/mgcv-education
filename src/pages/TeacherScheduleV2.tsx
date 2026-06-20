@@ -12,43 +12,32 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 /**
- * NEW parallel calendar view backed by m_calendar / m_holidays.
- *
- * - Reads the visible month from `m_get_calendar_range` (RPC) — one row per
- *   date, already merged with weekends + school-wide holidays.
- * - Writes a single edited day via `m_set_calendar_day` (RPC) — never touches
- *   m_calendar directly.
- * - p_teacher = the logged-in auth user id (uuid string). Confirm the
- *   m_calendar rows you want to read/write use the same uuid in their
- *   `teacher` column.
- *
- * Does NOT touch the legacy `calendar`, `calendar_chapters`, or
- * `teaching_schedules` tables, nor any existing component/route.
+ * Parallel calendar view — loads the raw `calendar_data` JSON blob directly
+ * from `m_calendar` for the (board, class_name, section, subject) tuple
+ * that the logged-in teacher is assigned to. Nothing else is rendered.
  */
 
-type EntryType = "class" | "holiday" | "free" | "cancelled" | "unplanned";
+type EntryType = "class" | "holiday" | "free" | "cancelled";
 
-interface DayRow {
-  date: string; // YYYY-MM-DD
+interface DayEntry {
   entry_type: EntryType;
-  topic_title: string | null;
-  chapter_name: string | null;
-  notes: string | null;
-  holiday_label: string | null;
+  topic_title?: string;
+  chapter_name?: string;
+  notes?: string;
 }
+
+type CalendarData = Record<string, DayEntry>;
 
 const DAY_HEADERS = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 
-const toKey = (d: Date) => d.toISOString().split("T")[0];
 const fmtDate = (d: Date) =>
   `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
 
-const entryStyles: Record<EntryType, { bg: string; label: string; pill: string }> = {
-  class:     { bg: "bg-card",                                 label: "Class",     pill: "bg-blue-500 text-white" },
-  holiday:   { bg: "bg-red-50 border-red-200",                label: "Holiday",   pill: "bg-red-500 text-white" },
-  free:      { bg: "bg-sky-50 border-sky-200",                label: "Free",      pill: "bg-sky-500 text-white" },
-  cancelled: { bg: "bg-zinc-100 border-zinc-300",             label: "Cancelled", pill: "bg-zinc-500 text-white line-through" },
-  unplanned: { bg: "bg-card/40",                              label: "Unplanned", pill: "bg-muted text-muted-foreground" },
+const entryStyles: Record<EntryType, { bg: string; pill: string; label: string }> = {
+  class:     { bg: "bg-card",                     pill: "bg-blue-500 text-white",                   label: "Class" },
+  holiday:   { bg: "bg-red-50 border-red-200",    pill: "bg-red-500 text-white",                    label: "Holiday" },
+  free:      { bg: "bg-sky-50 border-sky-200",    pill: "bg-sky-500 text-white",                    label: "Free" },
+  cancelled: { bg: "bg-zinc-100 border-zinc-300", pill: "bg-zinc-500 text-white line-through",      label: "Cancelled" },
 };
 
 const TeacherScheduleV2 = () => {
@@ -61,9 +50,10 @@ const TeacherScheduleV2 = () => {
   const [monthIndex, setMonthIndex] = useState(now.getMonth());
   const [year, setYear] = useState(now.getFullYear());
 
-  const [rows, setRows] = useState<DayRow[]>([]);
+  const [calendarData, setCalendarData] = useState<CalendarData>({});
+  const [rowId, setRowId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [editing, setEditing] = useState<DayRow | null>(null);
+  const [editing, setEditing] = useState<{ date: string; entry: DayEntry } | null>(null);
   const [saving, setSaving] = useState(false);
 
   // Init class/subject from teacher's assignments.
@@ -85,7 +75,7 @@ const TeacherScheduleV2 = () => {
     }
   }, [subjectsForCurrent, subject, className]);
 
-  // Resolve board + section for current (class, subject) from teacher_teaching_map.
+  // Resolve board + section + grade from teacher_teaching_map.
   const gradeNum = useMemo(() => {
     const n = parseInt(className.replace(/\D/g, ""), 10);
     return Number.isFinite(n) ? n : undefined;
@@ -97,40 +87,45 @@ const TeacherScheduleV2 = () => {
   const board = assignment?.board ?? "";
   const section = assignment?.section ?? "";
 
-  const monthStart = useMemo(() => new Date(Date.UTC(year, monthIndex, 1)), [year, monthIndex]);
-  const monthEnd = useMemo(() => new Date(Date.UTC(year, monthIndex + 1, 0)), [year, monthIndex]);
-
-  const fetchRange = useCallback(async () => {
-    if (!user || !className || !subject || !board || !section) {
-      setRows([]);
+  const fetchCalendar = useCallback(async () => {
+    if (!board || !section || !subject || gradeNum === undefined) {
+      setCalendarData({});
+      setRowId(null);
       return;
     }
     setLoading(true);
-    const { data, error } = await (supabase as any).rpc("m_get_calendar_range", {
-      p_teacher: user.id,
-      p_board: board,
-      p_class_name: className,
-      p_section: section,
-      p_subject: subject,
-      p_start_date: fmtDate(monthStart),
-      p_end_date: fmtDate(monthEnd),
-    });
+    // Case-insensitive match on text columns (DB stores e.g. "cbse" / "9").
+    const { data, error } = await (supabase as any)
+      .from("m_calendar")
+      .select("id, calendar_data")
+      .ilike("board", board)
+      .ilike("class_name", String(gradeNum))
+      .ilike("section", section)
+      .ilike("subject", subject)
+      .maybeSingle();
+
     if (error) {
       toast({ title: "Failed to load calendar", description: error.message, variant: "destructive" });
-      setRows([]);
+      setCalendarData({});
+      setRowId(null);
+    } else if (!data) {
+      setCalendarData({});
+      setRowId(null);
     } else {
-      setRows((data ?? []) as DayRow[]);
+      setCalendarData((data.calendar_data ?? {}) as CalendarData);
+      setRowId(data.id);
     }
     setLoading(false);
-  }, [user, className, subject, board, section, monthStart, monthEnd]);
+  }, [board, section, subject, gradeNum]);
 
-  useEffect(() => { fetchRange(); }, [fetchRange]);
+  useEffect(() => { fetchCalendar(); }, [fetchCalendar]);
 
-  const byDate = useMemo(() => {
-    const m: Record<string, DayRow> = {};
-    rows.forEach(r => { m[r.date] = r; });
-    return m;
-  }, [rows]);
+  const monthStart = useMemo(() => new Date(Date.UTC(year, monthIndex, 1)), [year, monthIndex]);
+  const monthEnd = useMemo(() => new Date(Date.UTC(year, monthIndex + 1, 0)), [year, monthIndex]);
+  const monthName = monthStart.toLocaleString("default", { month: "long", timeZone: "UTC" });
+  const daysInMonth = monthEnd.getUTCDate();
+  let firstDay = monthStart.getUTCDay();
+  firstDay = firstDay === 0 ? 6 : firstDay - 1;
 
   const prevMonth = () => {
     if (monthIndex === 0) { setMonthIndex(11); setYear(y => y - 1); }
@@ -141,38 +136,34 @@ const TeacherScheduleV2 = () => {
     else setMonthIndex(m => m + 1);
   };
 
-  const monthName = monthStart.toLocaleString("default", { month: "long", timeZone: "UTC" });
-  const daysInMonth = monthEnd.getUTCDate();
-  let firstDay = monthStart.getUTCDay();
-  firstDay = firstDay === 0 ? 6 : firstDay - 1;
-
   const saveDay = async () => {
-    if (!editing || !user) return;
-    const payload: Record<string, string> = { entry_type: editing.entry_type };
-    if (editing.topic_title) payload.topic_title = editing.topic_title;
-    if (editing.chapter_name) payload.chapter_name = editing.chapter_name;
-    if (editing.notes) payload.notes = editing.notes;
+    if (!editing || !rowId) {
+      toast({ title: "No calendar row", description: "Cannot save: no m_calendar row exists for this assignment yet.", variant: "destructive" });
+      return;
+    }
+    if (editing.entry.entry_type === "class" && !editing.entry.topic_title?.trim()) {
+      toast({ title: "Topic required", description: "Class entries need a topic_title.", variant: "destructive" });
+      return;
+    }
+    const cleaned: DayEntry = { entry_type: editing.entry.entry_type };
+    if (editing.entry.topic_title?.trim()) cleaned.topic_title = editing.entry.topic_title.trim();
+    if (editing.entry.chapter_name?.trim()) cleaned.chapter_name = editing.entry.chapter_name.trim();
+    if (editing.entry.notes?.trim()) cleaned.notes = editing.entry.notes.trim();
 
+    const next = { ...calendarData, [editing.date]: cleaned };
     setSaving(true);
-    const { error } = await (supabase as any).rpc("m_set_calendar_day", {
-      p_teacher: user.id,
-      p_board: board,
-      p_class_name: className,
-      p_section: section,
-      p_subject: subject,
-      p_date: editing.date,
-      p_day_entry: payload,
-    });
+    const { error } = await (supabase as any)
+      .from("m_calendar")
+      .update({ calendar_data: next })
+      .eq("id", rowId);
     setSaving(false);
 
     if (error) {
       toast({ title: "Could not save day", description: error.message, variant: "destructive" });
       return;
     }
-    // Optimistic local update + refetch for the visible month.
-    setRows(prev => prev.map(r => r.date === editing.date ? { ...r, ...editing } : r));
+    setCalendarData(next);
     setEditing(null);
-    fetchRange();
     toast({ title: "Saved", description: `${editing.date} updated.` });
   };
 
@@ -180,27 +171,28 @@ const TeacherScheduleV2 = () => {
   for (let i = 0; i < firstDay; i++) cells.push(<div key={`empty-${i}`} className="min-h-[96px] bg-card/30" />);
   for (let d = 1; d <= daysInMonth; d++) {
     const key = fmtDate(new Date(Date.UTC(year, monthIndex, d)));
-    const row = byDate[key];
-    const type: EntryType = (row?.entry_type as EntryType) ?? "unplanned";
-    const style = entryStyles[type] ?? entryStyles.unplanned;
-    const isToday = key === toKey(new Date());
+    const entry = calendarData[key];
+    const style = entry ? entryStyles[entry.entry_type] : null;
 
     cells.push(
       <button
         key={key}
-        onClick={() => setEditing(row ?? { date: key, entry_type: "unplanned", topic_title: "", chapter_name: "", notes: "", holiday_label: null })}
-        className={`min-h-[96px] p-2 border border-border/30 text-left relative transition-colors hover:ring-1 hover:ring-primary/50 ${style.bg} ${isToday ? "ring-2 ring-primary" : ""}`}
+        onClick={() => setEditing({ date: key, entry: entry ?? { entry_type: "class", topic_title: "" } })}
+        className={`min-h-[96px] p-2 border border-border/30 text-left transition-colors hover:ring-1 hover:ring-primary/50 ${style?.bg ?? "bg-card/40"}`}
       >
         <div className="text-sm font-semibold mb-1">{d}</div>
-        {row && (
-          <div className={`text-[10px] px-2 py-1 rounded-full text-center font-medium leading-tight ${style.pill}`}>
-            {type === "class" ? (row.topic_title || "Class")
-              : type === "holiday" ? (row.holiday_label || row.notes || "Holiday")
-              : style.label}
-          </div>
-        )}
-        {row?.chapter_name && type === "class" && (
-          <div className="text-[10px] text-muted-foreground mt-1 truncate">{row.chapter_name}</div>
+        {entry && style && (
+          <>
+            <div className={`text-[10px] px-2 py-1 rounded-full text-center font-medium leading-tight ${style.pill}`}>
+              {entry.entry_type === "class" ? (entry.topic_title || "Class") : style.label}
+            </div>
+            {entry.chapter_name && (
+              <div className="text-[10px] text-muted-foreground mt-1 truncate">{entry.chapter_name}</div>
+            )}
+            {entry.notes && (
+              <div className="text-[10px] text-muted-foreground mt-1 italic truncate">{entry.notes}</div>
+            )}
+          </>
         )}
       </button>
     );
@@ -220,7 +212,7 @@ const TeacherScheduleV2 = () => {
     <DashboardLayout role="teacher" breadcrumbItems={[{ label: "Dashboard", href: "/teacher" }, { label: "Schedule v2" }]}>
       <main className="p-4 md:p-8 max-w-[1400px] mx-auto">
         <div className="mb-2 text-xs text-muted-foreground">
-          Parallel calendar (m_calendar). Identifying teacher as <code className="font-mono">auth.uid()</code> = <span className="font-mono">{user?.id}</span>.
+          Loading <code className="font-mono">m_calendar.calendar_data</code> directly for your assignment.
         </div>
 
         <div className="flex flex-wrap gap-3 mb-4">
@@ -238,13 +230,14 @@ const TeacherScheduleV2 = () => {
           </Select>
           <div className="text-xs text-muted-foreground self-center">
             Board: <span className="font-medium">{board || "—"}</span> • Section: <span className="font-medium">{section || "—"}</span>
+            {rowId ? <span className="ml-2 text-green-600">• row found</span> : <span className="ml-2 text-amber-600">• no row</span>}
           </div>
         </div>
 
         <div className="bg-card/95 backdrop-blur rounded-2xl overflow-hidden shadow border border-border/20">
           <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white text-center py-5 px-6">
             <h2 className="text-xl font-light mb-1">{subject || "—"} Teaching Schedule</h2>
-            <p className="text-sm opacity-90">{className || "—"} • Section {section || "—"}</p>
+            <p className="text-sm opacity-90">Class {gradeNum ?? "—"} • Section {section || "—"} • {board || "—"}</p>
           </div>
 
           <div className="flex justify-between items-center px-5 py-3 bg-secondary/50 border-b border-border/30">
@@ -270,6 +263,11 @@ const TeacherScheduleV2 = () => {
             ))}
           </div>
         </div>
+
+        <details className="mt-6 text-xs">
+          <summary className="cursor-pointer text-muted-foreground">Raw calendar_data JSON</summary>
+          <pre className="mt-2 p-3 bg-muted rounded-lg overflow-auto max-h-80">{JSON.stringify(calendarData, null, 2)}</pre>
+        </details>
       </main>
 
       <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
@@ -280,8 +278,8 @@ const TeacherScheduleV2 = () => {
               <div>
                 <label className="text-xs font-medium text-muted-foreground">Entry type</label>
                 <Select
-                  value={editing.entry_type === "unplanned" ? "class" : editing.entry_type}
-                  onValueChange={(v) => setEditing({ ...editing, entry_type: v as EntryType })}
+                  value={editing.entry.entry_type}
+                  onValueChange={(v) => setEditing({ ...editing, entry: { ...editing.entry, entry_type: v as EntryType } })}
                 >
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -294,27 +292,25 @@ const TeacherScheduleV2 = () => {
               </div>
               <div>
                 <label className="text-xs font-medium text-muted-foreground">
-                  Topic title {editing.entry_type === "class" && <span className="text-red-500">*</span>}
+                  Topic title {editing.entry.entry_type === "class" && <span className="text-red-500">*</span>}
                 </label>
                 <Input
-                  value={editing.topic_title ?? ""}
-                  onChange={(e) => setEditing({ ...editing, topic_title: e.target.value })}
-                  placeholder="e.g. Real Numbers, Natural Numbers"
+                  value={editing.entry.topic_title ?? ""}
+                  onChange={(e) => setEditing({ ...editing, entry: { ...editing.entry, topic_title: e.target.value } })}
                 />
               </div>
               <div>
                 <label className="text-xs font-medium text-muted-foreground">Chapter name</label>
                 <Input
-                  value={editing.chapter_name ?? ""}
-                  onChange={(e) => setEditing({ ...editing, chapter_name: e.target.value })}
-                  placeholder="e.g. Chapter 1"
+                  value={editing.entry.chapter_name ?? ""}
+                  onChange={(e) => setEditing({ ...editing, entry: { ...editing.entry, chapter_name: e.target.value } })}
                 />
               </div>
               <div>
                 <label className="text-xs font-medium text-muted-foreground">Notes</label>
                 <Textarea
-                  value={editing.notes ?? ""}
-                  onChange={(e) => setEditing({ ...editing, notes: e.target.value })}
+                  value={editing.entry.notes ?? ""}
+                  onChange={(e) => setEditing({ ...editing, entry: { ...editing.entry, notes: e.target.value } })}
                   rows={3}
                 />
               </div>
@@ -322,7 +318,7 @@ const TeacherScheduleV2 = () => {
           )}
           <DialogFooter>
             <Button variant="ghost" onClick={() => setEditing(null)}>Cancel</Button>
-            <Button onClick={saveDay} disabled={saving}>{saving ? "Saving…" : "Save day"}</Button>
+            <Button onClick={saveDay} disabled={saving || !rowId}>{saving ? "Saving…" : "Save day"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
