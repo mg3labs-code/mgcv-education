@@ -331,6 +331,8 @@ const TeacherSchedule = () => {
           availableClasses={classes}
           availableSubjects={subjectsForCurrent}
           initialChapters={courseChapters}
+          savedSchedule={savedKey === `${user?.id}|${className}|${subject}` ? savedSchedule : null}
+          savedChapters={savedKey === `${user?.id}|${className}|${subject}` ? savedChapters : null}
         />
       </main>
 
