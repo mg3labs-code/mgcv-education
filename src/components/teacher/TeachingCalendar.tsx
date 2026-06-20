@@ -249,7 +249,7 @@ const DEFAULT_CLASSES = [
   "Class 12"
 ];
 
-const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, selectedSubject, onSubjectChange, availableClasses, availableSubjects, initialChapters }: TeachingCalendarProps) => {
+const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, selectedSubject, onSubjectChange, availableClasses, availableSubjects, initialChapters, savedSchedule, savedChapters }: TeachingCalendarProps) => {
   const CLASSES = availableClasses && availableClasses.length > 0 ? availableClasses : DEFAULT_CLASSES;
   const SUBJECTS = availableSubjects && availableSubjects.length > 0 ? availableSubjects : [];
 
@@ -258,20 +258,44 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
   const [monthIndex, setMonthIndex] = useState(now.getMonth());
   const [year, setYear] = useState(now.getFullYear());
 
-  // Mutable state — seeded from initialChapters (DB) if provided, else defaults.
-  const _seedChapters = initialChapters && initialChapters.length > 0 ? initialChapters : getDefaultChapters();
+  // Seed order: savedChapters → initialChapters → defaults.
+  const _seedChapters =
+    savedChapters && savedChapters.length > 0
+      ? savedChapters
+      : initialChapters && initialChapters.length > 0
+        ? initialChapters
+        : getDefaultChapters();
   const [chapters, setChapters] = useState<ChapterDef[]>(() => _seedChapters);
-  const [schedule, setSchedule] = useState<Record<string, ScheduleItem>>(() => generateSchedule(_seedChapters));
+  // Seed schedule from previously-saved data when present, so teacher edits
+  // survive a page refresh. Otherwise generate from chapters.
+  const [schedule, setSchedule] = useState<Record<string, ScheduleItem>>(() =>
+    savedSchedule && Object.keys(savedSchedule).length > 0
+      ? savedSchedule
+      : generateSchedule(_seedChapters)
+  );
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   // History (undo/redo)
   const [history, setHistory] = useState<{ chapters: ChapterDef[]; schedule: Record<string, ScheduleItem> }[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
 
-  // When the parent feeds in a fresh set of chapters (e.g. teacher switched
-  // class or subject), rebuild the calendar from those instead of keeping
-  // the previous class's schedule on screen.
+  // Rebuild when the parent swaps chapters (class/subject change) or when
+  // a saved schedule finishes loading asynchronously. Saved data wins.
   useEffect(() => {
+    if (savedSchedule && Object.keys(savedSchedule).length > 0) {
+      const ch =
+        savedChapters && savedChapters.length > 0
+          ? savedChapters
+          : initialChapters && initialChapters.length > 0
+            ? initialChapters
+            : getDefaultChapters();
+      setChapters(ch);
+      setSchedule(savedSchedule);
+      setHasUnsavedChanges(false);
+      setHistory([]);
+      setHistoryIndex(-1);
+      return;
+    }
     if (!initialChapters || initialChapters.length === 0) return;
     setChapters(initialChapters);
     setSchedule(generateSchedule(initialChapters));
@@ -279,7 +303,7 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
     setHistory([]);
     setHistoryIndex(-1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialChapters]);
+  }, [initialChapters, savedSchedule, savedChapters]);
 
   // Modal state
   const [activeModal, setActiveModal] = useState<ModalType>(null);
