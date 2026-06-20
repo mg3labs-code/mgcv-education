@@ -151,11 +151,16 @@ const TeacherSchedule = () => {
       }));
 
       // Legacy JSONB upsert (kept for backward compatibility with other reads).
+      // Scope the existing-row lookup by subject too — otherwise saving a
+      // schedule for one subject (e.g. Physics) would overwrite the row that
+      // belongs to another subject (e.g. Mathematics) in the same class,
+      // because the prior lookup matched any row for (teacher, class).
       const { data: existing } = await supabase
         .from("teaching_schedules")
         .select("id")
         .eq("teacher_id", user.id)
         .eq("class_name", className)
+        .eq("subject", subject)
         .maybeSingle();
 
       if (existing) {
