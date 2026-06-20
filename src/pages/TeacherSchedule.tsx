@@ -15,6 +15,13 @@ const TeacherSchedule = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [className, setClassName] = useState("");
   const [subject, setSubject] = useState("Mathematics");
+  // Saved schedule loaded from teaching_schedules for the current
+  // (teacher, class, subject). When present, the calendar hydrates from
+  // this instead of regenerating from chapters, so teacher edits survive
+  // a page refresh.
+  const [savedSchedule, setSavedSchedule] = useState<Record<string, ScheduleItem> | null>(null);
+  const [savedChapters, setSavedChapters] = useState<ChapterDef[] | null>(null);
+  const [savedKey, setSavedKey] = useState<string>("");
   const [autoHomework, setAutoHomework] = useState(true);
 
   // Initialize class & subject from teacher's first assignment.
