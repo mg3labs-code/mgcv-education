@@ -15,6 +15,13 @@ const TeacherSchedule = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [className, setClassName] = useState("");
   const [subject, setSubject] = useState("Mathematics");
+  // Saved schedule loaded from teaching_schedules for the current
+  // (teacher, class, subject). When present, the calendar hydrates from
+  // this instead of regenerating from chapters, so teacher edits survive
+  // a page refresh.
+  const [savedSchedule, setSavedSchedule] = useState<Record<string, ScheduleItem> | null>(null);
+  const [savedChapters, setSavedChapters] = useState<ChapterDef[] | null>(null);
+  const [savedKey, setSavedKey] = useState<string>("");
   const [autoHomework, setAutoHomework] = useState(true);
 
   // Initialize class & subject from teacher's first assignment.
@@ -48,6 +55,35 @@ const TeacherSchedule = () => {
     return match?.board;
   }, [entries, gradeNum, subject]);
   const { data: courseChapters } = useChaptersForCourse(board, gradeNum, subject);
+
+  // Load any previously-saved schedule for this (teacher, class, subject)
+  // so teacher edits persist across refreshes. If none exists, the calendar
+  // falls back to generating one from chapters.
+  useEffect(() => {
+    if (!user || !className || !subject) return;
+    const key = `${user.id}|${className}|${subject}`;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("teaching_schedules")
+        .select("schedule_data, chapters_data")
+        .eq("teacher_id", user.id)
+        .eq("class_name", className)
+        .eq("subject", subject)
+        .maybeSingle();
+      if (cancelled) return;
+      setSavedKey(key);
+      if (data?.schedule_data) {
+        setSavedSchedule(data.schedule_data as unknown as Record<string, ScheduleItem>);
+        const ch = data.chapters_data as any;
+        setSavedChapters(Array.isArray(ch) && ch.length > 0 ? (ch as ChapterDef[]) : null);
+      } else {
+        setSavedSchedule(null);
+        setSavedChapters(null);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [user, className, subject]);
 
   /**
    * Sync the in-memory generated schedule into the per-date `calendar` table,
@@ -295,6 +331,8 @@ const TeacherSchedule = () => {
           availableClasses={classes}
           availableSubjects={subjectsForCurrent}
           initialChapters={courseChapters}
+          savedSchedule={savedKey === `${user?.id}|${className}|${subject}` ? savedSchedule : null}
+          savedChapters={savedKey === `${user?.id}|${className}|${subject}` ? savedChapters : null}
         />
       </main>
 
