@@ -56,6 +56,35 @@ const TeacherSchedule = () => {
   }, [entries, gradeNum, subject]);
   const { data: courseChapters } = useChaptersForCourse(board, gradeNum, subject);
 
+  // Load any previously-saved schedule for this (teacher, class, subject)
+  // so teacher edits persist across refreshes. If none exists, the calendar
+  // falls back to generating one from chapters.
+  useEffect(() => {
+    if (!user || !className || !subject) return;
+    const key = `${user.id}|${className}|${subject}`;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("teaching_schedules")
+        .select("schedule_data, chapters_data")
+        .eq("teacher_id", user.id)
+        .eq("class_name", className)
+        .eq("subject", subject)
+        .maybeSingle();
+      if (cancelled) return;
+      setSavedKey(key);
+      if (data?.schedule_data) {
+        setSavedSchedule(data.schedule_data as Record<string, ScheduleItem>);
+        const ch = data.chapters_data as any;
+        setSavedChapters(Array.isArray(ch) && ch.length > 0 ? (ch as ChapterDef[]) : null);
+      } else {
+        setSavedSchedule(null);
+        setSavedChapters(null);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [user, className, subject]);
+
   /**
    * Sync the in-memory generated schedule into the per-date `calendar` table,
    * replacing all rows for this teacher × class × subject in one shot.
