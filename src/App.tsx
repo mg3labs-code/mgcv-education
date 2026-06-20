@@ -22,6 +22,7 @@ const StudentOnboarding = lazy(() => import("./pages/StudentOnboarding"));
 const StudentProfile = lazy(() => import("./pages/StudentProfile"));
 const AdminOnboarding = lazy(() => import("./pages/AdminOnboarding"));
 const TeacherSchedule = lazy(() => import("./pages/TeacherSchedule"));
+const TeacherScheduleV2 = lazy(() => import("./pages/TeacherScheduleV2"));
 const TeacherSettings = lazy(() => import("./pages/TeacherSettings"));
 const TeacherAnalytics = lazy(() => import("./pages/TeacherAnalytics"));
 const StudentCalendar = lazy(() => import("./pages/StudentCalendar"));
