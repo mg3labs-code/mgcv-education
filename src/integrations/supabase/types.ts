@@ -751,7 +751,6 @@ export type Database = {
           id: string
           section: string
           subject: string
-          teacher: string
           updated_at: string
         }
         Insert: {
@@ -762,7 +761,6 @@ export type Database = {
           id?: string
           section: string
           subject: string
-          teacher: string
           updated_at?: string
         }
         Update: {
@@ -773,7 +771,6 @@ export type Database = {
           id?: string
           section?: string
           subject?: string
-          teacher?: string
           updated_at?: string
         }
         Relationships: []
@@ -1802,23 +1799,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      m_v_calendar_days: {
-        Row: {
-          board: string | null
-          calendar_id: string | null
-          chapter_name: string | null
-          class_name: string | null
-          date: string | null
-          entry_type: string | null
-          notes: string | null
-          section: string | null
-          subject: string | null
-          teacher: string | null
-          topic_title: string | null
-          updated_at: string | null
-        }
-        Relationships: []
       }
       my_teachers: {
         Row: {
