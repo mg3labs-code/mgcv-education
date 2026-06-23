@@ -204,6 +204,7 @@ const ReasoningVisualDemo = () => {
     setInputTopic(visual.topic);
     setSelectedSubject(visual.subject);
     setSteps(visual.steps);
+    setActiveSlug((visual as any).slug || `${visual.subject.toLowerCase()}_${visual.topic.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 60)}`);
     setCurrentStep(4);
     toast({ title: "Loaded from library 📚", description: visual.topic });
     window.scrollTo({ top: 0, behavior: "smooth" });
