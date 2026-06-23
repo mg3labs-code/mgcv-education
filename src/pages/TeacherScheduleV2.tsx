@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, CalendarX } from "lucide-react";
+import EmptyState from "@/components/EmptyState";
 
 /**
  * Parallel calendar view — loads the raw `calendar_data` JSON blob directly
@@ -134,6 +135,24 @@ const TeacherScheduleV2 = () => {
     autoJumpedKeyRef.current = null;
   }, [className, subject]);
 
+  const createCalendar = async () => {
+    if (!board || !section || !subject || gradeNum === undefined) return;
+    setLoading(true);
+    const { data, error } = await (supabase as any)
+      .from("m_calendar")
+      .insert({ board, class_name: String(gradeNum), section, subject, calendar_data: {} })
+      .select("id")
+      .single();
+    setLoading(false);
+    if (error) {
+      toast({ title: "Could not create calendar", description: error.message, variant: "destructive" });
+    } else if (data) {
+      setRowId(data.id);
+      setCalendarData({});
+      toast({ title: "Calendar created", description: "You can now add schedule entries." });
+    }
+  };
+
   useEffect(() => { fetchCalendar(); }, [fetchCalendar]);
 
   const monthStart = useMemo(() => new Date(Date.UTC(year, monthIndex, 1)), [year, monthIndex]);
@@ -250,35 +269,45 @@ const TeacherScheduleV2 = () => {
           </div>
         </div>
 
-        <div className="bg-card/95 backdrop-blur rounded-2xl overflow-hidden shadow border border-border/20">
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white text-center py-5 px-6">
-            <h2 className="text-xl font-light mb-1">{subject || "—"} Teaching Schedule</h2>
-            <p className="text-sm opacity-90">Class {gradeNum ?? "—"} • Section {section || "—"} • {board || "—"}</p>
-          </div>
+        {!rowId && !loading && board ? (
+          <EmptyState
+            icon={CalendarX}
+            title="No calendar data"
+            description={`No schedule exists yet for ${subject} (${board.toUpperCase()} Class ${gradeNum} Section ${section}). Create a calendar to start planning your teaching schedule.`}
+            actionLabel="Create calendar"
+            onAction={createCalendar}
+          />
+        ) : (
+          <div className="bg-card/95 backdrop-blur rounded-2xl overflow-hidden shadow border border-border/20">
+            <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white text-center py-5 px-6">
+              <h2 className="text-xl font-light mb-1">{subject || "—"} Teaching Schedule</h2>
+              <p className="text-sm opacity-90">Class {gradeNum ?? "—"} • Section {section || "—"} • {board || "—"}</p>
+            </div>
 
-          <div className="flex justify-between items-center px-5 py-3 bg-secondary/50 border-b border-border/30">
-            <button onClick={prevMonth} className="w-9 h-9 rounded-lg bg-blue-500 hover:bg-blue-600 text-white flex items-center justify-center">
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <h3 className="text-lg font-semibold">{monthName} {year} {loading && <span className="text-xs text-muted-foreground ml-2">loading…</span>}</h3>
-            <button onClick={nextMonth} className="w-9 h-9 rounded-lg bg-blue-500 hover:bg-blue-600 text-white flex items-center justify-center">
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
+            <div className="flex justify-between items-center px-5 py-3 bg-secondary/50 border-b border-border/30">
+              <button onClick={prevMonth} className="w-9 h-9 rounded-lg bg-blue-500 hover:bg-blue-600 text-white flex items-center justify-center">
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <h3 className="text-lg font-semibold">{monthName} {year} {loading && <span className="text-xs text-muted-foreground ml-2">loading…</span>}</h3>
+              <button onClick={nextMonth} className="w-9 h-9 rounded-lg bg-blue-500 hover:bg-blue-600 text-white flex items-center justify-center">
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
 
-          <div className="grid grid-cols-7 gap-px bg-border/30">
-            {DAY_HEADERS.map(h => (
-              <div key={h} className="bg-gray-700 text-white py-2.5 text-center text-xs font-semibold">{h}</div>
-            ))}
-            {cells}
-          </div>
+            <div className="grid grid-cols-7 gap-px bg-border/30">
+              {DAY_HEADERS.map(h => (
+                <div key={h} className="bg-gray-700 text-white py-2.5 text-center text-xs font-semibold">{h}</div>
+              ))}
+              {cells}
+            </div>
 
-          <div className="px-5 py-3 bg-secondary/50 border-t border-border/30 flex flex-wrap gap-4 justify-center text-xs">
-            {(Object.keys(entryStyles) as EntryType[]).map(t => (
-              <div key={t} className="flex items-center gap-1.5"><div className={`w-4 h-4 rounded ${entryStyles[t].pill}`} /><span>{entryStyles[t].label}</span></div>
-            ))}
+            <div className="px-5 py-3 bg-secondary/50 border-t border-border/30 flex flex-wrap gap-4 justify-center text-xs">
+              {(Object.keys(entryStyles) as EntryType[]).map(t => (
+                <div key={t} className="flex items-center gap-1.5"><div className={`w-4 h-4 rounded ${entryStyles[t].pill}`} /><span>{entryStyles[t].label}</span></div>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         <details className="mt-6 text-xs">
           <summary className="cursor-pointer text-muted-foreground">Raw calendar_data JSON</summary>
