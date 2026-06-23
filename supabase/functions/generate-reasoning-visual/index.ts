@@ -465,9 +465,11 @@ Return JSON:
             cached: true,
             match: "related",
             original_topic: relatedMatches[0].topic,
+            slug: (relatedMatches[0] as any).slug,
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
+
       }
     }
 
