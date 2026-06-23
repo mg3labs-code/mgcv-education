@@ -85,6 +85,8 @@ const ReasoningVisualDemo = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [gallery, setGallery] = useState<StoredVisual[]>([]);
   const [galleryLoading, setGalleryLoading] = useState(true);
+  const [activeSlug, setActiveSlug] = useState<string>("");
+
 
   // Fetch gallery on mount
   useEffect(() => {
