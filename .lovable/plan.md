@@ -1,35 +1,33 @@
 ## Goal
-Stop rejecting reasonable passwords like `Password123` and enforce a clear, predictable rule on signup.
+When `/teacher/schedule-v2` finishes loading `m_calendar.calendar_data` for the selected board/class/section/subject, automatically navigate the view to the earliest month that actually has at least one day entry. Today the view stays on the current month (June 2026) even when all data lives in October 2025, making it look empty.
 
-## Root cause
-The "Password is known to be weak and easy to guess" message comes from Supabase's HIBP (Have I Been Pwned) leaked-password check, which is currently enabled on this Cloud project. It rejects any password that has ever appeared in a public breach, regardless of strength. The frontend only enforces `minLength={6}` on the `<input>`, with no character-class rules.
+## Scope
+Single file: `src/pages/TeacherScheduleV2.tsx`. No schema, no API, no UI redesign.
 
-## Changes
+## Behavior
+- After `fetchCalendar` populates `calendarData`, look at the JSON keys (`YYYY-MM-DD`).
+- Pick the **earliest** date present.
+- If that date's month/year differs from the currently displayed month, set `monthIndex` and `year` to it.
+- If `calendarData` is empty, leave the view on the current month (no jump).
+- Only auto-jump **once per (className + subject) selection** so a teacher who manually navigates back to June isn't yanked away on every re-render. When the teacher switches class or subject, the auto-jump arms again and fires after the new data loads.
 
-### 1. Backend (Lovable Cloud auth settings)
-Call `supabase--configure_auth` to set `password_hibp_enabled: false` (leaving other flags unchanged: `disable_signup: false`, `external_anonymous_users_enabled: false`, `auto_confirm_email` left at current value). This removes the breach-database rejection so our own rule is the source of truth.
-
-Note: Supabase's built-in minimum-length / required-characters settings are not modified — our frontend rule is stricter than the default 6-char minimum and runs before the API call, so this is sufficient.
-
-### 2. Frontend validation — `src/pages/Index.tsx`
-- Add a small helper:
-  ```ts
-  const PASSWORD_RULE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
-  const PASSWORD_MESSAGE =
-    "Password must contain at least 8 characters, including one uppercase letter, one lowercase letter, and one number.";
-  ```
-- In `handleSubmit`, when `authMode === "signup"`, validate `password` against `PASSWORD_RULE` before calling `signUp`. On failure, set `loginError` to `{ message: PASSWORD_MESSAGE, code: "AUTH_WEAK_PASSWORD", suggestion: PASSWORD_MESSAGE }` and return early.
-- Update the password `<input>` at line 688: change `minLength={6}` to `minLength={8}` and add `title={PASSWORD_MESSAGE}` for native tooltip parity.
-- In `parseError`, add a branch above the existing "Password should be at least" branch:
-  - If `msg` includes `"weak"`, `"known to be weak"`, `"pwned"`, or `"compromised"` (defensive — in case HIBP is ever re-enabled), return `{ message: PASSWORD_MESSAGE, code: "AUTH_WEAK_PASSWORD", suggestion: PASSWORD_MESSAGE }`.
-  - Also update the existing "Password should be at least" branch's `suggestion` to `PASSWORD_MESSAGE` for consistency.
-
-### 3. Out of scope (not modified)
-- `AuthContext.signUp` logic, metadata, teacher map handling
-- Login flow (existing accounts with shorter passwords keep working)
-- Database schema, RLS, triggers
-- `ForgotPasswordModal` (reset flow uses Supabase's own UI rules; can be addressed separately if requested)
+## Technical details
+1. Add a ref (e.g. `autoJumpedKeyRef = useRef<string | null>(null)`) that stores the last `${className}|${subject}` key we already auto-jumped for.
+2. Reset that ref to `null` inside the existing class/subject change effects (or whenever `fetchCalendar`'s dependencies change) so a new selection re-arms the jump.
+3. After `setCalendarData(...)` in `fetchCalendar` (success branch with data), compute:
+   ```ts
+   const keys = Object.keys(data.calendar_data ?? {}).sort();
+   if (keys.length > 0 && autoJumpedKeyRef.current !== `${className}|${subject}`) {
+     const [y, m] = keys[0].split("-").map(Number);
+     setYear(y);
+     setMonthIndex(m - 1);
+     autoJumpedKeyRef.current = `${className}|${subject}`;
+   }
+   ```
+4. Leave `monthIndex` / `year` initial state as today's date — the jump only happens when data exists.
 
 ## Verification
-- Try `Password123`, `Srikruthi2026`, `EduTech123`, `LearnMath9` → signup proceeds.
-- Try `password123`, `PASSWORD123`, `Password`, `Pass12` → blocked client-side with the new message, no network call.
+- Load `/teacher/schedule-v2` as the seeded teacher (cbse / 9 / A / Physics). Expect the view to open on **October 2025** with the 6 seeded entries visible.
+- Click Next/Prev to navigate to another month — view should stay where the teacher put it (no re-jump).
+- Switch subject (or class) to one with no `m_calendar` row — view should stay on the current month and show empty cells.
+- Switch back to Physics — view jumps to October 2025 again (new selection re-arms the jump).

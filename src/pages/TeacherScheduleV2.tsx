@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -55,6 +55,7 @@ const TeacherScheduleV2 = () => {
   const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState<{ date: string; entry: DayEntry } | null>(null);
   const [saving, setSaving] = useState(false);
+  const autoJumpedKeyRef = useRef<string | null>(null);
 
   // Init class/subject from teacher's assignments.
   useEffect(() => {
@@ -112,11 +113,26 @@ const TeacherScheduleV2 = () => {
       setCalendarData({});
       setRowId(null);
     } else {
-      setCalendarData((data.calendar_data ?? {}) as CalendarData);
+      const cd = (data.calendar_data ?? {}) as CalendarData;
+      setCalendarData(cd);
       setRowId(data.id);
+      const selectionKey = `${className}|${subject}`;
+      const keys = Object.keys(cd).sort();
+      if (keys.length > 0 && autoJumpedKeyRef.current !== selectionKey) {
+        const [y, m] = keys[0].split("-").map(Number);
+        if (Number.isFinite(y) && Number.isFinite(m)) {
+          setYear(y);
+          setMonthIndex(m - 1);
+        }
+        autoJumpedKeyRef.current = selectionKey;
+      }
     }
     setLoading(false);
-  }, [board, section, subject, gradeNum]);
+  }, [board, section, subject, gradeNum, className]);
+
+  useEffect(() => {
+    autoJumpedKeyRef.current = null;
+  }, [className, subject]);
 
   useEffect(() => { fetchCalendar(); }, [fetchCalendar]);
 
