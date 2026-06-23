@@ -349,7 +349,7 @@ const ReasoningVisualDemo = () => {
                         src={step.image_url}
                         alt={`Step ${step.step_number}: ${step.title}`}
                         stepIndex={i}
-                        slug={`${selectedSubject.toLowerCase()}_${inputTopic.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 60)}`}
+                        slug={activeSlug}
                         onImageFixed={(idx, newUrl) => {
                           setSteps(prev => prev.map((s, si) => si === idx ? { ...s, image_url: newUrl } : s));
                         }}
