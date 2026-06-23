@@ -433,9 +433,11 @@ Return JSON:
           cached: true,
           match: hasAllImages ? "exact" : "partial",
           images_generating: !hasAllImages,
+          slug: (exactMatch as any).slug || slug,
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+
     }
 
     // 2. Full-text search for related topics
@@ -463,9 +465,11 @@ Return JSON:
             cached: true,
             match: "related",
             original_topic: relatedMatches[0].topic,
+            slug: (relatedMatches[0] as any).slug,
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
+
       }
     }
 

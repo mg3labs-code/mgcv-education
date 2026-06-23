@@ -85,6 +85,8 @@ const ReasoningVisualDemo = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [gallery, setGallery] = useState<StoredVisual[]>([]);
   const [galleryLoading, setGalleryLoading] = useState(true);
+  const [activeSlug, setActiveSlug] = useState<string>("");
+
 
   // Fetch gallery on mount
   useEffect(() => {
@@ -133,7 +135,9 @@ const ReasoningVisualDemo = () => {
       if (error) throw error;
       if (data?.steps) {
         setSteps(data.steps);
+        setActiveSlug(data.slug || `${(subject || selectedSubject).toLowerCase()}_${topic.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 60)}`);
         setCurrentStep(4);
+
         if (data.cached && data.match === "exact") {
           toast({ title: "Loaded from cache ⚡", description: "This exact visual was generated before — with images!" });
         } else if (data.cached && data.match === "related") {
@@ -200,6 +204,7 @@ const ReasoningVisualDemo = () => {
     setInputTopic(visual.topic);
     setSelectedSubject(visual.subject);
     setSteps(visual.steps);
+    setActiveSlug((visual as any).slug || `${visual.subject.toLowerCase()}_${visual.topic.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 60)}`);
     setCurrentStep(4);
     toast({ title: "Loaded from library 📚", description: visual.topic });
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -344,7 +349,7 @@ const ReasoningVisualDemo = () => {
                         src={step.image_url}
                         alt={`Step ${step.step_number}: ${step.title}`}
                         stepIndex={i}
-                        slug={`${selectedSubject.toLowerCase()}_${inputTopic.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 60)}`}
+                        slug={activeSlug}
                         onImageFixed={(idx, newUrl) => {
                           setSteps(prev => prev.map((s, si) => si === idx ? { ...s, image_url: newUrl } : s));
                         }}
