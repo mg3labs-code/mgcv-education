@@ -135,6 +135,24 @@ const TeacherScheduleV2 = () => {
     autoJumpedKeyRef.current = null;
   }, [className, subject]);
 
+  const createCalendar = async () => {
+    if (!board || !section || !subject || gradeNum === undefined) return;
+    setLoading(true);
+    const { data, error } = await (supabase as any)
+      .from("m_calendar")
+      .insert({ board, class_name: String(gradeNum), section, subject, calendar_data: {} })
+      .select("id")
+      .single();
+    setLoading(false);
+    if (error) {
+      toast({ title: "Could not create calendar", description: error.message, variant: "destructive" });
+    } else if (data) {
+      setRowId(data.id);
+      setCalendarData({});
+      toast({ title: "Calendar created", description: "You can now add schedule entries." });
+    }
+  };
+
   useEffect(() => { fetchCalendar(); }, [fetchCalendar]);
 
   const monthStart = useMemo(() => new Date(Date.UTC(year, monthIndex, 1)), [year, monthIndex]);
