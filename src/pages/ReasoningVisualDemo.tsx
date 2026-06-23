@@ -135,7 +135,9 @@ const ReasoningVisualDemo = () => {
       if (error) throw error;
       if (data?.steps) {
         setSteps(data.steps);
+        setActiveSlug(data.slug || `${(subject || selectedSubject).toLowerCase()}_${topic.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 60)}`);
         setCurrentStep(4);
+
         if (data.cached && data.match === "exact") {
           toast({ title: "Loaded from cache ⚡", description: "This exact visual was generated before — with images!" });
         } else if (data.cached && data.match === "related") {
