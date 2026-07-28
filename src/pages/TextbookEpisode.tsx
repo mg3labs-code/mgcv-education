@@ -388,7 +388,7 @@ const TextbookEpisode = () => {
   // ─── ELITE STACK: Adaptive content ──────────────────────
   // Pilot: enabled for Math Ch1 (and any future opt-in chapters).
   // Wraps `concept` blocks with explorer/builder/master modes.
-  const adaptiveEnabled = !isLanguage && chapterId === "ch1";
+  const adaptiveEnabled = false;
 
   // 3-Phase indices
   const getPhaseForBlock = useCallback((type: string) => {
