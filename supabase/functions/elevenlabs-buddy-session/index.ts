@@ -227,28 +227,23 @@ serve(async (req) => {
     const agentId = await getOrCreateAgent(supabaseAdmin, ELEVENLABS_API_KEY);
     const tokenUrl = `https://api.elevenlabs.io/v1/convai/conversation/token?agent_id=${agentId}`;
 
-    const tokenRequestBody = {
-      conversation_config_override: {
-        agent: {
-          prompt: {
-            prompt: isTeluguSession ? BUDDY_SYSTEM_PROMPT + TELUGU_ADDENDUM : BUDDY_SYSTEM_PROMPT,
-          },
-          first_message: BUDDY_FIRST_MESSAGE,
-          language: isTeluguSession ? "hi" : "en",
+    const overrides = {
+      agent: {
+        prompt: {
+          prompt: isTeluguSession ? BUDDY_SYSTEM_PROMPT + TELUGU_ADDENDUM : BUDDY_SYSTEM_PROMPT,
         },
+        first_message: BUDDY_FIRST_MESSAGE,
+        language: isTeluguSession ? "hi" : "en",
       },
     };
-
 
     let token: string | null = null;
     for (let attempt = 0; attempt < 3; attempt++) {
       const tokenResponse = await fetch(tokenUrl, {
-        method: tokenRequestBody ? "POST" : "GET",
+        method: "GET",
         headers: {
           "xi-api-key": ELEVENLABS_API_KEY,
-          ...(tokenRequestBody ? { "Content-Type": "application/json" } : {}),
         },
-        ...(tokenRequestBody ? { body: JSON.stringify(tokenRequestBody) } : {}),
       });
 
       if (tokenResponse.ok) {
