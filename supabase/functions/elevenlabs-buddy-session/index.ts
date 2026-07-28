@@ -243,7 +243,37 @@ serve(async (req) => {
         first_message: BUDDY_FIRST_MESSAGE,
         language: isTeluguSession ? "hi" : "en",
       },
+      tts: {
+        voice_id: "EXAVITQu4vr4xnSDxMaL",
+        stability: 0.75,
+        similarity_boost: 0.75,
+        speed: 0.88,
+      },
     };
+
+    // Ensure the agent itself has calm TTS defaults (in case overrides aren't allowed)
+    try {
+      await fetch(`https://api.elevenlabs.io/v1/convai/agents/${agentId}`, {
+        method: "PATCH",
+        headers: {
+          "xi-api-key": ELEVENLABS_API_KEY,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          conversation_config: {
+            tts: {
+              voice_id: "EXAVITQu4vr4xnSDxMaL",
+              model_id: "eleven_v3_conversational",
+              stability: 0.75,
+              similarity_boost: 0.75,
+              speed: 0.88,
+            },
+          },
+        }),
+      });
+    } catch (e) {
+      console.warn("Agent PATCH (calm tts) failed, continuing:", e);
+    }
 
     let token: string | null = null;
     for (let attempt = 0; attempt < 3; attempt++) {
