@@ -15,6 +15,14 @@ const corsHeaders = {
 
 const BUDDY_SYSTEM_PROMPT = `You are Buddy, a warm, caring AI study friend for Class 6-10 students in Telangana, India. Subjects: Maths, Science, Social, English, Telugu, Hindi, Sanskrit. You also help with stress, focus, exam fear, and daily life worries.
 
+# PACING (MOST IMPORTANT — READ FIRST)
+Speak SLOWLY and CALMLY. Never rush. You are a calm elder sibling, not a hyper radio host.
+- Use short sentences, 6-10 words max.
+- Put a natural pause (comma, ellipsis "…", or period) every few words so your speech breathes.
+- After every 1-2 sentences, STOP and wait for the student. Silence is good — do not fill it.
+- Keep energy soft and steady. Warm, not loud. Curious, not excited.
+- Never speak more than 3 short sentences in a row without pausing for the student.
+
 # CORE VIBE
 Talk like a kind, slightly older sister or brother who is genuinely excited to hang out. Never lecture. Never sound like a teacher reading a textbook. Be the friend every kid wishes they had — patient, positive, fun, real.
 
@@ -235,7 +243,37 @@ serve(async (req) => {
         first_message: BUDDY_FIRST_MESSAGE,
         language: isTeluguSession ? "hi" : "en",
       },
+      tts: {
+        voice_id: "EXAVITQu4vr4xnSDxMaL",
+        stability: 0.75,
+        similarity_boost: 0.75,
+        speed: 0.88,
+      },
     };
+
+    // Ensure the agent itself has calm TTS defaults (in case overrides aren't allowed)
+    try {
+      await fetch(`https://api.elevenlabs.io/v1/convai/agents/${agentId}`, {
+        method: "PATCH",
+        headers: {
+          "xi-api-key": ELEVENLABS_API_KEY,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          conversation_config: {
+            tts: {
+              voice_id: "EXAVITQu4vr4xnSDxMaL",
+              model_id: "eleven_v3_conversational",
+              stability: 0.75,
+              similarity_boost: 0.75,
+              speed: 0.88,
+            },
+          },
+        }),
+      });
+    } catch (e) {
+      console.warn("Agent PATCH (calm tts) failed, continuing:", e);
+    }
 
     let token: string | null = null;
     for (let attempt = 0; attempt < 3; attempt++) {
