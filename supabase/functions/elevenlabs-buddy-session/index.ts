@@ -262,7 +262,7 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ token, agentId, model: "eleven_v3_conversational" }),
+      JSON.stringify({ token, agentId, model: "eleven_v3_conversational", overrides }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e) {
