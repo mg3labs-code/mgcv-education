@@ -267,6 +267,8 @@ const StudentTalk = () => {
 
   const startRecording = useCallback(async () => {
     // Stop any playing AI audio when user starts speaking
+    setNeedsTap(false);
+    pendingBlobRef.current = null;
     if (audioRef.current) {
       audioRef.current.pause();
       setIsSpeaking(false);
