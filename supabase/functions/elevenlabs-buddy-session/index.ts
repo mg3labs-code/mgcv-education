@@ -177,7 +177,7 @@ async function getOrCreateAgent(supabaseAdmin: any, elevenlabsKey: string): Prom
           language: "en",
         },
         tts: {
-          voice_id: "EXAVITQu4vr4xnSDxMaL", // Sarah - warm, conversational
+          voice_id: "2cRE7dHOunfL54az2myF", // Ranga - engaging lecturer
           model_id: "eleven_v3_conversational",
         },
       },
@@ -244,7 +244,7 @@ serve(async (req) => {
         language: isTeluguSession ? "hi" : "en",
       },
       tts: {
-        voice_id: "EXAVITQu4vr4xnSDxMaL",
+        voice_id: "2cRE7dHOunfL54az2myF",
         stability: 0.75,
         similarity_boost: 0.75,
         speed: 0.88,
@@ -262,7 +262,7 @@ serve(async (req) => {
         body: JSON.stringify({
           conversation_config: {
             tts: {
-              voice_id: "EXAVITQu4vr4xnSDxMaL",
+              voice_id: "2cRE7dHOunfL54az2myF",
               model_id: "eleven_v3_conversational",
               stability: 0.75,
               similarity_boost: 0.75,
