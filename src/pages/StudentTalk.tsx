@@ -258,7 +258,17 @@ const StudentTalk = () => {
       const { data, error } = await supabase.functions.invoke("transcribe-voice", {
         body: { audioBase64: base64, mimeType },
       });
-      if (error) throw error;
+      if (error) {
+        const detail =
+          typeof (error as any)?.context?.text === "function"
+            ? await (error as any).context.text().catch(() => "")
+            : "";
+        if (detail.includes("usage limit") || detail.includes("402")) {
+          toast.error("AI usage limit reached — add credits to keep talking.");
+          return;
+        }
+        throw error;
+      }
       const transcript = (data?.transcript ?? "").trim();
       if (!transcript) {
         toast.error("Didn't catch that. Try again?");
