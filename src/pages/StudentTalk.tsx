@@ -237,6 +237,13 @@ const StudentTalk = () => {
     }
   };
 
+  // Keep a live reference so the recorder's onstop callback (created once)
+  // always invokes the CURRENT handler with fresh phase/turns state.
+  const utteranceRef = useRef(handleUserUtterance);
+  useEffect(() => {
+    utteranceRef.current = handleUserUtterance;
+  });
+
   const processAudio = async (blob: Blob, mimeType: string) => {
     setIsTranscribing(true);
     try {
@@ -257,7 +264,7 @@ const StudentTalk = () => {
         toast.error("Didn't catch that. Try again?");
         return;
       }
-      await handleUserUtterance(transcript);
+      await utteranceRef.current(transcript);
     } catch {
       toast.error("Couldn't transcribe. Try again.");
     } finally {
