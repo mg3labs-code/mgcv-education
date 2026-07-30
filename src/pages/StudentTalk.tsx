@@ -237,6 +237,13 @@ const StudentTalk = () => {
     }
   };
 
+  // Keep a live reference so the recorder's onstop callback (created once)
+  // always invokes the CURRENT handler with fresh phase/turns state.
+  const utteranceRef = useRef(handleUserUtterance);
+  useEffect(() => {
+    utteranceRef.current = handleUserUtterance;
+  });
+
   const processAudio = async (blob: Blob, mimeType: string) => {
     setIsTranscribing(true);
     try {
