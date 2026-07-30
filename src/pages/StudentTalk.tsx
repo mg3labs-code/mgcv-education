@@ -8,6 +8,9 @@ import { toast } from "sonner";
 type Turn = { role: "user" | "assistant"; content: string };
 type Phase = "greeting" | "interest_capture" | "free_chat";
 
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
+const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+
 const INTEREST_PROMPTS = [
   "Hi! I'm Buddy, your study companion. Before we start, tell me — what do you love doing outside class? Cricket, drawing, gaming, anything!",
   "Awesome! One more thing — what's a subject or topic that genuinely excites you, or one that feels hard right now?",
