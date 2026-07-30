@@ -31,6 +31,8 @@ const StudentTalk = () => {
   const [interestStep, setInterestStep] = useState(0);
   const [capturedInterests, setCapturedInterests] = useState<string[]>([]);
   const [seconds, setSeconds] = useState(0);
+  const [needsTap, setNeedsTap] = useState(false);
+  const pendingBlobRef = useRef<Blob | null>(null);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
