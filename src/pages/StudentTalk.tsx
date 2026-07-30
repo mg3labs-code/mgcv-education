@@ -264,7 +264,7 @@ const StudentTalk = () => {
         toast.error("Didn't catch that. Try again?");
         return;
       }
-      await handleUserUtterance(transcript);
+      await utteranceRef.current(transcript);
     } catch {
       toast.error("Couldn't transcribe. Try again.");
     } finally {
