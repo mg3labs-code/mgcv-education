@@ -32,38 +32,27 @@ serve(async (req) => {
     }
     const { audioBase64, mimeType } = parsed.data;
 
-    // Use Gemini's multimodal capability to transcribe audio
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    // Dedicated speech-to-text endpoint (much lower latency than chat multimodal)
+    const binary = Uint8Array.from(atob(audioBase64), (c) => c.charCodeAt(0));
+    const ext = mimeType?.includes("webm")
+      ? "webm"
+      : mimeType?.includes("mp4")
+        ? "mp4"
+        : mimeType?.includes("mpeg")
+          ? "mp3"
+          : "wav";
+    const form = new FormData();
+    form.append("model", "openai/gpt-4o-mini-transcribe");
+    form.append(
+      "file",
+      new Blob([binary], { type: mimeType || "audio/webm" }),
+      `recording.${ext}`
+    );
+
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/audio/transcriptions", {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          {
-            role: "system",
-            content: "You are an audio transcription assistant. Transcribe the audio accurately. The speaker is likely a student explaining a math concept in English (possibly with Indian accent). Output ONLY the transcribed text, nothing else. If the audio is unclear, transcribe what you can hear."
-          },
-          {
-            role: "user",
-            content: [
-              {
-                type: "input_audio",
-                input_audio: {
-                  data: audioBase64,
-                  format: mimeType?.includes("webm") ? "webm" : "wav",
-                },
-              },
-              {
-                type: "text",
-                text: "Transcribe this audio recording of a student explaining a math concept.",
-              },
-            ],
-          },
-        ],
-      }),
+      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}` },
+      body: form,
     });
 
     if (!response.ok) {
