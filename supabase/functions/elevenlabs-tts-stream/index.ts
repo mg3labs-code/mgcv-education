@@ -116,7 +116,7 @@ serve(async (req) => {
       console.log("Routing Telugu TTS through ElevenLabs Jessica (expressive)...");
 
       const response = await fetch(
-        `https://api.elevenlabs.io/v1/text-to-speech/${teluguVoice}/stream?output_format=mp3_44100_128`,
+        `https://api.elevenlabs.io/v1/text-to-speech/${teluguVoice}/stream?output_format=mp3_22050_32&optimize_streaming_latency=3`,
         {
           method: "POST",
           headers: {
@@ -170,7 +170,7 @@ serve(async (req) => {
       : { stability: 0.5, similarity_boost: 0.75, style: 0, use_speaker_boost: true, speed: 1.0 };
 
     const response = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${voice}/stream?output_format=mp3_44100_128`,
+      `https://api.elevenlabs.io/v1/text-to-speech/${voice}/stream?output_format=mp3_22050_32&optimize_streaming_latency=3`,
       {
         method: "POST",
         headers: {
@@ -179,7 +179,7 @@ serve(async (req) => {
         },
         body: JSON.stringify({
           text: sanitized,
-          model_id: "eleven_multilingual_v2",
+          model_id: "eleven_flash_v2_5",
           voice_settings: voiceSettings,
         }),
       }
