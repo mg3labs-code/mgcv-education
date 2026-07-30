@@ -8,6 +8,9 @@ import { toast } from "sonner";
 type Turn = { role: "user" | "assistant"; content: string };
 type Phase = "greeting" | "interest_capture" | "free_chat";
 
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
+const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+
 const INTEREST_PROMPTS = [
   "Hi! I'm Buddy, your study companion. Before we start, tell me — what do you love doing outside class? Cricket, drawing, gaming, anything!",
   "Awesome! One more thing — what's a subject or topic that genuinely excites you, or one that feels hard right now?",
@@ -28,6 +31,8 @@ const StudentTalk = () => {
   const [interestStep, setInterestStep] = useState(0);
   const [capturedInterests, setCapturedInterests] = useState<string[]>([]);
   const [seconds, setSeconds] = useState(0);
+  const [needsTap, setNeedsTap] = useState(false);
+  const pendingBlobRef = useRef<Blob | null>(null);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -62,32 +67,70 @@ const StudentTalk = () => {
     transcriptEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [turns, isThinking]);
 
+  const playBlob = useCallback(async (blob: Blob) => {
+    const url = URL.createObjectURL(blob);
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.src = "";
+    }
+    const audio = new Audio(url);
+    audio.preload = "auto";
+    audioRef.current = audio;
+    audio.onended = () => {
+      setIsSpeaking(false);
+      URL.revokeObjectURL(url);
+    };
+    audio.onerror = () => setIsSpeaking(false);
+    try {
+      await audio.play();
+      setIsSpeaking(true);
+      return true;
+    } catch {
+      // Autoplay blocked — needs a user gesture
+      setIsSpeaking(false);
+      pendingBlobRef.current = blob;
+      setNeedsTap(true);
+      return false;
+    }
+  }, []);
+
   const speak = useCallback(async (text: string) => {
     if (muted || !text.trim()) return;
     try {
       setIsSpeaking(true);
-      const { data, error } = await supabase.functions.invoke("elevenlabs-tts-stream", {
-        body: { text: text.slice(0, 900) },
+      const { data: sess } = await supabase.auth.getSession();
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/elevenlabs-tts-stream`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: SUPABASE_KEY,
+          ...(sess?.session?.access_token
+            ? { Authorization: `Bearer ${sess.session.access_token}` }
+            : {}),
+        },
+        body: JSON.stringify({ text: text.slice(0, 900) }),
       });
-      if (error) throw error;
-      const blob = data instanceof Blob ? data : new Blob([data as ArrayBuffer], { type: "audio/mpeg" });
-      const url = URL.createObjectURL(blob);
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.src = "";
-      }
-      const audio = new Audio(url);
-      audioRef.current = audio;
-      audio.onended = () => {
+      if (!res.ok) {
+        console.error("TTS failed", res.status, await res.text().catch(() => ""));
         setIsSpeaking(false);
-        URL.revokeObjectURL(url);
-      };
-      audio.onerror = () => setIsSpeaking(false);
-      await audio.play().catch(() => setIsSpeaking(false));
-    } catch {
+        return;
+      }
+      const raw = await res.blob();
+      const blob = raw.type.startsWith("audio") ? raw : new Blob([raw], { type: "audio/mpeg" });
+      await playBlob(blob);
+    } catch (e) {
+      console.error("speak error", e);
       setIsSpeaking(false);
     }
-  }, [muted]);
+  }, [muted, playBlob]);
+
+  const enableSound = useCallback(async () => {
+    setNeedsTap(false);
+    const blob = pendingBlobRef.current;
+    pendingBlobRef.current = null;
+    if (blob) await playBlob(blob);
+  }, [playBlob]);
+
 
   const speakAndPush = useCallback(async (role: "assistant", content: string) => {
     setTurns((prev) => [...prev, { role, content }]);
@@ -224,6 +267,8 @@ const StudentTalk = () => {
 
   const startRecording = useCallback(async () => {
     // Stop any playing AI audio when user starts speaking
+    setNeedsTap(false);
+    pendingBlobRef.current = null;
     if (audioRef.current) {
       audioRef.current.pause();
       setIsSpeaking(false);
@@ -328,7 +373,16 @@ const StudentTalk = () => {
 
       {/* Mic bar */}
       <div className="border-t border-border/40 bg-card/60 backdrop-blur px-4 py-6 flex flex-col items-center gap-2">
+        {needsTap && (
+          <button
+            onClick={enableSound}
+            className="mb-2 inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow"
+          >
+            <Volume2 className="h-4 w-4" /> Tap to hear Buddy
+          </button>
+        )}
         <div className="text-xs text-muted-foreground h-4">
+
           {isRecording
             ? `Listening... ${seconds}s (tap to send)`
             : isTranscribing
