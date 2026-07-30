@@ -74,7 +74,7 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    const transcript = data.choices?.[0]?.message?.content?.trim() || "";
+    const transcript = (data.text ?? "").trim();
 
     return new Response(JSON.stringify({ transcript }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
