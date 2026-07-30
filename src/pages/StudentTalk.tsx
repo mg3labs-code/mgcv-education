@@ -206,6 +206,8 @@ const StudentTalk = () => {
       const decoder = new TextDecoder();
       let full = "";
       let buffer = "";
+      let spokenUpto = 0;
+      let firstChunkPromise: Promise<void> | null = null;
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
@@ -224,11 +226,29 @@ const StudentTalk = () => {
             /* ignore malformed chunk */
           }
         }
+        // Speak the first complete sentence as soon as it's ready (lower perceived latency)
+        if (!firstChunkPromise) {
+          const clean = full.replace(/\[NAV:[^\]]+\]/g, "");
+          const m = clean.match(/^[\s\S]{25,}?[.!?](\s|$)/);
+          if (m) {
+            spokenUpto = m[0].length;
+            setIsThinking(false);
+            firstChunkPromise = speak(m[0].trim());
+          }
+        }
       }
 
-      const clean = full.replace(/\[NAV:[^\]]+\]/g, "").trim() || "I'm not sure, can you say that again?";
+      const cleanFull = full.replace(/\[NAV:[^\]]+\]/g, "").trim() || "I'm not sure, can you say that again?";
       setIsThinking(false);
-      await speakAndPush("assistant", clean);
+      setTurns((prev) => [...prev, { role: "assistant" as const, content: cleanFull }]);
+      if (firstChunkPromise) {
+        await firstChunkPromise;
+        const rest = full.replace(/\[NAV:[^\]]+\]/g, "").slice(spokenUpto).trim();
+        if (rest) await speak(rest);
+      } else {
+        await speak(cleanFull);
+      }
+      return;
     } catch (e) {
       setIsThinking(false);
       const msg = "Sorry, I couldn't reach the AI. Try again?";
