@@ -371,7 +371,16 @@ const StudentTalk = () => {
 
       {/* Mic bar */}
       <div className="border-t border-border/40 bg-card/60 backdrop-blur px-4 py-6 flex flex-col items-center gap-2">
+        {needsTap && (
+          <button
+            onClick={enableSound}
+            className="mb-2 inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow"
+          >
+            <Volume2 className="h-4 w-4" /> Tap to hear Buddy
+          </button>
+        )}
         <div className="text-xs text-muted-foreground h-4">
+
           {isRecording
             ? `Listening... ${seconds}s (tap to send)`
             : isTranscribing
