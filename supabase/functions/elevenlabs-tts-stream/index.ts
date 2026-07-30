@@ -112,7 +112,7 @@ serve(async (req) => {
         throw new Error("ELEVENLABS_API_KEY is not configured");
       }
 
-      const teluguVoice = voiceId || "EXAVITQu4vr4xnSDxMaL"; // Sarah
+      const teluguVoice = voiceId || "2cRE7dHOunfL54az2myF"; // Ranga
       console.log("Routing Telugu TTS through ElevenLabs Jessica (expressive)...");
 
       const response = await fetch(
@@ -161,7 +161,7 @@ serve(async (req) => {
       throw new Error("ELEVENLABS_API_KEY is not configured");
     }
 
-    const voice = voiceId || "EXAVITQu4vr4xnSDxMaL"; // Sarah
+    const voice = voiceId || "2cRE7dHOunfL54az2myF"; // Ranga
 
     // Warm greeting voice (Lily) gets slower, more expressive settings
     const isWarmGreeting = voice === "pFZP5JQG7iQjIQuC4Bku";
