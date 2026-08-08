@@ -276,6 +276,8 @@ serve(async (req) => {
     }
 
     let token: string | null = null;
+    let lastStatus = 0;
+    let lastErr = "";
     for (let attempt = 0; attempt < 3; attempt++) {
       const tokenResponse = await fetch(tokenUrl, {
         method: "GET",
@@ -290,14 +292,31 @@ serve(async (req) => {
         break;
       }
 
-      const errText = await tokenResponse.text();
-      console.error(`Token attempt ${attempt + 1} failed:`, tokenResponse.status, errText);
+      lastStatus = tokenResponse.status;
+      lastErr = await tokenResponse.text();
+      console.error(`Token attempt ${attempt + 1} failed:`, lastStatus, lastErr);
+
+      // Auth/config errors will never succeed on retry — fail fast.
+      if (lastStatus === 400 || lastStatus === 401 || lastStatus === 403) break;
       if (attempt < 2) await new Promise((r) => setTimeout(r, 1500));
     }
 
     if (!token) {
-      throw new Error("Failed to get conversation token after 3 attempts");
+      const isAuth =
+        lastStatus === 400 || lastStatus === 401 || lastStatus === 403 ||
+        lastErr.includes("invalid_api_key") || lastErr.includes("api_key_id_used_as_api_key");
+      return new Response(
+        JSON.stringify({
+          error: isAuth
+            ? "Voice service key is invalid. The stored ElevenLabs key must be a real API key starting with 'sk_' (not the key ID)."
+            : "Could not start the voice session. Please try again.",
+          status: lastStatus,
+          details: lastErr,
+        }),
+        { status: isAuth ? 401 : 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
+
 
     return new Response(
       JSON.stringify({ token, agentId, model: "eleven_v3_conversational", overrides }),
