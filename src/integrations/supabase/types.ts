@@ -719,6 +719,7 @@ export type Database = {
           file_name: string
           file_path: string | null
           file_size: number | null
+          guest_id: string | null
           id: string
           source_lang: string
           status: string
@@ -726,7 +727,7 @@ export type Database = {
           term_style: string
           total_chunks: number
           updated_at: string
-          user_id: string
+          user_id: string | null
           validation: Json
         }
         Insert: {
@@ -739,6 +740,7 @@ export type Database = {
           file_name: string
           file_path?: string | null
           file_size?: number | null
+          guest_id?: string | null
           id?: string
           source_lang?: string
           status?: string
@@ -746,7 +748,7 @@ export type Database = {
           term_style?: string
           total_chunks?: number
           updated_at?: string
-          user_id: string
+          user_id?: string | null
           validation?: Json
         }
         Update: {
@@ -759,6 +761,7 @@ export type Database = {
           file_name?: string
           file_path?: string | null
           file_size?: number | null
+          guest_id?: string | null
           id?: string
           source_lang?: string
           status?: string
@@ -766,7 +769,7 @@ export type Database = {
           term_style?: string
           total_chunks?: number
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
           validation?: Json
         }
         Relationships: []
