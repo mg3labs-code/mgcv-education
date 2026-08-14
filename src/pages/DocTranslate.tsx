@@ -10,9 +10,10 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { parseDocument, hashString, type DocBlock } from "@/lib/docStructure";
+import { paginate, type DocPage, type DocUnit } from "@/lib/docPaginate";
 import DocChat from "@/components/translate/DocChat";
 import {
-  Upload, FileText, ChevronLeft, ChevronRight, Loader2, RefreshCw, AlertTriangle,
+  Upload, FileText, ChevronLeft, ChevronRight, Loader2, RefreshCw,
   BookOpen, Columns2, Plus, X, LayoutGrid, History,
 } from "lucide-react";
 
@@ -131,6 +132,31 @@ const BlockView = ({ block }: { block: DocBlock }) => {
     default:
       return <p className="my-3 leading-8 text-foreground/90">{text}</p>;
   }
+};
+
+/** One reading unit: a question with its own options, or a prose/heading run. */
+const UnitView = ({ unit }: { unit: DocUnit }) => {
+  if (unit.kind === "question") {
+    return (
+      <section className="mb-7 border-b border-border/50 pb-6 last:border-0 last:pb-0">
+        {unit.question ? <BlockView block={unit.question} /> : null}
+        {unit.options.length > 0 && (
+          <div className="mt-2 grid gap-1 sm:grid-cols-2">
+            {unit.options.map((o) => <BlockView key={o.id} block={o} />)}
+          </div>
+        )}
+        {unit.answer ? <BlockView block={unit.answer} /> : null}
+        {unit.explanation ? <BlockView block={unit.explanation} /> : null}
+        {unit.body.map((b) => <BlockView key={b.id} block={b} />)}
+      </section>
+    );
+  }
+  return (
+    <section className="mb-5 last:mb-0">
+      {unit.heading ? <BlockView block={unit.heading} /> : null}
+      {unit.body.map((b) => <BlockView key={b.id} block={b} />)}
+    </section>
+  );
 };
 
 const DocTranslate = () => {
@@ -278,13 +304,32 @@ const DocTranslate = () => {
     return Math.round(((activeJob.done_chunks + activeJob.failed_chunks) / activeJob.total_chunks) * 100);
   }, [activeJob]);
 
-  const total = chunks.length;
-  const current = chunks[Math.min(page, Math.max(total - 1, 0))];
+  // Repaginate the entire document into structure-respecting pages so a question
+  // is always shown with its own options, in document order.
+  const pages: DocPage[] = useMemo(() => {
+    const translated: DocBlock[] = [];
+    const source: DocBlock[] = [];
+    [...chunks]
+      .sort((a, b) => a.idx - b.idx)
+      .forEach((c) => {
+        const src = c.source?.blocks || [];
+        source.push(...src);
+        translated.push(...(c.translated?.blocks?.length ? c.translated.blocks : src));
+      });
+    return paginate(translated, source);
+  }, [chunks]);
+
+  const total = pages.length;
+  const current = pages[Math.min(page, Math.max(total - 1, 0))];
+  const pendingPage = chunks.length > 0 && chunks.every((c) => !c.translated);
 
   const pageText = useMemo(() => {
-    const blocks = current?.translated?.blocks || current?.source.blocks || [];
-    return blocks
-      .map((b) => clean(b.text) || (b.cells || []).flat().map(clean).join(" | "))
+    if (!current) return "";
+    const flat = current.units.flatMap((u) => [
+      u.heading, u.question, ...u.options, u.answer, u.explanation, ...u.body,
+    ]);
+    return flat
+      .map((b) => (b ? clean(b.text) || (b.cells || []).flat().map(clean).join(" | ") : ""))
       .filter(Boolean)
       .join("\n")
       .slice(0, 12000);
@@ -436,26 +481,25 @@ const DocTranslate = () => {
               ref={readerRef}
               className="rounded-xl border border-border bg-card px-6 py-8 sm:px-12 sm:py-12 min-h-[60vh]"
             >
-              {bilingual ? (
-                <div className="grid gap-8 md:grid-cols-2">
-                  <div>{current?.source.blocks.map((b) => <BlockView key={b.id} block={b} />)}</div>
-                  <div className="md:border-l md:border-border md:pl-8">
-                    {current?.translated?.blocks
-                      ? current.translated.blocks.map((b) => <BlockView key={b.id} block={b} />)
-                      : <p className="text-muted-foreground">Converting…</p>}
-                  </div>
-                </div>
-              ) : current?.translated?.blocks ? (
-                current.translated.blocks.map((b) => <BlockView key={b.id} block={b} />)
-              ) : (
-                <p className="text-muted-foreground flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" /> Converting this page…
+              {current?.title && (
+                <p className="mb-6 text-xs uppercase tracking-[0.14em] text-muted-foreground">
+                  {clean(current.title)}
                 </p>
               )}
+              {bilingual ? (
+                <div className="grid gap-8 md:grid-cols-2">
+                  <div>{current?.sourceUnits.map((u) => <UnitView key={u.id} unit={u} />)}</div>
+                  <div className="md:border-l md:border-border md:pl-8">
+                    {current?.units.map((u) => <UnitView key={u.id} unit={u} />)}
+                  </div>
+                </div>
+              ) : (
+                current?.units.map((u) => <UnitView key={u.id} unit={u} />)
+              )}
 
-              {current?.error && (
-                <p className="mt-6 text-sm text-destructive flex items-start gap-2">
-                  <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" /> {current.error}
+              {pendingPage && (
+                <p className="mt-6 text-sm text-muted-foreground flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" /> Converting — showing the original meanwhile.
                 </p>
               )}
             </article>
@@ -480,16 +524,11 @@ const DocTranslate = () => {
                   </div>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 max-h-[45vh] overflow-y-auto">
-                  {chunks.map((c, i) => {
-                    const blocks = c.translated?.blocks || c.source.blocks;
-                    const preview = blocks
-                      .map((b) => clean(b.text) || (b.cells || []).flat().map(clean).join(" "))
-                      .filter(Boolean)
-                      .join(" ")
-                      .slice(0, 140);
+                  {pages.map((pg, i) => {
+                    const preview = clean(pg.preview);
                     return (
                       <button
-                        key={c.idx}
+                        key={pg.index}
                         onClick={() => { setPage(i); readerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }); }}
                         className={`text-left rounded-lg border p-2 h-24 overflow-hidden transition-colors ${
                           i === page ? "border-primary bg-primary/5" : "border-border hover:bg-muted/60"
