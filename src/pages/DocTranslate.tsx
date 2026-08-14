@@ -206,6 +206,24 @@ const DocTranslate = () => {
     }
   }, [loadChunks, runLoop]);
 
+  // Resume a conversion opened from the history page (/translate?job=<id>)
+  const requestedJob = searchParams.get("job");
+  useEffect(() => {
+    if (!requestedJob) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("doc_translation_jobs").select("*").eq("id", requestedJob).maybeSingle();
+      if (cancelled) return;
+      searchParams.delete("job");
+      setSearchParams(searchParams, { replace: true });
+      if (data) await openJob(data as JobRow);
+      else toast({ title: "Conversion not found", description: "It may have been removed.", variant: "destructive" });
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [requestedJob]);
+
   const handleFile = async (file: File) => {
     try {
       setPhase("parsing");
