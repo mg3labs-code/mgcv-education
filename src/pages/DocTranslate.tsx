@@ -52,12 +52,24 @@ interface ChunkRow {
   translated: { blocks: DocBlock[]; validation?: { pass: boolean; issues: string[] } } | null;
 }
 
+const getGuestId = () => {
+  let id = localStorage.getItem("doc_translate_guest_id");
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem("doc_translate_guest_id", id);
+  }
+  return id;
+};
+
 const callEndpoint = async (payload: Record<string, unknown>) => {
-  const { data, error } = await supabase.functions.invoke("translate-doc", { body: payload });
+  const { data, error } = await supabase.functions.invoke("translate-doc", {
+    body: { ...payload, guestId: getGuestId() },
+  });
   if (error) throw new Error(error.message);
   if ((data as { error?: string })?.error) throw new Error((data as { error: string }).error);
   return data as Record<string, any>;
 };
+
 
 /** Clean list/label noise so the page reads like a printed book page. */
 const clean = (s?: string) => (s || "").replace(/^[\s•·▪●◦*\-–—]+/, "").trim();
