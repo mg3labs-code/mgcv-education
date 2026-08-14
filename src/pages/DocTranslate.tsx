@@ -259,7 +259,10 @@ const DocTranslate = () => {
       .slice(0, 12000);
   }, [current]);
 
+  useEffect(() => { setJumpValue(String(Math.min(page + 1, Math.max(total, 1)))); }, [page, total]);
+
   const jumpTo = useCallback((n: number) => {
+
     if (!Number.isFinite(n)) return;
     const target = Math.min(Math.max(Math.round(n), 1), Math.max(total, 1)) - 1;
     setPage(target);
