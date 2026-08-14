@@ -13,7 +13,7 @@ import { parseDocument, hashString, type DocBlock } from "@/lib/docStructure";
 import { paginate, type DocPage, type DocUnit } from "@/lib/docPaginate";
 import DocChat from "@/components/translate/DocChat";
 import {
-  Upload, FileText, ChevronLeft, ChevronRight, Loader2, RefreshCw, AlertTriangle,
+  Upload, FileText, ChevronLeft, ChevronRight, Loader2, RefreshCw,
   BookOpen, Columns2, Plus, X, LayoutGrid, History,
 } from "lucide-react";
 
