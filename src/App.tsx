@@ -22,6 +22,7 @@ const StudentOnboarding = lazy(() => import("./pages/StudentOnboarding"));
 const StudentProfile = lazy(() => import("./pages/StudentProfile"));
 const StudentTalk = lazy(() => import("./pages/StudentTalk"));
 const DocTranslate = lazy(() => import("./pages/DocTranslate"));
+const DocHistory = lazy(() => import("./pages/DocHistory"));
 const AdminOnboarding = lazy(() => import("./pages/AdminOnboarding"));
 const TeacherSchedule = lazy(() => import("./pages/TeacherSchedule"));
 const TeacherScheduleV2 = lazy(() => import("./pages/TeacherScheduleV2"));
@@ -143,6 +144,7 @@ const App = () => (
                 <Route path="/student/profile" element={<ProtectedRoute><StudentProfile /></ProtectedRoute>} />
                 <Route path="/student/talk" element={<ProtectedRoute><StudentTalk /></ProtectedRoute>} />
                 <Route path="/translate" element={<DocTranslate />} />
+                <Route path="/translate/history" element={<DocHistory />} />
                 <Route path="/student/episodes" element={<ProtectedRoute><StudentDashboard /></ProtectedRoute>} />
                 <Route path="/student/progress" element={<ProtectedRoute><StudentDashboard /></ProtectedRoute>} />
                 <Route path="/student/calendar" element={<ProtectedRoute><StudentCalendar /></ProtectedRoute>} />
