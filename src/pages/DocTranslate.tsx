@@ -274,7 +274,19 @@ const DocTranslate = () => {
           <p className="text-sm font-medium truncate">
             {activeJob ? activeJob.file_name : "Document Converter"}
           </p>
+          {activeJob && total > 0 && (
+            <span className="text-xs tabular-nums text-muted-foreground shrink-0">
+              · Page {Math.min(page + 1, total)} / {total}
+            </span>
+          )}
           <div className="ml-auto flex items-center gap-2">
+            {activeJob && total > 0 && (
+              <Button variant={showThumbs ? "secondary" : "ghost"} size="sm" className="gap-1.5"
+                onClick={() => setShowThumbs((s) => !s)}>
+                <LayoutGrid className="h-4 w-4" />
+                <span className="hidden sm:inline">Pages</span>
+              </Button>
+            )}
             {activeJob && (
               <Button variant="ghost" size="sm" className="gap-1.5" onClick={() => setBilingual((b) => !b)}>
                 <Columns2 className="h-4 w-4" />
@@ -288,8 +300,20 @@ const DocTranslate = () => {
             </Button>
           </div>
         </div>
-        {activeJob && activeJob.status !== "completed" && <Progress value={pct} className="h-0.5 rounded-none" />}
+        {/* Reading position — always visible */}
+        {activeJob && total > 0 && (
+          <div className="h-1 w-full bg-muted">
+            <div
+              className="h-full bg-primary transition-all"
+              style={{ width: `${((Math.min(page + 1, total)) / total) * 100}%` }}
+            />
+          </div>
+        )}
+        {activeJob && activeJob.status !== "completed" && (
+          <Progress value={pct} className="h-0.5 rounded-none" />
+        )}
       </header>
+
 
       <main className="max-w-4xl mx-auto px-4 py-6 space-y-6">
         {showUpload && (
