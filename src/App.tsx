@@ -142,6 +142,7 @@ const App = () => (
                 <Route path="/student/onboarding" element={<ProtectedRoute><StudentOnboarding /></ProtectedRoute>} />
                 <Route path="/student/profile" element={<ProtectedRoute><StudentProfile /></ProtectedRoute>} />
                 <Route path="/student/talk" element={<ProtectedRoute><StudentTalk /></ProtectedRoute>} />
+                <Route path="/translate" element={<ProtectedRoute><DocTranslate /></ProtectedRoute>} />
                 <Route path="/student/episodes" element={<ProtectedRoute><StudentDashboard /></ProtectedRoute>} />
                 <Route path="/student/progress" element={<ProtectedRoute><StudentDashboard /></ProtectedRoute>} />
                 <Route path="/student/calendar" element={<ProtectedRoute><StudentCalendar /></ProtectedRoute>} />
