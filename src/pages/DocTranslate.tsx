@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -12,7 +13,7 @@ import { parseDocument, hashString, type DocBlock } from "@/lib/docStructure";
 import DocChat from "@/components/translate/DocChat";
 import {
   Upload, FileText, ChevronLeft, ChevronRight, Loader2, RefreshCw, AlertTriangle,
-  BookOpen, Columns2, Plus, X, LayoutGrid,
+  BookOpen, Columns2, Plus, X, LayoutGrid, History,
 } from "lucide-react";
 
 
