@@ -604,6 +604,173 @@ export type Database = {
         }
         Relationships: []
       }
+      doc_glossary: {
+        Row: {
+          created_at: string
+          domain: string | null
+          english: string
+          id: string
+          rule: string
+          target_lang: string
+          translation: string
+        }
+        Insert: {
+          created_at?: string
+          domain?: string | null
+          english: string
+          id?: string
+          rule?: string
+          target_lang?: string
+          translation: string
+        }
+        Update: {
+          created_at?: string
+          domain?: string | null
+          english?: string
+          id?: string
+          rule?: string
+          target_lang?: string
+          translation?: string
+        }
+        Relationships: []
+      }
+      doc_translation_cache: {
+        Row: {
+          created_at: string
+          hits: number
+          source_hash: string
+          target_lang: string
+          term_style: string
+          translated: Json
+        }
+        Insert: {
+          created_at?: string
+          hits?: number
+          source_hash: string
+          target_lang: string
+          term_style: string
+          translated: Json
+        }
+        Update: {
+          created_at?: string
+          hits?: number
+          source_hash?: string
+          target_lang?: string
+          term_style?: string
+          translated?: Json
+        }
+        Relationships: []
+      }
+      doc_translation_chunks: {
+        Row: {
+          created_at: string
+          error: string | null
+          id: string
+          idx: number
+          job_id: string
+          kind: string
+          source: Json
+          source_hash: string | null
+          status: string
+          translated: Json | null
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          idx: number
+          job_id: string
+          kind?: string
+          source: Json
+          source_hash?: string | null
+          status?: string
+          translated?: Json | null
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          idx?: number
+          job_id?: string
+          kind?: string
+          source?: Json
+          source_hash?: string | null
+          status?: string
+          translated?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doc_translation_chunks_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "doc_translation_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      doc_translation_jobs: {
+        Row: {
+          content_hash: string | null
+          created_at: string
+          doc_type: string
+          done_chunks: number
+          error: string | null
+          failed_chunks: number
+          file_name: string
+          file_path: string | null
+          file_size: number | null
+          id: string
+          source_lang: string
+          status: string
+          target_lang: string
+          term_style: string
+          total_chunks: number
+          updated_at: string
+          user_id: string
+          validation: Json
+        }
+        Insert: {
+          content_hash?: string | null
+          created_at?: string
+          doc_type?: string
+          done_chunks?: number
+          error?: string | null
+          failed_chunks?: number
+          file_name: string
+          file_path?: string | null
+          file_size?: number | null
+          id?: string
+          source_lang?: string
+          status?: string
+          target_lang?: string
+          term_style?: string
+          total_chunks?: number
+          updated_at?: string
+          user_id: string
+          validation?: Json
+        }
+        Update: {
+          content_hash?: string | null
+          created_at?: string
+          doc_type?: string
+          done_chunks?: number
+          error?: string | null
+          failed_chunks?: number
+          file_name?: string
+          file_path?: string | null
+          file_size?: number | null
+          id?: string
+          source_lang?: string
+          status?: string
+          target_lang?: string
+          term_style?: string
+          total_chunks?: number
+          updated_at?: string
+          user_id?: string
+          validation?: Json
+        }
+        Relationships: []
+      }
       episode_interactions: {
         Row: {
           answer_changes: number
