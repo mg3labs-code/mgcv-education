@@ -21,6 +21,7 @@ const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const StudentOnboarding = lazy(() => import("./pages/StudentOnboarding"));
 const StudentProfile = lazy(() => import("./pages/StudentProfile"));
 const StudentTalk = lazy(() => import("./pages/StudentTalk"));
+const DocTranslate = lazy(() => import("./pages/DocTranslate"));
 const AdminOnboarding = lazy(() => import("./pages/AdminOnboarding"));
 const TeacherSchedule = lazy(() => import("./pages/TeacherSchedule"));
 const TeacherScheduleV2 = lazy(() => import("./pages/TeacherScheduleV2"));
