@@ -4,12 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { parseDocument, hashString, type DocBlock } from "@/lib/docStructure";
 import {
-  Upload, FileText, Languages, CheckCircle2, AlertTriangle, Loader2, Sparkles, RefreshCw,
+  Upload, FileText, ChevronLeft, ChevronRight, Loader2, RefreshCw, AlertTriangle,
+  BookOpen, Columns2, Plus, X,
 } from "lucide-react";
 
 const LANGS = [
@@ -55,16 +55,19 @@ const callEndpoint = async (payload: Record<string, unknown>) => {
   return data as Record<string, any>;
 };
 
+/** Clean list/label noise so the page reads like a printed book page. */
+const clean = (s?: string) => (s || "").replace(/^[\s•·▪●◦*\-–—]+/, "").trim();
+
 const BlockView = ({ block }: { block: DocBlock }) => {
   if (block.cells) {
     return (
-      <div className="overflow-x-auto my-2">
-        <table className="text-sm border border-border rounded">
+      <div className="overflow-x-auto my-5">
+        <table className="w-full text-[0.95rem] border-collapse">
           <tbody>
             {block.cells.map((row, i) => (
-              <tr key={i} className={i === 0 ? "bg-muted/60 font-semibold" : ""}>
+              <tr key={i} className={i === 0 ? "bg-muted/50 font-medium" : ""}>
                 {row.map((cell, j) => (
-                  <td key={j} className="border border-border px-2 py-1 align-top">{cell}</td>
+                  <td key={j} className="border border-border/70 px-3 py-2 align-top">{clean(cell)}</td>
                 ))}
               </tr>
             ))}
@@ -73,26 +76,43 @@ const BlockView = ({ block }: { block: DocBlock }) => {
       </div>
     );
   }
-  const base = "leading-relaxed";
+
+  const text = clean(block.text);
+  if (!text) return null;
+
   switch (block.type) {
     case "heading":
-      return <h3 className="text-lg font-bold mt-4 mb-1 text-foreground">{block.text}</h3>;
+      return <h2 className="text-2xl font-semibold tracking-tight mt-8 mb-3 first:mt-0">{text}</h2>;
     case "subheading":
-      return <h4 className="text-base font-semibold mt-3 mb-1 text-foreground">{block.text}</h4>;
+      return <h3 className="text-lg font-semibold mt-6 mb-2 first:mt-0">{text}</h3>;
     case "question":
-      return <p className={`${base} font-semibold mt-3 text-foreground`}>{block.num}. {block.text}</p>;
+      return (
+        <p className="mt-7 mb-2 font-medium leading-8">
+          {block.num ? <span className="text-muted-foreground mr-2 tabular-nums">{clean(block.num)}.</span> : null}
+          {text}
+        </p>
+      );
     case "option":
-      return <p className={`${base} pl-4 text-foreground/90`}>{block.label}. {block.text}</p>;
+      return (
+        <p className="pl-7 leading-8 text-foreground/90">
+          {block.label ? <span className="text-muted-foreground mr-2">{clean(block.label)}.</span> : null}
+          {text}
+        </p>
+      );
     case "answer":
-      return <p className={`${base} pl-4 font-medium text-primary`}>{block.label}: {block.text}</p>;
+      return <p className="pl-7 mt-2 leading-8 font-medium text-primary">{text}</p>;
     case "explanation":
-      return <p className={`${base} pl-4 text-muted-foreground italic`}>{block.label}: {block.text}</p>;
+      return <p className="pl-7 mt-1 leading-8 text-muted-foreground">{text}</p>;
     case "formula":
-      return <p className={`${base} font-mono text-sm bg-muted/50 rounded px-2 py-1 my-1`}>{block.text}</p>;
+      return <p className="my-4 font-mono text-[0.95rem] leading-8">{text}</p>;
     case "list_item":
-      return <p className={`${base} pl-4 text-foreground/90`}>• {block.text}</p>;
+      return (
+        <p className="pl-7 leading-8 text-foreground/90 relative before:content-[''] before:absolute before:left-2 before:top-[0.95em] before:h-1 before:w-1 before:rounded-full before:bg-muted-foreground/60">
+          {text}
+        </p>
+      );
     default:
-      return <p className={`${base} text-foreground/90 my-1`}>{block.text}</p>;
+      return <p className="my-3 leading-8 text-foreground/90">{text}</p>;
   }
 };
 
@@ -105,8 +125,12 @@ const DocTranslate = () => {
   const [termStyle, setTermStyle] = useState("bracket");
   const [phase, setPhase] = useState<"idle" | "parsing" | "uploading" | "translating">("idle");
   const [parseProgress, setParseProgress] = useState(0);
+  const [page, setPage] = useState(0);
+  const [bilingual, setBilingual] = useState(false);
+  const [showUpload, setShowUpload] = useState(true);
   const running = useRef(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const readerRef = useRef<HTMLDivElement>(null);
 
   const loadJobs = useCallback(async () => {
     const { data } = await supabase
@@ -128,8 +152,6 @@ const DocTranslate = () => {
 
   useEffect(() => { loadJobs(); }, [loadJobs]);
 
-  // Resumable translation loop — only touches chunks that are not done yet,
-  // so reopening a finished document costs nothing.
   const runLoop = useCallback(async (jobId: string) => {
     if (running.current) return;
     running.current = true;
@@ -140,9 +162,9 @@ const DocTranslate = () => {
         const { data: fresh } = await supabase
           .from("doc_translation_jobs").select("*").eq("id", jobId).maybeSingle();
         if (fresh) setActiveJob(fresh as JobRow);
+        await loadChunks(jobId);
         if (res.finished) break;
       }
-      await loadChunks(jobId);
       await loadJobs();
     } catch (e) {
       toast({ title: "Conversion paused", description: String(e), variant: "destructive" });
@@ -154,6 +176,8 @@ const DocTranslate = () => {
 
   const openJob = useCallback(async (job: JobRow) => {
     setActiveJob(job);
+    setPage(0);
+    setShowUpload(false);
     await loadChunks(job.id);
     if (job.status !== "completed" && job.total_chunks > job.done_chunks + job.failed_chunks) {
       runLoop(job.id);
@@ -182,7 +206,7 @@ const DocTranslate = () => {
       });
 
       if (reused) {
-        toast({ title: "Already converted", description: "Loading the saved version — no re-conversion needed." });
+        toast({ title: "Already converted", description: "Opening the saved version." });
         await loadJobs();
         await openJob(job as JobRow);
         setPhase("idle");
@@ -201,11 +225,13 @@ const DocTranslate = () => {
       }
       await loadJobs();
       setActiveJob(job as JobRow);
+      setPage(0);
+      setShowUpload(false);
       await loadChunks((job as JobRow).id);
       runLoop((job as JobRow).id);
     } catch (e) {
       setPhase("idle");
-      toast({ title: "Could not process file", description: String(e), variant: "destructive" });
+      toast({ title: "Could not read this file", description: String(e), variant: "destructive" });
     }
   };
 
@@ -214,33 +240,65 @@ const DocTranslate = () => {
     return Math.round(((activeJob.done_chunks + activeJob.failed_chunks) / activeJob.total_chunks) * 100);
   }, [activeJob]);
 
-  const reviewCount = chunks.filter((c) => c.status === "error" || c.translated?.validation?.pass === false).length;
+  const total = chunks.length;
+  const current = chunks[Math.min(page, Math.max(total - 1, 0))];
+
+  const go = useCallback((dir: -1 | 1) => {
+    setPage((p) => Math.min(Math.max(p + dir, 0), Math.max(total - 1, 0)));
+    readerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [total]);
+
+  // Keyboard page turning — feels like a book, no cursor scrubbing needed.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!activeJob) return;
+      const t = e.target as HTMLElement | null;
+      if (t && /input|textarea|select/i.test(t.tagName)) return;
+      if (e.key === "ArrowRight" || e.key === "PageDown") go(1);
+      if (e.key === "ArrowLeft" || e.key === "PageUp") go(-1);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [activeJob, go]);
+
+  const langLabel = LANGS.find((l) => l.code === (activeJob?.target_lang || targetLang))?.label;
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
-        <header className="space-y-2">
-          <Badge variant="secondary" className="gap-1"><Sparkles className="h-3 w-3" /> Structure-preserving engine</Badge>
-          <h1 className="text-3xl font-bold text-foreground">English → Indian Language Document Converter</h1>
-          <p className="text-muted-foreground max-w-3xl">
-            Convert full question banks, exam papers and study guides without changing numbering,
-            options, answer keys, tables or formulas. Every conversion is stored once and reopened instantly.
+      {/* Slim sticky bar: title, doc switcher, view toggle */}
+      <header className="sticky top-0 z-30 border-b border-border bg-background/90 backdrop-blur">
+        <div className="max-w-4xl mx-auto px-4 h-14 flex items-center gap-3">
+          <BookOpen className="h-4 w-4 text-muted-foreground shrink-0" />
+          <p className="text-sm font-medium truncate">
+            {activeJob ? activeJob.file_name : "Document Converter"}
           </p>
-        </header>
+          <div className="ml-auto flex items-center gap-2">
+            {activeJob && (
+              <Button variant="ghost" size="sm" className="gap-1.5" onClick={() => setBilingual((b) => !b)}>
+                <Columns2 className="h-4 w-4" />
+                <span className="hidden sm:inline">{bilingual ? langLabel : "Side by side"}</span>
+              </Button>
+            )}
+            <Button variant={showUpload ? "secondary" : "outline"} size="sm" className="gap-1.5"
+              onClick={() => setShowUpload((s) => !s)}>
+              {showUpload ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+              <span className="hidden sm:inline">{showUpload ? "Close" : "New"}</span>
+            </Button>
+          </div>
+        </div>
+        {activeJob && activeJob.status !== "completed" && <Progress value={pct} className="h-0.5 rounded-none" />}
+      </header>
 
-        <Card className="p-5 space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Target language</label>
+      <main className="max-w-4xl mx-auto px-4 py-6 space-y-6">
+        {showUpload && (
+          <Card className="p-5 space-y-4">
+            <div className="grid gap-3 sm:grid-cols-2">
               <Select value={targetLang} onValueChange={setTargetLang}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {LANGS.map((l) => <SelectItem key={l.code} value={l.code}>{l.label}</SelectItem>)}
                 </SelectContent>
               </Select>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Terminology style</label>
               <Select value={termStyle} onValueChange={setTermStyle}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -248,143 +306,106 @@ const DocTranslate = () => {
                 </SelectContent>
               </Select>
             </div>
-          </div>
 
-          <input
-            ref={fileRef}
-            type="file"
-            className="hidden"
-            accept=".pdf,.docx,.xlsx,.xls,.csv,.txt,.md"
-            onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = ""; }}
-          />
-          <Button
-            className="w-full gap-2"
-            size="lg"
-            disabled={phase !== "idle"}
-            onClick={() => fileRef.current?.click()}
-          >
-            {phase === "idle" ? <Upload className="h-4 w-4" /> : <Loader2 className="h-4 w-4 animate-spin" />}
-            {phase === "idle" && "Upload document (PDF, DOCX, Excel, CSV, TXT)"}
-            {phase === "parsing" && `Reading structure… ${Math.round(parseProgress * 100)}%`}
-            {phase === "uploading" && "Saving document structure…"}
-            {phase === "translating" && "Converting…"}
-          </Button>
-          {phase === "parsing" && <Progress value={parseProgress * 100} />}
-          <p className="text-xs text-muted-foreground">
-            Large files are read page-by-page in your browser and split into small chunks, so 300MB+ documents work.
-          </p>
-        </Card>
+            <input
+              ref={fileRef}
+              type="file"
+              className="hidden"
+              accept=".pdf,.docx,.xlsx,.xls,.csv,.txt,.md"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = ""; }}
+            />
+            <Button className="w-full gap-2" size="lg" disabled={phase !== "idle"}
+              onClick={() => fileRef.current?.click()}>
+              {phase === "idle" ? <Upload className="h-4 w-4" /> : <Loader2 className="h-4 w-4 animate-spin" />}
+              {phase === "idle" && "Choose a document"}
+              {phase === "parsing" && `Reading… ${Math.round(parseProgress * 100)}%`}
+              {phase === "uploading" && "Saving…"}
+              {phase === "translating" && "Converting…"}
+            </Button>
+            {phase === "parsing" && <Progress value={parseProgress * 100} />}
 
-        {jobs.length > 0 && (
-          <Card className="p-5 space-y-3">
-            <h2 className="font-semibold text-foreground">Your converted documents</h2>
-            <div className="grid gap-2">
-              {jobs.map((j) => (
-                <button
-                  key={j.id}
-                  onClick={() => openJob(j)}
-                  className={`flex items-center justify-between gap-3 rounded-lg border p-3 text-left transition-colors hover:bg-muted/50 ${activeJob?.id === j.id ? "border-primary bg-muted/40" : "border-border"}`}
-                >
-                  <div className="flex items-center gap-3 min-w-0">
+            {jobs.length > 0 && (
+              <div className="grid gap-1.5 pt-1">
+                {jobs.slice(0, 6).map((j) => (
+                  <button
+                    key={j.id}
+                    onClick={() => openJob(j)}
+                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-left hover:bg-muted/60 transition-colors"
+                  >
                     <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium truncate text-foreground">{j.file_name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {j.doc_type.replace("_", " ")} · {LANGS.find((l) => l.code === j.target_lang)?.label} · {j.done_chunks}/{j.total_chunks} sections
-                      </p>
-                    </div>
-                  </div>
-                  <Badge variant={j.status === "completed" ? "default" : j.status === "needs_review" ? "destructive" : "secondary"}>
-                    {j.status.replace("_", " ")}
-                  </Badge>
-                </button>
-              ))}
-            </div>
+                    <span className="text-sm truncate flex-1">{j.file_name}</span>
+                    <span className="text-xs text-muted-foreground shrink-0">
+                      {LANGS.find((l) => l.code === j.target_lang)?.label}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
           </Card>
         )}
 
-        {activeJob && (
-          <Card className="p-5 space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h2 className="font-semibold text-foreground flex items-center gap-2">
-                  <Languages className="h-4 w-4" /> {activeJob.file_name}
-                </h2>
-                <p className="text-xs text-muted-foreground">
-                  {activeJob.status === "completed"
-                    ? "Saved conversion — loaded from storage, nothing re-converted."
-                    : `Converting ${activeJob.done_chunks + activeJob.failed_chunks}/${activeJob.total_chunks} sections`}
+        {activeJob && total > 0 && (
+          <>
+            <article
+              ref={readerRef}
+              className="rounded-xl border border-border bg-card px-6 py-8 sm:px-12 sm:py-12 min-h-[60vh]"
+            >
+              {bilingual ? (
+                <div className="grid gap-8 md:grid-cols-2">
+                  <div>{current?.source.blocks.map((b) => <BlockView key={b.id} block={b} />)}</div>
+                  <div className="md:border-l md:border-border md:pl-8">
+                    {current?.translated?.blocks
+                      ? current.translated.blocks.map((b) => <BlockView key={b.id} block={b} />)
+                      : <p className="text-muted-foreground">Converting…</p>}
+                  </div>
+                </div>
+              ) : current?.translated?.blocks ? (
+                current.translated.blocks.map((b) => <BlockView key={b.id} block={b} />)
+              ) : (
+                <p className="text-muted-foreground flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" /> Converting this page…
                 </p>
-              </div>
-              <div className="flex items-center gap-2">
-                {reviewCount > 0 && (
-                  <Badge variant="destructive" className="gap-1">
-                    <AlertTriangle className="h-3 w-3" /> {reviewCount} need review
-                  </Badge>
-                )}
-                {activeJob.status === "completed" && reviewCount === 0 && (
-                  <Badge className="gap-1"><CheckCircle2 className="h-3 w-3" /> Validated</Badge>
-                )}
+              )}
+
+              {current?.error && (
+                <p className="mt-6 text-sm text-destructive flex items-start gap-2">
+                  <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" /> {current.error}
+                </p>
+              )}
+            </article>
+
+            {/* Page turner */}
+            <div className="sticky bottom-4 flex items-center justify-center gap-3">
+              <div className="flex items-center gap-2 rounded-full border border-border bg-background/95 backdrop-blur px-2 py-1.5 shadow-sm">
+                <Button variant="ghost" size="icon" className="rounded-full h-9 w-9"
+                  disabled={page === 0} onClick={() => go(-1)} aria-label="Previous page">
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <span className="text-xs font-medium tabular-nums text-muted-foreground px-2">
+                  {Math.min(page + 1, total)} / {total}
+                </span>
+                <Button variant="ghost" size="icon" className="rounded-full h-9 w-9"
+                  disabled={page >= total - 1} onClick={() => go(1)} aria-label="Next page">
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
                 {activeJob.status !== "completed" && (
-                  <Button size="sm" variant="outline" className="gap-1" disabled={phase !== "idle"}
-                    onClick={() => runLoop(activeJob.id)}>
-                    <RefreshCw className="h-3 w-3" /> Resume
+                  <Button variant="ghost" size="icon" className="rounded-full h-9 w-9"
+                    disabled={phase !== "idle"} onClick={() => runLoop(activeJob.id)} aria-label="Resume conversion">
+                    <RefreshCw className="h-4 w-4" />
                   </Button>
                 )}
               </div>
             </div>
-            {activeJob.status !== "completed" && <Progress value={pct} />}
-
-            <Tabs defaultValue="translated">
-              <TabsList>
-                <TabsTrigger value="translated">
-                  {LANGS.find((l) => l.code === activeJob.target_lang)?.label}
-                </TabsTrigger>
-                <TabsTrigger value="bilingual">Side by side</TabsTrigger>
-                <TabsTrigger value="source">English</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="translated" className="pt-4">
-                {chunks.map((c) => (
-                  <div key={c.idx} className="border-b border-border/60 pb-3 mb-3 last:border-0">
-                    {c.translated?.blocks
-                      ? c.translated.blocks.map((b) => <BlockView key={b.id} block={b} />)
-                      : <p className="text-sm text-muted-foreground italic flex items-center gap-2">
-                          <Loader2 className="h-3 w-3 animate-spin" /> Section {c.idx + 1} pending…
-                        </p>}
-                    {c.error && (
-                      <p className="text-xs text-destructive mt-1 flex items-start gap-1">
-                        <AlertTriangle className="h-3 w-3 mt-0.5 shrink-0" /> {c.error}
-                      </p>
-                    )}
-                  </div>
-                ))}
-              </TabsContent>
-
-              <TabsContent value="bilingual" className="pt-4 space-y-4">
-                {chunks.map((c) => (
-                  <div key={c.idx} className="grid gap-4 md:grid-cols-2 border-b border-border/60 pb-4">
-                    <div>{c.source.blocks.map((b) => <BlockView key={b.id} block={b} />)}</div>
-                    <div className="md:border-l md:border-border md:pl-4">
-                      {c.translated?.blocks
-                        ? c.translated.blocks.map((b) => <BlockView key={b.id} block={b} />)
-                        : <p className="text-sm text-muted-foreground italic">pending…</p>}
-                    </div>
-                  </div>
-                ))}
-              </TabsContent>
-
-              <TabsContent value="source" className="pt-4">
-                {chunks.map((c) => (
-                  <div key={c.idx} className="border-b border-border/60 pb-3 mb-3 last:border-0">
-                    {c.source.blocks.map((b) => <BlockView key={b.id} block={b} />)}
-                  </div>
-                ))}
-              </TabsContent>
-            </Tabs>
-          </Card>
+          </>
         )}
-      </div>
+
+        {!activeJob && !showUpload && (
+          <div className="py-20 text-center space-y-3">
+            <Badge variant="secondary">Nothing open</Badge>
+            <p className="text-sm text-muted-foreground">Tap “New” to convert a document.</p>
+          </div>
+        )}
+      </main>
     </div>
   );
 };
