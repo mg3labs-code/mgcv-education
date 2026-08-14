@@ -351,6 +351,10 @@ const DocTranslate = () => {
                 <span className="hidden sm:inline">{bilingual ? langLabel : "Side by side"}</span>
               </Button>
             )}
+            <Button variant="ghost" size="sm" className="gap-1.5" onClick={() => navigate("/translate/history")}>
+              <History className="h-4 w-4" />
+              <span className="hidden sm:inline">History</span>
+            </Button>
             <Button variant={showUpload ? "secondary" : "outline"} size="sm" className="gap-1.5"
               onClick={() => setShowUpload((s) => !s)}>
               {showUpload ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
