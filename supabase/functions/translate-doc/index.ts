@@ -207,6 +207,17 @@ function serve_handler() {
         return json({ job, reused: false });
       }
 
+      // ---------- LIST_JOBS: owner-scoped history ----------
+      if (action === "list_jobs") {
+        const { data, error } = await ownerFilter(
+          admin.from("doc_translation_jobs").select("*") as any,
+        )
+          .order("created_at", { ascending: false })
+          .limit(Math.min(Number(body.limit) || 30, 100));
+        if (error) throw error;
+        return json({ jobs: data || [] });
+      }
+
       const jobId = body.jobId as string;
       if (!jobId) return json({ error: "jobId required" }, 400);
 
@@ -385,6 +396,17 @@ function serve_handler() {
           failed_chunks: failedCount || 0,
           total_chunks: totalCount || 0,
         });
+      }
+
+      // ---------- CHUNKS: read structure for the reader ----------
+      if (action === "chunks") {
+        const { data, error } = await admin
+          .from("doc_translation_chunks")
+          .select("idx, status, error, source, translated")
+          .eq("job_id", jobId)
+          .order("idx", { ascending: true });
+        if (error) throw error;
+        return json({ chunks: data || [] });
       }
 
       // ---------- STATUS ----------
