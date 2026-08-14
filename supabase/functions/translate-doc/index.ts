@@ -151,12 +151,20 @@ function serve_handler() {
         Deno.env.get("SUPABASE_URL")!,
         Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
       );
-      const { data: userData } = await admin.auth.getUser(authHeader.replace("Bearer ", ""));
-      const user = userData?.user;
-      if (!user) return json({ error: "Please sign in to convert documents." }, 401);
+      const token = authHeader.replace("Bearer ", "");
+      let user: { id: string } | null = null;
+      if (token) {
+        const { data: userData } = await admin.auth.getUser(token);
+        user = userData?.user ?? null;
+      }
+
 
       const body = await req.json();
       const action = body.action as string;
+      const guestId = typeof body.guestId === "string" && body.guestId.length >= 8 ? body.guestId : null;
+      if (!user && !guestId) return json({ error: "guestId required" }, 400);
+      const ownerFilter = <T extends { eq: (c: string, v: unknown) => T }>(q: T) =>
+        user ? q.eq("user_id", user.id) : q.eq("guest_id", guestId);
 
       // ---------- START: create or reuse a job ----------
       if (action === "start") {
@@ -170,10 +178,9 @@ function serve_handler() {
         } = body;
         if (!fileName || !contentHash) return json({ error: "fileName and contentHash required" }, 400);
 
-        const { data: existing } = await admin
-          .from("doc_translation_jobs")
-          .select("*")
-          .eq("user_id", user.id)
+        const { data: existing } = await ownerFilter(
+          admin.from("doc_translation_jobs").select("*") as any,
+        )
           .eq("content_hash", contentHash)
           .eq("target_lang", targetLang)
           .eq("term_style", termStyle)
@@ -184,7 +191,8 @@ function serve_handler() {
         const { data: job, error } = await admin
           .from("doc_translation_jobs")
           .insert({
-            user_id: user.id,
+            user_id: user?.id ?? null,
+            guest_id: user ? null : guestId,
             file_name: fileName,
             file_size: fileSize,
             doc_type: docType,
@@ -202,12 +210,10 @@ function serve_handler() {
       const jobId = body.jobId as string;
       if (!jobId) return json({ error: "jobId required" }, 400);
 
-      const { data: job, error: jobErr } = await admin
-        .from("doc_translation_jobs")
-        .select("*")
-        .eq("id", jobId)
-        .eq("user_id", user.id)
-        .maybeSingle();
+      const { data: job, error: jobErr } = await ownerFilter(
+        admin.from("doc_translation_jobs").select("*").eq("id", jobId) as any,
+      ).maybeSingle();
+
       if (jobErr) throw jobErr;
       if (!job) return json({ error: "Job not found" }, 404);
 
