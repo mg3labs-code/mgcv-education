@@ -130,6 +130,9 @@ const DocTranslate = () => {
   const [page, setPage] = useState(0);
   const [bilingual, setBilingual] = useState(false);
   const [showUpload, setShowUpload] = useState(true);
+  const [showThumbs, setShowThumbs] = useState(false);
+  const [jumpValue, setJumpValue] = useState("1");
+
   const running = useRef(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const readerRef = useRef<HTMLDivElement>(null);
