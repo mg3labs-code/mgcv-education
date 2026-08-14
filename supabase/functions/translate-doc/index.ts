@@ -151,9 +151,13 @@ function serve_handler() {
         Deno.env.get("SUPABASE_URL")!,
         Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
       );
-      const { data: userData } = await admin.auth.getUser(authHeader.replace("Bearer ", ""));
-      const user = userData?.user;
-      if (!user) return json({ error: "Please sign in to convert documents." }, 401);
+      const token = authHeader.replace("Bearer ", "");
+      let user: { id: string } | null = null;
+      if (token) {
+        const { data: userData } = await admin.auth.getUser(token);
+        user = userData?.user ?? null;
+      }
+
 
       const body = await req.json();
       const action = body.action as string;
