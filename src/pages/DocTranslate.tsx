@@ -376,6 +376,52 @@ const DocTranslate = () => {
               )}
             </article>
 
+            {/* Page thumbnails + quick jump */}
+            {showThumbs && (
+              <Card className="p-3 space-y-3">
+                <div className="flex items-center gap-2">
+                  <p className="text-xs font-medium text-muted-foreground">Jump to page</p>
+                  <div className="ml-auto flex items-center gap-2">
+                    <Input
+                      type="number"
+                      min={1}
+                      max={total}
+                      value={jumpValue}
+                      onChange={(e) => setJumpValue(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") jumpTo(Number(jumpValue)); }}
+                      className="h-8 w-20"
+                      aria-label="Page number"
+                    />
+                    <Button size="sm" variant="secondary" onClick={() => jumpTo(Number(jumpValue))}>Go</Button>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 max-h-[45vh] overflow-y-auto">
+                  {chunks.map((c, i) => {
+                    const blocks = c.translated?.blocks || c.source.blocks;
+                    const preview = blocks
+                      .map((b) => clean(b.text) || (b.cells || []).flat().map(clean).join(" "))
+                      .filter(Boolean)
+                      .join(" ")
+                      .slice(0, 140);
+                    return (
+                      <button
+                        key={c.idx}
+                        onClick={() => { setPage(i); readerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }); }}
+                        className={`text-left rounded-lg border p-2 h-24 overflow-hidden transition-colors ${
+                          i === page ? "border-primary bg-primary/5" : "border-border hover:bg-muted/60"
+                        }`}
+                      >
+                        <span className="text-[10px] font-medium tabular-nums text-muted-foreground">{i + 1}</span>
+                        <span className="mt-1 block text-[10px] leading-4 text-muted-foreground/90 line-clamp-4">
+                          {preview || "…"}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </Card>
+            )}
+
             {/* Page turner */}
             <div className="sticky bottom-4 flex items-center justify-center gap-3">
               <div className="flex items-center gap-2 rounded-full border border-border bg-background/95 backdrop-blur px-2 py-1.5 shadow-sm">
@@ -384,11 +430,15 @@ const DocTranslate = () => {
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
                 <span className="text-xs font-medium tabular-nums text-muted-foreground px-2">
-                  {Math.min(page + 1, total)} / {total}
+                  Page {Math.min(page + 1, total)} of {total}
                 </span>
                 <Button variant="ghost" size="icon" className="rounded-full h-9 w-9"
                   disabled={page >= total - 1} onClick={() => go(1)} aria-label="Next page">
                   <ChevronRight className="h-4 w-4" />
+                </Button>
+                <Button variant={showThumbs ? "secondary" : "ghost"} size="icon" className="rounded-full h-9 w-9"
+                  onClick={() => setShowThumbs((s) => !s)} aria-label="Page thumbnails">
+                  <LayoutGrid className="h-4 w-4" />
                 </Button>
                 {activeJob.status !== "completed" && (
                   <Button variant="ghost" size="icon" className="rounded-full h-9 w-9"
@@ -398,6 +448,14 @@ const DocTranslate = () => {
                 )}
               </div>
             </div>
+
+            <DocChat
+              docName={activeJob.file_name}
+              pageText={pageText}
+              pageNumber={Math.min(page + 1, total)}
+              targetLang={activeJob.target_lang}
+            />
+
           </>
         )}
 
