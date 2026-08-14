@@ -155,21 +155,17 @@ const DocTranslate = () => {
   const readerRef = useRef<HTMLDivElement>(null);
 
   const loadJobs = useCallback(async () => {
-    const { data } = await supabase
-      .from("doc_translation_jobs")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(30);
-    setJobs((data as JobRow[]) || []);
+    try {
+      const res = await callEndpoint({ action: "list_jobs", limit: 30 });
+      setJobs((res.jobs as JobRow[]) || []);
+    } catch {
+      setJobs([]);
+    }
   }, []);
 
   const loadChunks = useCallback(async (jobId: string) => {
-    const { data } = await supabase
-      .from("doc_translation_chunks")
-      .select("idx, status, error, source, translated")
-      .eq("job_id", jobId)
-      .order("idx", { ascending: true });
-    setChunks((data as unknown as ChunkRow[]) || []);
+    const res = await callEndpoint({ action: "chunks", jobId });
+    setChunks((res.chunks as ChunkRow[]) || []);
   }, []);
 
   useEffect(() => { loadJobs(); }, [loadJobs]);
@@ -181,8 +177,7 @@ const DocTranslate = () => {
     try {
       for (let guard = 0; guard < 5000; guard++) {
         const res = await callEndpoint({ action: "process", jobId, batchSize: 3 });
-        const { data: fresh } = await supabase
-          .from("doc_translation_jobs").select("*").eq("id", jobId).maybeSingle();
+        const { job: fresh } = await callEndpoint({ action: "status", jobId });
         if (fresh) setActiveJob(fresh as JobRow);
         await loadChunks(jobId);
         if (res.finished) break;
@@ -212,12 +207,15 @@ const DocTranslate = () => {
     if (!requestedJob) return;
     let cancelled = false;
     (async () => {
-      const { data } = await supabase
-        .from("doc_translation_jobs").select("*").eq("id", requestedJob).maybeSingle();
+      let data: JobRow | null = null;
+      try {
+        const res = await callEndpoint({ action: "status", jobId: requestedJob });
+        data = (res.job as JobRow) ?? null;
+      } catch { data = null; }
       if (cancelled) return;
       searchParams.delete("job");
       setSearchParams(searchParams, { replace: true });
-      if (data) await openJob(data as JobRow);
+      if (data) await openJob(data);
       else toast({ title: "Conversion not found", description: "It may have been removed.", variant: "destructive" });
     })();
     return () => { cancelled = true; };

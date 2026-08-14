@@ -53,13 +53,15 @@ const DocHistory = () => {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from("doc_translation_jobs")
-      .select("*")
-      .eq("guest_id", guestId)
-      .order("created_at", { ascending: false })
-      .limit(100);
-    setJobs((data as JobRow[]) || []);
+    try {
+      const { data, error } = await supabase.functions.invoke("translate-doc", {
+        body: { action: "list_jobs", guestId, limit: 100 },
+      });
+      if (error) throw error;
+      setJobs(((data as { jobs?: JobRow[] })?.jobs as JobRow[]) || []);
+    } catch {
+      setJobs([]);
+    }
     setLoading(false);
   }, [guestId]);
 
