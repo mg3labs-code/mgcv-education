@@ -245,6 +245,23 @@ const DocTranslate = () => {
   const total = chunks.length;
   const current = chunks[Math.min(page, Math.max(total - 1, 0))];
 
+  const pageText = useMemo(() => {
+    const blocks = current?.translated?.blocks || current?.source.blocks || [];
+    return blocks
+      .map((b) => clean(b.text) || (b.cells || []).flat().map(clean).join(" | "))
+      .filter(Boolean)
+      .join("\n")
+      .slice(0, 12000);
+  }, [current]);
+
+  const jumpTo = useCallback((n: number) => {
+    if (!Number.isFinite(n)) return;
+    const target = Math.min(Math.max(Math.round(n), 1), Math.max(total, 1)) - 1;
+    setPage(target);
+    readerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [total]);
+
+
   const go = useCallback((dir: -1 | 1) => {
     setPage((p) => Math.min(Math.max(p + dir, 0), Math.max(total - 1, 0)));
     readerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
