@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -12,7 +13,7 @@ import { parseDocument, hashString, type DocBlock } from "@/lib/docStructure";
 import DocChat from "@/components/translate/DocChat";
 import {
   Upload, FileText, ChevronLeft, ChevronRight, Loader2, RefreshCw, AlertTriangle,
-  BookOpen, Columns2, Plus, X, LayoutGrid,
+  BookOpen, Columns2, Plus, X, LayoutGrid, History,
 } from "lucide-react";
 
 
@@ -134,6 +135,8 @@ const BlockView = ({ block }: { block: DocBlock }) => {
 
 const DocTranslate = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [jobs, setJobs] = useState<JobRow[]>([]);
   const [activeJob, setActiveJob] = useState<JobRow | null>(null);
   const [chunks, setChunks] = useState<ChunkRow[]>([]);
@@ -202,6 +205,24 @@ const DocTranslate = () => {
       runLoop(job.id);
     }
   }, [loadChunks, runLoop]);
+
+  // Resume a conversion opened from the history page (/translate?job=<id>)
+  const requestedJob = searchParams.get("job");
+  useEffect(() => {
+    if (!requestedJob) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("doc_translation_jobs").select("*").eq("id", requestedJob).maybeSingle();
+      if (cancelled) return;
+      searchParams.delete("job");
+      setSearchParams(searchParams, { replace: true });
+      if (data) await openJob(data as JobRow);
+      else toast({ title: "Conversion not found", description: "It may have been removed.", variant: "destructive" });
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [requestedJob]);
 
   const handleFile = async (file: File) => {
     try {
@@ -330,6 +351,10 @@ const DocTranslate = () => {
                 <span className="hidden sm:inline">{bilingual ? langLabel : "Side by side"}</span>
               </Button>
             )}
+            <Button variant="ghost" size="sm" className="gap-1.5" onClick={() => navigate("/translate/history")}>
+              <History className="h-4 w-4" />
+              <span className="hidden sm:inline">History</span>
+            </Button>
             <Button variant={showUpload ? "secondary" : "outline"} size="sm" className="gap-1.5"
               onClick={() => setShowUpload((s) => !s)}>
               {showUpload ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
