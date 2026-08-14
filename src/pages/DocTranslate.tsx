@@ -7,10 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { parseDocument, hashString, type DocBlock } from "@/lib/docStructure";
+import DocChat from "@/components/translate/DocChat";
 import {
   Upload, FileText, ChevronLeft, ChevronRight, Loader2, RefreshCw, AlertTriangle,
-  BookOpen, Columns2, Plus, X,
+  BookOpen, Columns2, Plus, X, LayoutGrid,
 } from "lucide-react";
+
 
 const LANGS = [
   { code: "te", label: "Telugu" },
