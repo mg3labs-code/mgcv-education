@@ -135,6 +135,8 @@ const BlockView = ({ block }: { block: DocBlock }) => {
 
 const DocTranslate = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [jobs, setJobs] = useState<JobRow[]>([]);
   const [activeJob, setActiveJob] = useState<JobRow | null>(null);
   const [chunks, setChunks] = useState<ChunkRow[]>([]);
