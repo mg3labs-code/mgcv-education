@@ -333,12 +333,22 @@ const DocTranslate = () => {
         source.push(...src);
         translated.push(...(c.translated?.blocks?.length ? c.translated.blocks : src));
       });
-    return paginate(translated, source);
+    return paginate(translated, source, { questionsPerPage: 4, pageChars: 1500 });
+  }, [chunks]);
+
+  // Sequential verification progress, question by question
+  const verify = useMemo(() => {
+    const qChunks = chunks.filter((c) => c.kind !== "prose" || (c.source?.blocks || []).some((b) => b.type === "question"));
+    const list = qChunks.length ? qChunks : chunks;
+    const done = list.filter((c) => !!c.translated);
+    const review = done.filter((c) => c.translated?.validation && !c.translated.validation.pass).length;
+    return { total: list.length, done: done.length, review };
   }, [chunks]);
 
   const total = pages.length;
   const current = pages[Math.min(page, Math.max(total - 1, 0))];
   const pendingPage = chunks.length > 0 && chunks.every((c) => !c.translated);
+
 
   const pageText = useMemo(() => {
     if (!current) return "";
