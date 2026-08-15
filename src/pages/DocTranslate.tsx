@@ -405,8 +405,18 @@ const DocTranslate = () => {
     const first = sel[0]?.sourcePage;
     const last = sel[sel.length - 1]?.sourcePage;
     const range = first ? `-p${first}${last && last !== first ? `-${last}` : ""}` : "";
-    downloadPagesAsPdf(sel, baseName, `${baseName}-${activeJob?.target_lang || targetLang}${range}`);
-  }, [pages, current, baseName, activeJob, targetLang]);
+    if (scope === "all" && verify.done < verify.total) {
+      toast({
+        title: "Still converting",
+        description: `${verify.done} of ${verify.total} verified — pages not yet converted will print in English.`,
+      });
+    }
+    downloadPagesAsPdf(sel, baseName, `${baseName}-${activeJob?.target_lang || targetLang}${range}`, {
+      comprehensive: scope === "all",
+      langLabel: langLabel || "Translated",
+    });
+  }, [pages, current, baseName, activeJob, targetLang, verify, langLabel]);
+
 
 
   return (
