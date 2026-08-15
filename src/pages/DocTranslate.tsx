@@ -172,6 +172,8 @@ const DocTranslate = () => {
   const [termStyle, setTermStyle] = useState("bracket");
   const [fromPage, setFromPage] = useState("1");
   const [toPage, setToPage] = useState("");
+  const [startAtOne, setStartAtOne] = useState(true);
+
   const [phase, setPhase] = useState<"idle" | "parsing" | "uploading" | "translating">("idle");
   const [parseProgress, setParseProgress] = useState(0);
   const [page, setPage] = useState(0);
