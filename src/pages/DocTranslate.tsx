@@ -261,11 +261,18 @@ const DocTranslate = () => {
     try {
       setPhase("parsing");
       setParseProgress(0);
-      const { blocks, chunks: parsed, docType } = await parseDocument(file, setParseProgress);
-      if (!blocks.length) throw new Error("No readable text found in this file.");
+      const from = Math.max(1, Number(fromPage) || 1);
+      const to = Number(toPage) > 0 ? Math.max(from, Number(toPage)) : undefined;
+      const { blocks, chunks: parsed, docType } = await parseDocument(file, setParseProgress, {
+        fromPage: from,
+        toPage: to,
+        perQuestion: true,
+      });
+      if (!blocks.length) throw new Error("No readable text found in this page range.");
 
       const contentHash = await hashString(
-        blocks.map((b) => b.text || (b.cells || []).flat().join("|")).join("\n"),
+        `p${from}-${to ?? "end"}\n` +
+          blocks.map((b) => b.text || (b.cells || []).flat().join("|")).join("\n"),
       );
 
       const { job, reused } = await callEndpoint({
@@ -277,6 +284,7 @@ const DocTranslate = () => {
         termStyle,
         contentHash,
       });
+
 
       if (reused) {
         toast({ title: "Already converted", description: "Opening the saved version." });
