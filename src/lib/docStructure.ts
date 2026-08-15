@@ -36,7 +36,22 @@ export interface DocChunk {
   blocks: DocBlock[];
 }
 
+/** Per-page extraction quality report, used by the diagnostics panel. */
+export interface PageDiagnostic {
+  page: number;
+  textItems: number;
+  chars: number;
+  lines: number;
+  questions: number;
+  options: number;
+  orphanOptions: number;
+  fragmentRatio: number;
+  confidence: number;
+  issues: string[];
+}
+
 export const MAX_CHUNK_CHARS = 2200;
+
 
 const QUESTION_RE = /^(?:Q\.?\s*)?(\d{1,4})[.)]\s+(.*)$/i;
 // Letter options may be bare ("a) 12") or bracketed; numeric options must be
