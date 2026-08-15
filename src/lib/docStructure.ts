@@ -176,27 +176,54 @@ export function detectDocType(blocks: DocBlock[]) {
 
 // ---------- Extractors ----------
 
-interface PdfItem { x: number; y: number; str: string }
+interface PdfItem { x: number; y: number; h: number; w: number; str: string }
 
-/** Find vertical text columns by looking for empty vertical bands. */
+/** Rules, dashes, single stray glyphs and other OCR noise carry no content. */
+function isNoise(line: string): boolean {
+  const t = line.trim();
+  if (!t) return true;
+  if (t.length <= 1) return true;
+  if (!/[A-Za-z0-9]/.test(t)) return true;                 // pure punctuation / rules
+  if (/^[-_=~.•*|IlJ\s]+$/.test(t)) return true;           // ---- / .... / | | |
+  const letters = t.replace(/[^A-Za-z0-9]/g, "").length;
+  if (letters / t.length < 0.35) return true;              // mostly separators
+  return false;
+}
+
+/**
+ * Column detection tuned for scanned exam books: find sustained low-ink vertical
+ * bands. Only accepts a split when both sides carry a fair share of the text,
+ * so single-column pages are never chopped.
+ */
 function findColumns(items: PdfItem[], width: number): number[] {
-  const BINS = 48;
+  const BINS = 60;
   const hist = new Array(BINS).fill(0);
+  let total = 0;
   for (const it of items) {
     const bin = Math.min(BINS - 1, Math.max(0, Math.floor((it.x / width) * BINS)));
-    hist[bin] += it.str.trim().length;
+    const n = it.str.trim().length;
+    hist[bin] += n;
+    total += n;
   }
+  if (total < 80) return [0];
+  const noise = total / BINS * 0.06;
   const bounds: number[] = [0];
   let run = 0;
-  for (let i = 0; i < BINS; i++) {
-    if (hist[i] === 0) { run++; continue; }
-    if (run >= 3 && bounds.length < 4) bounds.push(((i - run / 2) / BINS) * width);
+  for (let i = 4; i < BINS - 4; i++) {
+    if (hist[i] <= noise) { run++; continue; }
+    if (run >= 2 && bounds.length < 3) {
+      const cut = ((i - run / 2) / BINS) * width;
+      const left = hist.slice(0, i - run).reduce((a, b) => a + b, 0);
+      const right = total - left;
+      if (left > total * 0.15 && right > total * 0.15) bounds.push(cut);
+    }
     run = 0;
   }
   return bounds;
 }
 
 function linesFromItems(items: PdfItem[], width: number): string[] {
+  if (!items.length) return [];
   const bounds = findColumns(items, width);
   const columns: PdfItem[][] = bounds.map(() => []);
   for (const it of items) {
@@ -204,19 +231,72 @@ function linesFromItems(items: PdfItem[], width: number): string[] {
     for (let i = bounds.length - 1; i >= 0; i--) if (it.x >= bounds[i]) { c = i; break; }
     columns[c].push(it);
   }
+  const medianH = (() => {
+    const hs = items.map((i) => i.h).filter((h) => h > 0).sort((a, b) => a - b);
+    return hs.length ? hs[Math.floor(hs.length / 2)] : 10;
+  })();
+  const yTol = Math.max(2, medianH * 0.6);
+
   const lines: string[] = [];
   for (const col of columns) {
-    col.sort((a, b) => (Math.abs(b.y - a.y) > 3 ? b.y - a.y : a.x - b.x));
-    let line = "";
+    col.sort((a, b) => (Math.abs(b.y - a.y) > yTol ? b.y - a.y : a.x - b.x));
+    let parts: PdfItem[] = [];
+    const flush = () => {
+      if (!parts.length) return;
+      let line = "";
+      let prev: PdfItem | null = null;
+      for (const it of parts) {
+        const gap = prev ? it.x - (prev.x + prev.w) : 0;
+        const needSpace = prev !== null && gap > medianH * 0.22 && !line.endsWith(" ") && !it.str.startsWith(" ");
+        line += (needSpace ? " " : "") + it.str;
+        prev = it;
+      }
+      const clean = line.replace(/\s+/g, " ").trim();
+      if (clean) lines.push(clean);
+      parts = [];
+    };
     let lastY: number | null = null;
     for (const it of col) {
-      if (lastY !== null && Math.abs(it.y - lastY) > 3) { lines.push(line); line = ""; }
-      line += (line && !line.endsWith(" ") && !it.str.startsWith(" ") ? " " : "") + it.str;
+      if (lastY !== null && Math.abs(it.y - lastY) > yTol) flush();
+      parts.push(it);
       lastY = it.y;
     }
-    if (line.trim()) lines.push(line);
+    flush();
   }
   return lines;
+}
+
+/** Continuation lines belong to the block above them, not to new blocks. */
+function startsNewUnit(line: string): boolean {
+  return (
+    QUESTION_RE.test(line) ||
+    OPTION_RE.test(line) ||
+    ANSWER_RE.test(line) ||
+    EXPLANATION_RE.test(line) ||
+    HEADING_RE.test(line)
+  );
+}
+
+function blocksFromLines(lines: string[], page: number): DocBlock[] {
+  const out: DocBlock[] = [];
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (isNoise(line)) continue;
+    const prev = out[out.length - 1];
+    const wrapped =
+      prev &&
+      !startsNewUnit(line) &&
+      prev.text !== undefined &&
+      (prev.type === "question" || prev.type === "option" || prev.type === "answer" || prev.type === "explanation") &&
+      !/[.?!]$/.test(prev.text);
+    if (wrapped && prev) {
+      prev.text = `${prev.text} ${line}`.replace(/\s+/g, " ").trim();
+      continue;
+    }
+    const b = classifyLine(line, page);
+    if (b) out.push(b);
+  }
+  return out;
 }
 
 async function extractPdf(
@@ -234,18 +314,22 @@ async function extractPdf(
     const page = await pdf.getPage(p);
     const viewport = page.getViewport({ scale: 1 });
     const content = await page.getTextContent();
-    const items: PdfItem[] = (content.items as { str: string; transform: number[] }[])
+    const items: PdfItem[] = (content.items as { str: string; transform: number[]; width?: number; height?: number }[])
       .filter((i) => i.str && i.str.trim())
-      .map((i) => ({ x: i.transform[4], y: Math.round(i.transform[5]), str: i.str }));
-    for (const line of linesFromItems(items, viewport.width)) {
-      const b = classifyLine(line, p);
-      if (b) blocks.push(b);
-    }
+      .map((i) => ({
+        x: i.transform[4],
+        y: Math.round(i.transform[5]),
+        h: i.height || Math.abs(i.transform[3]) || 10,
+        w: i.width || i.str.length * 4,
+        str: i.str,
+      }));
+    blocks.push(...blocksFromLines(linesFromItems(items, viewport.width), p));
     page.cleanup();
     onProgress?.((p - from + 1) / span);
   }
   return blocks;
 }
+
 
 
 function htmlToBlocks(html: string): DocBlock[] {
