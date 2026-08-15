@@ -566,11 +566,12 @@ const DocTranslate = () => {
               ref={readerRef}
               className="rounded-xl border border-border bg-card px-6 py-8 sm:px-12 sm:py-12 min-h-[60vh]"
             >
-              {current?.title && (
+              {current?.title && current.units[0]?.heading?.text !== current.title && (
                 <p className="mb-6 text-xs uppercase tracking-[0.14em] text-muted-foreground">
                   {clean(current.title)}
                 </p>
               )}
+
               {bilingual ? (
                 <div className="grid gap-8 md:grid-cols-2">
                   <div>{current?.sourceUnits.map((u) => <UnitView key={u.id} unit={u} />)}</div>
