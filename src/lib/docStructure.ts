@@ -299,17 +299,25 @@ async function extractText(file: File): Promise<DocBlock[]> {
     .filter((b): b is DocBlock => !!b);
 }
 
-export async function parseDocument(file: File, onProgress?: (p: number) => void) {
+export async function parseDocument(
+  file: File,
+  onProgress?: (p: number) => void,
+  opts?: { fromPage?: number; toPage?: number; perQuestion?: boolean },
+) {
   const name = file.name.toLowerCase();
   let blocks: DocBlock[];
-  if (name.endsWith(".pdf")) blocks = await extractPdf(file, onProgress);
+  if (name.endsWith(".pdf")) blocks = await extractPdf(file, onProgress, opts);
   else if (name.endsWith(".docx")) blocks = await extractDocx(file);
   else if (/\.(xlsx|xls|csv)$/.test(name)) blocks = await extractSheet(file);
   else blocks = await extractText(file);
 
   onProgress?.(1);
-  return { blocks, chunks: chunkBlocks(blocks), docType: detectDocType(blocks) };
+  const docType = detectDocType(blocks);
+  const perQuestion = opts?.perQuestion ?? true;
+  const chunks = perQuestion ? chunkUnits(blocks) : chunkBlocks(blocks);
+  return { blocks, chunks, docType };
 }
+
 
 export async function hashString(text: string) {
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
