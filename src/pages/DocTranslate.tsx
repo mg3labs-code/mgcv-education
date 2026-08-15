@@ -338,7 +338,7 @@ const DocTranslate = () => {
 
   // Sequential verification progress, question by question
   const verify = useMemo(() => {
-    const qChunks = chunks.filter((c) => c.kind !== "prose" || (c.source?.blocks || []).some((b) => b.type === "question"));
+    const qChunks = chunks.filter((c) => (c.source?.blocks || []).some((b) => b.type === "question"));
     const list = qChunks.length ? qChunks : chunks;
     const done = list.filter((c) => !!c.translated);
     const review = done.filter((c) => c.translated?.validation && !c.translated.validation.pass).length;
