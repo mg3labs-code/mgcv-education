@@ -505,6 +505,24 @@ const DocTranslate = () => {
               </Select>
             </div>
 
+            <div className="grid gap-2 sm:grid-cols-2">
+              <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                From page
+                <Input type="number" min={1} value={fromPage}
+                  onChange={(e) => setFromPage(e.target.value)} className="h-9 w-24" />
+              </label>
+              <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                To page
+                <Input type="number" min={1} placeholder="end" value={toPage}
+                  onChange={(e) => setToPage(e.target.value)} className="h-9 w-24" />
+              </label>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Only these PDF pages are converted — e.g. start at 13 to begin from Chapter 1.
+            </p>
+
+
+
             <input
               ref={fileRef}
               type="file"
