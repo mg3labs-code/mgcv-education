@@ -39,7 +39,10 @@ export interface DocChunk {
 export const MAX_CHUNK_CHARS = 2200;
 
 const QUESTION_RE = /^(?:Q\.?\s*)?(\d{1,4})[.)]\s+(.*)$/i;
-const OPTION_RE = /^\(?([A-Da-d1-4])[).\]]\s+(.*)$/;
+// Letter options may be bare ("a) 12") or bracketed; numeric options must be
+// bracketed ("(1) 12") so numbered questions like "1. ..." stay questions.
+const OPTION_RE = /^(?:\(([A-Da-d1-4])\)|\[([A-Da-d1-4])\]|([A-Da-d])[).\]])\s+(.*)$/;
+
 const ANSWER_RE = /^(Ans(?:wer)?|Correct answer|Key)\s*[:.\-]\s*(.*)$/i;
 const EXPLANATION_RE = /^(Explanation|Solution|Reason)\s*[:.\-]\s*(.*)$/i;
 const FORMULA_RE = /^[^A-Za-z]*[=<>≤≥±√∑∫][^A-Za-z]*$|^[A-Za-z]\s*=\s*.+$/;
