@@ -206,13 +206,17 @@ const DocTranslate = () => {
     running.current = true;
     setPhase("translating");
     try {
-      for (let guard = 0; guard < 5000; guard++) {
-        const res = await callEndpoint({ action: "process", jobId, batchSize: 3 });
+      for (let guard = 0; guard < 20000; guard++) {
+        // one unit at a time, in document order, so a question is verified
+        // before the next one is converted
+        const res = await callEndpoint({ action: "process", jobId, batchSize: 1 });
         const { job: fresh } = await callEndpoint({ action: "status", jobId });
         if (fresh) setActiveJob(fresh as JobRow);
-        await loadChunks(jobId);
+        if (guard % 3 === 0 || res.finished) await loadChunks(jobId);
         if (res.finished) break;
       }
+      await loadChunks(jobId);
+
       await loadJobs();
     } catch (e) {
       toast({ title: "Conversion paused", description: String(e), variant: "destructive" });
