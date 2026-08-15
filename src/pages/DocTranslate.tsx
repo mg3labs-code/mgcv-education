@@ -11,11 +11,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { parseDocument, hashString, type DocBlock } from "@/lib/docStructure";
 import { paginate, type DocPage, type DocUnit } from "@/lib/docPaginate";
+import { downloadPagesAsPdf } from "@/lib/docPrint";
 import DocChat from "@/components/translate/DocChat";
 import {
   Upload, FileText, ChevronLeft, ChevronRight, Loader2, RefreshCw,
-  BookOpen, Columns2, Plus, X, LayoutGrid, History,
+  BookOpen, Columns2, Plus, X, LayoutGrid, History, Download, CheckCircle2,
 } from "lucide-react";
+
 
 
 const LANGS = [
@@ -168,6 +170,8 @@ const DocTranslate = () => {
   const [chunks, setChunks] = useState<ChunkRow[]>([]);
   const [targetLang, setTargetLang] = useState("te");
   const [termStyle, setTermStyle] = useState("bracket");
+  const [fromPage, setFromPage] = useState("1");
+  const [toPage, setToPage] = useState("");
   const [phase, setPhase] = useState<"idle" | "parsing" | "uploading" | "translating">("idle");
   const [parseProgress, setParseProgress] = useState(0);
   const [page, setPage] = useState(0);
@@ -175,6 +179,7 @@ const DocTranslate = () => {
   const [showUpload, setShowUpload] = useState(true);
   const [showThumbs, setShowThumbs] = useState(false);
   const [jumpValue, setJumpValue] = useState("1");
+
 
   const running = useRef(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -201,13 +206,17 @@ const DocTranslate = () => {
     running.current = true;
     setPhase("translating");
     try {
-      for (let guard = 0; guard < 5000; guard++) {
-        const res = await callEndpoint({ action: "process", jobId, batchSize: 3 });
+      for (let guard = 0; guard < 20000; guard++) {
+        // one unit at a time, in document order, so a question is verified
+        // before the next one is converted
+        const res = await callEndpoint({ action: "process", jobId, batchSize: 1 });
         const { job: fresh } = await callEndpoint({ action: "status", jobId });
         if (fresh) setActiveJob(fresh as JobRow);
-        await loadChunks(jobId);
+        if (guard % 3 === 0 || res.finished) await loadChunks(jobId);
         if (res.finished) break;
       }
+      await loadChunks(jobId);
+
       await loadJobs();
     } catch (e) {
       toast({ title: "Conversion paused", description: String(e), variant: "destructive" });
@@ -252,11 +261,18 @@ const DocTranslate = () => {
     try {
       setPhase("parsing");
       setParseProgress(0);
-      const { blocks, chunks: parsed, docType } = await parseDocument(file, setParseProgress);
-      if (!blocks.length) throw new Error("No readable text found in this file.");
+      const from = Math.max(1, Number(fromPage) || 1);
+      const to = Number(toPage) > 0 ? Math.max(from, Number(toPage)) : undefined;
+      const { blocks, chunks: parsed, docType } = await parseDocument(file, setParseProgress, {
+        fromPage: from,
+        toPage: to,
+        perQuestion: true,
+      });
+      if (!blocks.length) throw new Error("No readable text found in this page range.");
 
       const contentHash = await hashString(
-        blocks.map((b) => b.text || (b.cells || []).flat().join("|")).join("\n"),
+        `p${from}-${to ?? "end"}\n` +
+          blocks.map((b) => b.text || (b.cells || []).flat().join("|")).join("\n"),
       );
 
       const { job, reused } = await callEndpoint({
@@ -268,6 +284,7 @@ const DocTranslate = () => {
         termStyle,
         contentHash,
       });
+
 
       if (reused) {
         toast({ title: "Already converted", description: "Opening the saved version." });
@@ -316,12 +333,22 @@ const DocTranslate = () => {
         source.push(...src);
         translated.push(...(c.translated?.blocks?.length ? c.translated.blocks : src));
       });
-    return paginate(translated, source);
+    return paginate(translated, source, { questionsPerPage: 4, pageChars: 1500 });
+  }, [chunks]);
+
+  // Sequential verification progress, question by question
+  const verify = useMemo(() => {
+    const qChunks = chunks.filter((c) => (c.source?.blocks || []).some((b) => b.type === "question"));
+    const list = qChunks.length ? qChunks : chunks;
+    const done = list.filter((c) => !!c.translated);
+    const review = done.filter((c) => c.translated?.validation && !c.translated.validation.pass).length;
+    return { total: list.length, done: done.length, review };
   }, [chunks]);
 
   const total = pages.length;
   const current = pages[Math.min(page, Math.max(total - 1, 0))];
   const pendingPage = chunks.length > 0 && chunks.every((c) => !c.translated);
+
 
   const pageText = useMemo(() => {
     if (!current) return "";
@@ -366,6 +393,18 @@ const DocTranslate = () => {
 
   const langLabel = LANGS.find((l) => l.code === (activeJob?.target_lang || targetLang))?.label;
 
+  const baseName = (activeJob?.file_name || "document").replace(/\.[a-z0-9]+$/i, "").slice(0, 60);
+
+  const downloadPdf = useCallback((scope: "page" | "all") => {
+    if (!pages.length) return;
+    const sel = scope === "page" && current ? [current] : pages;
+    const first = sel[0]?.sourcePage;
+    const last = sel[sel.length - 1]?.sourcePage;
+    const range = first ? `-p${first}${last && last !== first ? `-${last}` : ""}` : "";
+    downloadPagesAsPdf(sel, baseName, `${baseName}-${activeJob?.target_lang || targetLang}${range}`);
+  }, [pages, current, baseName, activeJob, targetLang]);
+
+
   return (
     <div className="min-h-screen bg-background">
       {/* Slim sticky bar: title, doc switcher, view toggle */}
@@ -378,9 +417,22 @@ const DocTranslate = () => {
           {activeJob && total > 0 && (
             <span className="text-xs tabular-nums text-muted-foreground shrink-0">
               · Page {Math.min(page + 1, total)} / {total}
+              {current?.sourcePage ? ` · book p.${current.sourcePage}` : ""}
             </span>
           )}
           <div className="ml-auto flex items-center gap-2">
+            {activeJob && total > 0 && (
+              <>
+                <Button variant="ghost" size="sm" className="gap-1.5" onClick={() => downloadPdf("page")}>
+                  <Download className="h-4 w-4" />
+                  <span className="hidden lg:inline">This page</span>
+                </Button>
+                <Button variant="outline" size="sm" className="gap-1.5" onClick={() => downloadPdf("all")}>
+                  <Download className="h-4 w-4" />
+                  <span className="hidden sm:inline">PDF</span>
+                </Button>
+              </>
+            )}
             {activeJob && total > 0 && (
               <Button variant={showThumbs ? "secondary" : "ghost"} size="sm" className="gap-1.5"
                 onClick={() => setShowThumbs((s) => !s)}>
@@ -405,6 +457,21 @@ const DocTranslate = () => {
             </Button>
           </div>
         </div>
+        {activeJob && verify.total > 0 && verify.done < verify.total && (
+          <div className="max-w-4xl mx-auto px-4 pb-2 flex items-center gap-2 text-xs text-muted-foreground">
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            Question {Math.min(verify.done + 1, verify.total)} of {verify.total} — converting and verifying in order
+            {verify.review > 0 && <span>· {verify.review} need review</span>}
+          </div>
+        )}
+        {activeJob && verify.total > 0 && verify.done >= verify.total && (
+          <div className="max-w-4xl mx-auto px-4 pb-2 flex items-center gap-2 text-xs text-muted-foreground">
+            <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
+            {verify.total} questions verified
+            {verify.review > 0 && <span>· {verify.review} flagged for review</span>}
+          </div>
+        )}
+
         {/* Reading position — always visible */}
         {activeJob && total > 0 && (
           <div className="h-1 w-full bg-muted">
@@ -437,6 +504,24 @@ const DocTranslate = () => {
                 </SelectContent>
               </Select>
             </div>
+
+            <div className="grid gap-2 sm:grid-cols-2">
+              <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                From page
+                <Input type="number" min={1} value={fromPage}
+                  onChange={(e) => setFromPage(e.target.value)} className="h-9 w-24" />
+              </label>
+              <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                To page
+                <Input type="number" min={1} placeholder="end" value={toPage}
+                  onChange={(e) => setToPage(e.target.value)} className="h-9 w-24" />
+              </label>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Only these PDF pages are converted — e.g. start at 13 to begin from Chapter 1.
+            </p>
+
+
 
             <input
               ref={fileRef}
@@ -481,11 +566,12 @@ const DocTranslate = () => {
               ref={readerRef}
               className="rounded-xl border border-border bg-card px-6 py-8 sm:px-12 sm:py-12 min-h-[60vh]"
             >
-              {current?.title && (
+              {current?.title && current.units[0]?.heading?.text !== current.title && (
                 <p className="mb-6 text-xs uppercase tracking-[0.14em] text-muted-foreground">
                   {clean(current.title)}
                 </p>
               )}
+
               {bilingual ? (
                 <div className="grid gap-8 md:grid-cols-2">
                   <div>{current?.sourceUnits.map((u) => <UnitView key={u.id} unit={u} />)}</div>

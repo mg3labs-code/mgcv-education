@@ -19,7 +19,10 @@ export interface DocPage {
   sourceUnits: DocUnit[];
   title?: string;
   preview: string;
+  /** Page number in the original book, when known. */
+  sourcePage?: number;
 }
+
 
 const weight = (b?: DocBlock) =>
   b ? (b.text?.length || 0) + (b.cells?.flat().join("").length || 0) + 12 : 0;
@@ -77,14 +80,23 @@ const unitText = (u: DocUnit) =>
     .filter(Boolean)
     .join(" ");
 
-const PAGE_CHARS = 1800;
-const MAX_QUESTIONS = 5;
+const PAGE_CHARS = 1500;
+const MAX_QUESTIONS = 4;
+
+const unitPage = (u: DocUnit) =>
+  u.question?.page ?? u.heading?.page ?? u.options[0]?.page ?? u.body[0]?.page;
 
 /**
  * Repaginate the whole document into evenly-sized, structure-respecting pages.
  * Pages break at headings and between questions — never inside a question group.
  */
-export function paginate(translated: DocBlock[], source: DocBlock[]): DocPage[] {
+export function paginate(
+  translated: DocBlock[],
+  source: DocBlock[],
+  opts?: { questionsPerPage?: number; pageChars?: number },
+): DocPage[] {
+  const maxQuestions = opts?.questionsPerPage ?? MAX_QUESTIONS;
+  const pageChars = opts?.pageChars ?? PAGE_CHARS;
   const tUnits = groupUnits(translated);
   const sUnits = groupUnits(source);
   const pages: DocPage[] = [];
@@ -102,6 +114,7 @@ export function paginate(translated: DocBlock[], source: DocBlock[]): DocPage[] 
       units,
       sourceUnits: srcUnits,
       title,
+      sourcePage: units.map(unitPage).find((p) => typeof p === "number"),
       preview: units.map(unitText).join(" ").slice(0, 160),
     });
     units = [];
@@ -115,8 +128,8 @@ export function paginate(translated: DocBlock[], source: DocBlock[]): DocPage[] 
     const breakBefore =
       units.length > 0 &&
       ((u.kind === "heading" && u.heading?.type === "heading") ||
-        size + w > PAGE_CHARS ||
-        questions >= MAX_QUESTIONS);
+        size + w > pageChars ||
+        questions >= maxQuestions);
     if (breakBefore) flush();
     if (u.heading?.type === "heading") title = u.heading.text;
     if (!units.length && !title && u.heading) title = u.heading.text;
@@ -129,3 +142,4 @@ export function paginate(translated: DocBlock[], source: DocBlock[]): DocPage[] 
 
   return pages;
 }
+
