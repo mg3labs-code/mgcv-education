@@ -269,13 +269,15 @@ const DocTranslate = () => {
         fromPage: from,
         toPage: to,
         perQuestion: true,
+        startAtQuestionOne: startAtOne,
       });
       if (!blocks.length) throw new Error("No readable text found in this page range.");
 
       const contentHash = await hashString(
-        `p${from}-${to ?? "end"}\n` +
+        `p${from}-${to ?? "end"}${startAtOne ? "-q1" : ""}\n` +
           blocks.map((b) => b.text || (b.cells || []).flat().join("|")).join("\n"),
       );
+
 
       const { job, reused } = await callEndpoint({
         action: "start",
