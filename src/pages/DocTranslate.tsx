@@ -11,11 +11,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { parseDocument, hashString, type DocBlock } from "@/lib/docStructure";
 import { paginate, type DocPage, type DocUnit } from "@/lib/docPaginate";
+import { downloadPagesAsPdf } from "@/lib/docPrint";
 import DocChat from "@/components/translate/DocChat";
 import {
   Upload, FileText, ChevronLeft, ChevronRight, Loader2, RefreshCw,
-  BookOpen, Columns2, Plus, X, LayoutGrid, History,
+  BookOpen, Columns2, Plus, X, LayoutGrid, History, Download, CheckCircle2,
 } from "lucide-react";
+
 
 
 const LANGS = [
