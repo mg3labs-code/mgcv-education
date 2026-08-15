@@ -169,32 +169,77 @@ export function detectDocType(blocks: DocBlock[]) {
 
 // ---------- Extractors ----------
 
-async function extractPdf(file: File, onProgress?: (p: number) => void): Promise<DocBlock[]> {
-  const data = await file.arrayBuffer();
-  const pdf = await pdfjs.getDocument({ data }).promise;
-  const blocks: DocBlock[] = [];
-  for (let p = 1; p <= pdf.numPages; p++) {
-    const page = await pdf.getPage(p);
-    const content = await page.getTextContent();
+interface PdfItem { x: number; y: number; str: string }
+
+/** Find vertical text columns by looking for empty vertical bands. */
+function findColumns(items: PdfItem[], width: number): number[] {
+  const BINS = 48;
+  const hist = new Array(BINS).fill(0);
+  for (const it of items) {
+    const bin = Math.min(BINS - 1, Math.max(0, Math.floor((it.x / width) * BINS)));
+    hist[bin] += it.str.trim().length;
+  }
+  const bounds: number[] = [0];
+  let run = 0;
+  for (let i = 0; i < BINS; i++) {
+    if (hist[i] === 0) { run++; continue; }
+    if (run >= 3 && bounds.length < 4) bounds.push(((i - run / 2) / BINS) * width);
+    run = 0;
+  }
+  return bounds;
+}
+
+function linesFromItems(items: PdfItem[], width: number): string[] {
+  const bounds = findColumns(items, width);
+  const columns: PdfItem[][] = bounds.map(() => []);
+  for (const it of items) {
+    let c = 0;
+    for (let i = bounds.length - 1; i >= 0; i--) if (it.x >= bounds[i]) { c = i; break; }
+    columns[c].push(it);
+  }
+  const lines: string[] = [];
+  for (const col of columns) {
+    col.sort((a, b) => (Math.abs(b.y - a.y) > 3 ? b.y - a.y : a.x - b.x));
     let line = "";
     let lastY: number | null = null;
-    for (const item of content.items as { str: string; transform: number[] }[]) {
-      const y = Math.round(item.transform[5]);
-      if (lastY !== null && Math.abs(y - lastY) > 3) {
-        const b = classifyLine(line, p);
-        if (b) blocks.push(b);
-        line = "";
-      }
-      line += (line && !line.endsWith(" ") ? " " : "") + item.str;
-      lastY = y;
+    for (const it of col) {
+      if (lastY !== null && Math.abs(it.y - lastY) > 3) { lines.push(line); line = ""; }
+      line += (line && !line.endsWith(" ") && !it.str.startsWith(" ") ? " " : "") + it.str;
+      lastY = it.y;
     }
-    const last = classifyLine(line, p);
-    if (last) blocks.push(last);
+    if (line.trim()) lines.push(line);
+  }
+  return lines;
+}
+
+async function extractPdf(
+  file: File,
+  onProgress?: (p: number) => void,
+  range?: { fromPage?: number; toPage?: number },
+): Promise<DocBlock[]> {
+  const data = await file.arrayBuffer();
+  const pdf = await pdfjs.getDocument({ data }).promise;
+  const from = Math.max(1, Math.min(range?.fromPage || 1, pdf.numPages));
+  const to = Math.min(pdf.numPages, Math.max(from, range?.toPage || pdf.numPages));
+  const span = to - from + 1;
+  const blocks: DocBlock[] = [];
+  for (let p = from; p <= to; p++) {
+    const page = await pdf.getPage(p);
+    const viewport = page.getViewport({ scale: 1 });
+    const content = await page.getTextContent();
+    const items: PdfItem[] = (content.items as { str: string; transform: number[] }[])
+      .filter((i) => i.str && i.str.trim())
+      .map((i) => ({ x: i.transform[4], y: Math.round(i.transform[5]), str: i.str }));
+    for (const line of linesFromItems(items, viewport.width)) {
+      const b = classifyLine(line, p);
+      if (b) blocks.push(b);
+    }
     page.cleanup();
-    onProgress?.(p / pdf.numPages);
+    onProgress?.((p - from + 1) / span);
   }
   return blocks;
 }
+
 
 function htmlToBlocks(html: string): DocBlock[] {
   const doc = new DOMParser().parseFromString(html, "text/html");
