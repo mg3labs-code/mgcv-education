@@ -57,6 +57,42 @@ const pageHtml = (p: DocPage, n: number, totalPages: number, bookTitle: string) 
     <footer class="sheet-foot">${n} / ${totalPages}</footer>
   </div>`;
 
+const countQuestions = (pages: DocPage[]) =>
+  pages.reduce((n, p) => n + p.units.filter((u) => u.kind === "question").length, 0);
+
+const coverHtml = (pages: DocPage[], bookTitle: string, langLabel: string) => {
+  const first = pages[0]?.sourcePage;
+  const last = [...pages].reverse().find((p) => p.sourcePage)?.sourcePage;
+  const rangeText = first ? `Book pages ${first}${last && last !== first ? `–${last}` : ""}` : "";
+  return `<div class="sheet cover">
+    <div class="cover-inner">
+      <p class="cover-kicker">${esc(langLabel)} edition</p>
+      <h1>${esc(bookTitle)}</h1>
+      <p class="cover-sub">${esc(pages[0]?.title || "")}</p>
+      <ul class="cover-meta">
+        <li>${pages.length} reader pages</li>
+        <li>${countQuestions(pages)} questions</li>
+        ${rangeText ? `<li>${rangeText}</li>` : ""}
+        <li>Generated ${new Date().toLocaleDateString()}</li>
+      </ul>
+    </div>
+  </div>`;
+};
+
+const tocHtml = (pages: DocPage[]) => {
+  const rows = pages
+    .map((p, i) => ({ p, i }))
+    .filter(({ p, i }) => i === 0 || (p.title && p.title !== pages[i - 1].title))
+    .map(({ p, i }) => `<li><span>${esc(p.title || `Page ${i + 1}`)}</span><span class="dots"></span><span>${i + 2}</span></li>`)
+    .join("");
+  if (!rows) return "";
+  return `<div class="sheet">
+    <h2 class="toc-title">Contents</h2>
+    <ul class="toc">${rows}</ul>
+  </div>`;
+};
+
+
 const STYLES = `
   @page { size: A4; margin: 18mm 16mm; }
   * { box-sizing: border-box; }
@@ -93,21 +129,48 @@ const STYLES = `
   table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 11pt; }
   th, td { border: 1px solid #d8dde5; padding: 5px 8px; text-align: left; vertical-align: top; }
   th { background: #f3f5f9; }
+  .cover { display: flex; align-items: center; min-height: 240mm; }
+  .cover-inner { width: 100%; border-top: 3px solid #0f766e; border-bottom: 1px solid #d8dde5; padding: 28px 0; }
+  .cover-kicker { font-size: 10pt; letter-spacing: 0.14em; text-transform: uppercase; color: #0f766e; margin-bottom: 14px; }
+  .cover h1 { font-size: 30pt; line-height: 1.25; margin: 0 0 10px; }
+  .cover-sub { font-size: 14pt; color: #4b5563; margin-bottom: 22px; }
+  .cover-meta { list-style: none; padding: 0; margin: 0; font-size: 11pt; color: #6b7280; }
+  .cover-meta li { padding: 3px 0; }
+  .toc-title { font-size: 20pt; margin-bottom: 16px; }
+  .toc { list-style: none; padding: 0; margin: 0; font-size: 12pt; }
+  .toc li { display: flex; align-items: baseline; gap: 8px; padding: 5px 0; }
+  .toc .dots { flex: 1; border-bottom: 1px dotted #c3cad6; }
 `;
+
+export interface PdfOptions {
+  /** Add a cover page and a contents page (comprehensive full-book export). */
+  comprehensive?: boolean;
+  /** Language name shown on the cover. */
+  langLabel?: string;
+}
 
 /**
  * Build a clean, book-style printable document and open the browser's
  * print / "Save as PDF" dialog. Uses real text rendering so Telugu and other
  * Indic scripts are shaped correctly.
  */
-export function downloadPagesAsPdf(pages: DocPage[], bookTitle: string, fileName: string) {
+export function downloadPagesAsPdf(
+  pages: DocPage[],
+  bookTitle: string,
+  fileName: string,
+  opts: PdfOptions = {},
+) {
   if (!pages.length) return;
+  const front = opts.comprehensive
+    ? coverHtml(pages, bookTitle, opts.langLabel || "Translated") + tocHtml(pages)
+    : "";
   const html = `<!doctype html><html><head><meta charset="utf-8">
     <title>${esc(fileName)}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Telugu:wght@400;600&family=Noto+Sans+Devanagari:wght@400;600&family=Noto+Sans:wght@400;600&display=swap" rel="stylesheet">
     <style>${STYLES}</style></head>
-    <body>${pages.map((p, i) => pageHtml(p, i + 1, pages.length, bookTitle)).join("")}</body></html>`;
+    <body>${front}${pages.map((p, i) => pageHtml(p, i + 1, pages.length, bookTitle)).join("")}</body></html>`;
+
 
   const frame = document.createElement("iframe");
   frame.style.position = "fixed";
