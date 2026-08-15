@@ -109,6 +109,55 @@ export function chunkBlocks(blocks: DocBlock[], startIdx = 0): DocChunk[] {
   return chunks;
 }
 
+/**
+ * One chunk per reading unit: a single question with its own options / answer /
+ * explanation, or one heading + prose run. Keeps conversion strictly sequential
+ * and makes per-question verification possible.
+ */
+export function chunkUnits(blocks: DocBlock[], startIdx = 0): DocChunk[] {
+  const chunks: DocChunk[] = [];
+  let current: DocBlock[] = [];
+  let idx = startIdx;
+  let kind = "prose";
+
+  const flush = () => {
+    if (current.length) {
+      chunks.push({ idx: idx++, kind, blocks: current });
+      current = [];
+    }
+  };
+
+  for (const b of blocks) {
+    if (b.type === "question") {
+      flush();
+      kind = "question";
+      current.push(b);
+      continue;
+    }
+    if (b.type === "heading" || b.type === "subheading") {
+      flush();
+      kind = "prose";
+      current.push(b);
+      continue;
+    }
+    if (kind === "question" && (b.type === "option" || b.type === "answer" || b.type === "explanation" || b.type === "formula")) {
+      current.push(b);
+      continue;
+    }
+    if (kind === "question") {
+      // prose after a finished question starts a new unit
+      flush();
+      kind = "prose";
+    }
+    current.push(b);
+    // keep prose runs small so pages stay light
+    if (current.reduce((n, x) => n + groupWeight(x), 0) > 1200) flush();
+  }
+  flush();
+  return chunks;
+}
+
+
 export function detectDocType(blocks: DocBlock[]) {
   const questions = blocks.filter((b) => b.type === "question").length;
   const options = blocks.filter((b) => b.type === "option").length;
