@@ -172,6 +172,8 @@ const DocTranslate = () => {
   const [termStyle, setTermStyle] = useState("bracket");
   const [fromPage, setFromPage] = useState("1");
   const [toPage, setToPage] = useState("");
+  const [startAtOne, setStartAtOne] = useState(true);
+
   const [phase, setPhase] = useState<"idle" | "parsing" | "uploading" | "translating">("idle");
   const [parseProgress, setParseProgress] = useState(0);
   const [page, setPage] = useState(0);
@@ -267,13 +269,15 @@ const DocTranslate = () => {
         fromPage: from,
         toPage: to,
         perQuestion: true,
+        startAtQuestionOne: startAtOne,
       });
       if (!blocks.length) throw new Error("No readable text found in this page range.");
 
       const contentHash = await hashString(
-        `p${from}-${to ?? "end"}\n` +
+        `p${from}-${to ?? "end"}${startAtOne ? "-q1" : ""}\n` +
           blocks.map((b) => b.text || (b.cells || []).flat().join("|")).join("\n"),
       );
+
 
       const { job, reused } = await callEndpoint({
         action: "start",
@@ -517,9 +521,22 @@ const DocTranslate = () => {
                   onChange={(e) => setToPage(e.target.value)} className="h-9 w-24" />
               </label>
             </div>
+            <label className="flex items-start gap-2 text-sm text-muted-foreground">
+              <input
+                type="checkbox"
+                checked={startAtOne}
+                onChange={(e) => setStartAtOne(e.target.checked)}
+                className="mt-1 h-4 w-4 accent-primary"
+              />
+              <span>
+                Start at question 1 — skips leftover questions from the previous chapter,
+                so numbering begins at 1 instead of continuing from 460.
+              </span>
+            </label>
             <p className="text-xs text-muted-foreground">
               Only these PDF pages are converted — e.g. start at 13 to begin from Chapter 1.
             </p>
+
 
 
 
