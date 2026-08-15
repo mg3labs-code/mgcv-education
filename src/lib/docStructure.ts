@@ -62,10 +62,14 @@ export function classifyLine(line: string, page?: number): DocBlock | null {
   if (exp) return { id: nextId(), type: "explanation", label: exp[1], text: exp[2], page };
 
   const opt = text.match(OPTION_RE);
-  if (opt && text.length < 300) return { id: nextId(), type: "option", label: opt[1], text: opt[2], page };
+  if (opt && text.length < 300) {
+    const label = opt[1] || opt[2] || opt[3];
+    return { id: nextId(), type: "option", label, text: opt[4], page };
+  }
 
   const q = text.match(QUESTION_RE);
   if (q) return { id: nextId(), type: "question", num: q[1], text: q[2], page };
+
 
   if (FORMULA_RE.test(text) && text.length < 120) return { id: nextId(), type: "formula", text, page };
 
