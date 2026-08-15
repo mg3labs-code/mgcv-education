@@ -517,9 +517,22 @@ const DocTranslate = () => {
                   onChange={(e) => setToPage(e.target.value)} className="h-9 w-24" />
               </label>
             </div>
+            <label className="flex items-start gap-2 text-sm text-muted-foreground">
+              <input
+                type="checkbox"
+                checked={startAtOne}
+                onChange={(e) => setStartAtOne(e.target.checked)}
+                className="mt-1 h-4 w-4 accent-primary"
+              />
+              <span>
+                Start at question 1 — skips leftover questions from the previous chapter,
+                so numbering begins at 1 instead of continuing from 460.
+              </span>
+            </label>
             <p className="text-xs text-muted-foreground">
               Only these PDF pages are converted — e.g. start at 13 to begin from Chapter 1.
             </p>
+
 
 
 
