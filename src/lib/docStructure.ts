@@ -36,7 +36,22 @@ export interface DocChunk {
   blocks: DocBlock[];
 }
 
+/** Per-page extraction quality report, used by the diagnostics panel. */
+export interface PageDiagnostic {
+  page: number;
+  textItems: number;
+  chars: number;
+  lines: number;
+  questions: number;
+  options: number;
+  orphanOptions: number;
+  fragmentRatio: number;
+  confidence: number;
+  issues: string[];
+}
+
 export const MAX_CHUNK_CHARS = 2200;
+
 
 const QUESTION_RE = /^(?:Q\.?\s*)?(\d{1,4})[.)]\s+(.*)$/i;
 // Letter options may be bare ("a) 12") or bracketed; numeric options must be
@@ -299,17 +314,68 @@ function blocksFromLines(lines: string[], page: number): DocBlock[] {
   return out;
 }
 
+/** Scores how cleanly one page's text layer reconstructed into question units. */
+export function diagnosePage(page: number, items: number, lines: string[], blocks: DocBlock[]): PageDiagnostic {
+  const chars = lines.reduce((n, l) => n + l.length, 0);
+  const questions = blocks.filter((b) => b.type === "question").length;
+  const options = blocks.filter((b) => b.type === "option").length;
+  let orphanOptions = 0;
+  let seenQuestion = false;
+  for (const b of blocks) {
+    if (b.type === "question") seenQuestion = true;
+    if (b.type === "option" && !seenQuestion) orphanOptions++;
+  }
+  const shortLines = lines.filter((l) => l.trim().length > 0 && l.trim().length <= 3).length;
+  const fragmentRatio = lines.length ? shortLines / lines.length : 0;
+
+  const issues: string[] = [];
+  let confidence = 1;
+  if (items === 0 || chars < 40) {
+    issues.push("No usable text layer — likely a scanned page, needs OCR");
+    confidence = 0.05;
+  }
+  if (fragmentRatio > 0.35) {
+    issues.push(`Text came out fragmented (${Math.round(fragmentRatio * 100)}% tiny fragments)`);
+    confidence -= 0.35;
+  }
+  if (orphanOptions > 0) {
+    issues.push(`${orphanOptions} option(s) with no question above them`);
+    confidence -= 0.2;
+  }
+  if (questions > 0 && options > 0 && options / questions < 2) {
+    issues.push(`Only ${options} options for ${questions} questions — options may be missing`);
+    confidence -= 0.25;
+  }
+  if (chars >= 40 && questions === 0) {
+    issues.push("No question numbers detected on this page");
+    confidence -= 0.15;
+  }
+  return {
+    page,
+    textItems: items,
+    chars,
+    lines: lines.length,
+    questions,
+    options,
+    orphanOptions,
+    fragmentRatio,
+    confidence: Math.max(0, Math.min(1, Number(confidence.toFixed(2)))),
+    issues,
+  };
+}
+
 async function extractPdf(
   file: File,
   onProgress?: (p: number) => void,
   range?: { fromPage?: number; toPage?: number },
-): Promise<DocBlock[]> {
+): Promise<{ blocks: DocBlock[]; diagnostics: PageDiagnostic[] }> {
   const data = await file.arrayBuffer();
   const pdf = await pdfjs.getDocument({ data }).promise;
   const from = Math.max(1, Math.min(range?.fromPage || 1, pdf.numPages));
   const to = Math.min(pdf.numPages, Math.max(from, range?.toPage || pdf.numPages));
   const span = to - from + 1;
   const blocks: DocBlock[] = [];
+  const diagnostics: PageDiagnostic[] = [];
   for (let p = from; p <= to; p++) {
     const page = await pdf.getPage(p);
     const viewport = page.getViewport({ scale: 1 });
@@ -323,12 +389,16 @@ async function extractPdf(
         w: i.width || i.str.length * 4,
         str: i.str,
       }));
-    blocks.push(...blocksFromLines(linesFromItems(items, viewport.width), p));
+    const lines = linesFromItems(items, viewport.width);
+    const pageBlocks = blocksFromLines(lines, p);
+    diagnostics.push(diagnosePage(p, items.length, lines, pageBlocks));
+    blocks.push(...pageBlocks);
     page.cleanup();
     onProgress?.((p - from + 1) / span);
   }
-  return blocks;
+  return { blocks, diagnostics };
 }
+
 
 
 
@@ -405,26 +475,53 @@ export function startAtFirstQuestion(blocks: DocBlock[]): DocBlock[] {
   return blocks.slice(start);
 }
 
+/** Keep only the first N questions (with their options/answers) of the run. */
+export function limitToQuestions(blocks: DocBlock[], max: number): DocBlock[] {
+  if (!max || max <= 0) return blocks;
+  let count = 0;
+  const out: DocBlock[] = [];
+  for (const b of blocks) {
+    if (b.type === "question") {
+      count++;
+      if (count > max) break;
+    }
+    out.push(b);
+  }
+  return out;
+}
+
 export async function parseDocument(
   file: File,
   onProgress?: (p: number) => void,
-  opts?: { fromPage?: number; toPage?: number; perQuestion?: boolean; startAtQuestionOne?: boolean },
+  opts?: {
+    fromPage?: number;
+    toPage?: number;
+    perQuestion?: boolean;
+    startAtQuestionOne?: boolean;
+    maxQuestions?: number;
+  },
 ) {
   const name = file.name.toLowerCase();
   let blocks: DocBlock[];
-  if (name.endsWith(".pdf")) blocks = await extractPdf(file, onProgress, opts);
-  else if (name.endsWith(".docx")) blocks = await extractDocx(file);
+  let diagnostics: PageDiagnostic[] = [];
+  if (name.endsWith(".pdf")) {
+    const res = await extractPdf(file, onProgress, opts);
+    blocks = res.blocks;
+    diagnostics = res.diagnostics;
+  } else if (name.endsWith(".docx")) blocks = await extractDocx(file);
   else if (/\.(xlsx|xls|csv)$/.test(name)) blocks = await extractSheet(file);
   else blocks = await extractText(file);
 
   if (opts?.startAtQuestionOne !== false) blocks = startAtFirstQuestion(blocks);
+  if (opts?.maxQuestions) blocks = limitToQuestions(blocks, opts.maxQuestions);
 
   onProgress?.(1);
   const docType = detectDocType(blocks);
   const perQuestion = opts?.perQuestion ?? true;
   const chunks = perQuestion ? chunkUnits(blocks) : chunkBlocks(blocks);
-  return { blocks, chunks, docType };
+  return { blocks, chunks, docType, diagnostics };
 }
+
 
 
 
