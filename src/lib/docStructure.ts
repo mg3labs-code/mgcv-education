@@ -475,26 +475,53 @@ export function startAtFirstQuestion(blocks: DocBlock[]): DocBlock[] {
   return blocks.slice(start);
 }
 
+/** Keep only the first N questions (with their options/answers) of the run. */
+export function limitToQuestions(blocks: DocBlock[], max: number): DocBlock[] {
+  if (!max || max <= 0) return blocks;
+  let count = 0;
+  const out: DocBlock[] = [];
+  for (const b of blocks) {
+    if (b.type === "question") {
+      count++;
+      if (count > max) break;
+    }
+    out.push(b);
+  }
+  return out;
+}
+
 export async function parseDocument(
   file: File,
   onProgress?: (p: number) => void,
-  opts?: { fromPage?: number; toPage?: number; perQuestion?: boolean; startAtQuestionOne?: boolean },
+  opts?: {
+    fromPage?: number;
+    toPage?: number;
+    perQuestion?: boolean;
+    startAtQuestionOne?: boolean;
+    maxQuestions?: number;
+  },
 ) {
   const name = file.name.toLowerCase();
   let blocks: DocBlock[];
-  if (name.endsWith(".pdf")) blocks = await extractPdf(file, onProgress, opts);
-  else if (name.endsWith(".docx")) blocks = await extractDocx(file);
+  let diagnostics: PageDiagnostic[] = [];
+  if (name.endsWith(".pdf")) {
+    const res = await extractPdf(file, onProgress, opts);
+    blocks = res.blocks;
+    diagnostics = res.diagnostics;
+  } else if (name.endsWith(".docx")) blocks = await extractDocx(file);
   else if (/\.(xlsx|xls|csv)$/.test(name)) blocks = await extractSheet(file);
   else blocks = await extractText(file);
 
   if (opts?.startAtQuestionOne !== false) blocks = startAtFirstQuestion(blocks);
+  if (opts?.maxQuestions) blocks = limitToQuestions(blocks, opts.maxQuestions);
 
   onProgress?.(1);
   const docType = detectDocType(blocks);
   const perQuestion = opts?.perQuestion ?? true;
   const chunks = perQuestion ? chunkUnits(blocks) : chunkBlocks(blocks);
-  return { blocks, chunks, docType };
+  return { blocks, chunks, docType, diagnostics };
 }
+
 
 
 
