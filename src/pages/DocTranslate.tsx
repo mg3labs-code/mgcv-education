@@ -417,9 +417,22 @@ const DocTranslate = () => {
           {activeJob && total > 0 && (
             <span className="text-xs tabular-nums text-muted-foreground shrink-0">
               · Page {Math.min(page + 1, total)} / {total}
+              {current?.sourcePage ? ` · book p.${current.sourcePage}` : ""}
             </span>
           )}
           <div className="ml-auto flex items-center gap-2">
+            {activeJob && total > 0 && (
+              <>
+                <Button variant="ghost" size="sm" className="gap-1.5" onClick={() => downloadPdf("page")}>
+                  <Download className="h-4 w-4" />
+                  <span className="hidden lg:inline">This page</span>
+                </Button>
+                <Button variant="outline" size="sm" className="gap-1.5" onClick={() => downloadPdf("all")}>
+                  <Download className="h-4 w-4" />
+                  <span className="hidden sm:inline">PDF</span>
+                </Button>
+              </>
+            )}
             {activeJob && total > 0 && (
               <Button variant={showThumbs ? "secondary" : "ghost"} size="sm" className="gap-1.5"
                 onClick={() => setShowThumbs((s) => !s)}>
@@ -444,6 +457,21 @@ const DocTranslate = () => {
             </Button>
           </div>
         </div>
+        {activeJob && verify.total > 0 && verify.done < verify.total && (
+          <div className="max-w-4xl mx-auto px-4 pb-2 flex items-center gap-2 text-xs text-muted-foreground">
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            Question {Math.min(verify.done + 1, verify.total)} of {verify.total} — converting and verifying in order
+            {verify.review > 0 && <span>· {verify.review} need review</span>}
+          </div>
+        )}
+        {activeJob && verify.total > 0 && verify.done >= verify.total && (
+          <div className="max-w-4xl mx-auto px-4 pb-2 flex items-center gap-2 text-xs text-muted-foreground">
+            <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
+            {verify.total} questions verified
+            {verify.review > 0 && <span>· {verify.review} flagged for review</span>}
+          </div>
+        )}
+
         {/* Reading position — always visible */}
         {activeJob && total > 0 && (
           <div className="h-1 w-full bg-muted">
