@@ -306,10 +306,25 @@ async function extractText(file: File): Promise<DocBlock[]> {
     .filter((b): b is DocBlock => !!b);
 }
 
+/**
+ * Trim everything before the first question of the range so a conversion always
+ * starts at question 1 of the chosen page (never mid-book at e.g. 460).
+ * Keeps the heading immediately above that question when present.
+ */
+export function startAtFirstQuestion(blocks: DocBlock[]): DocBlock[] {
+  const isQ = (b: DocBlock) => b.type === "question";
+  let idx = blocks.findIndex((b) => isQ(b) && (b.num || "").replace(/\D/g, "") === "1");
+  if (idx === -1) idx = blocks.findIndex(isQ);
+  if (idx <= 0) return blocks;
+  const prev = blocks[idx - 1];
+  const start = prev && (prev.type === "heading" || prev.type === "subheading") ? idx - 1 : idx;
+  return blocks.slice(start);
+}
+
 export async function parseDocument(
   file: File,
   onProgress?: (p: number) => void,
-  opts?: { fromPage?: number; toPage?: number; perQuestion?: boolean },
+  opts?: { fromPage?: number; toPage?: number; perQuestion?: boolean; startAtQuestionOne?: boolean },
 ) {
   const name = file.name.toLowerCase();
   let blocks: DocBlock[];
@@ -318,12 +333,15 @@ export async function parseDocument(
   else if (/\.(xlsx|xls|csv)$/.test(name)) blocks = await extractSheet(file);
   else blocks = await extractText(file);
 
+  if (opts?.startAtQuestionOne !== false) blocks = startAtFirstQuestion(blocks);
+
   onProgress?.(1);
   const docType = detectDocType(blocks);
   const perQuestion = opts?.perQuestion ?? true;
   const chunks = perQuestion ? chunkUnits(blocks) : chunkBlocks(blocks);
   return { blocks, chunks, docType };
 }
+
 
 
 export async function hashString(text: string) {
