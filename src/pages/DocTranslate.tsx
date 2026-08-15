@@ -170,6 +170,8 @@ const DocTranslate = () => {
   const [chunks, setChunks] = useState<ChunkRow[]>([]);
   const [targetLang, setTargetLang] = useState("te");
   const [termStyle, setTermStyle] = useState("bracket");
+  const [fromPage, setFromPage] = useState("1");
+  const [toPage, setToPage] = useState("");
   const [phase, setPhase] = useState<"idle" | "parsing" | "uploading" | "translating">("idle");
   const [parseProgress, setParseProgress] = useState(0);
   const [page, setPage] = useState(0);
@@ -177,6 +179,7 @@ const DocTranslate = () => {
   const [showUpload, setShowUpload] = useState(true);
   const [showThumbs, setShowThumbs] = useState(false);
   const [jumpValue, setJumpValue] = useState("1");
+
 
   const running = useRef(false);
   const fileRef = useRef<HTMLInputElement>(null);
