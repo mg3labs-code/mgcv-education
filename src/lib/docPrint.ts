@@ -57,6 +57,42 @@ const pageHtml = (p: DocPage, n: number, totalPages: number, bookTitle: string) 
     <footer class="sheet-foot">${n} / ${totalPages}</footer>
   </div>`;
 
+const countQuestions = (pages: DocPage[]) =>
+  pages.reduce((n, p) => n + p.units.filter((u) => u.kind === "question").length, 0);
+
+const coverHtml = (pages: DocPage[], bookTitle: string, langLabel: string) => {
+  const first = pages[0]?.sourcePage;
+  const last = [...pages].reverse().find((p) => p.sourcePage)?.sourcePage;
+  const rangeText = first ? `Book pages ${first}${last && last !== first ? `–${last}` : ""}` : "";
+  return `<div class="sheet cover">
+    <div class="cover-inner">
+      <p class="cover-kicker">${esc(langLabel)} edition</p>
+      <h1>${esc(bookTitle)}</h1>
+      <p class="cover-sub">${esc(pages[0]?.title || "")}</p>
+      <ul class="cover-meta">
+        <li>${pages.length} reader pages</li>
+        <li>${countQuestions(pages)} questions</li>
+        ${rangeText ? `<li>${rangeText}</li>` : ""}
+        <li>Generated ${new Date().toLocaleDateString()}</li>
+      </ul>
+    </div>
+  </div>`;
+};
+
+const tocHtml = (pages: DocPage[]) => {
+  const rows = pages
+    .map((p, i) => ({ p, i }))
+    .filter(({ p, i }) => i === 0 || (p.title && p.title !== pages[i - 1].title))
+    .map(({ p, i }) => `<li><span>${esc(p.title || `Page ${i + 1}`)}</span><span class="dots"></span><span>${i + 2}</span></li>`)
+    .join("");
+  if (!rows) return "";
+  return `<div class="sheet">
+    <h2 class="toc-title">Contents</h2>
+    <ul class="toc">${rows}</ul>
+  </div>`;
+};
+
+
 const STYLES = `
   @page { size: A4; margin: 18mm 16mm; }
   * { box-sizing: border-box; }
