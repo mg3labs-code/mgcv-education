@@ -19,7 +19,10 @@ export interface DocPage {
   sourceUnits: DocUnit[];
   title?: string;
   preview: string;
+  /** Page number in the original book, when known. */
+  sourcePage?: number;
 }
+
 
 const weight = (b?: DocBlock) =>
   b ? (b.text?.length || 0) + (b.cells?.flat().join("").length || 0) + 12 : 0;
