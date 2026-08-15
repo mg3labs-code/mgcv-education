@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { parseDocument, hashString, type DocBlock } from "@/lib/docStructure";
+import { parseDocument, hashString, type DocBlock, type PageDiagnostic } from "@/lib/docStructure";
+import ExtractionDiagnostics from "@/components/translate/ExtractionDiagnostics";
 import { paginate, type DocPage, type DocUnit } from "@/lib/docPaginate";
 import { downloadPagesAsPdf } from "@/lib/docPrint";
 import DocChat from "@/components/translate/DocChat";
@@ -173,6 +174,8 @@ const DocTranslate = () => {
   const [fromPage, setFromPage] = useState("1");
   const [toPage, setToPage] = useState("");
   const [startAtOne, setStartAtOne] = useState(true);
+  const [maxQuestions, setMaxQuestions] = useState("100");
+  const [diagnostics, setDiagnostics] = useState<PageDiagnostic[]>([]);
 
   const [phase, setPhase] = useState<"idle" | "parsing" | "uploading" | "translating">("idle");
   const [parseProgress, setParseProgress] = useState(0);
@@ -265,16 +268,19 @@ const DocTranslate = () => {
       setParseProgress(0);
       const from = Math.max(1, Number(fromPage) || 1);
       const to = Number(toPage) > 0 ? Math.max(from, Number(toPage)) : undefined;
-      const { blocks, chunks: parsed, docType } = await parseDocument(file, setParseProgress, {
+      const maxQ = Number(maxQuestions) > 0 ? Number(maxQuestions) : undefined;
+      const { blocks, chunks: parsed, docType, diagnostics: diag } = await parseDocument(file, setParseProgress, {
         fromPage: from,
         toPage: to,
         perQuestion: true,
         startAtQuestionOne: startAtOne,
+        maxQuestions: maxQ,
       });
+      setDiagnostics(diag);
       if (!blocks.length) throw new Error("No readable text found in this page range.");
 
       const contentHash = await hashString(
-        `p${from}-${to ?? "end"}${startAtOne ? "-q1" : ""}\n` +
+        `p${from}-${to ?? "end"}${startAtOne ? "-q1" : ""}${maxQ ? `-max${maxQ}` : ""}\n` +
           blocks.map((b) => b.text || (b.cells || []).flat().join("|")).join("\n"),
       );
 
@@ -532,6 +538,12 @@ const DocTranslate = () => {
                   onChange={(e) => setToPage(e.target.value)} className="h-9 w-24" />
               </label>
             </div>
+            <label className="flex items-center gap-2 text-sm text-muted-foreground">
+              First
+              <Input type="number" min={1} placeholder="all" value={maxQuestions}
+                onChange={(e) => setMaxQuestions(e.target.value)} className="h-9 w-24" />
+              questions only — keeps trial runs small and fast (blank = all)
+            </label>
             <label className="flex items-start gap-2 text-sm text-muted-foreground">
               <input
                 type="checkbox"
@@ -587,6 +599,8 @@ const DocTranslate = () => {
             )}
           </Card>
         )}
+
+        {diagnostics.length > 0 && <ExtractionDiagnostics diagnostics={diagnostics} />}
 
         {activeJob && total > 0 && (
           <>
