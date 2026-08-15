@@ -393,6 +393,18 @@ const DocTranslate = () => {
 
   const langLabel = LANGS.find((l) => l.code === (activeJob?.target_lang || targetLang))?.label;
 
+  const baseName = (activeJob?.file_name || "document").replace(/\.[a-z0-9]+$/i, "").slice(0, 60);
+
+  const downloadPdf = useCallback((scope: "page" | "all") => {
+    if (!pages.length) return;
+    const sel = scope === "page" && current ? [current] : pages;
+    const first = sel[0]?.sourcePage;
+    const last = sel[sel.length - 1]?.sourcePage;
+    const range = first ? `-p${first}${last && last !== first ? `-${last}` : ""}` : "";
+    downloadPagesAsPdf(sel, baseName, `${baseName}-${activeJob?.target_lang || targetLang}${range}`);
+  }, [pages, current, baseName, activeJob, targetLang]);
+
+
   return (
     <div className="min-h-screen bg-background">
       {/* Slim sticky bar: title, doc switcher, view toggle */}
