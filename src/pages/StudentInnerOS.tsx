@@ -1,5 +1,8 @@
 import { useMemo, useState } from "react";
-import { FOOD_MODULES, STEP_META, type InnerStep } from "@/data/foodInnerOS";
+import { STEP_META, type InnerStep } from "@/data/foodInnerOS";
+import { JOURNEYS, DEFAULT_JOURNEY_ID, DAY_META } from "@/data/innerOSJourneys";
+import AreaGrid from "@/components/inner-os/AreaGrid";
+import CounterChallenge from "@/components/inner-os/CounterChallenge";
 
 const XP_PER_STEP = 10;
 
@@ -9,11 +12,12 @@ type Tab = "left" | "center" | "right";
 /** Maps our curiosity-arc step kinds onto the prototype's 3 card styles. */
 const cardStyleOf = (kind: InnerStep["kind"]) => {
   if (kind === "concept") return "concept";
-  if (kind === "guess" || kind === "apply") return "challenge";
+  if (kind === "guess" || kind === "apply" || kind === "challenge") return "challenge";
   return "story";
 };
 
 export default function StudentInnerOS() {
+  const [journeyId, setJourneyId] = useState(DEFAULT_JOURNEY_ID);
   const [moduleIdx, setModuleIdx] = useState(0);
   const [stepIdx, setStepIdx] = useState(0);
   const [completed, setCompleted] = useState<Record<string, number>>({});
@@ -22,24 +26,42 @@ export default function StudentInnerOS() {
   const [xp, setXp] = useState(0);
   const [tab, setTab] = useState<Tab>("center");
 
-  const mod = FOOD_MODULES[moduleIdx];
-  const step = mod.steps[stepIdx];
+  const journey = JOURNEYS.find((j) => j.id === journeyId) ?? JOURNEYS[0];
+  const modules = journey.modules;
+  const mod = modules[Math.min(moduleIdx, modules.length - 1)];
+  const step = mod.steps[Math.min(stepIdx, mod.steps.length - 1)];
   const isQuestion = step.kind === "guess" || step.kind === "apply";
+  const isChallenge = step.kind === "challenge";
   const correct = isQuestion && picked === step.answer;
   const progress = Math.round(((stepIdx + (checked ? 1 : 0)) / mod.steps.length) * 100);
   const style = cardStyleOf(step.kind);
+  const isLastStep = stepIdx + 1 >= mod.steps.length;
+
+  const isModuleDone = (i: number) => (completed[modules[i].id] ?? 0) >= modules[i].steps.length;
+
+  /** A day unlocks once every module of the previous day is complete. */
+  const dayUnlocked = (day: number) =>
+    modules.every((m, i) => (m.day ?? 1) >= day || isModuleDone(i));
 
   const statusOf = (i: number): Status => {
-    if ((completed[FOOD_MODULES[i].id] ?? 0) >= FOOD_MODULES[i].steps.length) return "done";
+    if (isModuleDone(i)) return "done";
+    if (!dayUnlocked(modules[i].day ?? 1)) return "locked";
     if (i === moduleIdx) return "active";
-    if (i === 0 || (completed[FOOD_MODULES[i - 1].id] ?? 0) >= FOOD_MODULES[i - 1].steps.length) return "active";
+    if (i === 0 || isModuleDone(i - 1)) return "active";
     return "locked";
   };
 
   const doneCount = useMemo(
-    () => FOOD_MODULES.filter((m) => (completed[m.id] ?? 0) >= m.steps.length).length,
-    [completed],
+    () => modules.filter((m) => (completed[m.id] ?? 0) >= m.steps.length).length,
+    [completed, modules],
   );
+
+  const nextUnlock = useMemo(() => {
+    const pending = modules.find((_, i) => !isModuleDone(i));
+    if (!pending) return "Journey complete";
+    return `Next: ${pending.title}`;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [completed, modules]);
 
   const reset = () => {
     setStepIdx(0);
@@ -47,12 +69,18 @@ export default function StudentInnerOS() {
     setChecked(false);
   };
 
+  const selectJourney = (id: string) => {
+    setJourneyId(id);
+    setModuleIdx(0);
+    reset();
+  };
+
   const advance = () => {
     setXp((x) => x + XP_PER_STEP);
     const next = stepIdx + 1;
     if (next >= mod.steps.length) {
       setCompleted((c) => ({ ...c, [mod.id]: mod.steps.length }));
-      setModuleIdx(Math.min(moduleIdx + 1, FOOD_MODULES.length - 1));
+      setModuleIdx(Math.min(moduleIdx + 1, modules.length - 1));
       reset();
       return;
     }
@@ -62,6 +90,7 @@ export default function StudentInnerOS() {
   };
 
   const tutorLines = buildTutorLines(step, checked, correct);
+  let lastDay = 0;
 
   return (
     <div className="ios-shell">
@@ -69,44 +98,80 @@ export default function StudentInnerOS() {
       <div className={`ios-panel ios-left${tab === "left" ? " mobile-active" : ""}`}>
         <div className="ios-user-stats">
           <div className="ios-user-profile">
-            <div className="ios-avatar">👨‍🍳</div>
+            <div className="ios-avatar">{journey.personaEmoji}</div>
             <div>
-              <h3 style={{ fontSize: 18 }}>Kitchen Manager</h3>
-              <p style={{ fontSize: 13, color: "var(--ios-muted)", fontWeight: 600 }}>Food Lens · Number Systems</p>
+              <h3 style={{ fontSize: 18 }}>{journey.persona}</h3>
+              <p style={{ fontSize: 13, color: "var(--ios-muted)", fontWeight: 600 }}>
+                {journey.lens} · {journey.title}
+              </p>
             </div>
           </div>
           <div className="ios-stat-pills">
-            <div className="ios-pill streak">🔥 {doneCount} Days</div>
+            <div className="ios-pill streak">🔥 {doneCount} Done</div>
             <div className="ios-pill xp">⭐ {xp} XP</div>
+          </div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: "var(--ios-muted)" }}>{nextUnlock}</div>
+          <div className="ios-stat-pills">
+            {JOURNEYS.map((j) => (
+              <button
+                key={j.id}
+                type="button"
+                className={`ios-action${j.id === journeyId ? " primary" : ""}`}
+                onClick={() => selectJourney(j.id)}
+              >
+                {j.title}
+              </button>
+            ))}
           </div>
         </div>
 
         <div className="ios-path">
-          {FOOD_MODULES.map((m, i) => {
+          {modules.map((m, i) => {
             const st = statusOf(i);
             const isCurrent = i === moduleIdx;
             const cls = st === "done" ? "completed" : isCurrent ? "active" : "";
+            const day = m.day ?? 0;
+            const showDay = day > 0 && day !== lastDay;
+            if (showDay) lastDay = day;
             return (
-              <button
-                key={m.id}
-                type="button"
-                className={`ios-node ${cls}`}
-                disabled={st === "locked"}
-                onClick={() => {
-                  setModuleIdx(i);
-                  reset();
-                  setTab("center");
-                }}
-              >
-                <div className="ios-node-icon">{st === "done" ? "✓" : st === "locked" ? "🔒" : m.emoji}</div>
-                <div className="ios-node-info">
-                  <div className="ios-node-title">{m.title}</div>
-                  <div className="ios-node-status">
-                    {st === "done" ? "Completed" : isCurrent ? "In progress" : st === "locked" ? "Locked" : "Ready"} ·{" "}
-                    {m.minutes} min
+              <div key={m.id}>
+                {showDay && DAY_META[day] && (
+                  <div className="ios-day-head">
+                    <span className={`ios-day-name${dayUnlocked(day) ? "" : " locked"}`}>
+                      {DAY_META[day].name}
+                      {dayUnlocked(day) ? "" : " · locked"}
+                    </span>
+                    <span className="ios-day-blurb">{DAY_META[day].blurb}</span>
                   </div>
-                </div>
-              </button>
+                )}
+                <button
+                  type="button"
+                  className={`ios-node ${cls}`}
+                  disabled={st === "locked"}
+                  onClick={() => {
+                    setModuleIdx(i);
+                    reset();
+                    setTab("center");
+                  }}
+                >
+                  <div className="ios-node-icon">
+                    {st === "done" ? "✓" : st === "locked" ? "🔒" : m.emoji}
+                  </div>
+                  <div className="ios-node-info">
+                    <div className="ios-node-title">{m.title}</div>
+                    <div className="ios-node-status">
+                      {st === "done"
+                        ? "Completed"
+                        : isCurrent
+                          ? "In progress"
+                          : st === "locked"
+                            ? "Locked"
+                            : "Ready"}{" "}
+                      · {m.minutes} min
+                    </div>
+                  </div>
+                </button>
+              </div>
             );
           })}
         </div>
@@ -115,9 +180,12 @@ export default function StudentInnerOS() {
       {/* CENTER PANEL: LEARNING */}
       <div className={`ios-panel ios-center${tab === "center" ? " mobile-active" : ""}`}>
         <div className="ios-center-header">
-          <h2 style={{ fontSize: 22 }}>
-            {mod.emoji} {mod.title}
-          </h2>
+          <div>
+            <h2 style={{ fontSize: 22 }}>
+              {mod.emoji} {mod.title}
+            </h2>
+            {mod.chapterRef && <div className="ios-ref">{mod.chapterRef}</div>}
+          </div>
           <div className="ios-progress-track">
             <div className="ios-progress-fill" style={{ width: `${progress}%` }} />
           </div>
@@ -132,9 +200,15 @@ export default function StudentInnerOS() {
 
             {step.emoji && <div className="ios-emoji-hero">{step.emoji}</div>}
 
-            {step.title && <h2 style={{ fontSize: 26, marginBottom: 16, textAlign: "center" }}>{step.title}</h2>}
+            {step.title && (
+              <h2 style={{ fontSize: 26, marginBottom: 16, textAlign: "center" }}>{step.title}</h2>
+            )}
 
             {step.text && <div className="ios-story-text" dangerouslySetInnerHTML={{ __html: step.text }} />}
+
+            {step.visual && <AreaGrid visual={step.visual} />}
+
+            {isChallenge && step.items && <CounterChallenge items={step.items} onDone={advance} />}
 
             {isQuestion && (
               <>
@@ -170,7 +244,7 @@ export default function StudentInnerOS() {
 
                 {checked && (
                   <div className={`ios-feedback ${correct ? "success" : "error"}`}>
-                    <strong>{correct ? "Correct! 🎉" : "Not quite."}</strong>
+                    <strong>{correct ? "Correct! 🎉" : "Good — most chefs say that too."}</strong>
                     <br />
                     {step.explanation ?? "Give it another thought."}
                   </div>
@@ -178,15 +252,28 @@ export default function StudentInnerOS() {
               </>
             )}
 
-            {isQuestion && !checked ? (
-              <button type="button" className="ios-btn" disabled={picked === null} onClick={() => setChecked(true)}>
-                Check Answer
-              </button>
-            ) : (
-              <button type="button" className="ios-btn success" onClick={advance}>
-                {stepIdx + 1 >= mod.steps.length ? "Finish Session →" : "Continue →"}
-              </button>
+            {step.kind === "close" && mod.showOff && (
+              <div className="ios-showoff">🎤 Show this to someone: {mod.showOff}</div>
             )}
+            {step.kind === "close" && mod.cliffhanger && (
+              <div className="ios-cliff">🔓 {mod.cliffhanger}</div>
+            )}
+
+            {!isChallenge &&
+              (isQuestion && !checked ? (
+                <button
+                  type="button"
+                  className="ios-btn"
+                  disabled={picked === null}
+                  onClick={() => setChecked(true)}
+                >
+                  Check Answer
+                </button>
+              ) : (
+                <button type="button" className="ios-btn success" onClick={advance}>
+                  {isLastStep ? "Finish Session →" : "Continue →"}
+                </button>
+              ))}
 
             {isQuestion && checked && !correct && (
               <button
@@ -221,6 +308,7 @@ export default function StudentInnerOS() {
               {line}
             </div>
           ))}
+          {mod.showOff && <div className="ios-msg ai">🎤 Today's flex: {mod.showOff}</div>}
         </div>
 
         <div className="ios-tutor-actions">
@@ -267,12 +355,15 @@ export default function StudentInnerOS() {
 }
 
 function buildTutorLines(step: InnerStep, checked: boolean, correct: boolean): string[] {
-  if (step.kind === "hook") return ["Read the kitchen scene once. Don't solve anything yet — just notice what feels odd."];
-  if (step.kind === "reveal") return ["This is the moment the old rule breaks. That's your clue for the next question."];
-  if (step.kind === "concept") return ["Say this back in your own words, using pizzas or orders instead of symbols."];
-  if (step.kind === "close") return ["Nice loop. You answered the thing you were wondering about at the start."];
+  if (step.kind === "hook")
+    return ["Read the kitchen scene once. Don't solve anything yet — just notice what feels odd."];
+  if (step.kind === "reveal") return ["This is the moment the trick stops being magic. Watch the pieces."];
+  if (step.kind === "concept")
+    return ["Point at each block in the picture and say what it costs. That's the whole identity."];
+  if (step.kind === "challenge") return ["Use the trick, not long multiplication. Speed is the point."];
+  if (step.kind === "close") return ["Nice loop. Now go perform it on someone before you forget it."];
   if (!checked) return ["Guess first, even if you're unsure. Guessing makes the answer stick harder."];
   return correct
     ? ["Good — you spotted the pattern, not just the answer."]
-    : ["No stress. Re-read the kitchen scene, then pick the option that keeps the food story true."];
+    : ["No stress. Most people miss the same piece. Re-read the picture, then pick again."];
 }
