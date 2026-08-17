@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Mic, Square, Loader2, ArrowLeft, Volume2, VolumeX } from "lucide-react";
+import { ArrowLeft, Volume2, VolumeX, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import BuddyOrb from "@/components/student/BuddyOrb";
 
 type Turn = { role: "user" | "assistant"; content: string };
 type Phase = "greeting" | "interest_capture" | "free_chat";
@@ -408,48 +409,52 @@ const StudentTalk = () => {
         <div ref={transcriptEndRef} />
       </div>
 
-      {/* Mic bar */}
-      <div className="border-t border-border/40 bg-card/60 backdrop-blur px-4 py-6 flex flex-col items-center gap-2">
+      {/* Buddy / mic bar */}
+      <div className="border-t border-border/40 bg-card/60 backdrop-blur px-4 py-6 flex flex-col items-center gap-3">
         {needsTap && (
           <button
             onClick={enableSound}
-            className="mb-2 inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow"
+            className="mb-1 inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow"
           >
             <Volume2 className="h-4 w-4" /> Tap to hear Buddy
           </button>
         )}
-        <div className="text-xs text-muted-foreground h-4">
 
+        <button
+          onClick={isRecording ? stopRecording : startRecording}
+          disabled={micDisabled}
+          className="disabled:opacity-60 disabled:cursor-not-allowed"
+          title={isRecording ? "Tap to stop & send" : "Tap to speak"}
+        >
+          <BuddyOrb
+            state={
+              muted
+                ? "muted"
+                : isRecording
+                  ? "listening"
+                  : isThinking || isTranscribing
+                    ? "thinking"
+                    : isSpeaking
+                      ? "speaking"
+                      : "idle"
+            }
+            seconds={seconds}
+          />
+        </button>
+
+        <div className="text-xs text-muted-foreground h-4">
           {isRecording
             ? `Listening... ${seconds}s (tap to send)`
             : isTranscribing
               ? "Transcribing..."
-              : isSpeaking
-                ? "Buddy is speaking..."
-                : phase === "interest_capture"
-                  ? `Getting to know you (${interestStep + 1}/${INTEREST_PROMPTS.length}) — tap to answer`
-                  : "Tap the mic and speak"}
+              : isThinking
+                ? "Buddy is thinking..."
+                : isSpeaking
+                  ? "Buddy is speaking..."
+                  : phase === "interest_capture"
+                    ? `Getting to know you (${interestStep + 1}/${INTEREST_PROMPTS.length}) — tap to answer`
+                    : "Tap the orb and speak"}
         </div>
-        <button
-          onClick={isRecording ? stopRecording : startRecording}
-          disabled={micDisabled}
-          className={`h-20 w-20 rounded-full flex items-center justify-center transition-all shadow-lg ${
-            isRecording
-              ? "bg-destructive text-destructive-foreground animate-pulse scale-110"
-              : micDisabled
-                ? "bg-muted text-muted-foreground cursor-not-allowed"
-                : "bg-primary text-primary-foreground hover:scale-105"
-          }`}
-          title={isRecording ? "Tap to stop & send" : "Tap to speak"}
-        >
-          {isTranscribing || isThinking ? (
-            <Loader2 className="h-8 w-8 animate-spin" />
-          ) : isRecording ? (
-            <Square className="h-8 w-8" />
-          ) : (
-            <Mic className="h-8 w-8" />
-          )}
-        </button>
       </div>
     </div>
   );
