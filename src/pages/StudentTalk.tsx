@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Mic, Square, Loader2, ArrowLeft, Volume2, VolumeX } from "lucide-react";
+import { ArrowLeft, Volume2, VolumeX } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import BuddyOrb from "@/components/student/BuddyOrb";
 
 type Turn = { role: "user" | "assistant"; content: string };
 type Phase = "greeting" | "interest_capture" | "free_chat";
