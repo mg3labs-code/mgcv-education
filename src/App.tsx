@@ -21,6 +21,7 @@ const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const StudentOnboarding = lazy(() => import("./pages/StudentOnboarding"));
 const StudentProfile = lazy(() => import("./pages/StudentProfile"));
 const StudentTalk = lazy(() => import("./pages/StudentTalk"));
+const StudentInnerOS = lazy(() => import("./pages/StudentInnerOS"));
 const DocTranslate = lazy(() => import("./pages/DocTranslate"));
 const DocHistory = lazy(() => import("./pages/DocHistory"));
 const AdminOnboarding = lazy(() => import("./pages/AdminOnboarding"));
