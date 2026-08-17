@@ -328,4 +328,6 @@ export const STEP_META: Record<StepKind, { tag: string; tint: string }> = {
   concept: { tag: "Concept", tint: "accent" },
   apply: { tag: "Apply", tint: "success" },
   close: { tag: "Loop closed", tint: "success" },
+  challenge: { tag: "Counter challenge", tint: "accent" },
+
 };
