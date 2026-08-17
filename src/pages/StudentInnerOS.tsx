@@ -1,15 +1,17 @@
 import { useMemo, useState } from "react";
-import { Check, Flame, Lock, Sparkles, Star, Timer, Utensils, ArrowRight, RotateCcw } from "lucide-react";
-import DashboardLayout from "@/components/DashboardLayout";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { cn } from "@/lib/utils";
 import { FOOD_MODULES, STEP_META, type InnerStep } from "@/data/foodInnerOS";
 
 const XP_PER_STEP = 10;
 
 type Status = "done" | "active" | "locked";
+type Tab = "left" | "center" | "right";
+
+/** Maps our curiosity-arc step kinds onto the prototype's 3 card styles. */
+const cardStyleOf = (kind: InnerStep["kind"]) => {
+  if (kind === "concept") return "concept";
+  if (kind === "guess" || kind === "apply") return "challenge";
+  return "story";
+};
 
 export default function StudentInnerOS() {
   const [moduleIdx, setModuleIdx] = useState(0);
@@ -18,12 +20,14 @@ export default function StudentInnerOS() {
   const [picked, setPicked] = useState<number | null>(null);
   const [checked, setChecked] = useState(false);
   const [xp, setXp] = useState(0);
+  const [tab, setTab] = useState<Tab>("center");
 
   const mod = FOOD_MODULES[moduleIdx];
   const step = mod.steps[stepIdx];
   const isQuestion = step.kind === "guess" || step.kind === "apply";
   const correct = isQuestion && picked === step.answer;
   const progress = Math.round(((stepIdx + (checked ? 1 : 0)) / mod.steps.length) * 100);
+  const style = cardStyleOf(step.kind);
 
   const statusOf = (i: number): Status => {
     if ((completed[FOOD_MODULES[i].id] ?? 0) >= FOOD_MODULES[i].steps.length) return "done";
@@ -48,8 +52,7 @@ export default function StudentInnerOS() {
     const next = stepIdx + 1;
     if (next >= mod.steps.length) {
       setCompleted((c) => ({ ...c, [mod.id]: mod.steps.length }));
-      const nextMod = Math.min(moduleIdx + 1, FOOD_MODULES.length - 1);
-      setModuleIdx(nextMod);
+      setModuleIdx(Math.min(moduleIdx + 1, FOOD_MODULES.length - 1));
       reset();
       return;
     }
@@ -61,130 +64,103 @@ export default function StudentInnerOS() {
   const tutorLines = buildTutorLines(step, checked, correct);
 
   return (
-    <DashboardLayout role="student">
-      <div className="mx-auto grid max-w-[1400px] gap-4 px-4 py-6 md:px-8 lg:grid-cols-[280px_1fr_300px]">
-        {/* LEFT: journey path */}
-        <aside className="space-y-4">
-          <Card className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-xl">🍳</div>
-              <div>
-                <p className="text-sm font-bold text-foreground">Food Lens</p>
-                <p className="text-xs text-muted-foreground">Number Systems</p>
-              </div>
-            </div>
-            <div className="mt-4 flex gap-2">
-              <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/50 px-2.5 py-1 text-xs font-bold text-foreground">
-                <Star className="h-3.5 w-3.5 text-primary" /> {xp} XP
-              </span>
-              <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/50 px-2.5 py-1 text-xs font-bold text-foreground">
-                <Flame className="h-3.5 w-3.5 text-destructive" /> {doneCount}
-              </span>
-            </div>
-          </Card>
-
-          <Card className="p-4">
-            <p className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Your kitchen path</p>
-            <ol className="space-y-1">
-              {FOOD_MODULES.map((m, i) => {
-                const st = statusOf(i);
-                const isCurrent = i === moduleIdx;
-                return (
-                  <li key={m.id}>
-                    <button
-                      type="button"
-                      disabled={st === "locked"}
-                      onClick={() => {
-                        setModuleIdx(i);
-                        reset();
-                      }}
-                      className={cn(
-                        "flex w-full items-start gap-3 rounded-xl p-2 text-left transition",
-                        st === "locked" ? "opacity-50" : "hover:bg-muted/60",
-                        isCurrent && "bg-muted/70",
-                      )}
-                    >
-                      <span
-                        className={cn(
-                          "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 text-sm",
-                          st === "done" && "border-primary bg-primary text-primary-foreground",
-                          st === "active" && isCurrent && "border-primary bg-primary/10",
-                          st === "locked" && "border-border bg-muted",
-                        )}
-                      >
-                        {st === "done" ? <Check className="h-4 w-4" /> : st === "locked" ? <Lock className="h-3.5 w-3.5" /> : m.emoji}
-                      </span>
-                      <span className="min-w-0">
-                        <span className="block truncate text-sm font-semibold text-foreground">{m.title}</span>
-                        <span className="flex items-center gap-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                          <Timer className="h-3 w-3" /> {m.minutes} min · {m.subtitle}
-                        </span>
-                      </span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ol>
-          </Card>
-        </aside>
-
-        {/* CENTER: step-by-step session */}
-        <section className="space-y-4">
-          <Card className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="ios-shell">
+      {/* LEFT PANEL: PATH */}
+      <div className={`ios-panel ios-left${tab === "left" ? " mobile-active" : ""}`}>
+        <div className="ios-user-stats">
+          <div className="ios-user-profile">
+            <div className="ios-avatar">👨‍🍳</div>
             <div>
-              <h1 className="text-lg font-bold text-foreground">
-                {mod.emoji} {mod.title}
-              </h1>
-              <p className="text-xs text-muted-foreground">
-                Step {stepIdx + 1} of {mod.steps.length} · under {mod.minutes} minutes
-              </p>
+              <h3 style={{ fontSize: 18 }}>Kitchen Manager</h3>
+              <p style={{ fontSize: 13, color: "var(--ios-muted)", fontWeight: 600 }}>Food Lens · Number Systems</p>
             </div>
-            <div className="flex items-center gap-3 sm:w-64">
-              <Progress value={progress} className="h-2 flex-1" />
-              <span className="text-xs font-bold text-muted-foreground">{progress}%</span>
-            </div>
-          </Card>
+          </div>
+          <div className="ios-stat-pills">
+            <div className="ios-pill streak">🔥 {doneCount} Days</div>
+            <div className="ios-pill xp">⭐ {xp} XP</div>
+          </div>
+        </div>
 
-          <Card
-            key={`${mod.id}-${stepIdx}`}
-            className="animate-fade-in border-t-4 p-6 md:p-8"
-            style={{ borderTopColor: "hsl(var(--primary))" }}
-          >
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-primary">
-              <Sparkles className="h-3 w-3" /> {step.label ?? STEP_META[step.kind].tag}
-            </span>
+        <div className="ios-path">
+          {FOOD_MODULES.map((m, i) => {
+            const st = statusOf(i);
+            const isCurrent = i === moduleIdx;
+            const cls = st === "done" ? "completed" : isCurrent ? "active" : "";
+            return (
+              <button
+                key={m.id}
+                type="button"
+                className={`ios-node ${cls}`}
+                disabled={st === "locked"}
+                onClick={() => {
+                  setModuleIdx(i);
+                  reset();
+                  setTab("center");
+                }}
+              >
+                <div className="ios-node-icon">{st === "done" ? "✓" : st === "locked" ? "🔒" : m.emoji}</div>
+                <div className="ios-node-info">
+                  <div className="ios-node-title">{m.title}</div>
+                  <div className="ios-node-status">
+                    {st === "done" ? "Completed" : isCurrent ? "In progress" : st === "locked" ? "Locked" : "Ready"} ·{" "}
+                    {m.minutes} min
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
-            {step.emoji && <div className="mt-4 text-4xl">{step.emoji}</div>}
+      {/* CENTER PANEL: LEARNING */}
+      <div className={`ios-panel ios-center${tab === "center" ? " mobile-active" : ""}`}>
+        <div className="ios-center-header">
+          <h2 style={{ fontSize: 22 }}>
+            {mod.emoji} {mod.title}
+          </h2>
+          <div className="ios-progress-track">
+            <div className="ios-progress-fill" style={{ width: `${progress}%` }} />
+          </div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: "var(--ios-muted)" }}>
+            {stepIdx + 1}/{mod.steps.length}
+          </div>
+        </div>
 
-            {step.title && <h2 className="mt-3 text-xl font-bold text-foreground">{step.title}</h2>}
+        <div className="ios-learning-area">
+          <div key={`${mod.id}-${stepIdx}`} className={`ios-card ${style}`}>
+            <span className={`ios-tag ${style}`}>{step.label ?? STEP_META[step.kind].tag}</span>
 
-            {step.text && (
-              <p
-                className="mt-3 text-base leading-relaxed text-foreground"
-                dangerouslySetInnerHTML={{ __html: step.text }}
-              />
-            )}
+            {step.emoji && <div className="ios-emoji-hero">{step.emoji}</div>}
+
+            {step.title && <h2 style={{ fontSize: 26, marginBottom: 16, textAlign: "center" }}>{step.title}</h2>}
+
+            {step.text && <div className="ios-story-text" dangerouslySetInnerHTML={{ __html: step.text }} />}
 
             {isQuestion && (
               <>
-                <p className="mt-4 text-lg font-semibold leading-snug text-foreground">{step.question}</p>
-                <div className="mt-4 grid gap-2">
+                <div className="ios-question" style={{ marginTop: step.text ? 24 : 0 }}>
+                  {step.question}
+                </div>
+                <div className="ios-options">
                   {step.options?.map((opt, i) => {
                     const isPicked = picked === i;
                     const isAnswer = step.answer === i;
+                    const optCls = !checked
+                      ? isPicked
+                        ? "selected"
+                        : ""
+                      : isAnswer
+                        ? "correct"
+                        : isPicked
+                          ? "wrong"
+                          : "";
                     return (
                       <button
                         key={opt}
                         type="button"
+                        className={`ios-option ${optCls}`}
                         disabled={checked}
                         onClick={() => setPicked(i)}
-                        className={cn(
-                          "rounded-xl border-2 border-border bg-card px-4 py-3 text-left text-sm font-semibold text-foreground transition",
-                          !checked && "hover:border-primary/50 hover:bg-muted/50",
-                          !checked && isPicked && "border-primary bg-primary/10",
-                          checked && isAnswer && "border-primary bg-primary/10",
-                          checked && isPicked && !isAnswer && "border-destructive bg-destructive/10",
-                        )}
                       >
                         {opt}
                       </button>
@@ -193,83 +169,100 @@ export default function StudentInnerOS() {
                 </div>
 
                 {checked && (
-                  <div
-                    className={cn(
-                      "mt-4 rounded-xl border-l-4 p-4 text-sm font-medium",
-                      correct
-                        ? "border-primary bg-primary/10 text-foreground"
-                        : "border-destructive bg-destructive/10 text-foreground",
-                    )}
-                  >
-                    <p className="font-bold">{correct ? "Exactly right." : "Not quite — here's the trick."}</p>
-                    {step.explanation && <p className="mt-1">{step.explanation}</p>}
+                  <div className={`ios-feedback ${correct ? "success" : "error"}`}>
+                    <strong>{correct ? "Correct! 🎉" : "Not quite."}</strong>
+                    <br />
+                    {step.explanation ?? "Give it another thought."}
                   </div>
                 )}
               </>
             )}
 
-            <div className="mt-6 flex flex-wrap gap-2">
-              {isQuestion && !checked ? (
-                <Button disabled={picked === null} onClick={() => setChecked(true)} className="flex-1">
-                  Check answer
-                </Button>
-              ) : (
-                <Button onClick={advance} className="flex-1">
-                  {stepIdx + 1 >= mod.steps.length ? "Finish session" : "Continue"}
-                  <ArrowRight className="ml-1 h-4 w-4" />
-                </Button>
-              )}
-              {isQuestion && checked && !correct && (
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setPicked(null);
-                    setChecked(false);
-                  }}
-                >
-                  <RotateCcw className="mr-1 h-4 w-4" /> Try again
-                </Button>
-              )}
-            </div>
-          </Card>
-        </section>
+            {isQuestion && !checked ? (
+              <button type="button" className="ios-btn" disabled={picked === null} onClick={() => setChecked(true)}>
+                Check Answer
+              </button>
+            ) : (
+              <button type="button" className="ios-btn success" onClick={advance}>
+                {stepIdx + 1 >= mod.steps.length ? "Finish Session →" : "Continue →"}
+              </button>
+            )}
 
-        {/* RIGHT: buddy panel */}
-        <aside className="space-y-4">
-          <Card className="p-4">
-            <div className="flex items-center gap-2 border-b border-border pb-3">
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-lg">🤖</span>
-              <p className="text-sm font-bold text-foreground">Buddy</p>
-            </div>
-            <div className="mt-3 space-y-3">
-              {tutorLines.map((line, i) => (
-                <p
-                  key={i}
-                  className="animate-fade-in rounded-2xl rounded-tl-sm border border-border bg-muted/40 px-3 py-2 text-sm leading-relaxed text-foreground"
-                >
-                  {line}
-                </p>
-              ))}
-            </div>
-          </Card>
-
-          <Card className="p-4">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Today's plan</p>
-            <ul className="mt-2 space-y-2 text-sm text-foreground">
-              <li className="flex items-center gap-2">
-                <Utensils className="h-4 w-4 text-primary" /> 1 food module ({mod.minutes} min)
-              </li>
-              <li className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-primary" /> 1 curiosity hook
-              </li>
-              <li className="flex items-center gap-2">
-                <Star className="h-4 w-4 text-primary" /> {mod.steps.length * XP_PER_STEP} XP up for grabs
-              </li>
-            </ul>
-          </Card>
-        </aside>
+            {isQuestion && checked && !correct && (
+              <button
+                type="button"
+                className="ios-btn ghost"
+                onClick={() => {
+                  setPicked(null);
+                  setChecked(false);
+                }}
+              >
+                Try Again
+              </button>
+            )}
+          </div>
+        </div>
       </div>
-    </DashboardLayout>
+
+      {/* RIGHT PANEL: BUDDY */}
+      <div className={`ios-panel ios-right${tab === "right" ? " mobile-active" : ""}`}>
+        <div className="ios-tutor-header">
+          <div className="ios-tutor-avatar">🤖</div>
+          <div>
+            <div style={{ fontSize: 16 }}>Buddy</div>
+            <div style={{ fontSize: 12, color: "var(--ios-secondary)", fontWeight: 600 }}>● Online</div>
+          </div>
+        </div>
+
+        <div className="ios-chat-area">
+          <div className="ios-msg system">{mod.subtitle}</div>
+          {tutorLines.map((line, i) => (
+            <div key={`${stepIdx}-${i}`} className="ios-msg ai">
+              {line}
+            </div>
+          ))}
+        </div>
+
+        <div className="ios-tutor-actions">
+          <button type="button" className="ios-action primary">
+            💡 Give Hint
+          </button>
+          <button type="button" className="ios-action">
+            🔄 Explain Again
+          </button>
+          <button type="button" className="ios-action">
+            🤔 Why?
+          </button>
+          <button type="button" className="ios-action">
+            📝 Give Example
+          </button>
+        </div>
+      </div>
+
+      {/* MOBILE NAVIGATION */}
+      <div className="ios-bottom-nav">
+        <button type="button" className={`ios-nav-item${tab === "left" ? " active" : ""}`} onClick={() => setTab("left")}>
+          <span className="ios-nav-icon">🗺️</span>
+          <span>Path</span>
+        </button>
+        <button
+          type="button"
+          className={`ios-nav-item${tab === "center" ? " active" : ""}`}
+          onClick={() => setTab("center")}
+        >
+          <span className="ios-nav-icon">🎯</span>
+          <span>Learn</span>
+        </button>
+        <button
+          type="button"
+          className={`ios-nav-item${tab === "right" ? " active" : ""}`}
+          onClick={() => setTab("right")}
+        >
+          <span className="ios-nav-icon">🤖</span>
+          <span>Buddy</span>
+        </button>
+      </div>
+    </div>
   );
 }
 
