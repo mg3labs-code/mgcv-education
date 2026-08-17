@@ -841,7 +841,44 @@
 .ios-action:hover { background: #e2e8f0; }
 .ios-action.primary { background: var(--ios-primary-light); color: var(--ios-primary); border-color: var(--ios-primary-light); }
 
+/* Day grouping in the path */
+.ios-day-head { display: flex; flex-direction: column; gap: 2px; margin: 0 0 16px; }
+.ios-day-head + .ios-day-head { margin-top: 8px; }
+.ios-day-name { font-family: 'Sora', sans-serif; font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--ios-primary); }
+.ios-day-name.locked { color: var(--ios-muted); }
+.ios-day-blurb { font-size: 12px; font-weight: 600; color: var(--ios-muted); }
+
+/* Chapter ref + show-off callout */
+.ios-ref { font-size: 12px; font-weight: 700; color: var(--ios-muted); text-transform: uppercase; letter-spacing: 0.6px; }
+.ios-showoff { margin-top: 20px; padding: 14px 16px; border-radius: 12px; background: #fffbeb; border-left: 4px solid var(--ios-accent); font-size: 15px; font-weight: 700; color: #92400e; line-height: 1.5; }
+.ios-cliff { margin-top: 20px; padding: 14px 16px; border-radius: 12px; background: var(--ios-primary-light); border-left: 4px solid var(--ios-primary); font-size: 15px; font-weight: 700; color: #3730a3; line-height: 1.5; }
+
+/* Labelled area diagrams */
+.ios-area { margin: 24px 0 0; }
+.ios-area-grid { display: grid; gap: 4px; max-width: 340px; margin: 0 auto; }
+.ios-area-grid.two { grid-template-columns: 2fr 1fr; grid-template-rows: 2fr 1fr; }
+.ios-area-grid.three { grid-template-columns: 3fr 2fr 1fr; grid-template-rows: 3fr 2fr 1fr; }
+.ios-area-cell { display: flex; align-items: center; justify-content: center; border-radius: 8px; font-family: 'Sora', sans-serif; font-size: 15px; font-weight: 700; min-height: 44px; padding: 6px; }
+.ios-area-cell.sq { background: var(--ios-primary); color: #fff; }
+.ios-area-cell.rect { background: var(--ios-primary-light); color: var(--ios-primary-hover); }
+.ios-area-cell.corner { background: var(--ios-accent); color: #fff; }
+.ios-area-cell.rect.cut { background: repeating-linear-gradient(45deg, #fee2e2, #fee2e2 6px, #fecaca 6px, #fecaca 12px); color: #b91c1c; }
+.ios-area-cell.corner.repaid { background: #d1fae5; color: #065f46; border: 2px dashed var(--ios-secondary); }
+.ios-area-caption { margin-top: 12px; text-align: center; font-size: 13px; font-weight: 600; color: var(--ios-muted); }
+
+/* Counter challenge */
+.ios-challenge { display: flex; flex-direction: column; }
+.ios-challenge-meta { display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; color: var(--ios-muted); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 16px; }
+.ios-challenge-prompt { font-family: 'Sora', sans-serif; font-size: 52px; font-weight: 800; text-align: center; margin-bottom: 24px; }
+.ios-challenge-input {
+  width: 100%; padding: 16px 20px; border-radius: 12px; border: 2px solid var(--ios-border);
+  font-family: 'Sora', sans-serif; font-size: 24px; font-weight: 700; text-align: center; color: var(--ios-text);
+  background: var(--ios-panel);
+}
+.ios-challenge-input:focus { outline: none; border-color: var(--ios-primary); background: #f8fafc; }
+
 .ios-bottom-nav { display: none; }
+
 @media (max-width: 1024px) {
   .ios-shell { grid-template-columns: 1fr; }
   .ios-left, .ios-right { display: none; }

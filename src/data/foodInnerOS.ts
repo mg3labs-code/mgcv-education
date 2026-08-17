@@ -4,7 +4,23 @@
  * hook (wonder) -> guess -> reveal -> concept -> apply -> close the loop.
  */
 
-export type StepKind = "hook" | "guess" | "reveal" | "concept" | "apply" | "close";
+export type StepKind = "hook" | "guess" | "reveal" | "concept" | "apply" | "close" | "challenge";
+
+/** Labelled area diagram rendered on concept cards. */
+export interface StepVisual {
+  kind: "square2" | "diff2" | "trinomial";
+  a: string;
+  b: string;
+  c?: string;
+  caption?: string;
+}
+
+/** One rapid-fire item inside a Counter Challenge step. */
+export interface ChallengeItem {
+  prompt: string;
+  answer: string;
+  hint?: string;
+}
 
 export interface InnerStep {
   kind: StepKind;
@@ -20,6 +36,10 @@ export interface InnerStep {
   explanation?: string;
   /** Concept steps */
   title?: string;
+  /** Optional labelled area diagram (concept steps). */
+  visual?: StepVisual;
+  /** Counter Challenge items (kind: "challenge"). */
+  items?: ChallengeItem[];
 }
 
 export interface InnerModule {
@@ -29,8 +49,26 @@ export interface InnerModule {
   emoji: string;
   /** Estimated minutes — always kept under 4. */
   minutes: number;
+  /** Spark-session day this module belongs to. */
+  day?: 1 | 2 | 3;
+  /** Textbook reference, e.g. "Ch 4.2". */
+  chapterRef?: string;
+  /** Open loop shown on the close card instead of a summary. */
+  cliffhanger?: string;
+  /** The one thing the student can perform in front of someone else. */
+  showOff?: string;
   steps: InnerStep[];
 }
+
+export interface InnerJourney {
+  id: string;
+  title: string;
+  lens: string;
+  persona: string;
+  personaEmoji: string;
+  modules: InnerModule[];
+}
+
 
 export const FOOD_MODULES: InnerModule[] = [
   {
@@ -290,4 +328,6 @@ export const STEP_META: Record<StepKind, { tag: string; tint: string }> = {
   concept: { tag: "Concept", tint: "accent" },
   apply: { tag: "Apply", tint: "success" },
   close: { tag: "Loop closed", tint: "success" },
+  challenge: { tag: "Counter challenge", tint: "accent" },
+
 };
