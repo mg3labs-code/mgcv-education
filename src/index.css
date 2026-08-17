@@ -701,3 +701,159 @@
 }
 
 
+
+/* =====================================================
+   Student Inner OS — strict port of the MGCV prototype
+   (scoped under .ios-shell so it never leaks into the app)
+   ===================================================== */
+.ios-shell {
+  --ios-primary: #6366f1;
+  --ios-primary-hover: #4f46e5;
+  --ios-primary-light: #e0e7ff;
+  --ios-secondary: #10b981;
+  --ios-secondary-hover: #059669;
+  --ios-accent: #f59e0b;
+  --ios-danger: #ef4444;
+  --ios-danger-light: #fee2e2;
+  --ios-bg: #f8fafc;
+  --ios-panel: #ffffff;
+  --ios-text: #0f172a;
+  --ios-muted: #64748b;
+  --ios-border: #e2e8f0;
+  --ios-shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.05);
+  --ios-shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+
+  font-family: 'Nunito', sans-serif;
+  font-size: 16px;
+  color: var(--ios-text);
+  background: var(--ios-bg);
+  height: 100vh;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 280px 1fr 320px;
+  width: 100%;
+}
+.ios-shell h1, .ios-shell h2, .ios-shell h3, .ios-shell h4 {
+  font-family: 'Sora', sans-serif; color: var(--ios-text); margin: 0;
+}
+.ios-shell * { box-sizing: border-box; }
+
+.ios-panel { background: var(--ios-panel); display: flex; flex-direction: column; height: 100%; overflow-y: auto; }
+.ios-left { border-right: 1px solid var(--ios-border); z-index: 10; box-shadow: var(--ios-shadow-sm); }
+
+.ios-user-stats {
+  padding: 24px; border-bottom: 1px solid var(--ios-border); display: flex; flex-direction: column; gap: 16px;
+  position: sticky; top: 0; background: var(--ios-panel); z-index: 5;
+}
+.ios-user-profile { display: flex; align-items: center; gap: 12px; }
+.ios-avatar { width: 48px; height: 48px; background: var(--ios-primary-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+.ios-stat-pills { display: flex; gap: 8px; }
+.ios-pill { padding: 6px 12px; border-radius: 20px; font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 6px; background: var(--ios-bg); color: var(--ios-text); border: 1px solid var(--ios-border); }
+.ios-pill.xp { color: var(--ios-accent); border-color: #fde68a; background: #fffbeb; }
+.ios-pill.streak { color: var(--ios-danger); border-color: #fecaca; background: #fef2f2; }
+
+.ios-path { padding: 24px; }
+.ios-node {
+  display: flex; gap: 16px; position: relative; padding-bottom: 32px; cursor: pointer;
+  opacity: 0.6; transition: all 0.3s ease; width: 100%; text-align: left;
+  background: none; border: none; font: inherit; color: inherit;
+}
+.ios-node:not(:last-child)::after { content: ''; position: absolute; left: 23px; top: 48px; bottom: 0; width: 3px; background: var(--ios-border); z-index: 1; }
+.ios-node.completed { opacity: 1; }
+.ios-node.completed:not(:last-child)::after { background: var(--ios-secondary); }
+.ios-node.active { opacity: 1; transform: scale(1.02); }
+.ios-node.active .ios-node-icon { border-color: var(--ios-primary); box-shadow: 0 0 0 4px var(--ios-primary-light); background: var(--ios-primary); color: #fff; }
+.ios-node-icon {
+  width: 48px; height: 48px; border-radius: 50%; background: var(--ios-bg); border: 3px solid var(--ios-border);
+  display: flex; align-items: center; justify-content: center; font-size: 20px; z-index: 2; font-weight: bold;
+  flex-shrink: 0; transition: all 0.3s ease;
+}
+.ios-node.completed .ios-node-icon { background: var(--ios-secondary); border-color: var(--ios-secondary); color: #fff; }
+.ios-node-info { flex: 1; padding-top: 4px; min-width: 0; }
+.ios-node-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+.ios-node-status { font-size: 12px; font-weight: 600; color: var(--ios-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.ios-node.completed .ios-node-status { color: var(--ios-secondary); }
+.ios-node.active .ios-node-status { color: var(--ios-primary); }
+
+.ios-center { background: var(--ios-bg); position: relative; display: flex; flex-direction: column; }
+.ios-center-header { padding: 20px 40px; background: var(--ios-panel); border-bottom: 1px solid var(--ios-border); display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.ios-progress-track { flex: 1; max-width: 400px; height: 12px; background: var(--ios-border); border-radius: 6px; overflow: hidden; margin: 0 24px; }
+.ios-progress-fill { height: 100%; background: var(--ios-secondary); transition: width 0.5s ease; }
+.ios-learning-area { flex: 1; padding: 40px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; scroll-behavior: smooth; }
+
+.ios-card {
+  background: var(--ios-panel); width: 100%; max-width: 680px; border-radius: 24px; padding: 32px;
+  box-shadow: var(--ios-shadow-md); margin-bottom: 24px; border: 1px solid rgba(0,0,0,0.02);
+  animation: iosSlideUp 0.4s ease-out forwards; opacity: 0; transform: translateY(20px);
+}
+@keyframes iosSlideUp { to { opacity: 1; transform: translateY(0); } }
+.ios-card.story { border-top: 6px solid var(--ios-primary); }
+.ios-card.concept { border-top: 6px solid var(--ios-accent); background: linear-gradient(to bottom, #fffbeb, #ffffff); }
+.ios-card.challenge { border-top: 6px solid var(--ios-secondary); }
+
+.ios-tag { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 700; text-transform: uppercase; margin-bottom: 16px; }
+.ios-tag.story { background: var(--ios-primary-light); color: var(--ios-primary); }
+.ios-tag.concept { background: #fef3c7; color: #d97706; }
+.ios-tag.challenge { background: #d1fae5; color: var(--ios-secondary-hover); }
+
+.ios-story-text { font-size: 18px; line-height: 1.6; color: var(--ios-text); font-weight: 600; }
+.ios-emoji-hero { font-size: 56px; text-align: center; margin-bottom: 16px; }
+.ios-question { font-size: 20px; font-weight: 600; margin-bottom: 24px; line-height: 1.4; color: var(--ios-text); }
+.ios-options { display: grid; gap: 12px; }
+.ios-option {
+  background: var(--ios-panel); border: 2px solid var(--ios-border); padding: 16px 20px; border-radius: 12px;
+  font-size: 16px; font-weight: 600; color: var(--ios-text); cursor: pointer; text-align: left; transition: all 0.2s;
+  font-family: inherit;
+}
+.ios-option:hover:not(:disabled) { border-color: var(--ios-primary-light); background: #f8fafc; }
+.ios-option.selected { border-color: var(--ios-primary); background: var(--ios-primary-light); }
+.ios-option.correct { border-color: var(--ios-secondary); background: #ecfdf5; color: var(--ios-secondary-hover); }
+.ios-option.wrong { border-color: var(--ios-danger); background: var(--ios-danger-light); color: #b91c1c; }
+.ios-option:disabled { cursor: default; }
+
+.ios-btn {
+  background: var(--ios-primary); color: #fff; border: none; padding: 16px 32px; border-radius: 20px;
+  font-size: 18px; font-weight: 700; cursor: pointer; transition: all 0.2s; width: 100%; margin-top: 24px;
+  box-shadow: 0 4px 0 var(--ios-primary-hover); font-family: inherit;
+}
+.ios-btn:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 0 0 var(--ios-primary-hover); }
+.ios-btn:disabled { background: var(--ios-border); box-shadow: 0 4px 0 #cbd5e1; cursor: not-allowed; color: var(--ios-muted); }
+.ios-btn.success { background: var(--ios-secondary); box-shadow: 0 4px 0 var(--ios-secondary-hover); }
+.ios-btn.ghost { background: transparent; color: var(--ios-muted); box-shadow: none; border: 2px solid var(--ios-border); }
+
+.ios-feedback { margin-top: 20px; padding: 16px; border-radius: 12px; font-weight: 600; animation: iosSlideUp 0.3s ease-out forwards; opacity: 0; font-size: 16px; line-height: 1.5; }
+.ios-feedback.success { background: #d1fae5; color: #065f46; border-left: 4px solid var(--ios-secondary); }
+.ios-feedback.error { background: #fee2e2; color: #991b1b; border-left: 4px solid var(--ios-danger); }
+
+.ios-right { border-left: 1px solid var(--ios-border); background: #f8fafc; }
+.ios-tutor-header { padding: 20px; background: var(--ios-panel); border-bottom: 1px solid var(--ios-border); display: flex; align-items: center; gap: 12px; font-weight: 700; box-shadow: var(--ios-shadow-sm); }
+.ios-tutor-avatar { font-size: 28px; background: #e0e7ff; padding: 8px; border-radius: 50%; }
+.ios-chat-area { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
+.ios-msg { max-width: 85%; padding: 12px 16px; border-radius: 16px; font-size: 14px; line-height: 1.5; animation: iosSlideUp 0.3s ease-out forwards; opacity: 0; }
+.ios-msg.ai { background: var(--ios-panel); border: 1px solid var(--ios-border); align-self: flex-start; border-top-left-radius: 4px; box-shadow: var(--ios-shadow-sm); }
+.ios-msg.system { background: #fffbeb; color: #b45309; align-self: center; font-size: 12px; font-weight: 700; border-radius: 20px; text-align: center; }
+.ios-tutor-actions { padding: 20px; background: var(--ios-panel); border-top: 1px solid var(--ios-border); display: flex; flex-wrap: wrap; gap: 8px; }
+.ios-action {
+  background: #f1f5f9; border: 1px solid var(--ios-border); padding: 8px 12px; border-radius: 20px;
+  font-size: 13px; font-weight: 600; color: var(--ios-text); cursor: pointer; transition: all 0.2s;
+  display: flex; align-items: center; gap: 4px; font-family: inherit;
+}
+.ios-action:hover { background: #e2e8f0; }
+.ios-action.primary { background: var(--ios-primary-light); color: var(--ios-primary); border-color: var(--ios-primary-light); }
+
+.ios-bottom-nav { display: none; }
+@media (max-width: 1024px) {
+  .ios-shell { grid-template-columns: 1fr; }
+  .ios-left, .ios-right { display: none; }
+  .ios-left.mobile-active, .ios-right.mobile-active, .ios-center.mobile-active { display: flex; }
+  .ios-center:not(.mobile-active) { display: none; }
+  .ios-center-header { padding: 16px 20px; }
+  .ios-learning-area { padding: 20px 16px 80px; }
+  .ios-bottom-nav {
+    display: flex; position: fixed; bottom: 0; left: 0; right: 0; background: var(--ios-panel);
+    border-top: 1px solid var(--ios-border); z-index: 50; justify-content: space-around; padding: 12px;
+  }
+  .ios-nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 12px; font-weight: 700; color: var(--ios-muted); cursor: pointer; background: none; border: none; font-family: inherit; }
+  .ios-nav-item.active { color: var(--ios-primary); }
+  .ios-nav-icon { font-size: 24px; }
+}
