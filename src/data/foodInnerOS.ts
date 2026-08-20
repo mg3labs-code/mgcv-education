@@ -4,7 +4,33 @@
  * hook (wonder) -> guess -> reveal -> concept -> apply -> close the loop.
  */
 
-export type StepKind = "hook" | "guess" | "reveal" | "concept" | "apply" | "close" | "challenge";
+export type StepKind =
+  | "hook"
+  | "guess"
+  | "reveal"
+  | "concept"
+  | "apply"
+  | "close"
+  | "challenge"
+  /** 7-layer depth steps layered under the 3-day spark */
+  | "firstprinciples"
+  | "truefalse"
+  | "assumption"
+  | "connect"
+  | "reflect";
+
+/** One statement in a Spot-the-Trap true/false step. */
+export interface TfStatement {
+  text: string;
+  isTrue: boolean;
+  why: string;
+}
+
+/** One rung of a first-principles rebuild chain. */
+export interface PrincipleRung {
+  claim: string;
+  because: string;
+}
 
 /** Labelled area diagram rendered on concept cards. */
 export interface StepVisual {
