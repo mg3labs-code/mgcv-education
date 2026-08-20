@@ -49,8 +49,12 @@ export default function StudentInnerOS() {
   const modules = journey.modules;
   const mod = modules[Math.min(moduleIdx, modules.length - 1)];
   const step = mod.steps[Math.min(stepIdx, mod.steps.length - 1)];
-  const isQuestion = step.kind === "guess" || step.kind === "apply";
-  const isChallenge = step.kind === "challenge";
+  const isQuestion = step.kind === "guess" || step.kind === "apply" || step.kind === "assumption";
+  const isChallenge =
+    step.kind === "challenge" ||
+    step.kind === "truefalse" ||
+    step.kind === "firstprinciples" ||
+    step.kind === "reflect";
   const correct = isQuestion && picked === step.answer;
   const progress = Math.round(((stepIdx + (checked ? 1 : 0)) / mod.steps.length) * 100);
   const style = cardStyleOf(step.kind);
