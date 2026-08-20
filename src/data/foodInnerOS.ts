@@ -4,6 +4,8 @@
  * hook (wonder) -> guess -> reveal -> concept -> apply -> close the loop.
  */
 
+import type { LayerKey } from "@/lib/sevenLayers";
+
 export type StepKind =
   | "hook"
   | "guess"
