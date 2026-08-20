@@ -894,3 +894,18 @@
   .ios-nav-item.active { color: var(--ios-primary); }
   .ios-nav-icon { font-size: 24px; }
 }
+
+/* ---- Inner OS · 7-layer depth steps ---- */
+.ios-layer-chip { display: inline-block; margin-left: 8px; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; background: #eef2ff; color: #4338ca; }
+.ios-tf-meta { font-size: 13px; font-weight: 700; color: var(--ios-muted); margin: 12px 0; }
+.ios-fp-list { display: grid; gap: 12px; }
+.ios-fp-rung { display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border: 2px solid var(--ios-border); border-radius: 14px; background: #f8fafc; }
+.ios-fp-rung.open { border-color: var(--ios-secondary); background: #ecfdf5; }
+.ios-fp-index { width: 28px; height: 28px; border-radius: 50%; background: var(--ios-primary); color: #fff; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 14px; }
+.ios-fp-claim { font-size: 17px; font-weight: 700; color: var(--ios-text); line-height: 1.4; }
+.ios-fp-because { margin-top: 6px; font-size: 15px; font-weight: 600; color: #065f46; line-height: 1.5; }
+.ios-fp-ask { margin-top: 8px; background: transparent; border: 2px solid var(--ios-border); border-radius: 10px; padding: 8px 14px; font-family: inherit; font-size: 14px; font-weight: 700; color: var(--ios-primary); cursor: pointer; }
+.ios-fp-ask:hover { border-color: var(--ios-primary); background: var(--ios-primary-light); }
+.ios-prompt-list { margin: 0 0 16px; padding-left: 20px; display: grid; gap: 6px; font-size: 16px; font-weight: 600; color: var(--ios-muted); }
+.ios-textarea { width: 100%; border: 2px solid var(--ios-border); border-radius: 14px; padding: 14px 16px; font-family: inherit; font-size: 16px; font-weight: 600; color: var(--ios-text); resize: vertical; background: var(--ios-panel); }
+.ios-textarea:focus { outline: none; border-color: var(--ios-primary); }
