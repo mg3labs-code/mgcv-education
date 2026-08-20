@@ -400,6 +400,16 @@ function buildTutorLines(step: InnerStep, checked: boolean, correct: boolean): s
   if (step.kind === "concept")
     return ["Point at each block in the picture and say what it costs. That's the whole identity."];
   if (step.kind === "challenge") return ["Use the trick, not long multiplication. Speed is the point."];
+  if (step.kind === "firstprinciples")
+    return ["Don't skip a rung. Ask 'why' on each line until it feels obvious, then move on."];
+  if (step.kind === "truefalse")
+    return ["Decide before you read the reason. Being wrong here is cheaper than being wrong in an exam."];
+  if (step.kind === "assumption")
+    return ["Every rule hides a condition. Find the one this trick quietly needs."];
+  if (step.kind === "connect")
+    return ["If it shows up in four different places, it isn't a maths rule — it's how area works."];
+  if (step.kind === "reflect")
+    return ["Write it messy. Explaining it in your own words is what makes it yours."];
   if (step.kind === "close") return ["Nice loop. Now go perform it on someone before you forget it."];
   if (!checked) return ["Guess first, even if you're unsure. Guessing makes the answer stick harder."];
   return correct
