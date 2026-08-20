@@ -59,6 +59,18 @@ export const IDENTITY_MODULES: InnerModule[] = [
         text: "An <strong>equation</strong> is true for some values (x + 2 = 5 only when x = 3).<br>An <strong>identity</strong> is true for <em>every</em> value. The tray trick is an identity wearing a disguise.",
       },
       {
+        kind: "assumption",
+        label: "Hidden assumption",
+        question: "The chef's trick assumed something about your three trays. What?",
+        options: [
+          "The areas are consecutive squares (n−1)², n², (n+1)²",
+          "The trays are made of the same material",
+          "The middle tray is the biggest",
+        ],
+        answer: 0,
+        explanation: "Break that one assumption — pick 1, 9, 25 — and the answer stops being 2. Identities always come with conditions.",
+      },
+      {
         kind: "apply",
         label: "Kitchen check",
         question: "Which of these is an identity?",
@@ -126,6 +138,27 @@ export const IDENTITY_MODULES: InnerModule[] = [
         explanation: "The two rectangles (2ab) are the most commonly lost pieces in all of algebra.",
       },
       {
+        kind: "firstprinciples",
+        label: "First principles",
+        title: "Build (a + b)² from nothing",
+        text: "No formula. Only area. Unlock each step and the identity assembles itself.",
+        rungs: [
+          { claim: "A square griddle of side (a + b) has area (a + b)².", because: "area of any square = side × side. Nothing else is assumed." },
+          { claim: "That griddle can be cut into 4 pieces.", because: "one cut at height a, one cut at width a — that is all." },
+          { claim: "The pieces are a², ab, ab and b².", because: "the two corner squares are a² and b², and the two rectangles are each a by b." },
+          { claim: "So (a + b)² = a² + 2ab + b².", because: "the parts must add up to the whole. Cutting food never creates or destroys area." },
+        ],
+      },
+      {
+        kind: "truefalse",
+        label: "Spot the trap",
+        statements: [
+          { text: "(a + b)² = a² + b²", isTrue: false, why: "The two ab rectangles are missing. This is the single most expensive mistake in school algebra." },
+          { text: "(a + b)² is bigger than a² + b² whenever a and b are positive.", isTrue: true, why: "You are adding 2ab of extra area — the two strips you can literally point at." },
+          { text: "(2 + 3)² = 25", isTrue: true, why: "4 + 12 + 9 = 25. The picture and the arithmetic agree, as they must." },
+        ],
+      },
+      {
         kind: "close",
         label: "Loop closed",
         emoji: "📐",
@@ -183,6 +216,15 @@ export const IDENTITY_MODULES: InnerModule[] = [
         explanation: "(4y)² − 2(4y)(3) + 3². Middle term negative → minus inside.",
       },
       {
+        kind: "truefalse",
+        label: "Spot the trap",
+        statements: [
+          { text: "(a − b)² = a² − b²", isTrue: false, why: "a² − b² is the DIFFERENCE of squares, a completely different tray: (a + b)(a − b)." },
+          { text: "(a − b)² is never negative.", isTrue: true, why: "It is the area of a real square, and area cannot be negative — whatever a and b are." },
+          { text: "(b − a)² = (a − b)²", isTrue: true, why: "Trimming from either side leaves the same square. Squaring erases the sign." },
+        ],
+      },
+      {
         kind: "close",
         label: "Loop closed",
         emoji: "✂️",
@@ -234,6 +276,12 @@ export const IDENTITY_MODULES: InnerModule[] = [
         options: ["12544", "11244", "12454", "12644"],
         answer: 0,
         explanation: "10000 + 100 + 4 + 2000 + 40 + 400 = 12544.",
+      },
+      {
+        kind: "connect",
+        label: "Where else this shows up",
+        title: "Same identity, four other kitchens",
+        text: "🏏 <strong>Cricket</strong> — a batter’s strike-rate jump when both runs and balls change is exactly a 2ab term.<br>💰 <strong>Money</strong> — compound interest for 2 years is P(1 + r)², the same expansion.<br>🔬 <strong>Physics</strong> — heat a metal plate and its area grows by 2α plus a tiny α² you can ignore.<br>📦 <strong>Packing</strong> — every “add a margin on all sides” problem is (a + b)² wearing a different apron.",
       },
       {
         kind: "close",
@@ -354,6 +402,17 @@ export const IDENTITY_MODULES: InnerModule[] = [
           { prompt: "111²", answer: "12321", hint: "(100 + 10 + 1)²" },
           { prompt: "85²", answer: "7225", hint: "90 × 80 + 25" },
         ],
+      },
+      {
+        kind: "reflect",
+        label: "Teach it back",
+        title: "Explain it like a head chef",
+        prompts: [
+          "Why does (a + b)² have TWO ab strips and not one?",
+          "What would break if you forgot the +b² corner while trimming?",
+          "Where would you use this outside a kitchen?",
+        ],
+        minWords: 15,
       },
       {
         kind: "close",
