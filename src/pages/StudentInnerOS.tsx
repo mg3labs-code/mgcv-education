@@ -1,8 +1,12 @@
 import { useMemo, useState } from "react";
-import { STEP_META, type InnerStep } from "@/data/foodInnerOS";
+import { STEP_META, KIND_LAYER, type InnerStep } from "@/data/foodInnerOS";
 import { JOURNEYS, DEFAULT_JOURNEY_ID, DAY_META } from "@/data/innerOSJourneys";
+import { LAYERS } from "@/lib/sevenLayers";
 import AreaGrid from "@/components/inner-os/AreaGrid";
 import CounterChallenge from "@/components/inner-os/CounterChallenge";
+import TrapTrueFalse from "@/components/inner-os/TrapTrueFalse";
+import FirstPrinciples from "@/components/inner-os/FirstPrinciples";
+import TeachItBack from "@/components/inner-os/TeachItBack";
 
 const XP_PER_STEP = 10;
 
@@ -11,10 +15,25 @@ type Tab = "left" | "center" | "right";
 
 /** Maps our curiosity-arc step kinds onto the prototype's 3 card styles. */
 const cardStyleOf = (kind: InnerStep["kind"]) => {
-  if (kind === "concept") return "concept";
-  if (kind === "guess" || kind === "apply" || kind === "challenge") return "challenge";
+  if (kind === "concept" || kind === "firstprinciples") return "concept";
+  if (
+    kind === "guess" ||
+    kind === "apply" ||
+    kind === "challenge" ||
+    kind === "truefalse" ||
+    kind === "assumption"
+  )
+    return "challenge";
   return "story";
 };
+
+/** The 7-layer badge shown on every card. */
+const layerOf = (step: InnerStep) => {
+  const key = step.layer ?? KIND_LAYER[step.kind];
+  const layer = LAYERS.find((l) => l.key === key) ?? LAYERS[0];
+  return `L${layer.index} · ${layer.name}`;
+};
+
 
 export default function StudentInnerOS() {
   const [journeyId, setJourneyId] = useState(DEFAULT_JOURNEY_ID);
