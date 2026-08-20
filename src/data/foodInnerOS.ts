@@ -52,6 +52,8 @@ export interface InnerStep {
   kind: StepKind;
   /** Short eyebrow shown on the card. */
   label?: string;
+  /** Which of the 7 pedagogy layers this step exercises (defaults per kind). */
+  layer?: LayerKey;
   /** Story / prompt body (may contain simple <br> line breaks). */
   text?: string;
   emoji?: string;
@@ -66,7 +68,16 @@ export interface InnerStep {
   visual?: StepVisual;
   /** Counter Challenge items (kind: "challenge"). */
   items?: ChallengeItem[];
+  /** Spot-the-trap true/false statements (kind: "truefalse"). */
+  statements?: TfStatement[];
+  /** First-principles rebuild chain (kind: "firstprinciples"). */
+  rungs?: PrincipleRung[];
+  /** Reflection / teach-it-back prompts (kind: "reflect"). */
+  prompts?: string[];
+  /** Minimum words before the reflect step can be submitted. */
+  minWords?: number;
 }
+
 
 export interface InnerModule {
   id: string;
