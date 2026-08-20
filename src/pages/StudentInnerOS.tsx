@@ -1,8 +1,12 @@
 import { useMemo, useState } from "react";
-import { STEP_META, type InnerStep } from "@/data/foodInnerOS";
+import { STEP_META, KIND_LAYER, type InnerStep } from "@/data/foodInnerOS";
 import { JOURNEYS, DEFAULT_JOURNEY_ID, DAY_META } from "@/data/innerOSJourneys";
+import { LAYERS } from "@/lib/sevenLayers";
 import AreaGrid from "@/components/inner-os/AreaGrid";
 import CounterChallenge from "@/components/inner-os/CounterChallenge";
+import TrapTrueFalse from "@/components/inner-os/TrapTrueFalse";
+import FirstPrinciples from "@/components/inner-os/FirstPrinciples";
+import TeachItBack from "@/components/inner-os/TeachItBack";
 
 const XP_PER_STEP = 10;
 
@@ -11,10 +15,25 @@ type Tab = "left" | "center" | "right";
 
 /** Maps our curiosity-arc step kinds onto the prototype's 3 card styles. */
 const cardStyleOf = (kind: InnerStep["kind"]) => {
-  if (kind === "concept") return "concept";
-  if (kind === "guess" || kind === "apply" || kind === "challenge") return "challenge";
+  if (kind === "concept" || kind === "firstprinciples") return "concept";
+  if (
+    kind === "guess" ||
+    kind === "apply" ||
+    kind === "challenge" ||
+    kind === "truefalse" ||
+    kind === "assumption"
+  )
+    return "challenge";
   return "story";
 };
+
+/** The 7-layer badge shown on every card. */
+const layerOf = (step: InnerStep) => {
+  const key = step.layer ?? KIND_LAYER[step.kind];
+  const layer = LAYERS.find((l) => l.key === key) ?? LAYERS[0];
+  return `L${layer.index} · ${layer.name}`;
+};
+
 
 export default function StudentInnerOS() {
   const [journeyId, setJourneyId] = useState(DEFAULT_JOURNEY_ID);
@@ -30,8 +49,12 @@ export default function StudentInnerOS() {
   const modules = journey.modules;
   const mod = modules[Math.min(moduleIdx, modules.length - 1)];
   const step = mod.steps[Math.min(stepIdx, mod.steps.length - 1)];
-  const isQuestion = step.kind === "guess" || step.kind === "apply";
-  const isChallenge = step.kind === "challenge";
+  const isQuestion = step.kind === "guess" || step.kind === "apply" || step.kind === "assumption";
+  const isChallenge =
+    step.kind === "challenge" ||
+    step.kind === "truefalse" ||
+    step.kind === "firstprinciples" ||
+    step.kind === "reflect";
   const correct = isQuestion && picked === step.answer;
   const progress = Math.round(((stepIdx + (checked ? 1 : 0)) / mod.steps.length) * 100);
   const style = cardStyleOf(step.kind);
@@ -197,6 +220,7 @@ export default function StudentInnerOS() {
         <div className="ios-learning-area">
           <div key={`${mod.id}-${stepIdx}`} className={`ios-card ${style}`}>
             <span className={`ios-tag ${style}`}>{step.label ?? STEP_META[step.kind].tag}</span>
+            <span className="ios-layer-chip">{layerOf(step)}</span>
 
             {step.emoji && <div className="ios-emoji-hero">{step.emoji}</div>}
 
@@ -208,7 +232,22 @@ export default function StudentInnerOS() {
 
             {step.visual && <AreaGrid visual={step.visual} />}
 
-            {isChallenge && step.items && <CounterChallenge items={step.items} onDone={advance} />}
+            {step.kind === "challenge" && step.items && (
+              <CounterChallenge items={step.items} onDone={advance} />
+            )}
+
+            {step.kind === "truefalse" && step.statements && (
+              <TrapTrueFalse statements={step.statements} onDone={advance} />
+            )}
+
+            {step.kind === "firstprinciples" && step.rungs && (
+              <FirstPrinciples rungs={step.rungs} onDone={advance} />
+            )}
+
+            {step.kind === "reflect" && (
+              <TeachItBack prompts={step.prompts} minWords={step.minWords} onDone={advance} />
+            )}
+
 
             {isQuestion && (
               <>
@@ -361,6 +400,16 @@ function buildTutorLines(step: InnerStep, checked: boolean, correct: boolean): s
   if (step.kind === "concept")
     return ["Point at each block in the picture and say what it costs. That's the whole identity."];
   if (step.kind === "challenge") return ["Use the trick, not long multiplication. Speed is the point."];
+  if (step.kind === "firstprinciples")
+    return ["Don't skip a rung. Ask 'why' on each line until it feels obvious, then move on."];
+  if (step.kind === "truefalse")
+    return ["Decide before you read the reason. Being wrong here is cheaper than being wrong in an exam."];
+  if (step.kind === "assumption")
+    return ["Every rule hides a condition. Find the one this trick quietly needs."];
+  if (step.kind === "connect")
+    return ["If it shows up in four different places, it isn't a maths rule — it's how area works."];
+  if (step.kind === "reflect")
+    return ["Write it messy. Explaining it in your own words is what makes it yours."];
   if (step.kind === "close") return ["Nice loop. Now go perform it on someone before you forget it."];
   if (!checked) return ["Guess first, even if you're unsure. Guessing makes the answer stick harder."];
   return correct

@@ -4,7 +4,35 @@
  * hook (wonder) -> guess -> reveal -> concept -> apply -> close the loop.
  */
 
-export type StepKind = "hook" | "guess" | "reveal" | "concept" | "apply" | "close" | "challenge";
+import type { LayerKey } from "@/lib/sevenLayers";
+
+export type StepKind =
+  | "hook"
+  | "guess"
+  | "reveal"
+  | "concept"
+  | "apply"
+  | "close"
+  | "challenge"
+  /** 7-layer depth steps layered under the 3-day spark */
+  | "firstprinciples"
+  | "truefalse"
+  | "assumption"
+  | "connect"
+  | "reflect";
+
+/** One statement in a Spot-the-Trap true/false step. */
+export interface TfStatement {
+  text: string;
+  isTrue: boolean;
+  why: string;
+}
+
+/** One rung of a first-principles rebuild chain. */
+export interface PrincipleRung {
+  claim: string;
+  because: string;
+}
 
 /** Labelled area diagram rendered on concept cards. */
 export interface StepVisual {
@@ -26,6 +54,8 @@ export interface InnerStep {
   kind: StepKind;
   /** Short eyebrow shown on the card. */
   label?: string;
+  /** Which of the 7 pedagogy layers this step exercises (defaults per kind). */
+  layer?: LayerKey;
   /** Story / prompt body (may contain simple <br> line breaks). */
   text?: string;
   emoji?: string;
@@ -40,7 +70,16 @@ export interface InnerStep {
   visual?: StepVisual;
   /** Counter Challenge items (kind: "challenge"). */
   items?: ChallengeItem[];
+  /** Spot-the-trap true/false statements (kind: "truefalse"). */
+  statements?: TfStatement[];
+  /** First-principles rebuild chain (kind: "firstprinciples"). */
+  rungs?: PrincipleRung[];
+  /** Reflection / teach-it-back prompts (kind: "reflect"). */
+  prompts?: string[];
+  /** Minimum words before the reflect step can be submitted. */
+  minWords?: number;
 }
+
 
 export interface InnerModule {
   id: string;
@@ -329,5 +368,26 @@ export const STEP_META: Record<StepKind, { tag: string; tint: string }> = {
   apply: { tag: "Apply", tint: "success" },
   close: { tag: "Loop closed", tint: "success" },
   challenge: { tag: "Counter challenge", tint: "accent" },
-
+  firstprinciples: { tag: "First principles", tint: "primary" },
+  truefalse: { tag: "Spot the trap", tint: "accent" },
+  assumption: { tag: "Hidden assumption", tint: "accent" },
+  connect: { tag: "Connections", tint: "primary" },
+  reflect: { tag: "Teach it back", tint: "success" },
 };
+
+/** Default 7-layer mapping for each step kind (a step can override with `layer`). */
+export const KIND_LAYER: Record<StepKind, LayerKey> = {
+  hook: "definition",
+  guess: "reasoning",
+  reveal: "mechanism",
+  concept: "mechanism",
+  firstprinciples: "reasoning",
+  truefalse: "assumptions",
+  assumption: "assumptions",
+  connect: "connections",
+  apply: "applications",
+  challenge: "applications",
+  reflect: "implications",
+  close: "implications",
+};
+
