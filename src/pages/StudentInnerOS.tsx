@@ -220,6 +220,7 @@ export default function StudentInnerOS() {
         <div className="ios-learning-area">
           <div key={`${mod.id}-${stepIdx}`} className={`ios-card ${style}`}>
             <span className={`ios-tag ${style}`}>{step.label ?? STEP_META[step.kind].tag}</span>
+            <span className="ios-layer-chip">{layerOf(step)}</span>
 
             {step.emoji && <div className="ios-emoji-hero">{step.emoji}</div>}
 
@@ -231,7 +232,22 @@ export default function StudentInnerOS() {
 
             {step.visual && <AreaGrid visual={step.visual} />}
 
-            {isChallenge && step.items && <CounterChallenge items={step.items} onDone={advance} />}
+            {step.kind === "challenge" && step.items && (
+              <CounterChallenge items={step.items} onDone={advance} />
+            )}
+
+            {step.kind === "truefalse" && step.statements && (
+              <TrapTrueFalse statements={step.statements} onDone={advance} />
+            )}
+
+            {step.kind === "firstprinciples" && step.rungs && (
+              <FirstPrinciples rungs={step.rungs} onDone={advance} />
+            )}
+
+            {step.kind === "reflect" && (
+              <TeachItBack prompts={step.prompts} minWords={step.minWords} onDone={advance} />
+            )}
+
 
             {isQuestion && (
               <>
