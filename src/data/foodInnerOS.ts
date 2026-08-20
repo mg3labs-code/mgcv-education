@@ -355,5 +355,26 @@ export const STEP_META: Record<StepKind, { tag: string; tint: string }> = {
   apply: { tag: "Apply", tint: "success" },
   close: { tag: "Loop closed", tint: "success" },
   challenge: { tag: "Counter challenge", tint: "accent" },
-
+  firstprinciples: { tag: "First principles", tint: "primary" },
+  truefalse: { tag: "Spot the trap", tint: "accent" },
+  assumption: { tag: "Hidden assumption", tint: "accent" },
+  connect: { tag: "Connections", tint: "primary" },
+  reflect: { tag: "Teach it back", tint: "success" },
 };
+
+/** Default 7-layer mapping for each step kind (a step can override with `layer`). */
+export const KIND_LAYER: Record<StepKind, LayerKey> = {
+  hook: "definition",
+  guess: "reasoning",
+  reveal: "mechanism",
+  concept: "mechanism",
+  firstprinciples: "reasoning",
+  truefalse: "assumptions",
+  assumption: "assumptions",
+  connect: "connections",
+  apply: "applications",
+  challenge: "applications",
+  reflect: "implications",
+  close: "implications",
+};
+
