@@ -509,7 +509,28 @@ export default function StudentInnerOS() {
           <span>Buddy</span>
         </button>
       </div>
+
+      {dayModal !== null && DAY_META[dayModal] && (
+        <DayCompleteModal
+          day={dayModal}
+          dayName={DAY_META[dayModal].name}
+          dayBlurb={DAY_META[dayModal].blurb}
+          xp={xp}
+          nextDayName={DAY_META[dayModal + 1]?.name}
+          onContinue={() => {
+            const nextIdx = modules.findIndex((m) => (m.day ?? 0) === dayModal + 1);
+            if (nextIdx !== -1) {
+              setModuleIdx(nextIdx);
+              reset();
+              setTab("center");
+            }
+            setDayModal(null);
+          }}
+          onClose={() => setDayModal(null)}
+        />
+      )}
     </div>
+
   );
 }
 
