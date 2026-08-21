@@ -177,7 +177,7 @@ export default function StudentInnerOS() {
   const advance = () => {
     const next = stepIdx + 1;
     if (next >= mod.steps.length) {
-      const earned = (mod.steps.length - (doneIds.has(mod.id) ? mod.steps.length : 0)) * XP_PER_STEP;
+      const earned = mod.steps.length * XP_PER_STEP;
       setSessionXp((x) => x + XP_PER_STEP);
       setLocalDone((d) => ({ ...d, [mod.id]: true as const }));
 
