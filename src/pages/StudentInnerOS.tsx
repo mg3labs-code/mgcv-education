@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { STEP_META, KIND_LAYER, type InnerStep } from "@/data/foodInnerOS";
 import { JOURNEYS, DEFAULT_JOURNEY_ID, DAY_META } from "@/data/innerOSJourneys";
 import { LAYERS } from "@/lib/sevenLayers";
@@ -7,6 +7,10 @@ import CounterChallenge from "@/components/inner-os/CounterChallenge";
 import TrapTrueFalse from "@/components/inner-os/TrapTrueFalse";
 import FirstPrinciples from "@/components/inner-os/FirstPrinciples";
 import TeachItBack from "@/components/inner-os/TeachItBack";
+import DayCompleteModal from "@/components/inner-os/DayCompleteModal";
+import { useInnerOSProgress } from "@/hooks/useInnerOSProgress";
+import { toast } from "@/hooks/use-toast";
+
 
 const XP_PER_STEP = 10;
 
