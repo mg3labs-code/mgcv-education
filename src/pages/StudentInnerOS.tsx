@@ -43,11 +43,23 @@ export default function StudentInnerOS() {
   const [journeyId, setJourneyId] = useState(DEFAULT_JOURNEY_ID);
   const [moduleIdx, setModuleIdx] = useState(0);
   const [stepIdx, setStepIdx] = useState(0);
-  const [completed, setCompleted] = useState<Record<string, number>>({});
+  const [localDone, setLocalDone] = useState<Record<string, true>>({});
   const [picked, setPicked] = useState<number | null>(null);
   const [checked, setChecked] = useState(false);
-  const [xp, setXp] = useState(0);
+  const [sessionXp, setSessionXp] = useState(0);
   const [tab, setTab] = useState<Tab>("center");
+  const [dayModal, setDayModal] = useState<number | null>(null);
+  const hydrated = useRef<string | null>(null);
+
+  const {
+    isLoading: progressLoading,
+    isSignedIn,
+    doneIdsFor,
+    savedXp,
+    completeModule,
+    resetJourney,
+    resetModule,
+  } = useInnerOSProgress();
 
   const journey = JOURNEYS.find((j) => j.id === journeyId) ?? JOURNEYS[0];
   const modules = journey.modules;
@@ -64,7 +76,23 @@ export default function StudentInnerOS() {
   const style = cardStyleOf(step.kind);
   const isLastStep = stepIdx + 1 >= mod.steps.length;
 
-  const isModuleDone = (i: number) => (completed[modules[i].id] ?? 0) >= modules[i].steps.length;
+  const savedDone = doneIdsFor(journeyId);
+  const doneIds = useMemo(() => {
+    const s = new Set(savedDone);
+    Object.keys(localDone).forEach((id) => s.add(id));
+    return s;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [savedDone, localDone]);
+
+  const xp = savedXp + sessionXp;
+
+  const isModuleDone = (i: number) => doneIds.has(modules[i].id);
+  const journeyDone = (jid: string) => {
+    const j = JOURNEYS.find((x) => x.id === jid);
+    if (!j) return false;
+    const set = jid === journeyId ? doneIds : doneIdsFor(jid);
+    return j.modules.length > 0 && j.modules.every((m) => set.has(m.id));
+  };
 
   /** A day unlocks once every module of the previous day is complete. */
   const dayUnlocked = (day: number) =>
@@ -78,17 +106,13 @@ export default function StudentInnerOS() {
     return "locked";
   };
 
-  const doneCount = useMemo(
-    () => modules.filter((m) => (completed[m.id] ?? 0) >= m.steps.length).length,
-    [completed, modules],
-  );
+  const doneCount = useMemo(() => modules.filter((m) => doneIds.has(m.id)).length, [doneIds, modules]);
 
   const nextUnlock = useMemo(() => {
-    const pending = modules.find((_, i) => !isModuleDone(i));
+    const pending = modules.find((m) => !doneIds.has(m.id));
     if (!pending) return "Journey complete";
     return `Next: ${pending.title}`;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [completed, modules]);
+  }, [doneIds, modules]);
 
   const reset = () => {
     setStepIdx(0);
@@ -96,25 +120,97 @@ export default function StudentInnerOS() {
     setChecked(false);
   };
 
+  /** Once saved progress lands, jump to the first module that isn't finished. */
+  useEffect(() => {
+    if (progressLoading) return;
+    if (hydrated.current === journeyId) return;
+    hydrated.current = journeyId;
+    const firstPending = modules.findIndex((m) => !savedDone.has(m.id));
+    setModuleIdx(firstPending === -1 ? 0 : firstPending);
+    reset();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [progressLoading, journeyId, modules]);
+
   const selectJourney = (id: string) => {
     setJourneyId(id);
+    hydrated.current = null;
     setModuleIdx(0);
     reset();
   };
 
+  const handleReattemptJourney = async (jid: string) => {
+    const j = JOURNEYS.find((x) => x.id === jid);
+    if (!window.confirm(`Restart "${j?.title}" from Day 1? Your saved progress for it will be cleared.`))
+      return;
+    try {
+      await resetJourney.mutateAsync(jid);
+      setLocalDone({});
+      setSessionXp(0);
+      setJourneyId(jid);
+      hydrated.current = jid;
+      setModuleIdx(0);
+      reset();
+      setTab("center");
+      toast({ title: "Journey restarted", description: `${j?.title} is ready from Day 1.` });
+    } catch (e: any) {
+      toast({ title: "Could not restart", description: e.message, variant: "destructive" });
+    }
+  };
+
+  const handleReattemptModule = async (i: number) => {
+    const m = modules[i];
+    try {
+      await resetModule.mutateAsync({ journeyId, moduleId: m.id });
+      setLocalDone((d) => {
+        const next = { ...d };
+        delete next[m.id];
+        return next;
+      });
+      setModuleIdx(i);
+      reset();
+      setTab("center");
+    } catch (e: any) {
+      toast({ title: "Could not reattempt", description: e.message, variant: "destructive" });
+    }
+  };
+
   const advance = () => {
-    setXp((x) => x + XP_PER_STEP);
     const next = stepIdx + 1;
     if (next >= mod.steps.length) {
-      setCompleted((c) => ({ ...c, [mod.id]: mod.steps.length }));
+      const earned = (mod.steps.length - (doneIds.has(mod.id) ? mod.steps.length : 0)) * XP_PER_STEP;
+      setSessionXp((x) => x + XP_PER_STEP);
+      setLocalDone((d) => ({ ...d, [mod.id]: true as const }));
+
+      if (isSignedIn) {
+        completeModule
+          .mutateAsync({
+            journeyId,
+            moduleId: mod.id,
+            steps: mod.steps.length,
+            day: mod.day,
+            xp: Math.max(earned, mod.steps.length * XP_PER_STEP),
+          })
+          .catch((e: any) =>
+            toast({ title: "Progress not saved", description: e.message, variant: "destructive" }),
+          );
+      }
+
+      // Day complete? (every module of this module's day is now finished)
+      const day = mod.day ?? 0;
+      const dayFinished =
+        day > 0 && modules.every((m) => (m.day ?? 0) !== day || m.id === mod.id || doneIds.has(m.id));
+      if (dayFinished) setDayModal(day);
+
       setModuleIdx(Math.min(moduleIdx + 1, modules.length - 1));
       reset();
       return;
     }
+    setSessionXp((x) => x + XP_PER_STEP);
     setStepIdx(next);
     setPicked(null);
     setChecked(false);
   };
+
 
   const tutorLines = buildTutorLines(step, checked, correct);
   let lastDay = 0;
