@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { STEP_META, KIND_LAYER, type InnerStep } from "@/data/foodInnerOS";
 import { JOURNEYS, DEFAULT_JOURNEY_ID, DAY_META } from "@/data/innerOSJourneys";
 import { LAYERS } from "@/lib/sevenLayers";
@@ -7,6 +7,10 @@ import CounterChallenge from "@/components/inner-os/CounterChallenge";
 import TrapTrueFalse from "@/components/inner-os/TrapTrueFalse";
 import FirstPrinciples from "@/components/inner-os/FirstPrinciples";
 import TeachItBack from "@/components/inner-os/TeachItBack";
+import DayCompleteModal from "@/components/inner-os/DayCompleteModal";
+import { useInnerOSProgress } from "@/hooks/useInnerOSProgress";
+import { toast } from "@/hooks/use-toast";
+
 
 const XP_PER_STEP = 10;
 
@@ -39,11 +43,23 @@ export default function StudentInnerOS() {
   const [journeyId, setJourneyId] = useState(DEFAULT_JOURNEY_ID);
   const [moduleIdx, setModuleIdx] = useState(0);
   const [stepIdx, setStepIdx] = useState(0);
-  const [completed, setCompleted] = useState<Record<string, number>>({});
+  const [localDone, setLocalDone] = useState<Record<string, true>>({});
   const [picked, setPicked] = useState<number | null>(null);
   const [checked, setChecked] = useState(false);
-  const [xp, setXp] = useState(0);
+  const [sessionXp, setSessionXp] = useState(0);
   const [tab, setTab] = useState<Tab>("center");
+  const [dayModal, setDayModal] = useState<number | null>(null);
+  const hydrated = useRef<string | null>(null);
+
+  const {
+    isLoading: progressLoading,
+    isSignedIn,
+    doneIdsFor,
+    savedXp,
+    completeModule,
+    resetJourney,
+    resetModule,
+  } = useInnerOSProgress();
 
   const journey = JOURNEYS.find((j) => j.id === journeyId) ?? JOURNEYS[0];
   const modules = journey.modules;
@@ -60,7 +76,23 @@ export default function StudentInnerOS() {
   const style = cardStyleOf(step.kind);
   const isLastStep = stepIdx + 1 >= mod.steps.length;
 
-  const isModuleDone = (i: number) => (completed[modules[i].id] ?? 0) >= modules[i].steps.length;
+  const savedDone = doneIdsFor(journeyId);
+  const doneIds = useMemo(() => {
+    const s = new Set(savedDone);
+    Object.keys(localDone).forEach((id) => s.add(id));
+    return s;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [savedDone, localDone]);
+
+  const xp = savedXp + sessionXp;
+
+  const isModuleDone = (i: number) => doneIds.has(modules[i].id);
+  const journeyDone = (jid: string) => {
+    const j = JOURNEYS.find((x) => x.id === jid);
+    if (!j) return false;
+    const set = jid === journeyId ? doneIds : doneIdsFor(jid);
+    return j.modules.length > 0 && j.modules.every((m) => set.has(m.id));
+  };
 
   /** A day unlocks once every module of the previous day is complete. */
   const dayUnlocked = (day: number) =>
@@ -74,17 +106,13 @@ export default function StudentInnerOS() {
     return "locked";
   };
 
-  const doneCount = useMemo(
-    () => modules.filter((m) => (completed[m.id] ?? 0) >= m.steps.length).length,
-    [completed, modules],
-  );
+  const doneCount = useMemo(() => modules.filter((m) => doneIds.has(m.id)).length, [doneIds, modules]);
 
   const nextUnlock = useMemo(() => {
-    const pending = modules.find((_, i) => !isModuleDone(i));
+    const pending = modules.find((m) => !doneIds.has(m.id));
     if (!pending) return "Journey complete";
     return `Next: ${pending.title}`;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [completed, modules]);
+  }, [doneIds, modules]);
 
   const reset = () => {
     setStepIdx(0);
@@ -92,25 +120,97 @@ export default function StudentInnerOS() {
     setChecked(false);
   };
 
+  /** Once saved progress lands, jump to the first module that isn't finished. */
+  useEffect(() => {
+    if (progressLoading) return;
+    if (hydrated.current === journeyId) return;
+    hydrated.current = journeyId;
+    const firstPending = modules.findIndex((m) => !savedDone.has(m.id));
+    setModuleIdx(firstPending === -1 ? 0 : firstPending);
+    reset();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [progressLoading, journeyId, modules]);
+
   const selectJourney = (id: string) => {
     setJourneyId(id);
+    hydrated.current = null;
     setModuleIdx(0);
     reset();
   };
 
+  const handleReattemptJourney = async (jid: string) => {
+    const j = JOURNEYS.find((x) => x.id === jid);
+    if (!window.confirm(`Restart "${j?.title}" from Day 1? Your saved progress for it will be cleared.`))
+      return;
+    try {
+      await resetJourney.mutateAsync(jid);
+      setLocalDone({});
+      setSessionXp(0);
+      setJourneyId(jid);
+      hydrated.current = jid;
+      setModuleIdx(0);
+      reset();
+      setTab("center");
+      toast({ title: "Journey restarted", description: `${j?.title} is ready from Day 1.` });
+    } catch (e: any) {
+      toast({ title: "Could not restart", description: e.message, variant: "destructive" });
+    }
+  };
+
+  const handleReattemptModule = async (i: number) => {
+    const m = modules[i];
+    try {
+      await resetModule.mutateAsync({ journeyId, moduleId: m.id });
+      setLocalDone((d) => {
+        const next = { ...d };
+        delete next[m.id];
+        return next;
+      });
+      setModuleIdx(i);
+      reset();
+      setTab("center");
+    } catch (e: any) {
+      toast({ title: "Could not reattempt", description: e.message, variant: "destructive" });
+    }
+  };
+
   const advance = () => {
-    setXp((x) => x + XP_PER_STEP);
     const next = stepIdx + 1;
     if (next >= mod.steps.length) {
-      setCompleted((c) => ({ ...c, [mod.id]: mod.steps.length }));
+      const earned = mod.steps.length * XP_PER_STEP;
+      setSessionXp((x) => x + XP_PER_STEP);
+      setLocalDone((d) => ({ ...d, [mod.id]: true as const }));
+
+      if (isSignedIn) {
+        completeModule
+          .mutateAsync({
+            journeyId,
+            moduleId: mod.id,
+            steps: mod.steps.length,
+            day: mod.day,
+            xp: earned,
+          })
+          .catch((e: any) =>
+            toast({ title: "Progress not saved", description: e.message, variant: "destructive" }),
+          );
+      }
+
+      // Day complete? (every module of this module's day is now finished)
+      const day = mod.day ?? 0;
+      const dayFinished =
+        day > 0 && modules.every((m) => (m.day ?? 0) !== day || m.id === mod.id || doneIds.has(m.id));
+      if (dayFinished) setDayModal(day);
+
       setModuleIdx(Math.min(moduleIdx + 1, modules.length - 1));
       reset();
       return;
     }
+    setSessionXp((x) => x + XP_PER_STEP);
     setStepIdx(next);
     setPicked(null);
     setChecked(false);
   };
+
 
   const tutorLines = buildTutorLines(step, checked, correct);
   let lastDay = 0;
@@ -136,16 +236,28 @@ export default function StudentInnerOS() {
           <div style={{ fontSize: 12, fontWeight: 700, color: "var(--ios-muted)" }}>{nextUnlock}</div>
           <div className="ios-stat-pills">
             {JOURNEYS.map((j) => (
-              <button
-                key={j.id}
-                type="button"
-                className={`ios-action${j.id === journeyId ? " primary" : ""}`}
-                onClick={() => selectJourney(j.id)}
-              >
-                {j.title}
-              </button>
+              <div key={j.id} className="ios-chip-wrap">
+                <button
+                  type="button"
+                  className={`ios-action${j.id === journeyId ? " primary" : ""}`}
+                  onClick={() => selectJourney(j.id)}
+                >
+                  {journeyDone(j.id) ? "✅ " : ""}
+                  {j.title}
+                </button>
+                {journeyDone(j.id) && (
+                  <button
+                    type="button"
+                    className="ios-reattempt"
+                    onClick={() => handleReattemptJourney(j.id)}
+                  >
+                    Reattempt
+                  </button>
+                )}
+              </div>
             ))}
           </div>
+
         </div>
 
         <div className="ios-path">
@@ -167,33 +279,41 @@ export default function StudentInnerOS() {
                     <span className="ios-day-blurb">{DAY_META[day].blurb}</span>
                   </div>
                 )}
-                <button
-                  type="button"
-                  className={`ios-node ${cls}`}
-                  disabled={st === "locked"}
-                  onClick={() => {
-                    setModuleIdx(i);
-                    reset();
-                    setTab("center");
-                  }}
-                >
-                  <div className="ios-node-icon">
-                    {st === "done" ? "✓" : st === "locked" ? "🔒" : m.emoji}
-                  </div>
-                  <div className="ios-node-info">
-                    <div className="ios-node-title">{m.title}</div>
-                    <div className="ios-node-status">
-                      {st === "done"
-                        ? "Completed"
-                        : isCurrent
-                          ? "In progress"
-                          : st === "locked"
-                            ? "Locked"
-                            : "Ready"}{" "}
-                      · {m.minutes} min
+                <div className="ios-node-row">
+                  <button
+                    type="button"
+                    className={`ios-node ${cls}`}
+                    disabled={st === "locked"}
+                    onClick={() => {
+                      setModuleIdx(i);
+                      reset();
+                      setTab("center");
+                    }}
+                  >
+                    <div className="ios-node-icon">
+                      {st === "done" ? "✓" : st === "locked" ? "🔒" : m.emoji}
                     </div>
-                  </div>
-                </button>
+                    <div className="ios-node-info">
+                      <div className="ios-node-title">{m.title}</div>
+                      <div className="ios-node-status">
+                        {st === "done"
+                          ? "Completed"
+                          : isCurrent
+                            ? "In progress"
+                            : st === "locked"
+                              ? "Locked"
+                              : "Ready"}{" "}
+                        · {m.minutes} min
+                      </div>
+                    </div>
+                  </button>
+                  {st === "done" && (
+                    <button type="button" className="ios-reattempt" onClick={() => handleReattemptModule(i)}>
+                      Redo
+                    </button>
+                  )}
+                </div>
+
               </div>
             );
           })}
@@ -389,7 +509,28 @@ export default function StudentInnerOS() {
           <span>Buddy</span>
         </button>
       </div>
+
+      {dayModal !== null && DAY_META[dayModal] && (
+        <DayCompleteModal
+          day={dayModal}
+          dayName={DAY_META[dayModal].name}
+          dayBlurb={DAY_META[dayModal].blurb}
+          xp={xp}
+          nextDayName={DAY_META[dayModal + 1]?.name}
+          onContinue={() => {
+            const nextIdx = modules.findIndex((m) => (m.day ?? 0) === dayModal + 1);
+            if (nextIdx !== -1) {
+              setModuleIdx(nextIdx);
+              reset();
+              setTab("center");
+            }
+            setDayModal(null);
+          }}
+          onClose={() => setDayModal(null)}
+        />
+      )}
     </div>
+
   );
 }
 
