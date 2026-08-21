@@ -909,3 +909,13 @@
 .ios-prompt-list { margin: 0 0 16px; padding-left: 20px; display: grid; gap: 6px; font-size: 16px; font-weight: 600; color: var(--ios-muted); }
 .ios-textarea { width: 100%; border: 2px solid var(--ios-border); border-radius: 14px; padding: 14px 16px; font-family: inherit; font-size: 16px; font-weight: 600; color: var(--ios-text); resize: vertical; background: var(--ios-panel); }
 .ios-textarea:focus { outline: none; border-color: var(--ios-primary); }
+
+/* ---- Inner OS · day-complete modal + reattempt ---- */
+.ios-modal-overlay { position: fixed; inset: 0; z-index: 100; background: rgba(15, 23, 42, 0.55); display: flex; align-items: center; justify-content: center; padding: 20px; }
+.ios-modal { width: 100%; max-width: 420px; background: var(--ios-panel); border-radius: 24px; padding: 28px 24px; box-shadow: 0 24px 60px rgba(15, 23, 42, 0.25); border-top: 6px solid var(--ios-secondary); max-height: 90vh; overflow-y: auto; }
+.ios-modal .ios-btn { margin-top: 12px; }
+.ios-reattempt { margin-left: auto; background: transparent; border: 2px solid var(--ios-border); border-radius: 10px; padding: 4px 10px; font-family: inherit; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.4px; color: var(--ios-muted); cursor: pointer; }
+.ios-reattempt:hover { border-color: var(--ios-primary); color: var(--ios-primary); background: var(--ios-primary-light); }
+.ios-node-row { display: flex; align-items: center; gap: 8px; }
+.ios-node-row .ios-node { flex: 1; }
+.ios-chip-wrap { display: flex; align-items: center; gap: 4px; }
