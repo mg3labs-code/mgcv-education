@@ -188,7 +188,7 @@ export default function StudentInnerOS() {
             moduleId: mod.id,
             steps: mod.steps.length,
             day: mod.day,
-            xp: Math.max(earned, mod.steps.length * XP_PER_STEP),
+            xp: earned,
           })
           .catch((e: any) =>
             toast({ title: "Progress not saved", description: e.message, variant: "destructive" }),
