@@ -279,33 +279,41 @@ export default function StudentInnerOS() {
                     <span className="ios-day-blurb">{DAY_META[day].blurb}</span>
                   </div>
                 )}
-                <button
-                  type="button"
-                  className={`ios-node ${cls}`}
-                  disabled={st === "locked"}
-                  onClick={() => {
-                    setModuleIdx(i);
-                    reset();
-                    setTab("center");
-                  }}
-                >
-                  <div className="ios-node-icon">
-                    {st === "done" ? "✓" : st === "locked" ? "🔒" : m.emoji}
-                  </div>
-                  <div className="ios-node-info">
-                    <div className="ios-node-title">{m.title}</div>
-                    <div className="ios-node-status">
-                      {st === "done"
-                        ? "Completed"
-                        : isCurrent
-                          ? "In progress"
-                          : st === "locked"
-                            ? "Locked"
-                            : "Ready"}{" "}
-                      · {m.minutes} min
+                <div className="ios-node-row">
+                  <button
+                    type="button"
+                    className={`ios-node ${cls}`}
+                    disabled={st === "locked"}
+                    onClick={() => {
+                      setModuleIdx(i);
+                      reset();
+                      setTab("center");
+                    }}
+                  >
+                    <div className="ios-node-icon">
+                      {st === "done" ? "✓" : st === "locked" ? "🔒" : m.emoji}
                     </div>
-                  </div>
-                </button>
+                    <div className="ios-node-info">
+                      <div className="ios-node-title">{m.title}</div>
+                      <div className="ios-node-status">
+                        {st === "done"
+                          ? "Completed"
+                          : isCurrent
+                            ? "In progress"
+                            : st === "locked"
+                              ? "Locked"
+                              : "Ready"}{" "}
+                        · {m.minutes} min
+                      </div>
+                    </div>
+                  </button>
+                  {st === "done" && (
+                    <button type="button" className="ios-reattempt" onClick={() => handleReattemptModule(i)}>
+                      Redo
+                    </button>
+                  )}
+                </div>
+
               </div>
             );
           })}
