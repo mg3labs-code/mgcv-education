@@ -236,16 +236,28 @@ export default function StudentInnerOS() {
           <div style={{ fontSize: 12, fontWeight: 700, color: "var(--ios-muted)" }}>{nextUnlock}</div>
           <div className="ios-stat-pills">
             {JOURNEYS.map((j) => (
-              <button
-                key={j.id}
-                type="button"
-                className={`ios-action${j.id === journeyId ? " primary" : ""}`}
-                onClick={() => selectJourney(j.id)}
-              >
-                {j.title}
-              </button>
+              <div key={j.id} className="ios-chip-wrap">
+                <button
+                  type="button"
+                  className={`ios-action${j.id === journeyId ? " primary" : ""}`}
+                  onClick={() => selectJourney(j.id)}
+                >
+                  {journeyDone(j.id) ? "✅ " : ""}
+                  {j.title}
+                </button>
+                {journeyDone(j.id) && (
+                  <button
+                    type="button"
+                    className="ios-reattempt"
+                    onClick={() => handleReattemptJourney(j.id)}
+                  >
+                    Reattempt
+                  </button>
+                )}
+              </div>
             ))}
           </div>
+
         </div>
 
         <div className="ios-path">
