@@ -33,7 +33,7 @@ const universityMethods = [
   {
     university: "The Socratic Challenge",
     flag: "🔍",
-    method: "Research-proven assumption testing",
+    method: "Assumption-testing practice",
     feature: "What if we're wrong?",
     featureDesc: "Assumptions Block",
     icon: Shield,
