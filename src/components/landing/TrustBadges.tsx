@@ -26,7 +26,7 @@ const TrustBadges = () => {
             Not another EdTech app
           </h2>
           <p className="text-sm text-muted-foreground max-w-md mx-auto">
-            We don't replace teachers — we give them research-proven pedagogy tools.
+            We don't replace teachers — we give them research-backed pedagogy tools.
           </p>
         </motion.div>
 

@@ -63,7 +63,7 @@ const universityMethods = [
   {
     university: "The Simplicity Test",
     flag: "💡",
-    method: "Teach-back method — proven to boost retention 90%",
+    method: "Teach-back method — explain it to learn it deeply",
     feature: "Teach your friend",
     featureDesc: "Explain Block",
     icon: MessageSquare,
@@ -96,7 +96,7 @@ const WhyThisWorks = () => {
         >
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-4">
             <Lightbulb className="h-3.5 w-3.5 text-primary" />
-            <span className="text-xs font-semibold text-primary uppercase tracking-wider">Proven Methodology</span>
+            <span className="text-xs font-semibold text-primary uppercase tracking-wider">Research-Backed Methods</span>
           </div>
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
             Why This <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-info">Actually Works</span>
@@ -135,7 +135,7 @@ const WhyThisWorks = () => {
           className="mb-6"
         >
           <h3 className="text-xl md:text-2xl font-bold text-foreground text-center mb-2">
-            Research-Proven Methods, Built Into Every Lesson
+            Research-Backed Methods, Built Into Every Lesson
           </h3>
           <p className="text-sm text-muted-foreground text-center mb-8">
             Your child practices techniques rooted in cognitive science research used by top-tier institutions worldwide — every single day.
