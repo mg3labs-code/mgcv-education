@@ -95,9 +95,9 @@ To integrate elite cognitive learning methods into the existing school curriculu
 
 2. Core Objective for Schools
 
-The system must:
+The system is designed to:
 
-Improve retention from ~50% to 80–90%
+Test whether structured cognitive practice can improve retention and conceptual clarity during a pilot
 
 Reduce last-minute exam cramming
 
@@ -213,17 +213,17 @@ C) Homework reinforcement system
 
 No replacement of teacher required.
 
-9. Measurable KPIs for Pilot
+9. Pilot Hypotheses to Validate
 
-During 3-month pilot:
+During a 3-month pilot, we will measure whether the system produces:
 
-20% increase in chapter test scores
+A measurable increase in chapter test scores
 
-30% increase in long-term retention
+A measurable increase in long-term retention
 
-50% reduction in last-minute revision stress
+A measurable reduction in last-minute revision stress
 
-Improvement in student explanation ability
+A measurable improvement in student explanation ability
 
 10. Data & Compliance
 
