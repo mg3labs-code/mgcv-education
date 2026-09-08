@@ -358,24 +358,6 @@ const Index = () => {
               </button>
             </motion.div>
 
-            {/* Trust Signal */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.6 }}
-              className="mt-6 flex items-center gap-3"
-            >
-              <div className="flex -space-x-2">
-                {["🏫", "🎓", "📚"].map((emoji, i) => (
-                  <div key={i} className="w-8 h-8 rounded-full bg-muted border-2 border-background flex items-center justify-center text-sm">
-                    {emoji}
-                  </div>
-                ))}
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Trusted by <strong className="text-foreground">200+ schools</strong> across India
-              </p>
-            </motion.div>
 
             {/* Mobile Hero Carousel */}
             <motion.div
