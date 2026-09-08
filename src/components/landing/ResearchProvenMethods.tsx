@@ -231,7 +231,7 @@ const ResearchProvenMethods = () => {
             Research-Backed Methods, Built Into Every Lesson
           </h3>
           <p className="text-sm text-muted-foreground text-center mb-8 max-w-lg mx-auto">
-            Your child practices techniques rooted in proven learning science used by the world's top institutions — every single day.
+            Your child practices techniques rooted in learning science — every single day.
           </p>
 
           <Tabs defaultValue="first-principles" className="w-full">
