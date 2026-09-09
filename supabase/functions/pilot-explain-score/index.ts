@@ -11,7 +11,7 @@ const BodySchema = z.object({
   episodeTitle: z.string().min(1).max(300),
   day: z.number().int().min(1).max(3),
   prompt: z.string().min(1).max(1200),
-  answer: z.string().min(5).max(3000),
+  answer: z.string().min(5).max(20000).transform((s) => s.slice(0, 20000)),
 });
 
 // No silent fake-score fallback. If the AI gateway fails we surface a real
