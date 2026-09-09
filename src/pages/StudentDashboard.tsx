@@ -581,20 +581,6 @@ const StudentDashboard = () => {
                 <DashboardGreeting firstName={firstName} subline={greeting} />
               </FadeSlide>
 
-              {/* Voice-first CTA */}
-              <FadeSlide delay={40}>
-                <button
-                  onClick={() => navigate("/student/talk")}
-                  className="w-full text-left rounded-2xl p-5 bg-gradient-to-r from-primary to-primary/70 text-primary-foreground shadow-lg hover:shadow-xl transition-all hover:scale-[1.01] flex items-center gap-4"
-                >
-                  <div className="h-12 w-12 rounded-full bg-white/20 flex items-center justify-center text-2xl shrink-0">🎤</div>
-                  <div className="flex-1">
-                    <div className="font-semibold text-base">Talk to Buddy</div>
-                    <div className="text-xs opacity-90 mt-0.5">Tap and speak — Buddy will listen, answer, and get to know you.</div>
-                  </div>
-                  <div className="text-sm font-medium bg-white/20 px-3 py-1.5 rounded-full">Start</div>
-                </button>
-              </FadeSlide>
 
               {/* Personalized "Continue Your Journey" hero */}
               <FadeSlide delay={60}>
