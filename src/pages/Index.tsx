@@ -654,7 +654,11 @@ const Index = () => {
 
                 {showForgot ? (
                   <div className="mt-6">
-                    <ForgotPasswordModal onBack={() => setShowForgot(false)} variant="glass" />
+                    <ForgotPasswordModal
+                      onBack={() => setShowForgot(false)}
+                      variant="glass"
+                      accountType={loginType}
+                    />
                   </div>
                 ) : (
                   <>

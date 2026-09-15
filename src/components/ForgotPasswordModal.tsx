@@ -7,9 +7,10 @@ import { useToast } from "@/hooks/use-toast";
 interface ForgotPasswordModalProps {
   onBack: () => void;
   variant?: "card" | "glass";
+  accountType?: "student" | "teacher";
 }
 
-const ForgotPasswordModal = ({ onBack, variant = "card" }: ForgotPasswordModalProps) => {
+const ForgotPasswordModal = ({ onBack, variant = "card", accountType }: ForgotPasswordModalProps) => {
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [sent, setSent] = useState(false);
@@ -49,7 +50,9 @@ const ForgotPasswordModal = ({ onBack, variant = "card" }: ForgotPasswordModalPr
         ) : (
           <>
             <h3 className="text-xl text-foreground font-semibold mb-2">Reset password</h3>
-            <p className="text-muted-foreground text-sm mb-6">Enter your teacher account email to receive a reset link.</p>
+            <p className="text-muted-foreground text-sm mb-6">
+              Enter your {accountType ? `${accountType} account` : "account"} email to receive a reset link.
+            </p>
             <form onSubmit={handleSubmit}>
               <div className="mb-4 text-left">
                 <label htmlFor="reset-email" className="mb-1.5 block text-sm font-medium text-foreground">Email address</label>
@@ -60,7 +63,7 @@ const ForgotPasswordModal = ({ onBack, variant = "card" }: ForgotPasswordModalPr
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   autoComplete="email"
-                  placeholder="teacher@school.edu"
+                  placeholder={accountType === "student" ? "student@school.edu" : "teacher@school.edu"}
                   className="w-full rounded-lg border border-input bg-background px-4 py-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring"
                 />
               </div>
