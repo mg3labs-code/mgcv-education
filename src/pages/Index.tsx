@@ -48,6 +48,7 @@ const Index = () => {
   const [loginType, setLoginType] = useState<LoginType>("");
   const [authMode, setAuthMode] = useState<AuthMode>("login");
   const [showForgot, setShowForgot] = useState(false);
+  const [signupEmailSent, setSignupEmailSent] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -118,6 +119,7 @@ const Index = () => {
     setLoginType("");
     setAuthMode("login");
     setShowForgot(false);
+    setSignupEmailSent(false);
     setEmail("");
     setPassword("");
     setFullName("");
@@ -197,12 +199,11 @@ const Index = () => {
             ? { board: studentBoard, grade: studentGrade, section: studentSection }
             : undefined,
         );
+        setSignupEmailSent(true);
         toast({ title: "Account created!", description: "Please check your email to verify your account." });
-        closeModal();
       } else {
         await signIn(email, password);
-        toast({ title: "Welcome back!" });
-        closeModal();
+        toast({ title: "Welcome back!", description: "Opening your dashboard…" });
       }
     } catch (err: any) {
       const parsed = parseError(err);
@@ -652,7 +653,26 @@ const Index = () => {
                   {loginType === "student" ? "Student Portal" : "Teacher Portal"}
                 </h2>
 
-                {showForgot ? (
+                {signupEmailSent ? (
+                  <div className="mt-6 text-center" role="status">
+                    <h3 className="text-xl text-foreground font-semibold mb-2">Check your email</h3>
+                    <p className="text-muted-foreground text-sm mb-6">
+                      We sent a verification link to <strong className="text-foreground">{email}</strong>.
+                      Open it to activate your {loginType} account.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSignupEmailSent(false);
+                        setAuthMode("login");
+                        setPassword("");
+                      }}
+                      className="w-full py-3 rounded-xl bg-primary text-primary-foreground text-sm font-semibold"
+                    >
+                      Back to Sign In
+                    </button>
+                  </div>
+                ) : showForgot ? (
                   <div className="mt-6">
                     <ForgotPasswordModal
                       onBack={() => setShowForgot(false)}

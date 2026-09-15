@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 interface NavItem {
   label: string;
@@ -46,11 +47,16 @@ const NavContent = ({ role, onNavigate }: { role: string; onNavigate: (path: str
   const location = useLocation();
   const { signOut, fullName } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const items = navMap[role];
 
   const handleSignOut = async () => {
-    await signOut();
-    navigate("/auth");
+    try {
+      await signOut();
+      navigate("/", { replace: true });
+    } catch {
+      toast({ title: "Could not sign out", description: "Please try again.", variant: "destructive" });
+    }
   };
 
   return (
