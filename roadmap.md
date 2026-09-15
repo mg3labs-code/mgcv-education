@@ -6,3 +6,4 @@
 - [x] Consolidate pilot navigation and branding
 - [x] Add Real Numbers entry and principal one-pager
 - [x] Validate core student and teacher flows
+- [x] Stabilize student and teacher sign-in, signup confirmation, password reset, and logout
