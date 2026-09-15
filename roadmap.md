@@ -5,4 +5,4 @@
 - [x] Remove misleading or unfinished surfaces from pilot navigation
 - [x] Consolidate pilot navigation and branding
 - [x] Add Real Numbers entry and principal one-pager
-- [ ] Validate core student and teacher flows
+- [x] Validate core student and teacher flows
