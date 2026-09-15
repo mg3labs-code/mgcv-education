@@ -22,13 +22,16 @@ const normaliseBand = (band: string | null, score: number | null): TeacherExplan
   return "Needs support";
 };
 
+const teachingKey = (entry: { board: string; grade: number; section: string; subject: string }) =>
+  `${assignmentKey(entry)}::${entry.subject}`;
+
 const TeacherExplanations = () => {
   const { demoMode } = useDemoMode();
   const { entries: realAssignments, loading: assignmentsLoading } = useTeacherAssignments();
   const assignments = demoMode ? PILOT_DEMO_ASSIGNMENTS : realAssignments;
   const [selectedKey, setSelectedKey] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
-  const selected = assignments.find((entry) => assignmentKey(entry) === selectedKey) ?? assignments[0];
+  const selected = assignments.find((entry) => teachingKey(entry) === selectedKey) ?? assignments[0];
 
   const { data: realRows = [], isLoading } = useQuery({
     queryKey: ["teacher-explanations", selected?.board, selected?.grade, selected?.section, selected?.subject],
@@ -81,13 +84,13 @@ const TeacherExplanations = () => {
             </div>
             {selected && (
               <select
-                value={assignmentKey(selected)}
+                value={teachingKey(selected)}
                 onChange={(event) => setSelectedKey(event.target.value)}
                 className="min-w-[280px] rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
                 aria-label="Select teaching assignment"
               >
                 {assignments.map((entry) => (
-                  <option key={`${assignmentKey(entry)}::${entry.subject}`} value={assignmentKey(entry)}>
+                  <option key={teachingKey(entry)} value={teachingKey(entry)}>
                     {assignmentLabel(entry)} · {entry.subject}
                   </option>
                 ))}
