@@ -14,6 +14,7 @@ import { Menu, X, ArrowRight, GraduationCap, BookOpen } from "lucide-react";
 import ImageTextEffect from "@/components/landing/ImageTextEffect";
 import TeacherClassSubjectMatrix from "@/components/teacher/TeacherClassSubjectMatrix";
 import type { TeachingMapEntry } from "@/data/teacherSubjects";
+import { TEACHER_BOARDS, TEACHER_GRADES, TEACHER_SECTIONS } from "@/data/teacherSubjects";
 import { motion, AnimatePresence } from "framer-motion";
 import heroStudents from "@/assets/hero-students.webp";
 import heroFutureLearning from "@/assets/hero-future-learning.jpg";
@@ -51,6 +52,9 @@ const Index = () => {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [className, setClassName] = useState("");
+  const [studentBoard, setStudentBoard] = useState("");
+  const [studentGrade, setStudentGrade] = useState<number | null>(null);
+  const [studentSection, setStudentSection] = useState("");
   const [schoolName, setSchoolName] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -118,6 +122,9 @@ const Index = () => {
     setPassword("");
     setFullName("");
     setClassName("");
+    setStudentBoard("");
+    setStudentGrade(null);
+    setStudentSection("");
     setSchoolName("");
     setTeacherAssignments([]);
     setLoginError(null);
@@ -167,12 +174,29 @@ const Index = () => {
           setSubmitting(false);
           return;
         }
+        if (selectedRole === "student" && (!studentBoard || studentGrade === null || !studentSection)) {
+          setLoginError({ message: "Please select your board, class, and section.", suggestion: "These details connect you to the correct teachers and assignments." });
+          setSubmitting(false);
+          return;
+        }
         if (!PASSWORD_RULE.test(password)) {
           setLoginError({ message: PASSWORD_MESSAGE, code: "AUTH_WEAK_PASSWORD", suggestion: PASSWORD_MESSAGE });
           setSubmitting(false);
           return;
         }
-        await signUp(email, password, fullName, selectedRole as any, className, schoolName, selectedRole === "teacher" ? teacherAssignments : undefined);
+        const canonicalClassName = selectedRole === "student" && studentGrade !== null ? `Class ${studentGrade}` : className;
+        await signUp(
+          email,
+          password,
+          fullName,
+          selectedRole as any,
+          canonicalClassName,
+          schoolName,
+          selectedRole === "teacher" ? teacherAssignments : undefined,
+          selectedRole === "student" && studentGrade !== null
+            ? { board: studentBoard, grade: studentGrade, section: studentSection }
+            : undefined,
+        );
         toast({ title: "Account created!", description: "Please check your email to verify your account." });
         closeModal();
       } else {
@@ -657,6 +681,25 @@ const Index = () => {
                         <>
                           <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} required
                             placeholder="Full name" className={inputClass} />
+                          {loginType === "student" && (
+                            <>
+                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                <select value={studentBoard} onChange={(e) => setStudentBoard(e.target.value)} required className={inputClass} aria-label="Board">
+                                  <option value="">Board</option>
+                                  {TEACHER_BOARDS.map((b) => <option key={b.code} value={b.code}>{b.label}</option>)}
+                                </select>
+                                <select value={studentGrade ?? ""} onChange={(e) => setStudentGrade(e.target.value ? Number(e.target.value) : null)} required className={inputClass} aria-label="Class">
+                                  <option value="">Class</option>
+                                  {TEACHER_GRADES.map((g) => <option key={g} value={g}>Class {g}</option>)}
+                                </select>
+                                <select value={studentSection} onChange={(e) => setStudentSection(e.target.value)} required className={inputClass} aria-label="Section">
+                                  <option value="">Section</option>
+                                  {TEACHER_SECTIONS.map((s) => <option key={s} value={s}>Section {s}</option>)}
+                                </select>
+                              </div>
+                              <input type="text" value={schoolName} onChange={(e) => setSchoolName(e.target.value)} placeholder="School name (optional)" className={inputClass} />
+                            </>
+                          )}
                           {loginType === "teacher" && (
                             <>
                               <input type="text" value={schoolName} onChange={(e) => setSchoolName(e.target.value)}
