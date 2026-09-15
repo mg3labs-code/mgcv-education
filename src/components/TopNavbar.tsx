@@ -174,6 +174,7 @@ const TopNavbar = ({ role, phase = 4, activeTab, onTabChange }: TopNavbarProps) 
             <div ref={profileRef} style={{ position: "relative" }}>
               <button
                 onClick={() => setProfileOpen(!profileOpen)}
+                aria-label="Open profile menu"
                 style={{
                   display: "flex", alignItems: "center", gap: 6,
                   background: profileOpen ? "#F5F5F4" : "transparent",
