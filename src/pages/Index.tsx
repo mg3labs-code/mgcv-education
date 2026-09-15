@@ -582,7 +582,7 @@ const Index = () => {
       {/* Footer */}
       <footer className="relative z-10 border-t border-border/50 py-8">
         <div className="max-w-[1400px] mx-auto px-4 md:px-10 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <div className="text-sm text-muted-foreground">© 2026 EduTech by MG3 Labs. All rights reserved.</div>
+          <div className="text-sm text-muted-foreground">© 2026 MGCV by MG3 Labs. All rights reserved.</div>
           <div className="flex gap-6">
             <button onClick={() => openModal("about")} className="text-sm text-muted-foreground hover:text-foreground bg-transparent border-none cursor-pointer">About</button>
             <button onClick={() => openModal("contact")} className="text-sm text-muted-foreground hover:text-foreground bg-transparent border-none cursor-pointer">Contact</button>
@@ -765,10 +765,10 @@ const Index = () => {
             className="glass-premium rounded-2xl p-8 md:p-10 w-full max-w-[600px] max-h-[80vh] overflow-y-auto text-left relative border border-border/50 shadow-2xl"
           >
             <button onClick={closeModal} className="absolute top-4 right-5 text-2xl cursor-pointer text-muted-foreground hover:text-foreground bg-transparent border-none">×</button>
-            <h2 className="text-2xl font-bold text-foreground mb-5 text-center">About EduTech</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-5 text-center">About MGCV</h2>
             <div className="text-muted-foreground leading-relaxed text-sm space-y-4">
-              <p><strong className="text-primary">EduTech</strong> is a cutting-edge educational technology platform designed to revolutionize the way students learn and teachers educate.</p>
-              <p>Built with modern web technologies and user-centered design principles, EduTech offers separate, tailored experiences for both students and educators.</p>
+              <p><strong className="text-primary">MGCV</strong> is a classroom learning pilot that helps teachers see students’ understanding through their own explanations.</p>
+              <p>The pilot tests whether short, structured learning sessions can improve conceptual clarity and help teachers respond earlier to misconceptions.</p>
               <p>Our platform emphasizes <strong className="text-primary">collaborative learning</strong>, <strong className="text-primary">data-driven insights</strong>, and <strong className="text-primary">personalized education paths</strong>.</p>
             </div>
           </motion.div>
