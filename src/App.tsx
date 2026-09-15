@@ -93,8 +93,8 @@ const PageLoader = () => (
 
 const CompanionWrapper = () => {
   const { role } = useAuth();
-  if (role !== "student" && role !== "teacher") return null;
-  return <StudyCompanion role={role} />;
+  if (role !== "student") return null;
+  return <StudyCompanion role="student" />;
 };
 
 const VibeCheckWrapper = () => {
