@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Menu, X, Bell, ChevronDown } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useDemoMode } from "@/contexts/DemoModeContext";
+import { useToast } from "@/hooks/use-toast";
 
 interface TopNavbarProps {
   role: "student" | "teacher" | "admin";
@@ -17,6 +18,7 @@ const TopNavbar = ({ role, phase = 4, activeTab, onTabChange }: TopNavbarProps) 
   const location = useLocation();
   const { signOut, fullName } = useAuth();
   const { demoMode, setDemoMode } = useDemoMode();
+  const { toast } = useToast();
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -33,8 +35,12 @@ const TopNavbar = ({ role, phase = 4, activeTab, onTabChange }: TopNavbarProps) 
   }, []);
 
   const handleSignOut = async () => {
-    await signOut();
-    navigate("/");
+    try {
+      await signOut();
+      navigate("/", { replace: true });
+    } catch {
+      toast({ title: "Could not sign out", description: "Please try again.", variant: "destructive" });
+    }
   };
 
   const initials = fullName
@@ -168,6 +174,7 @@ const TopNavbar = ({ role, phase = 4, activeTab, onTabChange }: TopNavbarProps) 
             <div ref={profileRef} style={{ position: "relative" }}>
               <button
                 onClick={() => setProfileOpen(!profileOpen)}
+                aria-label="Open profile menu"
                 style={{
                   display: "flex", alignItems: "center", gap: 6,
                   background: profileOpen ? "#F5F5F4" : "transparent",
