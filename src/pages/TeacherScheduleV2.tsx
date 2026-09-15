@@ -96,12 +96,12 @@ const TeacherScheduleV2 = () => {
       return;
     }
     setLoading(true);
-    // Case-insensitive match on text columns (DB stores e.g. "cbse" / "9").
+    const canonicalClassName = `Class ${gradeNum}`;
     const { data, error } = await (supabase as any)
       .from("m_calendar")
       .select("id, calendar_data")
       .ilike("board", board)
-      .ilike("class_name", String(gradeNum))
+      .ilike("class_name", canonicalClassName)
       .ilike("section", section)
       .ilike("subject", subject)
       .maybeSingle();
@@ -140,7 +140,7 @@ const TeacherScheduleV2 = () => {
     setLoading(true);
     const { data, error } = await (supabase as any)
       .from("m_calendar")
-      .insert({ board, class_name: String(gradeNum), section, subject, calendar_data: {} })
+      .insert({ board, class_name: `Class ${gradeNum}`, section, subject, calendar_data: {} })
       .select("id")
       .single();
     setLoading(false);
