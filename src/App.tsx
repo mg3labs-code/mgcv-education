@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { DemoModeProvider } from "@/contexts/DemoModeContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -66,6 +66,7 @@ const CuriosityArc = lazy(() => import("./pages/CuriosityArc"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const PreviewMockups = lazy(() => import("./pages/PreviewMockups"));
 const Pitch = lazy(() => import("./pages/Pitch"));
+const PilotPrincipalBrief = lazy(() => import("./pages/PilotPrincipalBrief"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -119,6 +120,7 @@ const App = () => (
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/pitch" element={<Pitch />} />
+                <Route path="/pilot/principal" element={<PilotPrincipalBrief />} />
                 <Route path="/install" element={<Install />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/attraction-demo" element={<AttractionDemo />} />
@@ -159,7 +161,7 @@ const App = () => (
                 <Route path="/student/textbook/:chapterId/:episodeId" element={<ProtectedRoute><TextbookEpisode /></ProtectedRoute>} />
                 <Route path="/student/textbook-lab" element={<ProtectedRoute><TextbookLab /></ProtectedRoute>} />
                 <Route path="/student/deep-dive" element={<ProtectedRoute><StudentDeepDive /></ProtectedRoute>} />
-                <Route path="/teacher" element={<ProtectedRoute><TeacherDashboard /></ProtectedRoute>} />
+                <Route path="/teacher" element={<ProtectedRoute><Navigate to="/teacher/explanations" replace /></ProtectedRoute>} />
                 <Route path="/teacher/explanations" element={<ProtectedRoute><TeacherExplanations /></ProtectedRoute>} />
                 <Route path="/teacher/students" element={<ProtectedRoute><TeacherDashboard /></ProtectedRoute>} />
                 <Route path="/teacher/daily-todo" element={<ProtectedRoute><TeacherDailyTodo /></ProtectedRoute>} />

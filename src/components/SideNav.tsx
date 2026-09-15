@@ -115,7 +115,7 @@ const SideNav = ({ role }: SideNavProps) => {
           <Button size="icon" variant="ghost" onClick={() => setMobileOpen(true)} className="text-sidebar-foreground">
             <Menu className="h-5 w-5" />
           </Button>
-          <h1 className="font-serif text-base font-bold text-sidebar-foreground ml-3 tracking-tight">EduTech</h1>
+          <h1 className="font-serif text-base font-bold text-sidebar-foreground ml-3 tracking-tight">MGCV</h1>
         </div>
 
         {/* Mobile drawer */}
