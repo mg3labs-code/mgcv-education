@@ -2,9 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Menu, X, Bell, ChevronDown } from "lucide-react";
-import { Switch } from "@/components/ui/switch";
-import { useDemoMode } from "@/contexts/DemoModeContext";
-import { useToast } from "@/hooks/use-toast";
+import MessageModal from "./student/MessageModal";
 
 interface TopNavbarProps {
   role: "student" | "teacher" | "admin";
@@ -17,8 +15,7 @@ const TopNavbar = ({ role, phase = 4, activeTab, onTabChange }: TopNavbarProps) 
   const navigate = useNavigate();
   const location = useLocation();
   const { signOut, fullName } = useAuth();
-  const { demoMode, setDemoMode } = useDemoMode();
-  const { toast } = useToast();
+  const [activeModal, setActiveModal] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -35,17 +32,15 @@ const TopNavbar = ({ role, phase = 4, activeTab, onTabChange }: TopNavbarProps) 
   }, []);
 
   const handleSignOut = async () => {
-    try {
-      await signOut();
-      navigate("/", { replace: true });
-    } catch {
-      toast({ title: "Could not sign out", description: "Please try again.", variant: "destructive" });
-    }
+    await signOut();
+    navigate("/");
   };
 
   const initials = fullName
     ? fullName.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
     : role[0].toUpperCase();
+
+  const closeModal = () => setActiveModal(null);
 
   // Main navigation tabs (removed messages, notifications, personalisation)
   const studentTabs = [
@@ -58,11 +53,11 @@ const TopNavbar = ({ role, phase = 4, activeTab, onTabChange }: TopNavbarProps) 
 
   const teacherItems = [
     { label: "Dashboard", path: "/teacher", type: "nav" as const },
-    { label: "Student Explanations", path: "/teacher/explanations", type: "nav" as const },
-    { label: "Attendance", path: "/teacher/attendance", type: "nav" as const },
-    { label: "Assignments", path: "/teacher/assignments", type: "nav" as const },
-    { label: "Schedule", path: "/teacher/schedule-v2", type: "nav" as const },
+    { label: "Annual Schedule", path: "/teacher/schedule", type: "nav" as const },
+    { label: "Daily Plan", path: "/teacher/daily-todo", type: "nav" as const },
+    { label: "Metrics", path: "/teacher/analytics", type: "nav" as const },
     { label: "My Profile", path: "/teacher/settings", type: "nav" as const },
+    { label: "Message Bar", modal: "message", type: "modal" as const },
   ];
 
   const isActive = (path?: string) => path && location.pathname === path;
@@ -90,7 +85,7 @@ const TopNavbar = ({ role, phase = 4, activeTab, onTabChange }: TopNavbarProps) 
               fontWeight: 700,
               color: "#1C1917",
             }}>
-              MGCV
+              EduTech
             </div>
           </a>
 
@@ -174,7 +169,6 @@ const TopNavbar = ({ role, phase = 4, activeTab, onTabChange }: TopNavbarProps) 
             <div ref={profileRef} style={{ position: "relative" }}>
               <button
                 onClick={() => setProfileOpen(!profileOpen)}
-                aria-label="Open profile menu"
                 style={{
                   display: "flex", alignItems: "center", gap: 6,
                   background: profileOpen ? "#F5F5F4" : "transparent",
@@ -303,7 +297,7 @@ const TopNavbar = ({ role, phase = 4, activeTab, onTabChange }: TopNavbarProps) 
     <>
       <nav role="navigation" aria-label="Main navigation" className="bg-[#0f1419]/95 backdrop-blur-[10px] py-4 px-4 lg:px-8 flex justify-between items-center shadow-[0_4px_20px_rgba(0,0,0,0.1)] sticky top-0 z-[1000] animate-slide-down border-b-2 border-blue-500/30">
         <a href="/" className="no-underline">
-          <div className="text-2xl font-bold text-white flex items-center gap-2.5">MGCV</div>
+          <div className="text-2xl font-bold text-white flex items-center gap-2.5">EduTech</div>
         </a>
 
         <div className="hidden lg:flex gap-5 items-center">
@@ -313,7 +307,11 @@ const TopNavbar = ({ role, phase = 4, activeTab, onTabChange }: TopNavbarProps) 
                 className={`${btnBase} ${isActive(item.path) ? "ring-2 ring-white/60" : ""}`}>
                 {item.label}
               </button>
-            ) : null
+            ) : (
+              <button key={item.label} onClick={() => setActiveModal(item.modal!)} className={btnBase}>
+                {item.label}
+              </button>
+            )
           )}
         </div>
 
@@ -348,17 +346,18 @@ const TopNavbar = ({ role, phase = 4, activeTab, onTabChange }: TopNavbarProps) 
                     >
                       {item.label}
                     </button>
-                  ) : null
+                  ) : (
+                    <button
+                      key={item.label}
+                      onClick={() => { setActiveModal(item.modal!); setProfileOpen(false); }}
+                      className="w-full text-left px-3 py-2 rounded-lg text-sm text-white/90 hover:bg-white/10"
+                    >
+                      {item.label}
+                    </button>
+                  )
                 )}
                 <div className="border-t border-white/10 my-1" />
               </div>
-
-              {role === "teacher" && (
-                <div className="flex items-center justify-between gap-3 px-3 py-2">
-                  <div><div className="text-sm font-medium text-white">Demo mode</div><div className="text-[11px] text-white/50">Clearly labelled sample data</div></div>
-                  <Switch checked={demoMode} onCheckedChange={setDemoMode} aria-label="Toggle demo mode" />
-                </div>
-              )}
 
               <button
                 onClick={() => { setProfileOpen(false); handleSignOut(); }}
@@ -370,6 +369,10 @@ const TopNavbar = ({ role, phase = 4, activeTab, onTabChange }: TopNavbarProps) 
           )}
         </div>
       </nav>
+
+      {role === "teacher" && (
+        <MessageModal open={activeModal === "message"} onOpenChange={(o) => !o && closeModal()} />
+      )}
     </>
   );
 };

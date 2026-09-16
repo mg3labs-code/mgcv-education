@@ -22,7 +22,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     staleTime: 5 * 60 * 1000,
   });
 
-  if (loading || (!!user && role === null) || (role === "student" && onboardingLoading)) {
+  if (loading || (role === "student" && onboardingLoading)) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center animate-fade-in">

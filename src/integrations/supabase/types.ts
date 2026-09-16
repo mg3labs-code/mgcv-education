@@ -2015,29 +2015,6 @@ export type Database = {
       get_my_student_phone: { Args: never; Returns: string }
       get_my_teacher_phone: { Args: never; Returns: string }
       get_student_streak: { Args: { _user_id: string }; Returns: number }
-      get_teacher_explanations: {
-        Args: {
-          _board: string
-          _grade: number
-          _section: string
-          _subject: string
-        }
-        Returns: {
-          band: string
-          board: string
-          chapter_id: string
-          completed_at: string
-          episode_id: string
-          explanation: string
-          feedback: string
-          grade: number
-          next_step: string
-          score: number
-          section: string
-          student_id: string
-          student_name: string
-        }[]
-      }
       get_user_class: { Args: { _user_id: string }; Returns: string }
       get_user_role: {
         Args: { _user_id: string }

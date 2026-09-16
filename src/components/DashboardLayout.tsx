@@ -1,8 +1,6 @@
 import TopNavbar from "./TopNavbar";
 import Breadcrumbs, { type BreadcrumbEntry } from "./Breadcrumbs";
 import PageTransition from "./PageTransition";
-import DemoDataBanner from "./DemoDataBanner";
-import { useDemoMode } from "@/contexts/DemoModeContext";
 
 interface DashboardLayoutProps {
   role: "student" | "teacher" | "admin";
@@ -13,11 +11,8 @@ interface DashboardLayoutProps {
   onTabChange?: (tab: string) => void;
 }
 
-const DashboardLayout = ({ role, children, breadcrumbItems, phase, activeTab, onTabChange }: DashboardLayoutProps) => {
-  const { demoMode } = useDemoMode();
-  return (
+const DashboardLayout = ({ role, children, breadcrumbItems, phase, activeTab, onTabChange }: DashboardLayoutProps) => (
   <div className="gradient-bg min-h-screen" style={{ animation: "gradientShift 10s ease infinite" }}>
-    {role === "teacher" && demoMode && <DemoDataBanner />}
     <a href="#main-content" className="skip-to-content">Skip to content</a>
     <TopNavbar role={role} phase={phase} activeTab={activeTab} onTabChange={onTabChange} />
     {breadcrumbItems && breadcrumbItems.length > 0 && (
@@ -31,7 +26,6 @@ const DashboardLayout = ({ role, children, breadcrumbItems, phase, activeTab, on
       </PageTransition>
     </div>
   </div>
-  );
-};
+);
 
 export default DashboardLayout;

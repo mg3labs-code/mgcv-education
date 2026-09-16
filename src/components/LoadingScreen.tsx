@@ -24,7 +24,7 @@ const LoadingScreen = () => (
           <span className="text-xl font-bold text-primary">E</span>
         </div>
       </div>
-      <div className="text-lg font-semibold text-foreground tracking-wide">MGCV</div>
+      <div className="text-lg font-semibold text-foreground tracking-wide">EduTech</div>
       <div className="flex gap-1.5">
         {[0, 1, 2].map((i) => (
           <motion.div

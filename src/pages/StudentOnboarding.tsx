@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,7 +13,7 @@ const BOARD_OPTIONS = [
   { id: 'IB', label: 'IB' },
   { id: 'IGCSE', label: 'IGCSE' },
 ];
-const GRADE_OPTIONS = [6, 7, 8, 9, 10];
+const GRADE_OPTIONS = [7, 8, 9];
 const SECTION_OPTIONS = ['A', 'B', 'C', 'D', 'E', 'F'];
 
 const StudentOnboarding = () => {
@@ -27,16 +27,6 @@ const StudentOnboarding = () => {
   const [section, setSection] = useState('');
   const [schoolName, setSchoolName] = useState('');
   const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    if (!user) return;
-    const metadata = user.user_metadata ?? {};
-    setName(typeof metadata.full_name === 'string' ? metadata.full_name : '');
-    setBoard(typeof metadata.board === 'string' ? metadata.board : '');
-    setGrade(typeof metadata.grade === 'number' ? metadata.grade : null);
-    setSection(typeof metadata.section === 'string' ? metadata.section : '');
-    setSchoolName(typeof metadata.school_name === 'string' ? metadata.school_name : '');
-  }, [user]);
 
   const canContinue = name.trim().length > 0 && board && grade !== null && section;
 
@@ -77,15 +67,32 @@ const StudentOnboarding = () => {
     }
   };
 
+  const handleSkip = async () => {
+    if (user) {
+      await (supabase as any).from('student_preferences').update({ onboarding_completed: true }).eq('user_id', user.id);
+      queryClient.setQueryData(['onboarding-status', user.id], true);
+    }
+    navigate('/student');
+  };
+
   return (
-    <div className="min-h-screen bg-sidebar flex flex-col items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-[#1a1a2e] flex flex-col items-center justify-center p-4 relative overflow-hidden">
+      <div className="absolute top-0 left-0 w-80 h-80 bg-teal-500/10 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl" />
+
+      <button
+        onClick={handleSkip}
+        className="absolute top-4 right-4 text-sm text-white/40 hover:text-white/70 transition-colors z-20"
+      >
+        Skip →
+      </button>
 
       <div className="relative z-10 w-full max-w-md">
         {step === 0 && (
           <div className="animate-fade-in">
             <div className="text-center mb-8">
               <span className="text-5xl block mb-3">👋</span>
-              <h1 className="text-2xl font-bold text-white">Welcome to MGCV</h1>
+              <h1 className="text-2xl font-bold text-white">Welcome to EduTech</h1>
               <p className="text-teal-400 text-sm mt-1">Tell us where you study</p>
             </div>
 

@@ -268,7 +268,7 @@ const ResearchProvenMethods = () => {
                   {/* Mapping table */}
                   <div className="rounded-xl border border-border overflow-hidden mb-5">
                     <div className="grid grid-cols-2 bg-muted/50 border-b border-border">
-                      <div className="px-3 py-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">What you learn on MGCV</div>
+                      <div className="px-3 py-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">What you learn on EduTech</div>
                       <div className="px-3 py-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">The research method</div>
                     </div>
                     {m.mapping.map((mp, i) => (
