@@ -7,9 +7,10 @@ import { useToast } from "@/hooks/use-toast";
 interface ForgotPasswordModalProps {
   onBack: () => void;
   variant?: "card" | "glass";
+  accountType?: "student" | "teacher";
 }
 
-const ForgotPasswordModal = ({ onBack, variant = "card" }: ForgotPasswordModalProps) => {
+const ForgotPasswordModal = ({ onBack, variant = "card", accountType }: ForgotPasswordModalProps) => {
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [sent, setSent] = useState(false);
@@ -37,47 +38,46 @@ const ForgotPasswordModal = ({ onBack, variant = "card" }: ForgotPasswordModalPr
       <div className="text-center">
         {sent ? (
           <>
-            <Mail className="h-12 w-12 text-teal mx-auto mb-4" />
-            <h3 className="text-xl text-white font-semibold mb-2">Check Your Email</h3>
-            <p className="text-white/70 text-sm mb-6">
-              We've sent a password reset link to <strong className="text-teal">{email}</strong>
+            <Mail className="h-12 w-12 text-primary mx-auto mb-4" />
+            <h3 className="text-xl text-foreground font-semibold mb-2">Check your email</h3>
+            <p className="text-muted-foreground text-sm mb-6">
+              We sent a password reset link to <strong className="text-foreground">{email}</strong>. Check spam if it does not arrive.
             </p>
-            <button
-              onClick={onBack}
-              className="text-white/70 text-sm transition-colors hover:text-teal bg-transparent border-none cursor-pointer flex items-center gap-1 mx-auto"
-            >
+            <Button type="button" variant="ghost" onClick={onBack} className="mx-auto text-muted-foreground">
               <ArrowLeft className="h-3 w-3" /> Back to sign in
-            </button>
+            </Button>
           </>
         ) : (
           <>
-            <h3 className="text-xl text-teal font-light mb-2">Reset Password</h3>
-            <p className="text-white/70 text-sm mb-6">Enter your email to receive a reset link</p>
+            <h3 className="text-xl text-foreground font-semibold mb-2">Reset password</h3>
+            <p className="text-muted-foreground text-sm mb-6">
+              Enter your {accountType ? `${accountType} account` : "account"} email to receive a reset link.
+            </p>
             <form onSubmit={handleSubmit}>
-              <div className="mb-4">
+              <div className="mb-4 text-left">
+                <label htmlFor="reset-email" className="mb-1.5 block text-sm font-medium text-foreground">Email address</label>
                 <input
+                  id="reset-email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  placeholder="📧 Enter your email"
-                  className="w-full py-[18px] px-6 border-none rounded-full bg-white/15 text-white text-base outline-none border-2 border-transparent transition-all placeholder:text-white/60 focus:bg-white/20 focus:border-teal focus:shadow-[0_0_20px_rgba(0,212,170,0.3)]"
+                  autoComplete="email"
+                  placeholder={accountType === "student" ? "student@school.edu" : "teacher@school.edu"}
+                  className="w-full rounded-lg border border-input bg-background px-4 py-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring"
                 />
               </div>
-              <button
+              <Button
                 type="submit"
                 disabled={submitting}
-                className="w-full py-[18px] border-none rounded-full bg-gradient-to-br from-teal to-teal-light text-white text-lg font-semibold cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-[0_15px_35px_rgba(0,212,170,0.4)] disabled:opacity-50"
+                className="w-full"
               >
                 {submitting ? "Sending..." : "Send Reset Link"}
-              </button>
+              </Button>
             </form>
-            <button
-              onClick={onBack}
-              className="text-white/70 text-sm transition-colors hover:text-teal bg-transparent border-none cursor-pointer mt-4 flex items-center gap-1 mx-auto"
-            >
+            <Button type="button" variant="ghost" onClick={onBack} className="mx-auto mt-3 text-muted-foreground">
               <ArrowLeft className="h-3 w-3" /> Back to sign in
-            </button>
+            </Button>
           </>
         )}
       </div>
