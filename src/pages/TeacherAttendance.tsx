@@ -9,8 +9,6 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Check, X, Clock, Users, CalendarDays, Save, ChevronLeft, ChevronRight } from "lucide-react";
 import { format, addDays, subDays } from "date-fns";
-import { useTeacherAssignments } from "@/hooks/useTeacherAssignments";
-import { assignmentLabel } from "@/lib/classIdentity";
 
 type AttendanceStatus = "present" | "absent" | "late";
 
@@ -18,49 +16,58 @@ const TeacherAttendance = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [selectedAssignmentKey, setSelectedAssignmentKey] = useState("");
   const dateStr = format(selectedDate, "yyyy-MM-dd");
   const displayDate = format(selectedDate, "EEEE, MMMM d, yyyy");
-  const { entries: assignments, loading: assignmentsLoading } = useTeacherAssignments();
-  const assignmentKey = (entry: typeof assignments[number]) => `${entry.board}::${entry.grade}::${entry.section}::${entry.subject}`;
-  const selectedAssignment = assignments.find((entry) => assignmentKey(entry) === selectedAssignmentKey) ?? assignments[0];
-  const className = selectedAssignment ? `Class ${selectedAssignment.grade}` : "";
+
+  // Fetch teacher's class
+  const { data: profile } = useQuery({
+    queryKey: ["teacher-profile", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("class_name")
+        .eq("user_id", user!.id)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
 
   // Fetch students in the class
   const { data: students } = useQuery({
-    queryKey: ["class-students", selectedAssignment?.board, selectedAssignment?.grade, selectedAssignment?.section],
+    queryKey: ["class-students", profile?.class_name],
     queryFn: async () => {
-      if (!selectedAssignment) return [];
       const { data, error } = await supabase
-        .from("student_profiles")
+        .from("profiles")
         .select("user_id, full_name")
-        .eq("board", selectedAssignment.board)
-        .eq("grade", selectedAssignment.grade)
-        .eq("section", selectedAssignment.section);
+        .eq("class_name", profile!.class_name!);
       if (error) throw error;
-      return data.sort((a, b) => a.full_name.localeCompare(b.full_name));
+      // Filter to only students by checking user_roles
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "student")
+        .in("user_id", data.map(d => d.user_id));
+      const studentIds = new Set(roles?.map(r => r.user_id) || []);
+      return data.filter(d => studentIds.has(d.user_id)).sort((a, b) => a.full_name.localeCompare(b.full_name));
     },
-    enabled: !!selectedAssignment,
+    enabled: !!profile?.class_name,
   });
 
   // Fetch existing attendance for selected date
   const { data: existingAttendance } = useQuery({
-    queryKey: ["attendance", dateStr, selectedAssignment?.board, selectedAssignment?.grade, selectedAssignment?.section, selectedAssignment?.subject],
+    queryKey: ["attendance", dateStr, profile?.class_name],
     queryFn: async () => {
-      if (!selectedAssignment) return [];
       const { data, error } = await supabase
         .from("attendance")
         .select("*")
         .eq("date", dateStr)
-        .eq("teacher_id", user?.id ?? "")
-        .eq("class_name", className)
-        .eq("board", selectedAssignment.board)
-        .eq("section", selectedAssignment.section)
-        .eq("subject", selectedAssignment.subject);
+        .eq("class_name", profile!.class_name!);
       if (error) throw error;
       return data;
     },
-    enabled: !!user && !!selectedAssignment,
+    enabled: !!profile?.class_name,
   });
 
   // Local attendance state
@@ -90,14 +97,11 @@ const TeacherAttendance = () => {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      if (!students || !selectedAssignment || !user) return;
+      if (!students || !profile?.class_name) return;
       const records = students.map(s => ({
-        teacher_id: user.id,
+        teacher_id: user!.id,
         student_id: s.user_id,
-        class_name: className,
-        board: selectedAssignment.board,
-        section: selectedAssignment.section,
-        subject: selectedAssignment.subject,
+        class_name: profile.class_name!,
         date: dateStr,
         status: attendanceMap[s.user_id] || "present",
       }));
@@ -135,24 +139,13 @@ const TeacherAttendance = () => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-foreground">📋 Take Attendance</h1>
-            <p className="text-sm text-muted-foreground mt-1">{selectedAssignment ? `${assignmentLabel(selectedAssignment)} · ${selectedAssignment.subject}` : "Add a class in My Profile"}</p>
+            <p className="text-sm text-muted-foreground mt-1">{profile?.class_name || "Loading..."}</p>
           </div>
-          <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending || !selectedAssignment} className="gap-2 w-fit" size="sm">
+          <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending} className="gap-2 w-fit" size="sm">
             <Save className="h-4 w-4" />
             {saveMutation.isPending ? "Saving..." : "Save"}
           </Button>
         </div>
-
-        {assignments.length > 0 && (
-          <select
-            value={selectedAssignment ? assignmentKey(selectedAssignment) : ""}
-            onChange={(event) => { setSelectedAssignmentKey(event.target.value); setLocalAttendance({}); }}
-            className="mb-6 w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
-            aria-label="Select class and subject"
-          >
-            {assignments.map((entry) => <option key={assignmentKey(entry)} value={assignmentKey(entry)}>{assignmentLabel(entry)} · {entry.subject}</option>)}
-          </select>
-        )}
 
         {/* Date Navigation */}
         <Card className="p-4 mb-6">
@@ -227,8 +220,8 @@ const TeacherAttendance = () => {
               </Card>
             );
           })}
-          {!assignmentsLoading && (!students || students.length === 0) && (
-            <p className="text-center text-muted-foreground py-12">{selectedAssignment ? "No students linked to this board, class, and section yet" : "Add a class in My Profile to take attendance"}</p>
+          {(!students || students.length === 0) && (
+            <p className="text-center text-muted-foreground py-12">No students found in this class</p>
           )}
         </div>
       </main>

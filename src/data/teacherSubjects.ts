@@ -1,14 +1,12 @@
 // Canonical lookups used in teacher signup / settings and to scope access.
 
 export const TEACHER_CLASSES = [
-  "Class 6",
   "Class 7",
   "Class 8",
   "Class 9",
-  "Class 10",
 ] as const;
 
-export const TEACHER_GRADES = [6, 7, 8, 9, 10] as const;
+export const TEACHER_GRADES = [7, 8, 9] as const;
 
 export const TEACHER_BOARDS = [
   { code: "CBSE", label: "CBSE" },

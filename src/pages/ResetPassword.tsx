@@ -14,9 +14,6 @@ const ResetPassword = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const passwordIsValid =
-    password.length >= 8 && /[A-Z]/.test(password) && /[a-z]/.test(password) && /\d/.test(password);
-
   useEffect(() => {
     // Listen for the PASSWORD_RECOVERY event from the URL hash
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
@@ -42,12 +39,8 @@ const ResetPassword = () => {
       return;
     }
 
-    if (!passwordIsValid) {
-      toast({
-        title: "Choose a stronger password",
-        description: "Use at least 8 characters with uppercase, lowercase, and a number.",
-        variant: "destructive",
-      });
+    if (password.length < 6) {
+      toast({ title: "Password must be at least 6 characters", variant: "destructive" });
       return;
     }
 
@@ -57,7 +50,7 @@ const ResetPassword = () => {
       if (error) throw error;
       toast({ title: "Password updated!", description: "You can now sign in with your new password." });
       await supabase.auth.signOut();
-      navigate("/", { replace: true });
+      navigate("/auth", { replace: true });
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
@@ -74,7 +67,7 @@ const ResetPassword = () => {
           <p className="text-muted-foreground mb-6">
             This link is invalid or has expired. Please request a new password reset.
           </p>
-          <Button onClick={() => navigate("/")} className="w-full">
+          <Button onClick={() => navigate("/auth")} className="w-full">
             Back to Sign In
           </Button>
         </div>
@@ -101,15 +94,13 @@ const ResetPassword = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  minLength={8}
-                  autoComplete="new-password"
+                  minLength={6}
                   placeholder="••••••••"
                   className="w-full rounded-lg border border-input bg-background px-4 py-2.5 pr-10 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                    aria-label={showPassword ? "Hide password" : "Show password"}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -124,16 +115,11 @@ const ResetPassword = () => {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
-                minLength={8}
-                autoComplete="new-password"
+                minLength={6}
                 placeholder="••••••••"
                 className="w-full rounded-lg border border-input bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
-
-            <p className="text-xs text-muted-foreground">
-              Use 8 or more characters with uppercase, lowercase, and a number.
-            </p>
 
             <Button type="submit" className="w-full" disabled={submitting}>
               {submitting ? "Updating..." : "Update Password"}

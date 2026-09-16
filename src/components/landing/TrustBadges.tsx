@@ -42,7 +42,7 @@ const TrustBadges = () => {
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Generic EdTech</span>
           </div>
           <div className="text-center py-2">
-            <span className="text-xs font-semibold text-primary uppercase tracking-wider">MGCV Pilot Edition</span>
+            <span className="text-xs font-semibold text-primary uppercase tracking-wider">Student Inner OS</span>
           </div>
 
           {/* Rows */}

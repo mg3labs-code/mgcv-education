@@ -19,7 +19,7 @@ const comparison = [
     bg: "bg-amber-50/50 dark:bg-amber-950/20",
   },
   {
-    type: "MGCV",
+    type: "EduTech",
     teaches: "HOW TO THINK",
     emoji: "🧠",
     desc: "Build reasoning, question assumptions, apply knowledge",

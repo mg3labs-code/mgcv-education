@@ -21,7 +21,6 @@ interface AuthContextType {
     className?: string,
     schoolName?: string,
     teachingMap?: Array<{ subject: string; board: string; grade: number; section: string } | { class_name: string; subject: string }>,
-    studentDetails?: { board: string; grade: number; section: string },
   ) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signInWithPhone: (phone: string) => Promise<void>;
@@ -134,7 +133,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     className?: string,
     schoolName?: string,
     teachingMapInput?: Array<{ subject: string; board: string; grade: number; section: string } | { class_name: string; subject: string }>,
-    studentDetails?: { board: string; grade: number; section: string },
   ) => {
     // Accept both the new TeachingMapEntry shape and the legacy { class_name, subject }
     // shape so older callers keep working.
@@ -160,9 +158,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           full_name: name,
           role: selectedRole,
           class_name: selectedRole === 'teacher' ? '' : (className || ''),
-          board: selectedRole === 'student' ? studentDetails?.board : undefined,
-          grade: selectedRole === 'student' ? studentDetails?.grade : undefined,
-          section: selectedRole === 'student' ? studentDetails?.section : undefined,
           school_name: schoolName || '',
           // New schema: server trigger reads `teaching_map` to populate teacher_teaching_map.
           teaching_map: teachingMap,
@@ -197,10 +192,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
-    setSession(null);
-    setUser(null);
+    await supabase.auth.signOut();
     setRole(null);
     setFullName("");
   };
