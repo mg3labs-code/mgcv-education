@@ -14,6 +14,7 @@ import { Menu, X, ArrowRight, GraduationCap, BookOpen } from "lucide-react";
 import ImageTextEffect from "@/components/landing/ImageTextEffect";
 import TeacherClassSubjectMatrix from "@/components/teacher/TeacherClassSubjectMatrix";
 import type { TeachingMapEntry } from "@/data/teacherSubjects";
+import { TEACHER_BOARDS, TEACHER_GRADES, TEACHER_SECTIONS } from "@/data/teacherSubjects";
 import { motion, AnimatePresence } from "framer-motion";
 import heroStudents from "@/assets/hero-students.webp";
 import heroFutureLearning from "@/assets/hero-future-learning.jpg";
@@ -47,10 +48,14 @@ const Index = () => {
   const [loginType, setLoginType] = useState<LoginType>("");
   const [authMode, setAuthMode] = useState<AuthMode>("login");
   const [showForgot, setShowForgot] = useState(false);
+  const [signupEmailSent, setSignupEmailSent] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [className, setClassName] = useState("");
+  const [studentBoard, setStudentBoard] = useState("");
+  const [studentGrade, setStudentGrade] = useState<number | null>(null);
+  const [studentSection, setStudentSection] = useState("");
   const [schoolName, setSchoolName] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -114,10 +119,14 @@ const Index = () => {
     setLoginType("");
     setAuthMode("login");
     setShowForgot(false);
+    setSignupEmailSent(false);
     setEmail("");
     setPassword("");
     setFullName("");
     setClassName("");
+    setStudentBoard("");
+    setStudentGrade(null);
+    setStudentSection("");
     setSchoolName("");
     setTeacherAssignments([]);
     setLoginError(null);
@@ -167,18 +176,34 @@ const Index = () => {
           setSubmitting(false);
           return;
         }
+        if (selectedRole === "student" && (!studentBoard || studentGrade === null || !studentSection)) {
+          setLoginError({ message: "Please select your board, class, and section.", suggestion: "These details connect you to the correct teachers and assignments." });
+          setSubmitting(false);
+          return;
+        }
         if (!PASSWORD_RULE.test(password)) {
           setLoginError({ message: PASSWORD_MESSAGE, code: "AUTH_WEAK_PASSWORD", suggestion: PASSWORD_MESSAGE });
           setSubmitting(false);
           return;
         }
-        await signUp(email, password, fullName, selectedRole as any, className, schoolName, selectedRole === "teacher" ? teacherAssignments : undefined);
+        const canonicalClassName = selectedRole === "student" && studentGrade !== null ? `Class ${studentGrade}` : className;
+        await signUp(
+          email,
+          password,
+          fullName,
+          selectedRole as any,
+          canonicalClassName,
+          schoolName,
+          selectedRole === "teacher" ? teacherAssignments : undefined,
+          selectedRole === "student" && studentGrade !== null
+            ? { board: studentBoard, grade: studentGrade, section: studentSection }
+            : undefined,
+        );
+        setSignupEmailSent(true);
         toast({ title: "Account created!", description: "Please check your email to verify your account." });
-        closeModal();
       } else {
         await signIn(email, password);
-        toast({ title: "Welcome back!" });
-        closeModal();
+        toast({ title: "Welcome back!", description: "Opening your dashboard…" });
       }
     } catch (err: any) {
       const parsed = parseError(err);
@@ -558,7 +583,7 @@ const Index = () => {
       {/* Footer */}
       <footer className="relative z-10 border-t border-border/50 py-8">
         <div className="max-w-[1400px] mx-auto px-4 md:px-10 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <div className="text-sm text-muted-foreground">© 2026 EduTech by MG3 Labs. All rights reserved.</div>
+          <div className="text-sm text-muted-foreground">© 2026 MGCV by MG3 Labs. All rights reserved.</div>
           <div className="flex gap-6">
             <button onClick={() => openModal("about")} className="text-sm text-muted-foreground hover:text-foreground bg-transparent border-none cursor-pointer">About</button>
             <button onClick={() => openModal("contact")} className="text-sm text-muted-foreground hover:text-foreground bg-transparent border-none cursor-pointer">Contact</button>
@@ -628,9 +653,32 @@ const Index = () => {
                   {loginType === "student" ? "Student Portal" : "Teacher Portal"}
                 </h2>
 
-                {showForgot ? (
+                {signupEmailSent ? (
+                  <div className="mt-6 text-center" role="status">
+                    <h3 className="text-xl text-foreground font-semibold mb-2">Check your email</h3>
+                    <p className="text-muted-foreground text-sm mb-6">
+                      We sent a verification link to <strong className="text-foreground">{email}</strong>.
+                      Open it to activate your {loginType} account.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSignupEmailSent(false);
+                        setAuthMode("login");
+                        setPassword("");
+                      }}
+                      className="w-full py-3 rounded-xl bg-primary text-primary-foreground text-sm font-semibold"
+                    >
+                      Back to Sign In
+                    </button>
+                  </div>
+                ) : showForgot ? (
                   <div className="mt-6">
-                    <ForgotPasswordModal onBack={() => setShowForgot(false)} variant="glass" />
+                    <ForgotPasswordModal
+                      onBack={() => setShowForgot(false)}
+                      variant="glass"
+                      accountType={loginType}
+                    />
                   </div>
                 ) : (
                   <>
@@ -657,6 +705,25 @@ const Index = () => {
                         <>
                           <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} required
                             placeholder="Full name" className={inputClass} />
+                          {loginType === "student" && (
+                            <>
+                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                <select value={studentBoard} onChange={(e) => setStudentBoard(e.target.value)} required className={inputClass} aria-label="Board">
+                                  <option value="">Board</option>
+                                  {TEACHER_BOARDS.map((b) => <option key={b.code} value={b.code}>{b.label}</option>)}
+                                </select>
+                                <select value={studentGrade ?? ""} onChange={(e) => setStudentGrade(e.target.value ? Number(e.target.value) : null)} required className={inputClass} aria-label="Class">
+                                  <option value="">Class</option>
+                                  {TEACHER_GRADES.map((g) => <option key={g} value={g}>Class {g}</option>)}
+                                </select>
+                                <select value={studentSection} onChange={(e) => setStudentSection(e.target.value)} required className={inputClass} aria-label="Section">
+                                  <option value="">Section</option>
+                                  {TEACHER_SECTIONS.map((s) => <option key={s} value={s}>Section {s}</option>)}
+                                </select>
+                              </div>
+                              <input type="text" value={schoolName} onChange={(e) => setSchoolName(e.target.value)} placeholder="School name (optional)" className={inputClass} />
+                            </>
+                          )}
                           {loginType === "teacher" && (
                             <>
                               <input type="text" value={schoolName} onChange={(e) => setSchoolName(e.target.value)}
@@ -722,10 +789,10 @@ const Index = () => {
             className="glass-premium rounded-2xl p-8 md:p-10 w-full max-w-[600px] max-h-[80vh] overflow-y-auto text-left relative border border-border/50 shadow-2xl"
           >
             <button onClick={closeModal} className="absolute top-4 right-5 text-2xl cursor-pointer text-muted-foreground hover:text-foreground bg-transparent border-none">×</button>
-            <h2 className="text-2xl font-bold text-foreground mb-5 text-center">About EduTech</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-5 text-center">About MGCV</h2>
             <div className="text-muted-foreground leading-relaxed text-sm space-y-4">
-              <p><strong className="text-primary">EduTech</strong> is a cutting-edge educational technology platform designed to revolutionize the way students learn and teachers educate.</p>
-              <p>Built with modern web technologies and user-centered design principles, EduTech offers separate, tailored experiences for both students and educators.</p>
+              <p><strong className="text-primary">MGCV</strong> is a classroom learning pilot that helps teachers see students’ understanding through their own explanations.</p>
+              <p>The pilot tests whether short, structured learning sessions can improve conceptual clarity and help teachers respond earlier to misconceptions.</p>
               <p>Our platform emphasizes <strong className="text-primary">collaborative learning</strong>, <strong className="text-primary">data-driven insights</strong>, and <strong className="text-primary">personalized education paths</strong>.</p>
             </div>
           </motion.div>

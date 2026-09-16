@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { LucideIcon, LayoutDashboard, BookOpen, BarChart3, Users, Settings, LogOut, GraduationCap, CalendarDays, ClipboardList, School, Brain, ListTodo, FlaskConical, Menu, Sparkles } from "lucide-react";
+import { LucideIcon, LayoutDashboard, BookOpen, BarChart3, Settings, LogOut, GraduationCap, CalendarDays, ClipboardList, Menu, MessageSquareQuote } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 interface NavItem {
   label: string;
@@ -18,19 +19,14 @@ const studentNav: NavItem[] = [
   { label: "Episodes", icon: GraduationCap, path: "/student/episodes" },
   { label: "Assignments", icon: ClipboardList, path: "/student/assignments" },
   { label: "Progress", icon: BarChart3, path: "/student/progress" },
-  { label: "Textbook Lab", icon: FlaskConical, path: "/student/textbook-lab" },
-  { label: "Board vs JEE", icon: Sparkles, path: "/board-vs-jee" },
 ];
 
 const teacherNav: NavItem[] = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/teacher" },
-  { label: "Daily Plan", icon: ListTodo, path: "/teacher/daily-todo" },
-  { label: "Annual Schedule", icon: CalendarDays, path: "/teacher/schedule" },
+  { label: "Student Explanations", icon: MessageSquareQuote, path: "/teacher/explanations" },
+  { label: "Attendance", icon: ClipboardList, path: "/teacher/attendance" },
   { label: "Assignments", icon: ClipboardList, path: "/teacher/assignments" },
-  { label: "Class Insights", icon: Brain, path: "/teacher/insights" },
-  { label: "Exam Room", icon: School, path: "/teacher/exam-room" },
-  { label: "Students", icon: Users, path: "/teacher/students" },
-  { label: "Analytics", icon: BarChart3, path: "/teacher/analytics" },
+  { label: "Schedule", icon: CalendarDays, path: "/teacher/schedule-v2" },
 ];
 
 const adminNav: NavItem[] = [
@@ -51,18 +47,23 @@ const NavContent = ({ role, onNavigate }: { role: string; onNavigate: (path: str
   const location = useLocation();
   const { signOut, fullName } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const items = navMap[role];
 
   const handleSignOut = async () => {
-    await signOut();
-    navigate("/auth");
+    try {
+      await signOut();
+      navigate("/", { replace: true });
+    } catch {
+      toast({ title: "Could not sign out", description: "Please try again.", variant: "destructive" });
+    }
   };
 
   return (
     <>
       <div className="p-5 border-b border-sidebar-border">
         <h1 className="font-serif text-lg font-bold text-sidebar-foreground tracking-tight">
-          EduTech
+          MGCV
         </h1>
         <p className="text-xs text-sidebar-foreground/60 mt-0.5">
           {fullName || roleLabels[role]} · {roleLabels[role]}
@@ -120,7 +121,7 @@ const SideNav = ({ role }: SideNavProps) => {
           <Button size="icon" variant="ghost" onClick={() => setMobileOpen(true)} className="text-sidebar-foreground">
             <Menu className="h-5 w-5" />
           </Button>
-          <h1 className="font-serif text-base font-bold text-sidebar-foreground ml-3 tracking-tight">EduTech</h1>
+          <h1 className="font-serif text-base font-bold text-sidebar-foreground ml-3 tracking-tight">MGCV</h1>
         </div>
 
         {/* Mobile drawer */}
