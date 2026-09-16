@@ -1,4 +1,4 @@
-- [ ] Fix teacher Dashboard navigation
-- [ ] Fix Schedule V2 calendar creation error
-- [ ] Capture current teacher screens
-- [ ] Create saveable previous-vs-now teacher comparison pictures
+- [x] Fix teacher Dashboard navigation
+- [x] Fix Schedule V2 calendar creation error
+- [x] Capture current teacher screens
+- [x] Create saveable previous-vs-now teacher comparison pictures
