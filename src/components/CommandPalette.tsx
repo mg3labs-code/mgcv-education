@@ -11,9 +11,9 @@ import {
   CommandSeparator,
 } from "@/components/ui/command";
 import {
-  LayoutDashboard, BookOpen, Calendar, ClipboardList, BarChart3,
-  Users, Bell, Target, GraduationCap, Lightbulb, MessageSquare,
-  FlaskConical, Compass, CheckSquare,
+  LayoutDashboard, BookOpen, Calendar, ClipboardList,
+  Users, Target, Lightbulb,
+  CheckSquare,
 } from "lucide-react";
 
 const STUDENT_PAGES = [
@@ -21,21 +21,16 @@ const STUDENT_PAGES = [
   { label: "Textbook", path: "/student/textbook", icon: BookOpen },
   { label: "Calendar", path: "/student/calendar", icon: Calendar },
   { label: "Assignments", path: "/student/assignments", icon: ClipboardList },
-  { label: "Deep Dive", path: "/student/deep-dive", icon: Compass },
-  { label: "Textbook Lab", path: "/student/textbook-lab", icon: FlaskConical },
 ];
 
 const TEACHER_PAGES = [
   { label: "Dashboard", path: "/teacher", icon: LayoutDashboard },
   { label: "Annual Schedule", path: "/teacher/schedule", icon: Calendar },
-  { label: "Analytics", path: "/teacher/analytics", icon: BarChart3 },
   { label: "Assignments", path: "/teacher/assignments", icon: ClipboardList },
   { label: "Attendance", path: "/teacher/attendance", icon: Users },
   { label: "Performance", path: "/teacher/performance", icon: Target },
   { label: "Daily Plan", path: "/teacher/daily-todo", icon: CheckSquare },
   { label: "Insights", path: "/teacher/insights", icon: Lightbulb },
-  { label: "Parent Connect", path: "/teacher/parent-connect", icon: MessageSquare },
-  { label: "Exam Room", path: "/teacher/exam-room", icon: GraduationCap },
 ];
 
 const CommandPalette = () => {
