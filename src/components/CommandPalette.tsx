@@ -11,8 +11,8 @@ import {
   CommandSeparator,
 } from "@/components/ui/command";
 import {
-  LayoutDashboard, BookOpen, Calendar, ClipboardList, BarChart3,
-  Users, Target, GraduationCap, Lightbulb,
+  LayoutDashboard, BookOpen, Calendar, ClipboardList,
+  Users, Target, Lightbulb,
   CheckSquare,
 } from "lucide-react";
 
