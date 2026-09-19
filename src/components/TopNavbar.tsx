@@ -59,6 +59,7 @@ const TopNavbar = ({ role, phase = 4, activeTab, onTabChange }: TopNavbarProps) 
   const teacherItems = [
     { label: "Dashboard", path: "/teacher", type: "nav" as const },
     { label: "Student Explanations", path: "/teacher/explanations", type: "nav" as const },
+    { label: "Daily Plan", path: "/teacher/daily-todo", type: "nav" as const },
     { label: "Attendance", path: "/teacher/attendance", type: "nav" as const },
     { label: "Assignments", path: "/teacher/assignments", type: "nav" as const },
     { label: "Schedule", path: "/teacher/schedule", type: "nav" as const },

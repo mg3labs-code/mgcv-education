@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import ClassCognitiveProfile from "@/components/teacher/ClassCognitiveProfile";
@@ -7,16 +7,23 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Eye, Brain, Target, Heart } from "lucide-react";
-
-const CLASS_OPTIONS = ["Class 10", "Class 9", "Class 8"];
+import { useTeacherAssignments } from "@/hooks/useTeacherAssignments";
+import { Link } from "react-router-dom";
 
 const TeacherDashboard = () => {
   const { fullName } = useAuth();
   const firstName = fullName?.split(" ")[0] || "Teacher";
-  const [selectedClass, setSelectedClass] = useState(CLASS_OPTIONS[0]);
+  const { classes, loading: loadingClasses } = useTeacherAssignments();
+  const [selectedClass, setSelectedClass] = useState("");
+
+  // Default to the first class this teacher actually teaches.
+  useEffect(() => {
+    if (!selectedClass && classes.length > 0) setSelectedClass(classes[0]);
+  }, [classes, selectedClass]);
 
   const { data: classAvg } = useQuery({
     queryKey: ["class-averages", selectedClass],
+    enabled: !!selectedClass,
     queryFn: async () => {
       const { data, error } = await supabase.rpc("get_class_averages", { _class_name: selectedClass });
       if (error) throw error;
@@ -40,6 +47,26 @@ const TeacherDashboard = () => {
     { label: "Character", score: Math.round(Number(classAvg?.avg_character) || 0), Icon: Heart,  color: "hsl(330 81% 60%)" },
   ];
 
+  // No classes set up yet — say so instead of showing zeroes everywhere.
+  if (!loadingClasses && classes.length === 0) {
+    return (
+      <DashboardLayout role="teacher">
+        <main className="p-8 max-w-2xl mx-auto text-center">
+          <h2 className="text-2xl font-bold mb-3">Set up your classes first</h2>
+          <p className="text-muted-foreground mb-6">
+            Once you add the classes and subjects you teach, this dashboard will show your students' real numbers.
+          </p>
+          <Link
+            to="/teacher/settings"
+            className="inline-block px-5 py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold"
+          >
+            Open My Profile
+          </Link>
+        </main>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout role="teacher">
       <div className="min-h-screen bg-background">
@@ -62,7 +89,7 @@ const TeacherDashboard = () => {
               aria-label="Select class"
               className="inline-flex p-1 rounded-xl bg-muted/60 border border-border self-start md:self-auto"
             >
-              {CLASS_OPTIONS.map((cls) => {
+              {classes.map((cls) => {
                 const active = selectedClass === cls;
                 return (
                   <button
