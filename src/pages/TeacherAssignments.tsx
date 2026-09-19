@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Plus, Send, Eye, Trash2, Brain, ExternalLink, ChevronDown, ChevronUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useTeacherAssignments } from "@/hooks/useTeacherAssignments";
 
 const ExtractedTextPreview = ({ text }: { text: string }) => {
   const [expanded, setExpanded] = useState(false);
@@ -104,6 +105,7 @@ const TeacherAssignments = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { entries } = useTeacherAssignments();
   const [showCreate, setShowCreate] = useState(false);
   const [viewSubmissions, setViewSubmissions] = useState<string | null>(null);
   const [gradeModal, setGradeModal] = useState<any>(null);
@@ -114,7 +116,7 @@ const TeacherAssignments = () => {
     instructions: "",
     class_name: "Class 10",
     subject: "Mathematics",
-    board: "cbse",
+    rubric_style: "cbse",
     questions: [{ question_text: "", max_score: 10, expected_answer_hints: "", rubric: [] as any[], question_type: "short_answer" }],
   });
 
@@ -134,8 +136,12 @@ const TeacherAssignments = () => {
 
   const createMutation = useMutation({
     mutationFn: async () => {
+      const grade = parseInt(newAssignment.class_name.replace(/\D/g, ""), 10);
+      const board = Number.isFinite(grade)
+        ? entries.find((entry) => entry.grade === grade && entry.subject === newAssignment.subject)?.board ?? null
+        : null;
       const { data, error } = await supabase.functions.invoke("manage-assignment", {
-        body: { action: "create_assignment", ...newAssignment },
+        body: { action: "create_assignment", ...newAssignment, board },
       });
       if (error) throw error;
       return data;
@@ -146,7 +152,7 @@ const TeacherAssignments = () => {
       setShowCreate(false);
       setNewAssignment({
         title: "", description: "", instructions: "", class_name: "Class 10",
-        subject: "Mathematics", board: "cbse", questions: [{ question_text: "", max_score: 10, expected_answer_hints: "", rubric: [], question_type: "short_answer" }],
+        subject: "Mathematics", rubric_style: "cbse", questions: [{ question_text: "", max_score: 10, expected_answer_hints: "", rubric: [], question_type: "short_answer" }],
       });
     },
     onError: (e: any) => toast.error(e.message),
@@ -343,15 +349,15 @@ const TeacherAssignments = () => {
                   <label className="text-xs font-medium text-muted-foreground mb-1 block">Board</label>
                   <select
                     className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    value={newAssignment.board}
+                    value={newAssignment.rubric_style}
                     onChange={(e) => {
-                      const board = e.target.value;
+                      const rubric_style = e.target.value;
                       setNewAssignment((p) => ({
                         ...p,
-                        board,
+                        rubric_style,
                         questions: p.questions.map(q => ({
                           ...q,
-                          rubric: board !== "custom" ? BOARD_RUBRICS[board].criteria : q.rubric,
+                          rubric: rubric_style !== "custom" ? BOARD_RUBRICS[rubric_style].criteria : q.rubric,
                         })),
                       }));
                     }}
@@ -364,13 +370,13 @@ const TeacherAssignments = () => {
               </div>
 
               {/* Board rubric preview */}
-              {newAssignment.board !== "custom" && (
+              {newAssignment.rubric_style !== "custom" && (
                 <div className="bg-muted/50 rounded-lg p-3 text-xs">
                   <span className="font-semibold text-muted-foreground">
-                    {BOARD_RUBRICS[newAssignment.board].label} Rubric:
+                    {BOARD_RUBRICS[newAssignment.rubric_style].label} Rubric:
                   </span>
                   <span className="text-muted-foreground ml-1">
-                    {BOARD_RUBRICS[newAssignment.board].criteria.map(c => `${c.criterion} (${c.max_marks}m)`).join(" • ")}
+                    {BOARD_RUBRICS[newAssignment.rubric_style].criteria.map(c => `${c.criterion} (${c.max_marks}m)`).join(" • ")}
                   </span>
                 </div>
               )}
