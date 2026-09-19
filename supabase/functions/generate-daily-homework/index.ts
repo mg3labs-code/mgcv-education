@@ -11,7 +11,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { class_name, subject, teacher_id, topic_key, topic_title, chapter_name } = await req.json();
+    const { class_name, subject, board, teacher_id, topic_key, topic_title, chapter_name } = await req.json();
 
     if (!class_name || !topic_title || !teacher_id) {
       return new Response(JSON.stringify({ error: "Missing required fields: class_name, topic_title, teacher_id" }), {
@@ -82,7 +82,7 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You are a smart homework generator for Class 10 ${subjectName} students studying under Indian curriculum (CBSE/ICSE/Telangana board).
+            content: `You are a smart homework generator for ${class_name} ${subjectName} students studying under Indian curriculum (CBSE/ICSE/Telangana board).
 
 RULES:
 - Generate exactly 2 questions based on the topic taught today
@@ -192,6 +192,7 @@ Generate 2 smart, simple homework questions for this topic.`
         instructions: "Answer each question in your own words. Show your thinking!",
         class_name,
         subject: subjectName,
+         board: board || null,
         source: "auto_homework",
         schedule_topic_key: topic_key || topic_title,
         schedule_date: today,

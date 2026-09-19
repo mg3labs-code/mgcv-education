@@ -86,7 +86,7 @@ serve(async (req) => {
 
     switch (action) {
       case "create_assignment": {
-        const { title, description, instructions, class_name, subject, questions, unlock_date, due_date } = body;
+        const { title, description, instructions, class_name, subject, board, questions, unlock_date, due_date } = body;
 
         const { data: assignment, error: aErr } = await supabase
           .from("assignments")
@@ -97,6 +97,7 @@ serve(async (req) => {
             instructions,
             class_name,
             subject: subject || "Mathematics",
+            board: board || null,
             max_total_score: questions?.reduce((s: number, q: any) => s + (q.max_score || 10), 0) || 0,
             unlock_date: unlock_date || null,
             due_date: due_date || null,
@@ -219,7 +220,7 @@ serve(async (req) => {
         // Trigger async AI evaluation (fire and forget)
         if (extracted_text || fileUrl) {
           const evalUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/evaluate-answer`;
-          fetch(evalUrl, {
+          const evaluationRequest = fetch(evalUrl, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -227,6 +228,14 @@ serve(async (req) => {
             },
             body: JSON.stringify({ answer_id: answer.id }),
           }).catch((e) => console.error("Failed to trigger evaluation:", e));
+
+          // @ts-ignore - EdgeRuntime is available in Deno edge runtime
+          if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) {
+            // @ts-ignore
+            EdgeRuntime.waitUntil(evaluationRequest);
+          } else {
+            await evaluationRequest;
+          }
         }
 
         return new Response(

@@ -244,6 +244,7 @@ const TeacherSchedule = () => {
                 body: {
                   class_name: className,
                   subject,
+                   board,
                   teacher_id: user.id,
                   topic_key: todayItem.key || todayItem.title,
                   topic_title: todayItem.title,
