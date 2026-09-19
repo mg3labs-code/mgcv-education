@@ -69,7 +69,7 @@ const TeacherDashboard = () => {
               aria-label="Select class"
               className="inline-flex p-1 rounded-xl bg-muted/60 border border-border self-start md:self-auto"
             >
-              {CLASS_OPTIONS.map((cls) => {
+              {classes.map((cls) => {
                 const active = selectedClass === cls;
                 return (
                   <button
