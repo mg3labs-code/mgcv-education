@@ -181,10 +181,17 @@ const TeacherSchedule = () => {
     }
     setIsSaving(true);
     try {
+      // Persist the FULL chapter shape (including topics) so a schedule
+      // hydrated from this row behaves exactly like a freshly loaded one.
       const chaptersData = chaptersArr.map(ch => ({
         id: ch.id,
         name: ch.name,
+        teachingDays: ch.teachingDays,
+        practiceDays: ch.practiceDays,
+        testDays: ch.testDays,
+        colorClass: ch.colorClass,
         colorHex: ch.colorHex,
+        topics: Array.isArray(ch.topics) ? ch.topics : [],
       }));
 
       // Legacy JSONB upsert (kept for backward compatibility with other reads).
