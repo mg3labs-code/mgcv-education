@@ -2,3 +2,6 @@
 - [x] Fix Schedule V2 calendar creation error
 - [x] Capture current teacher screens
 - [x] Create saveable previous-vs-now teacher comparison pictures
+- [ ] Point teacher Schedule navigation and legacy schedule-v2 URL to the student-facing schedule
+- [ ] Add undoable direct per-date calendar editing without changing existing schedule tools
+- [ ] Verify teacher schedule routing and date-edit behavior
