@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import ClassCognitiveProfile from "@/components/teacher/ClassCognitiveProfile";
@@ -7,16 +7,23 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Eye, Brain, Target, Heart } from "lucide-react";
-
-const CLASS_OPTIONS = ["Class 10", "Class 9", "Class 8"];
+import { useTeacherAssignments } from "@/hooks/useTeacherAssignments";
+import { Link } from "react-router-dom";
 
 const TeacherDashboard = () => {
   const { fullName } = useAuth();
   const firstName = fullName?.split(" ")[0] || "Teacher";
-  const [selectedClass, setSelectedClass] = useState(CLASS_OPTIONS[0]);
+  const { classes, loading: loadingClasses } = useTeacherAssignments();
+  const [selectedClass, setSelectedClass] = useState("");
+
+  // Default to the first class this teacher actually teaches.
+  useEffect(() => {
+    if (!selectedClass && classes.length > 0) setSelectedClass(classes[0]);
+  }, [classes, selectedClass]);
 
   const { data: classAvg } = useQuery({
     queryKey: ["class-averages", selectedClass],
+    enabled: !!selectedClass,
     queryFn: async () => {
       const { data, error } = await supabase.rpc("get_class_averages", { _class_name: selectedClass });
       if (error) throw error;
