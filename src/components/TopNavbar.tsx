@@ -61,7 +61,7 @@ const TopNavbar = ({ role, phase = 4, activeTab, onTabChange }: TopNavbarProps) 
     { label: "Student Explanations", path: "/teacher/explanations", type: "nav" as const },
     { label: "Attendance", path: "/teacher/attendance", type: "nav" as const },
     { label: "Assignments", path: "/teacher/assignments", type: "nav" as const },
-    { label: "Schedule", path: "/teacher/schedule-v2", type: "nav" as const },
+    { label: "Schedule", path: "/teacher/schedule", type: "nav" as const },
     { label: "My Profile", path: "/teacher/settings", type: "nav" as const },
   ];
 

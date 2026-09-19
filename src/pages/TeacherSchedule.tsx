@@ -152,6 +152,7 @@ const TeacherSchedule = () => {
       topic_key: item.key ?? null,
       topic_title: item.title ?? null,
       label: item.label ?? null,
+      notes: item.notes ?? null,
       is_national_holiday: !!item.isNational,
     }));
 
