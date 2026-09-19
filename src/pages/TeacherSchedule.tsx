@@ -54,7 +54,47 @@ const TeacherSchedule = () => {
     const match = entries.find(e => e.grade === gradeNum && e.subject === subject);
     return match?.board;
   }, [entries, gradeNum, subject]);
-  const { data: courseChapters } = useChaptersForCourse(board, gradeNum, subject);
+  const { data: courseChapters, isFetched: chaptersFetched } = useChaptersForCourse(board, gradeNum, subject);
+
+  // Which subjects actually have curriculum loaded for this grade, so the
+  // default subject isn't just "first alphabetically" (which can land the
+  // teacher on an empty calendar with no explanation).
+  const [subjectsWithChapters, setSubjectsWithChapters] = useState<string[]>([]);
+  const [autoPickedFor, setAutoPickedFor] = useState<string>("");
+
+  useEffect(() => {
+    if (!gradeNum) { setSubjectsWithChapters([]); return; }
+    let cancelled = false;
+    (async () => {
+      const { data } = await (supabase as any)
+        .from("tb_chapters")
+        .select("subjects!inner(name)")
+        .eq("grade", gradeNum);
+      if (cancelled) return;
+      const names = Array.from(
+        new Set(((data ?? []) as any[]).map(r => r?.subjects?.name).filter(Boolean)),
+      ) as string[];
+      setSubjectsWithChapters(names);
+    })();
+    return () => { cancelled = true; };
+  }, [gradeNum]);
+
+  // Prefer a subject that has curriculum for this class — once per class.
+  useEffect(() => {
+    if (!className || subjectsWithChapters.length === 0) return;
+    if (autoPickedFor === className) return;
+    const subs = subjectsForCurrent;
+    if (subs.length === 0) return;
+    const lower = subjectsWithChapters.map(s => s.toLowerCase());
+    if (!lower.includes(subject.toLowerCase())) {
+      const better = subs.find(s => lower.includes(s.toLowerCase()));
+      if (better) setSubject(better);
+    }
+    setAutoPickedFor(className);
+  }, [className, subject, subjectsForCurrent, subjectsWithChapters, autoPickedFor]);
+
+  const noCurriculum =
+    chaptersFetched && (courseChapters?.length ?? 0) === 0 && !savedSchedule;
 
   // Load any previously-saved schedule for this (teacher, class, subject)
   // so teacher edits persist across refreshes. If none exists, the calendar
