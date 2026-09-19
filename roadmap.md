@@ -5,3 +5,6 @@
 - [x] Point teacher Schedule navigation and legacy schedule-v2 URL to the student-facing schedule
 - [x] Add undoable direct per-date calendar editing without changing existing schedule tools
 - [x] Verify teacher schedule routing and date-edit behavior
+- [ ] Keep answer evaluation alive after upload responses return
+- [ ] Use the selected class and board for generated homework
+- [ ] Persist board on manually created assignments
