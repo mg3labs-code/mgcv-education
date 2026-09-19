@@ -986,7 +986,7 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
               {!extendToNextDay && (
                 <p className="text-xs text-muted-foreground">Practice days from the same chapter will be converted to extend this topic.</p>
               )}
-              <Button className="bg-green-600 hover:bg-green-700" onClick={() => {
+              <Button className="bg-green-600 hover:bg-green-700" onClick={() => runAction("extend the topic", () => {
                 if (!selectedTopic) return;
                 const item = schedule[selectedTopic];
                 if (!item) return;
@@ -999,7 +999,11 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
                   for (let i = 0; i < days; i++) {
                     const freed = shiftAndConsumeNextPractice(newSchedule, anchor);
                     if (!freed) {
-                      alert("Ran out of upcoming Practice Days to absorb the extension.");
+                      toast({
+                        title: "Not enough Practice Days",
+                        description: "Ran out of upcoming Practice Days to absorb the extension.",
+                        variant: "destructive",
+                      });
                       return;
                     }
                     newSchedule[freed] = {
@@ -1023,13 +1027,15 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
                 const ch = newChapters.find(c => c.id === item.chapterId);
                 if (!ch) return;
                 ch.teachingDays += days;
+                const topics = ensureTopics(ch);
                 for (let i = 0; i < days; i++) {
-                  ch.topics.push({ key: `${item.key}_ext_${i}`, title: `${item.title} (Day ${i + 2})`, cssClass: item.cssClass || "intro" });
+                  topics.push({ key: `${item.key}_ext_${i}`, title: `${item.title} (Day ${i + 2})`, cssClass: item.cssClass || "intro" });
                 }
                 if (ch.practiceDays >= days) ch.practiceDays -= days;
                 applyChange(newChapters);
                 closeModal();
-              }}>Apply Extension</Button>
+              })}>Apply Extension</Button>
+
             </div>
           )}
 
