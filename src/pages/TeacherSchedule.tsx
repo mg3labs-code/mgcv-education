@@ -370,6 +370,14 @@ const TeacherSchedule = () => {
           </label>
         </div>
 
+        {noCurriculum && (
+          <div className="mb-4 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
+            No curriculum has been set up for {className || "this class"} — {subject} yet, so the calendar
+            below starts empty. You can still add topics date by date, or pick another subject above.
+          </div>
+        )}
+
+
         <TeachingCalendar
           onSave={handleSave}
           isSaving={isSaving}
