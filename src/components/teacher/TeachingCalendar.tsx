@@ -161,10 +161,10 @@ function generateSchedule(chapters: ChapterDef[]): Record<string, ScheduleItem> 
   chapters.forEach((chapter) => {
     for (let i = 0; i < chapter.teachingDays; i++) {
       currentDate = getNextSlot(currentDate);
-      const topic = chapter.topics[i] || {
+      const topic = chapter.topics?.[i] || {
         key: `extra_${chapter.id}_${i}`,
         title: `Extra Topic ${i + 1}`,
-        cssClass: chapter.topics[0]?.cssClass,
+        cssClass: chapter.topics?.[0]?.cssClass,
       };
       schedule[toKey(currentDate)] = {
         type: "topic",
@@ -521,7 +521,7 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
     ch.teachingDays += numDays;
     ch.practiceDays += Math.floor(numDays / 3);
     for (let i = 1; i <= numDays; i++) {
-      ch.topics.push({ key: `ext_${ch.id}_${ch.topics.length + i}`, title: `Extension Day ${i}`, cssClass: ch.topics[0]?.cssClass || "intro" });
+      ch.topics.push({ key: `ext_${ch.id}_${ch.topics.length + i}`, title: `Extension Day ${i}`, cssClass: ch.topics?.[0]?.cssClass || "intro" });
     }
     applyChange(newChapters);
     closeModal();
@@ -544,7 +544,7 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
       newSchedule[freed] = {
         type: "topic",
         title: insertTopicName.trim(),
-        cssClass: ch?.topics[0]?.cssClass || "intro",
+        cssClass: ch?.topics?.[0]?.cssClass || "intro",
         chapterId: insertTopicChapter,
         key: `inserted_${Date.now()}`,
       };
@@ -560,7 +560,7 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
     const ch = newChapters.find(c => c.id === insertTopicChapter);
     if (!ch) return;
     ch.teachingDays++;
-    ch.topics.push({ key: `inserted_${Date.now()}`, title: insertTopicName.trim(), cssClass: ch.topics[0]?.cssClass || "intro" });
+    ch.topics.push({ key: `inserted_${Date.now()}`, title: insertTopicName.trim(), cssClass: ch.topics?.[0]?.cssClass || "intro" });
     applyChange(newChapters);
     closeModal();
   };
@@ -658,7 +658,7 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
           title: dateTopicTitle.trim(),
           notes: dateNotes.trim() || undefined,
           chapterId: dateChapterId,
-          cssClass: chapter?.topics[0]?.cssClass || "intro",
+          cssClass: chapter?.topics?.[0]?.cssClass || "intro",
           key: schedule[editingDate]?.key || `dated_${editingDate}_${Date.now()}`,
         };
     setSchedule(newSchedule);
@@ -741,7 +741,7 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
       <div className="bg-card/95 backdrop-blur-[10px] rounded-2xl overflow-hidden shadow-[0_20px_40px_rgba(0,0,0,0.1)] border border-border/20">
         {/* Header with action buttons */}
         <div className="bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white text-center py-6 px-8">
-          <h2 className="text-2xl font-light mb-1">Mathematics Teaching Schedule</h2>
+          <h2 className="text-2xl font-light mb-1">{selectedSubject} Teaching Schedule</h2>
           <div className="flex flex-col items-center gap-2 mt-1">
             <div className="flex flex-wrap items-center justify-center gap-2">
               <Select value={selectedClass} onValueChange={onClassChange}>
