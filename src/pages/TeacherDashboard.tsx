@@ -47,6 +47,26 @@ const TeacherDashboard = () => {
     { label: "Character", score: Math.round(Number(classAvg?.avg_character) || 0), Icon: Heart,  color: "hsl(330 81% 60%)" },
   ];
 
+  // No classes set up yet — say so instead of showing zeroes everywhere.
+  if (!loadingClasses && classes.length === 0) {
+    return (
+      <DashboardLayout role="teacher">
+        <main className="p-8 max-w-2xl mx-auto text-center">
+          <h2 className="text-2xl font-bold mb-3">Set up your classes first</h2>
+          <p className="text-muted-foreground mb-6">
+            Once you add the classes and subjects you teach, this dashboard will show your students' real numbers.
+          </p>
+          <Link
+            to="/teacher/settings"
+            className="inline-block px-5 py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold"
+          >
+            Open My Profile
+          </Link>
+        </main>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout role="teacher">
       <div className="min-h-screen bg-background">
