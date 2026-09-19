@@ -512,7 +512,30 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
 
   // ── Action handlers ──
 
-  const handleExtendChapter = () => {
+  /**
+   * Runs a calendar action and surfaces any failure to the teacher instead of
+   * dying silently in the console.
+   */
+  const runAction = (label: string, fn: () => void) => {
+    try {
+      fn();
+    } catch (error: any) {
+      console.error(`[TeachingCalendar] ${label} failed`, error);
+      toast({
+        title: `Could not ${label}`,
+        description: error?.message || "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  /** Chapters hydrated from older saved data may lack a topics array. */
+  const ensureTopics = (ch: ChapterDef) => {
+    if (!Array.isArray(ch.topics)) ch.topics = [];
+    return ch.topics;
+  };
+
+  const handleExtendChapter = () => runAction("extend the chapter", () => {
     if (!selectedChapter) return;
     const numDays = parseInt(extendChapterDays, 10);
     const newChapters = JSON.parse(JSON.stringify(chapters)) as ChapterDef[];
@@ -520,14 +543,15 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
     if (!ch) return;
     ch.teachingDays += numDays;
     ch.practiceDays += Math.floor(numDays / 3);
+    const topics = ensureTopics(ch);
     for (let i = 1; i <= numDays; i++) {
-      ch.topics.push({ key: `ext_${ch.id}_${ch.topics.length + i}`, title: `Extension Day ${i}`, cssClass: ch.topics?.[0]?.cssClass || "intro" });
+      topics.push({ key: `ext_${ch.id}_${topics.length + i}`, title: `Extension Day ${i}`, cssClass: topics[0]?.cssClass || "intro" });
     }
     applyChange(newChapters);
     closeModal();
-  };
+  });
 
-  const handleInsertTopic = () => {
+  const handleInsertTopic = () => runAction("insert the topic", () => {
     if (!insertTopicName.trim() || !insertTopicChapter) return;
 
     // Mode A: "Extend to next day" — pure date-level shift, no chapter regen.
@@ -537,7 +561,11 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
       const newSchedule = JSON.parse(JSON.stringify(schedule)) as Record<string, ScheduleItem>;
       const freed = shiftAndConsumeNextPractice(newSchedule, insertAfterTopic);
       if (!freed) {
-        alert("No upcoming Practice Day found to absorb the insert. Add a Practice Day first.");
+        toast({
+          title: "No Practice Day available",
+          description: "Add a Practice Day before inserting a new topic.",
+          variant: "destructive",
+        });
         return;
       }
       const ch = chapters.find(c => c.id === insertTopicChapter);
@@ -560,34 +588,36 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
     const ch = newChapters.find(c => c.id === insertTopicChapter);
     if (!ch) return;
     ch.teachingDays++;
-    ch.topics.push({ key: `inserted_${Date.now()}`, title: insertTopicName.trim(), cssClass: ch.topics?.[0]?.cssClass || "intro" });
+    const topics = ensureTopics(ch);
+    topics.push({ key: `inserted_${Date.now()}`, title: insertTopicName.trim(), cssClass: topics[0]?.cssClass || "intro" });
     applyChange(newChapters);
     closeModal();
-  };
+  });
 
 
-  const handleDeleteTopic = () => {
+  const handleDeleteTopic = () => runAction("delete the topic", () => {
     if (!deleteTopicKey) return;
     const item = schedule[deleteTopicKey];
     if (!item || item.type !== "topic") return;
     const newChapters = JSON.parse(JSON.stringify(chapters)) as ChapterDef[];
     const ch = newChapters.find(c => c.id === item.chapterId);
     if (ch) {
-      const idx = ch.topics.findIndex(t => t.key === item.key);
-      if (idx > -1) { ch.topics.splice(idx, 1); ch.teachingDays--; }
+      const topics = ensureTopics(ch);
+      const idx = topics.findIndex(t => t.key === item.key);
+      if (idx > -1) { topics.splice(idx, 1); ch.teachingDays--; }
     }
     applyChange(newChapters);
     closeModal();
-  };
+  });
 
-  const handleDeleteChapter = () => {
+  const handleDeleteChapter = () => runAction("delete the chapter", () => {
     if (!deleteChapterId) return;
     const newChapters = chapters.filter(c => c.id !== deleteChapterId);
     applyChange(newChapters);
     closeModal();
-  };
+  });
 
-  const handleAddHoliday = () => {
+  const handleAddHoliday = () => runAction("add the holiday", () => {
     if (!holidayDate) return;
     const name = holidayName.trim() || "Holiday";
     // Add as custom holiday - regenerate schedule with it
@@ -601,9 +631,9 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
     pushHistory(chapters, regen);
     setHasUnsavedChanges(true);
     closeModal();
-  };
+  });
 
-  const handleSwapTopics = () => {
+  const handleSwapTopics = () => runAction("swap the topics", () => {
     if (!swapTopic1 || !swapTopic2 || swapTopic1 === swapTopic2) return;
     const newSchedule = { ...schedule };
     const item1 = { ...newSchedule[swapTopic1] };
@@ -614,9 +644,9 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
     pushHistory(chapters, newSchedule);
     setHasUnsavedChanges(true);
     closeModal();
-  };
+  });
 
-  const handleSwapChapters = () => {
+  const handleSwapChapters = () => runAction("swap the chapters", () => {
     if (!swapChapter1 || !swapChapter2 || swapChapter1 === swapChapter2) return;
     const newChapters = [...chapters];
     const i1 = newChapters.findIndex(c => c.id === swapChapter1);
@@ -625,7 +655,7 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
     [newChapters[i1], newChapters[i2]] = [newChapters[i2], newChapters[i1]];
     applyChange(newChapters);
     closeModal();
-  };
+  });
 
   const handleSavePublish = () => {
     if (onSave) onSave(schedule, chapters);
@@ -643,7 +673,7 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
     setActiveModal("date");
   };
 
-  const handleSaveDate = () => {
+  const handleSaveDate = () => runAction("save this date", () => {
     if (!editingDate || !dateTopicTitle.trim() || (!dateIsHoliday && !dateChapterId)) return;
     const chapter = chapters.find((candidate) => candidate.id === dateChapterId);
     const newSchedule = JSON.parse(JSON.stringify(schedule)) as Record<string, ScheduleItem>;
@@ -665,9 +695,9 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
     pushHistory(chapters, newSchedule);
     setHasUnsavedChanges(true);
     closeModal();
-  };
+  });
 
-  const handleClearDate = () => {
+  const handleClearDate = () => runAction("clear this date", () => {
     if (!editingDate) return;
     const newSchedule = JSON.parse(JSON.stringify(schedule)) as Record<string, ScheduleItem>;
     delete newSchedule[editingDate];
@@ -675,7 +705,8 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
     pushHistory(chapters, newSchedule);
     setHasUnsavedChanges(true);
     closeModal();
-  };
+  });
+
 
   // ── Calendar grid ──
   const days = [];
