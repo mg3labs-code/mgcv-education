@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -37,6 +38,7 @@ export interface ScheduleItem {
   chapterId?: string;
   isNational?: boolean;
   key?: string;
+  notes?: string;
 }
 
 // ── Default data ──
@@ -214,7 +216,7 @@ export const defaultChapters = getDefaultChapters();
 const DAY_HEADERS = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 
 // ── Modal types ──
-type ModalType = null | "extend" | "holiday" | "reschedule" | "delete";
+type ModalType = null | "extend" | "holiday" | "reschedule" | "delete" | "date";
 type SubSection = null | "extendTopic" | "extendChapter" | "insertTopic" | "deleteTopic" | "deleteChapter" | "swapTopics" | "swapChapters";
 
 interface TeachingCalendarProps {
@@ -276,8 +278,17 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   // History (undo/redo)
-  const [history, setHistory] = useState<{ chapters: ChapterDef[]; schedule: Record<string, ScheduleItem> }[]>([]);
-  const [historyIndex, setHistoryIndex] = useState(-1);
+  const [history, setHistory] = useState<{ chapters: ChapterDef[]; schedule: Record<string, ScheduleItem> }[]>(() => [
+    {
+      chapters: JSON.parse(JSON.stringify(_seedChapters)),
+      schedule: JSON.parse(JSON.stringify(
+        savedSchedule && Object.keys(savedSchedule).length > 0
+          ? savedSchedule
+          : generateSchedule(_seedChapters),
+      )),
+    },
+  ]);
+  const [historyIndex, setHistoryIndex] = useState(0);
 
   // Rebuild when the parent swaps chapters (class/subject change) or when
   // a saved schedule finishes loading asynchronously. Saved data wins.
@@ -292,16 +303,17 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
       setChapters(ch);
       setSchedule(savedSchedule);
       setHasUnsavedChanges(false);
-      setHistory([]);
-      setHistoryIndex(-1);
+      setHistory([{ chapters: JSON.parse(JSON.stringify(ch)), schedule: JSON.parse(JSON.stringify(savedSchedule)) }]);
+      setHistoryIndex(0);
       return;
     }
     if (!initialChapters || initialChapters.length === 0) return;
     setChapters(initialChapters);
     setSchedule(generateSchedule(initialChapters));
     setHasUnsavedChanges(false);
-    setHistory([]);
-    setHistoryIndex(-1);
+    const generated = generateSchedule(initialChapters);
+    setHistory([{ chapters: JSON.parse(JSON.stringify(initialChapters)), schedule: JSON.parse(JSON.stringify(generated)) }]);
+    setHistoryIndex(0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialChapters, savedSchedule, savedChapters]);
 
@@ -329,6 +341,11 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
   // working day and trailing topics shift forward one slot each until the
   // next Practice Day is consumed (Sat/Sun/holidays are skipped).
   const [extendToNextDay, setExtendToNextDay] = useState(false);
+  const [editingDate, setEditingDate] = useState("");
+  const [dateChapterId, setDateChapterId] = useState("");
+  const [dateTopicTitle, setDateTopicTitle] = useState("");
+  const [dateNotes, setDateNotes] = useState("");
+  const [dateIsHoliday, setDateIsHoliday] = useState(false);
 
   /**
    * Walk forward from `anchorKey` (exclusive), skipping Sat/Sun/holidays,
@@ -490,7 +507,7 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
     setHolidayDate(""); setHolidayName("");
     setSwapTopic1(""); setSwapTopic2(""); setSwapChapter1(""); setSwapChapter2("");
     setExtendToNextDay(false);
-
+    setEditingDate(""); setDateChapterId(""); setDateTopicTitle(""); setDateNotes(""); setDateIsHoliday(false);
   };
 
   // ── Action handlers ──
@@ -615,6 +632,51 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
     setHasUnsavedChanges(false);
   };
 
+  const openDateEditor = (dateKey: string) => {
+    const item = schedule[dateKey];
+    const isHoliday = item?.type === "holiday";
+    setEditingDate(dateKey);
+    setDateChapterId(item?.chapterId || "");
+    setDateTopicTitle(isHoliday ? item?.label || "" : item?.title || "");
+    setDateNotes(item?.notes || "");
+    setDateIsHoliday(isHoliday);
+    setActiveModal("date");
+  };
+
+  const handleSaveDate = () => {
+    if (!editingDate || !dateTopicTitle.trim() || (!dateIsHoliday && !dateChapterId)) return;
+    const chapter = chapters.find((candidate) => candidate.id === dateChapterId);
+    const newSchedule = JSON.parse(JSON.stringify(schedule)) as Record<string, ScheduleItem>;
+    newSchedule[editingDate] = dateIsHoliday
+      ? {
+          type: "holiday",
+          label: dateTopicTitle.trim(),
+          notes: dateNotes.trim() || undefined,
+        }
+      : {
+          type: "topic",
+          title: dateTopicTitle.trim(),
+          notes: dateNotes.trim() || undefined,
+          chapterId: dateChapterId,
+          cssClass: chapter?.topics[0]?.cssClass || "intro",
+          key: schedule[editingDate]?.key || `dated_${editingDate}_${Date.now()}`,
+        };
+    setSchedule(newSchedule);
+    pushHistory(chapters, newSchedule);
+    setHasUnsavedChanges(true);
+    closeModal();
+  };
+
+  const handleClearDate = () => {
+    if (!editingDate) return;
+    const newSchedule = JSON.parse(JSON.stringify(schedule)) as Record<string, ScheduleItem>;
+    delete newSchedule[editingDate];
+    setSchedule(newSchedule);
+    pushHistory(chapters, newSchedule);
+    setHasUnsavedChanges(true);
+    closeModal();
+  };
+
   // ── Calendar grid ──
   const days = [];
   for (let i = 0; i < firstDay; i++) {
@@ -633,7 +695,17 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
     days.push(
       <div
         key={d}
-        className={`min-h-[120px] p-2 border border-border/30 relative ${cellBg} ${isToday ? "ring-2 ring-primary" : ""}`}
+        className={`min-h-[120px] p-2 border border-border/30 relative cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${cellBg} ${isToday ? "ring-2 ring-primary" : ""}`}
+        onClick={() => openDateEditor(key)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            openDateEditor(key);
+          }
+        }}
+        role="button"
+        tabIndex={0}
+        aria-label={`Edit schedule for ${key}`}
       >
         <div className={`text-sm font-semibold mb-2 ${isToday ? "text-primary" : "text-card-foreground"}`}>{d}</div>
         {item && (
@@ -771,6 +843,78 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
           </div>
         </div>
       </div>
+
+      {/* ── DIRECT DATE EDITOR ── */}
+      <Dialog open={activeModal === "date"} onOpenChange={(open) => !open && closeModal()}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>
+              Edit {editingDate ? fromKey(editingDate).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric", timeZone: "UTC" }) : "date"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <label className="flex items-center gap-2 text-sm font-medium text-foreground">
+              <input
+                type="checkbox"
+                checked={dateIsHoliday}
+                onChange={(event) => setDateIsHoliday(event.target.checked)}
+              />
+              Mark this day as a holiday
+            </label>
+
+            {!dateIsHoliday && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">Chapter</label>
+                <Select value={dateChapterId} onValueChange={setDateChapterId}>
+                  <SelectTrigger><SelectValue placeholder="Select chapter..." /></SelectTrigger>
+                  <SelectContent>
+                    {chapters.map((chapter) => (
+                      <SelectItem key={chapter.id} value={chapter.id}>{chapter.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <label htmlFor="date-topic-title" className="text-sm font-medium text-foreground">
+                {dateIsHoliday ? "Holiday name" : "Topic title"}
+              </label>
+              <Input
+                id="date-topic-title"
+                value={dateTopicTitle}
+                onChange={(event) => setDateTopicTitle(event.target.value)}
+                placeholder={dateIsHoliday ? "Holiday name" : "Topic title"}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="date-notes" className="text-sm font-medium text-foreground">Notes (optional)</label>
+              <Textarea
+                id="date-notes"
+                rows={3}
+                value={dateNotes}
+                onChange={(event) => setDateNotes(event.target.value)}
+                placeholder="Add a note for this date"
+              />
+            </div>
+
+            <div className="flex flex-wrap justify-between gap-2 pt-2">
+              <Button type="button" variant="destructive" onClick={handleClearDate}>Clear entry</Button>
+              <div className="flex gap-2">
+                <Button type="button" variant="outline" onClick={closeModal}>Cancel</Button>
+                <Button
+                  type="button"
+                  onClick={handleSaveDate}
+                  disabled={!dateTopicTitle.trim() || (!dateIsHoliday && !dateChapterId)}
+                >
+                  Save date
+                </Button>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* ── EXTEND & INSERT MODAL ── */}
       <Dialog open={activeModal === "extend"} onOpenChange={(open) => !open && closeModal()}>

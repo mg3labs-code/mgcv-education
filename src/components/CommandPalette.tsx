@@ -25,7 +25,7 @@ const STUDENT_PAGES = [
 
 const TEACHER_PAGES = [
   { label: "Dashboard", path: "/teacher", icon: LayoutDashboard },
-  { label: "Annual Schedule", path: "/teacher/schedule", icon: Calendar },
+  { label: "Schedule", path: "/teacher/schedule", icon: Calendar },
   { label: "Assignments", path: "/teacher/assignments", icon: ClipboardList },
   { label: "Attendance", path: "/teacher/attendance", icon: Users },
   { label: "Performance", path: "/teacher/performance", icon: Target },
