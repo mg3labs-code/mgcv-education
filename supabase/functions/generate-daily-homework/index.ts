@@ -206,9 +206,10 @@ Generate exactly 5 smart, simple homework questions for this topic, one per laye
         source: "auto_homework",
         schedule_topic_key: topic_key || topic_title,
         schedule_date: today,
-        max_total_score: questions.reduce((s: number, q: any) => s + (q.max_score || 5), 0),
+        max_total_score: questions.reduce((s: number, q: any) => s + (q.max_score || 3), 0),
         due_date: dueDate.toISOString(),
-        is_published: true,
+        // Drafted for teacher review — never visible to students until she approves it.
+        is_published: false,
       })
       .select()
       .single();
