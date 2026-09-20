@@ -116,7 +116,7 @@ Return as JSON with this exact structure — no markdown, just raw JSON:
           {
             role: "user",
             content: `Topic taught today: "${topic_title}" from chapter "${chapter_name || subjectName}".
-Generate 2 smart, simple homework questions for this topic.`
+Generate exactly 5 smart, simple homework questions for this topic, one per layer in the fixed order: Definition, Mechanism, Reasoning, Application, Assumption Check.`
           }
         ],
         tools: [
