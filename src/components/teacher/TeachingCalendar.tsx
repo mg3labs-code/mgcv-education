@@ -213,6 +213,37 @@ function generateSchedule(chapters: ChapterDef[]): Record<string, ScheduleItem> 
   return schedule;
 }
 
+const isSameGeneratedItem = (saved: ScheduleItem, generated?: ScheduleItem) => {
+  if (!generated) return false;
+  return saved.type === generated.type
+    && saved.title === generated.title
+    && saved.label === generated.label
+    && saved.chapterId === generated.chapterId
+    && saved.key === generated.key
+    && saved.notes === generated.notes
+    && saved.isNational === generated.isNational;
+};
+
+/**
+ * Older saved schedules predate `manualOverride`. Infer those overrides by
+ * comparing them with the chapter-generated baseline so subsequent bulk
+ * actions cannot silently replace a teacher's dated edits.
+ */
+function restoreManualOverrideMarkers(
+  saved: Record<string, ScheduleItem>,
+  chapterDefs: ChapterDef[],
+): Record<string, ScheduleItem> {
+  const baseline = generateSchedule(chapterDefs);
+  return Object.fromEntries(
+    Object.entries(saved).map(([date, item]) => [
+      date,
+      item.manualOverride || isSameGeneratedItem(item, baseline[date])
+        ? item
+        : { ...item, manualOverride: true },
+    ]),
+  );
+}
+
 export { getDefaultChapters as defaultChaptersFactory, toKey, generateSchedule };
 export const defaultChapters = getDefaultChapters();
 
@@ -275,7 +306,7 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
   // survive a page refresh. Otherwise generate from chapters.
   const [schedule, setSchedule] = useState<Record<string, ScheduleItem>>(() =>
     savedSchedule && Object.keys(savedSchedule).length > 0
-      ? savedSchedule
+      ? restoreManualOverrideMarkers(savedSchedule, _seedChapters)
       : generateSchedule(_seedChapters)
   );
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -286,7 +317,7 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
       chapters: JSON.parse(JSON.stringify(_seedChapters)),
       schedule: JSON.parse(JSON.stringify(
         savedSchedule && Object.keys(savedSchedule).length > 0
-          ? savedSchedule
+          ? restoreManualOverrideMarkers(savedSchedule, _seedChapters)
           : generateSchedule(_seedChapters),
       )),
     },
@@ -303,10 +334,11 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
           : initialChapters && initialChapters.length > 0
             ? initialChapters
             : getDefaultChapters();
+      const restoredSchedule = restoreManualOverrideMarkers(savedSchedule, ch);
       setChapters(ch);
-      setSchedule(savedSchedule);
+      setSchedule(restoredSchedule);
       setHasUnsavedChanges(false);
-      setHistory([{ chapters: JSON.parse(JSON.stringify(ch)), schedule: JSON.parse(JSON.stringify(savedSchedule)) }]);
+      setHistory([{ chapters: JSON.parse(JSON.stringify(ch)), schedule: JSON.parse(JSON.stringify(restoredSchedule)) }]);
       setHistoryIndex(0);
       return;
     }
@@ -413,10 +445,11 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
   const preserveManualOverrides = useCallback((
     generated: Record<string, ScheduleItem>,
     excludedDates: string[] = [],
+    sourceSchedule: Record<string, ScheduleItem> = schedule,
   ) => {
     const preserved = { ...generated };
     const excluded = new Set(excludedDates);
-    Object.entries(schedule).forEach(([date, item]) => {
+    Object.entries(sourceSchedule).forEach(([date, item]) => {
       if (item.manualOverride && !excluded.has(date)) preserved[date] = item;
     });
     return preserved;
@@ -653,7 +686,7 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
     const name = holidayName.trim() || "Holiday";
     // Add as custom holiday - regenerate schedule with it
     // Regenerate to shift topics
-    const regen = preserveManualOverrides(generateSchedule(chapters), affectedDates);
+    const regen = preserveManualOverrides(generateSchedule(chapters), affectedDates, schedule);
     // Merge custom holidays
     regen[holidayDate] = { type: "holiday", label: name, manualOverride: true };
     setSchedule(regen);
