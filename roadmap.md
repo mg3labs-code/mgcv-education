@@ -8,3 +8,5 @@
 - [x] Keep answer evaluation alive after upload responses return
 - [x] Use the selected class and board for generated homework
 - [x] Persist board on manually created assignments
+- [x] Verify the six-fix cleanup commit reached Lovable's synchronized main branch
+- [x] Preserve hand-edited calendar dates across bulk schedule actions and warn before unavoidable changes
