@@ -410,7 +410,7 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
     setHistoryIndex(prev => prev + 1);
   }, [historyIndex]);
 
-  const preserveManualOverrides = (
+  const preserveManualOverrides = useCallback((
     generated: Record<string, ScheduleItem>,
     excludedDates: string[] = [],
   ) => {
@@ -420,7 +420,7 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
       if (item.manualOverride && !excluded.has(date)) preserved[date] = item;
     });
     return preserved;
-  };
+  }, [schedule]);
 
   const confirmManualDateChanges = (dates: string[], action: string) => {
     if (dates.length === 0) return true;
@@ -435,7 +435,7 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
     setSchedule(newSchedule);
     pushHistory(newChapters, newSchedule);
     setHasUnsavedChanges(true);
-  }, [pushHistory, schedule]);
+  }, [preserveManualOverrides, pushHistory]);
 
   const undo = () => {
     if (historyIndex <= 0) return;
@@ -541,11 +541,11 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
   const runAction = (label: string, fn: () => void) => {
     try {
       fn();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(`[TeachingCalendar] ${label} failed`, error);
       toast({
         title: `Could not ${label}`,
-        description: error?.message || "Something went wrong. Please try again.",
+        description: error instanceof Error ? error.message : "Something went wrong. Please try again.",
         variant: "destructive",
       });
     }
@@ -652,8 +652,6 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
     if (!confirmManualDateChanges(affectedDates, "Adding this holiday")) return;
     const name = holidayName.trim() || "Holiday";
     // Add as custom holiday - regenerate schedule with it
-    const newSchedule = { ...schedule };
-    newSchedule[holidayDate] = { type: "holiday", label: name };
     // Regenerate to shift topics
     const regen = preserveManualOverrides(generateSchedule(chapters), affectedDates);
     // Merge custom holidays
