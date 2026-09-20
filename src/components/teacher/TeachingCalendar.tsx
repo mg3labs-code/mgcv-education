@@ -246,13 +246,16 @@ function restoreManualOverrideMarkers(
 
 export function addHolidayToSchedule(
   currentSchedule: Record<string, ScheduleItem>,
+  chapterDefs: ChapterDef[],
   date: string,
   name: string,
 ): Record<string, ScheduleItem> {
-  return {
-    ...currentSchedule,
-    [date]: { type: "holiday", label: name, manualOverride: true },
-  };
+  const regenerated = generateSchedule(chapterDefs);
+  Object.entries(currentSchedule).forEach(([currentDate, item]) => {
+    if (item.manualOverride && currentDate !== date) regenerated[currentDate] = item;
+  });
+  regenerated[date] = { type: "holiday", label: name, manualOverride: true };
+  return regenerated;
 }
 
 export { getDefaultChapters as defaultChaptersFactory, toKey, generateSchedule };
@@ -695,9 +698,7 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
     const affectedDates = schedule[holidayDate]?.manualOverride ? [holidayDate] : [];
     if (!confirmManualDateChanges(affectedDates, "Adding this holiday")) return;
     const name = holidayName.trim() || "Holiday";
-    // A holiday changes only its selected date. Rebuilding from the chapter
-    // template here used to overwrite unrelated hand-edited dates.
-    const updatedSchedule = addHolidayToSchedule(schedule, holidayDate, name);
+    const updatedSchedule = addHolidayToSchedule(schedule, chapters, holidayDate, name);
     setSchedule(updatedSchedule);
     pushHistory(chapters, updatedSchedule);
     setHasUnsavedChanges(true);

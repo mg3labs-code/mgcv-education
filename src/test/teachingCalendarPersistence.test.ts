@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { addHolidayToSchedule, type ScheduleItem } from "@/components/teacher/TeachingCalendar";
+import {
+  addHolidayToSchedule,
+  type ChapterDef,
+  type ScheduleItem,
+} from "@/components/teacher/TeachingCalendar";
 
 describe("teaching calendar date persistence", () => {
   it("keeps a hand-edited Saturday when a holiday is added elsewhere", () => {
@@ -18,8 +22,18 @@ describe("teaching calendar date persistence", () => {
         key: "speed_velocity",
       },
     };
+    const chapters: ChapterDef[] = [{
+      id: "motion",
+      name: "Motion",
+      teachingDays: 1,
+      practiceDays: 0,
+      testDays: 0,
+      colorClass: "bg-blue-500",
+      colorHex: "#3b82f6",
+      topics: [{ key: "motion_intro", title: "Motion", cssClass: "intro" }],
+    }];
 
-    const updated = addHolidayToSchedule(schedule, "2026-09-22", "Test Holiday");
+    const updated = addHolidayToSchedule(schedule, chapters, "2026-09-22", "Test Holiday");
 
     expect(updated["2026-09-19"]?.title).toBe("Distance and Displacement");
     expect(updated["2026-09-19"]?.manualOverride).toBe(true);
