@@ -85,14 +85,17 @@ serve(async (req) => {
             content: `You are a smart homework generator for ${class_name} ${subjectName} students studying under Indian curriculum (CBSE/ICSE/Telangana board).
 
 RULES:
-- Generate exactly 2 questions based on the topic taught today
-- Question 1: Quick recall or conceptual check (1-2 marks level). Should feel satisfying to answer correctly.
-- Question 2: Smart application question — tactical, logical, makes the student think "oh that's clever!" Not JEE-level reasoning. Simple but insightful.
-- Questions should be at textbook level, NOT competitive exam level
+- Generate exactly 5 questions based on the topic taught today. All 5 are mandatory — no optional or bonus extras.
+- Follow this fixed progression, one question each, in this order:
+  Q1 Definition — state or recognise the idea and distinguish it from a nearby misconception. Short, a confident start.
+  Q2 Mechanism — show how it works: the sequence, the steps, or the cause.
+  Q3 Reasoning — explain why, or predict an outcome, supported by evidence given in the question.
+  Q4 Application — use the concept in a new everyday situation: a small case or a little data to interpret.
+  Q5 Assumption Check — give a plausible-sounding but mistaken claim about the topic, ask the student to judge it and say exactly what is wrong with it. Easy-looking but tricky: it tests instinct, not recall.
+- Questions must stay at ${class_name} textbook level, NOT competitive exam level
 - Use simple English (Grade 4-5 reading level)
-- If the student has low completion (basic level), focus on fundamental understanding
-- If moderate completion, add a real-world connection
-- If high completion, add a logical twist or "what-if" scenario
+- Whole set should take about 15-20 minutes and total roughly 12-15 marks
+- Marks: Q1 smallest (1-2), Q2 and Q3 moderate (2-3 each), Q4 and Q5 a little more (3-4 each)
 - Make questions feel rewarding — not intimidating
 
 Student progress hint: ${difficultyHint}
@@ -101,8 +104,11 @@ Average class completion on this chapter: ${avgCompletion}%
 Return as JSON with this exact structure — no markdown, just raw JSON:
 {
   "questions": [
-    { "question_text": "...", "max_score": 5, "type": "recall", "hint": "..." },
-    { "question_text": "...", "max_score": 5, "type": "application", "hint": "..." }
+    { "question_text": "...", "max_score": 2, "layer": "Definition", "type": "recall", "hint": "..." },
+    { "question_text": "...", "max_score": 2, "layer": "Mechanism", "type": "recall", "hint": "..." },
+    { "question_text": "...", "max_score": 3, "layer": "Reasoning", "type": "application", "hint": "..." },
+    { "question_text": "...", "max_score": 3, "layer": "Application", "type": "application", "hint": "..." },
+    { "question_text": "...", "max_score": 3, "layer": "Assumption Check", "type": "application", "hint": "..." }
   ],
   "title_emoji": "📐"
 }`
