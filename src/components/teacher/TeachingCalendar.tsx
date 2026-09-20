@@ -40,6 +40,8 @@ export interface ScheduleItem {
   isNational?: boolean;
   key?: string;
   notes?: string;
+  /** Keeps a date-editor override anchored to its exact calendar date. */
+  manualOverride?: boolean;
 }
 
 // ── Default data ──
@@ -367,7 +369,7 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
       if (dow === 0 || dow === 6) return false;
       const k = toKey(d);
       const it = sched[k];
-      return !(it?.type === "holiday");
+      return !(it?.type === "holiday" || it?.manualOverride);
     };
     const nextWorking = (from: Date) => {
       const d = new Date(from);
@@ -408,13 +410,32 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
     setHistoryIndex(prev => prev + 1);
   }, [historyIndex]);
 
-  const applyChange = useCallback((newChapters: ChapterDef[]) => {
-    const newSchedule = generateSchedule(newChapters);
+  const preserveManualOverrides = (
+    generated: Record<string, ScheduleItem>,
+    excludedDates: string[] = [],
+  ) => {
+    const preserved = { ...generated };
+    const excluded = new Set(excludedDates);
+    Object.entries(schedule).forEach(([date, item]) => {
+      if (item.manualOverride && !excluded.has(date)) preserved[date] = item;
+    });
+    return preserved;
+  };
+
+  const confirmManualDateChanges = (dates: string[], action: string) => {
+    if (dates.length === 0) return true;
+    return window.confirm(
+      `${action} cannot preserve your hand-edited ${dates.length === 1 ? "date" : "dates"}:\n\n${dates.join("\n")}\n\nContinue?`,
+    );
+  };
+
+  const applyChange = useCallback((newChapters: ChapterDef[], excludedDates: string[] = []) => {
+    const newSchedule = preserveManualOverrides(generateSchedule(newChapters), excludedDates);
     setChapters(newChapters);
     setSchedule(newSchedule);
     pushHistory(newChapters, newSchedule);
     setHasUnsavedChanges(true);
-  }, [pushHistory]);
+  }, [pushHistory, schedule]);
 
   const undo = () => {
     if (historyIndex <= 0) return;
@@ -600,6 +621,8 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
     if (!deleteTopicKey) return;
     const item = schedule[deleteTopicKey];
     if (!item || item.type !== "topic") return;
+    const affectedDates = item.manualOverride ? [deleteTopicKey] : [];
+    if (!confirmManualDateChanges(affectedDates, "Deleting this topic")) return;
     const newChapters = JSON.parse(JSON.stringify(chapters)) as ChapterDef[];
     const ch = newChapters.find(c => c.id === item.chapterId);
     if (ch) {
@@ -607,27 +630,34 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
       const idx = topics.findIndex(t => t.key === item.key);
       if (idx > -1) { topics.splice(idx, 1); ch.teachingDays--; }
     }
-    applyChange(newChapters);
+    applyChange(newChapters, affectedDates);
     closeModal();
   });
 
   const handleDeleteChapter = () => runAction("delete the chapter", () => {
     if (!deleteChapterId) return;
+    const affectedDates = Object.entries(schedule)
+      .filter(([, item]) => item.manualOverride && item.chapterId === deleteChapterId)
+      .map(([date]) => date)
+      .sort();
+    if (!confirmManualDateChanges(affectedDates, "Deleting this chapter")) return;
     const newChapters = chapters.filter(c => c.id !== deleteChapterId);
-    applyChange(newChapters);
+    applyChange(newChapters, affectedDates);
     closeModal();
   });
 
   const handleAddHoliday = () => runAction("add the holiday", () => {
     if (!holidayDate) return;
+    const affectedDates = schedule[holidayDate]?.manualOverride ? [holidayDate] : [];
+    if (!confirmManualDateChanges(affectedDates, "Adding this holiday")) return;
     const name = holidayName.trim() || "Holiday";
     // Add as custom holiday - regenerate schedule with it
     const newSchedule = { ...schedule };
     newSchedule[holidayDate] = { type: "holiday", label: name };
     // Regenerate to shift topics
-    const regen = generateSchedule(chapters);
+    const regen = preserveManualOverrides(generateSchedule(chapters), affectedDates);
     // Merge custom holidays
-    regen[holidayDate] = { type: "holiday", label: name };
+    regen[holidayDate] = { type: "holiday", label: name, manualOverride: true };
     setSchedule(regen);
     pushHistory(chapters, regen);
     setHasUnsavedChanges(true);
@@ -636,11 +666,15 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
 
   const handleSwapTopics = () => runAction("swap the topics", () => {
     if (!swapTopic1 || !swapTopic2 || swapTopic1 === swapTopic2) return;
+    const affectedDates = [swapTopic1, swapTopic2]
+      .filter((date) => schedule[date]?.manualOverride)
+      .sort();
+    if (!confirmManualDateChanges(affectedDates, "Swapping these topics")) return;
     const newSchedule = { ...schedule };
     const item1 = { ...newSchedule[swapTopic1] };
     const item2 = { ...newSchedule[swapTopic2] };
-    newSchedule[swapTopic1] = item2;
-    newSchedule[swapTopic2] = item1;
+    newSchedule[swapTopic1] = { ...item2, manualOverride: true };
+    newSchedule[swapTopic2] = { ...item1, manualOverride: true };
     setSchedule(newSchedule);
     pushHistory(chapters, newSchedule);
     setHasUnsavedChanges(true);
@@ -683,6 +717,7 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
           type: "holiday",
           label: dateTopicTitle.trim(),
           notes: dateNotes.trim() || undefined,
+          manualOverride: true,
         }
       : {
           type: "topic",
@@ -691,6 +726,7 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
           chapterId: dateChapterId,
           cssClass: chapter?.topics?.[0]?.cssClass || "intro",
           key: schedule[editingDate]?.key || `dated_${editingDate}_${Date.now()}`,
+          manualOverride: true,
         };
     setSchedule(newSchedule);
     pushHistory(chapters, newSchedule);
