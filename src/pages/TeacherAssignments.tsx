@@ -158,6 +158,93 @@ const TeacherAssignments = () => {
     onError: (e: any) => toast.error(e.message),
   });
 
+  // Auto-generated homework awaiting the teacher's approval
+  const { data: reviewItems } = useQuery({
+    queryKey: ["homework-needing-review"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("assignments")
+        .select("*, questions:assignment_questions(*)")
+        .eq("teacher_id", user?.id)
+        .eq("source", "auto_homework")
+        .eq("is_published", false)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data || []).map((a: any) => ({
+        ...a,
+        questions: [...(a.questions || [])].sort(
+          (x: any, y: any) => x.question_number - y.question_number,
+        ),
+      }));
+    },
+    enabled: !!user,
+  });
+
+  const [questionEdits, setQuestionEdits] = useState<Record<string, { question_text: string; max_score: number }>>({});
+
+  const editValue = (q: any) => questionEdits[q.id] ?? { question_text: q.question_text, max_score: Number(q.max_score) };
+
+  const setEditValue = (q: any, patch: Partial<{ question_text: string; max_score: number }>) =>
+    setQuestionEdits((prev) => ({ ...prev, [q.id]: { ...editValue(q), ...patch } }));
+
+  const invalidateReview = () => {
+    queryClient.invalidateQueries({ queryKey: ["homework-needing-review"] });
+    queryClient.invalidateQueries({ queryKey: ["teacher-assignments"] });
+  };
+
+  const saveQuestionMutation = useMutation({
+    mutationFn: async (q: any) => {
+      const next = editValue(q);
+      const { error } = await supabase
+        .from("assignment_questions")
+        .update({ question_text: next.question_text, max_score: next.max_score })
+        .eq("id", q.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Question saved");
+      invalidateReview();
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const deleteQuestionMutation = useMutation({
+    mutationFn: async (questionId: string) => {
+      const { error } = await supabase.from("assignment_questions").delete().eq("id", questionId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Question removed");
+      invalidateReview();
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const approveMutation = useMutation({
+    mutationFn: async (assignment: any) => {
+      // Save any unsaved edits first so students see exactly what the teacher approved.
+      for (const q of assignment.questions || []) {
+        const edit = questionEdits[q.id];
+        if (!edit) continue;
+        if (edit.question_text === q.question_text && Number(edit.max_score) === Number(q.max_score)) continue;
+        const { error } = await supabase
+          .from("assignment_questions")
+          .update({ question_text: edit.question_text, max_score: edit.max_score })
+          .eq("id", q.id);
+        if (error) throw error;
+      }
+      const { error } = await supabase.functions.invoke("manage-assignment", {
+        body: { action: "publish_assignment", assignment_id: assignment.id },
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Approved and published to students");
+      invalidateReview();
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
   const publishMutation = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.functions.invoke("manage-assignment", {
