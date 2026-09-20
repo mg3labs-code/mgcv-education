@@ -221,8 +221,8 @@ Generate exactly 5 smart, simple homework questions for this topic, one per laye
       assignment_id: assignment.id,
       question_number: i + 1,
       question_text: q.question_text,
-      max_score: q.max_score || 5,
-      rubric: [],
+      max_score: q.max_score || 3,
+      rubric: { layer: q.layer || null },
       expected_answer_hints: q.hint || null,
     }));
 
