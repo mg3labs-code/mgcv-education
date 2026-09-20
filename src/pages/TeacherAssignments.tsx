@@ -158,6 +158,93 @@ const TeacherAssignments = () => {
     onError: (e: any) => toast.error(e.message),
   });
 
+  // Auto-generated homework awaiting the teacher's approval
+  const { data: reviewItems } = useQuery({
+    queryKey: ["homework-needing-review"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("assignments")
+        .select("*, questions:assignment_questions(*)")
+        .eq("teacher_id", user?.id)
+        .eq("source", "auto_homework")
+        .eq("is_published", false)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data || []).map((a: any) => ({
+        ...a,
+        questions: [...(a.questions || [])].sort(
+          (x: any, y: any) => x.question_number - y.question_number,
+        ),
+      }));
+    },
+    enabled: !!user,
+  });
+
+  const [questionEdits, setQuestionEdits] = useState<Record<string, { question_text: string; max_score: number }>>({});
+
+  const editValue = (q: any) => questionEdits[q.id] ?? { question_text: q.question_text, max_score: Number(q.max_score) };
+
+  const setEditValue = (q: any, patch: Partial<{ question_text: string; max_score: number }>) =>
+    setQuestionEdits((prev) => ({ ...prev, [q.id]: { ...editValue(q), ...patch } }));
+
+  const invalidateReview = () => {
+    queryClient.invalidateQueries({ queryKey: ["homework-needing-review"] });
+    queryClient.invalidateQueries({ queryKey: ["teacher-assignments"] });
+  };
+
+  const saveQuestionMutation = useMutation({
+    mutationFn: async (q: any) => {
+      const next = editValue(q);
+      const { error } = await supabase
+        .from("assignment_questions")
+        .update({ question_text: next.question_text, max_score: next.max_score })
+        .eq("id", q.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Question saved");
+      invalidateReview();
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const deleteQuestionMutation = useMutation({
+    mutationFn: async (questionId: string) => {
+      const { error } = await supabase.from("assignment_questions").delete().eq("id", questionId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Question removed");
+      invalidateReview();
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const approveMutation = useMutation({
+    mutationFn: async (assignment: any) => {
+      // Save any unsaved edits first so students see exactly what the teacher approved.
+      for (const q of assignment.questions || []) {
+        const edit = questionEdits[q.id];
+        if (!edit) continue;
+        if (edit.question_text === q.question_text && Number(edit.max_score) === Number(q.max_score)) continue;
+        const { error } = await supabase
+          .from("assignment_questions")
+          .update({ question_text: edit.question_text, max_score: edit.max_score })
+          .eq("id", q.id);
+        if (error) throw error;
+      }
+      const { error } = await supabase.functions.invoke("manage-assignment", {
+        body: { action: "publish_assignment", assignment_id: assignment.id },
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Approved and published to students");
+      invalidateReview();
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
   const publishMutation = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.functions.invoke("manage-assignment", {
@@ -292,12 +379,101 @@ const TeacherAssignments = () => {
           </div>
         </div>
 
+        {/* Needs your review — auto-generated homework, hidden from students until approved */}
+        {reviewItems && reviewItems.length > 0 && (
+          <section className="mb-8">
+            <div className="flex items-center gap-2 mb-2">
+              <h2 className="text-lg font-semibold text-foreground">Needs your review</h2>
+              <Badge variant="destructive">{reviewItems.length}</Badge>
+            </div>
+            <p className="text-sm text-muted-foreground mb-4">
+              Auto-generated practice. Students cannot see any of this until you approve it.
+            </p>
+            <div className="grid gap-4">
+              {reviewItems.map((a: any) => (
+                <Card key={a.id} className="p-5 border-primary/40">
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                    <div>
+                      <h3 className="font-semibold text-lg text-card-foreground">{a.title}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {a.subject} • {a.class_name} • {a.questions.length} question{a.questions.length === 1 ? "" : "s"}
+                      </p>
+                    </div>
+                    <Button
+                      size="sm"
+                      disabled={approveMutation.isPending || a.questions.length === 0}
+                      onClick={() => approveMutation.mutate(a)}
+                      className="gap-2 shrink-0"
+                    >
+                      <Send className="h-3.5 w-3.5" /> Approve &amp; Publish
+                    </Button>
+                  </div>
+
+                  <div className="mt-4 space-y-3">
+                    {a.questions.map((q: any) => {
+                      const val = editValue(q);
+                      const layer = (q.rubric && !Array.isArray(q.rubric) ? q.rubric.layer : null) as string | null;
+                      return (
+                        <div key={q.id} className="border border-border rounded-lg p-3 space-y-2">
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium">Q{q.question_number}</span>
+                              {layer && <Badge variant="outline">{layer}</Badge>}
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => deleteQuestionMutation.mutate(q.id)}
+                              disabled={deleteQuestionMutation.isPending}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                          <Textarea
+                            value={val.question_text}
+                            onChange={(e) => setEditValue(q, { question_text: e.target.value })}
+                          />
+                          {q.expected_answer_hints && (
+                            <p className="text-xs text-muted-foreground">Hint: {q.expected_answer_hints}</p>
+                          )}
+                          <div className="flex items-center gap-2">
+                            <label className="text-xs text-muted-foreground">Marks</label>
+                            <Input
+                              type="number"
+                              className="w-24"
+                              value={val.max_score}
+                              onChange={(e) => setEditValue(q, { max_score: Number(e.target.value) })}
+                            />
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => saveQuestionMutation.mutate(q)}
+                              disabled={saveQuestionMutation.isPending}
+                            >
+                              Save
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {a.questions.length === 0 && (
+                      <p className="text-sm text-muted-foreground">
+                        No questions left — nothing to publish here.
+                      </p>
+                    )}
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* Assignment List */}
         {isLoading ? (
           <p className="text-muted-foreground">Loading...</p>
         ) : (
           <div className="grid gap-4">
-            {assignments?.map((a: any) => (
+            {assignments?.filter((a: any) => !(a.source === "auto_homework" && !a.is_published)).map((a: any) => (
               <Card key={a.id} className="p-5">
                 <div className="flex items-start justify-between">
                   <div>
