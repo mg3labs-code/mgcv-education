@@ -135,10 +135,14 @@ Generate exactly 5 smart, simple homework questions for this topic, one per laye
                       properties: {
                         question_text: { type: "string" },
                         max_score: { type: "number" },
+                        layer: {
+                          type: "string",
+                          enum: ["Definition", "Mechanism", "Reasoning", "Application", "Assumption Check"],
+                        },
                         type: { type: "string", enum: ["recall", "application"] },
                         hint: { type: "string" },
                       },
-                      required: ["question_text", "max_score", "type"],
+                      required: ["question_text", "max_score", "layer", "type"],
                       additionalProperties: false,
                     },
                   },
