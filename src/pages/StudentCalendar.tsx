@@ -176,30 +176,28 @@ const StudentCalendar = () => {
 
   const todayKey = now.toISOString().split("T")[0];
 
-  // Build today's full timeline
+  // Build today's timeline from real published entries only — never invented periods.
   const todayTimeline = useMemo(() => {
     const items: { time: string; subject: string; icon: string; topic: string; type: string; color: string; isBreak: boolean }[] = [];
-    const orderedSubjects = Object.keys(SUBJECT_META);
 
-    orderedSubjects.forEach((subjectName) => {
+    availableSubjects.forEach((subjectName) => {
       const subSchedule = subjectSchedules.find((s) => s.subject === subjectName);
-      const meta = SUBJECT_META[subjectName];
       const todayItem = subSchedule?.schedule[todayKey];
+      if (!todayItem) return;
 
-      let topic = "Regular Class";
-      if (todayItem) {
-        const chapterName = todayItem.chapterId ? subSchedule?.chapters.find((c) => c.id === todayItem.chapterId)?.name : undefined;
-        topic = todayItem.title || todayItem.label || "Scheduled";
-        if (chapterName) topic = `${chapterName}: ${topic}`;
-      }
+      const meta = metaFor(subjectName);
+      const chapterName = todayItem.chapterId
+        ? subSchedule?.chapters.find((c) => c.id === todayItem.chapterId)?.name
+        : undefined;
+      let topic = todayItem.title || todayItem.label || "Scheduled";
+      if (chapterName) topic = `${chapterName}: ${topic}`;
 
-      items.push({ time: meta.time, subject: subjectName, icon: meta.icon, topic, type: todayItem?.type || "class", color: meta.color, isBreak: false });
-
-      if (subjectName === "Science") items.push({ time: BREAKS[0].time, subject: BREAKS[0].subject, icon: BREAKS[0].icon, topic: BREAKS[0].topic, type: "break", color: "#9CA3AF", isBreak: true });
-      if (subjectName === "English") items.push({ time: BREAKS[1].time, subject: BREAKS[1].subject, icon: BREAKS[1].icon, topic: BREAKS[1].topic, type: "break", color: "#9CA3AF", isBreak: true });
+      items.push({ time: meta.time, subject: subjectName, icon: meta.icon, topic, type: todayItem.type || "class", color: meta.color, isBreak: false });
     });
+
     return items;
-  }, [subjectSchedules, todayKey]);
+  }, [subjectSchedules, availableSubjects, todayKey]);
+
 
   // Determine "now" class (simplified: based on hour)
   const currentHour = now.getHours();
