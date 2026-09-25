@@ -265,8 +265,15 @@ const StudentCalendar = () => {
 
             {loading ? (
               <div className="text-center py-16 text-muted-foreground">Loading schedule...</div>
+            ) : todayTimeline.length === 0 ? (
+              <div className="text-center py-16 bg-card rounded-2xl border">
+                <span className="text-4xl block mb-3">🗓️</span>
+                <h3 className="text-lg font-semibold text-foreground mb-2">No classes scheduled for today.</h3>
+                <p className="text-sm text-muted-foreground">Check the Monthly view for the rest of your plan.</p>
+              </div>
             ) : (
               <div className="relative">
+
                 {todayTimeline.map((cls, i) => {
                   const isNow = i === nowIndex;
                   const actionKey = `action-${i}`;
