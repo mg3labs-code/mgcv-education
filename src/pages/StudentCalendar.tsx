@@ -376,35 +376,43 @@ const StudentCalendar = () => {
         {/* ═══ MONTHLY VIEW ═══ */}
         {view === "monthly" && (
           <div className="space-y-4">
-            {/* Subject filter tabs */}
+            {/* Subject filter tabs — only subjects this class actually has */}
             <div className="flex gap-2 overflow-x-auto pb-2">
-              {SUBJECTS_LIST.map(s => (
-                <button key={s.id} onClick={() => setSelectedSubject(s.id)}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold border-none cursor-pointer whitespace-nowrap transition-all"
-                  style={{
-                    background: selectedSubject === s.id ? s.color : undefined,
-                    color: selectedSubject === s.id ? "white" : undefined,
-                  }}
-                >
-                  {s.icon} {s.label}
-                </button>
-              ))}
+              {availableSubjects.map(subject => {
+                const meta = metaFor(subject);
+                return (
+                  <button key={subject} onClick={() => setSelectedSubject(subject)}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold border-none cursor-pointer whitespace-nowrap transition-all"
+                    style={{
+                      background: selectedSubject === subject ? meta.color : undefined,
+                      color: selectedSubject === subject ? "white" : undefined,
+                    }}
+                  >
+                    {meta.icon} {subject}
+                  </button>
+                );
+              })}
             </div>
 
             {/* Use existing ScheduleCalendar component */}
             {currentSubjectSchedule ? (
               <ScheduleCalendar
                 scheduleData={currentSubjectSchedule.schedule}
-                className="Class 10"
+                className={studentClassName}
                 subject={selectedSubject}
                 chaptersData={currentSubjectSchedule.chapters}
               />
             ) : (
               <div className="text-center py-16 bg-card rounded-2xl border">
-                <span className="text-4xl block mb-3">{SUBJECTS_LIST.find(s => s.id === selectedSubject)?.icon}</span>
+                <span className="text-4xl block mb-3">{metaFor(selectedSubject).icon}</span>
                 <h3 className="text-lg font-semibold text-foreground mb-2">No Schedule Published Yet</h3>
-                <p className="text-sm text-muted-foreground">Your teacher hasn't published the {selectedSubject} schedule yet.</p>
+                <p className="text-sm text-muted-foreground">
+                  {selectedSubject
+                    ? `Your teacher hasn't published the ${selectedSubject} schedule yet.`
+                    : "Your teacher hasn't published a schedule yet."}
+                </p>
               </div>
+
             )}
           </div>
         )}
