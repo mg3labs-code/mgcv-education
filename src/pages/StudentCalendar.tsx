@@ -66,15 +66,21 @@ const StudentCalendar = () => {
   const [year, setYear] = useState(now.getFullYear());
 
   // Refetch helper extracted so realtime callbacks can re-run it.
-  const refetchSchedules = async () => {
+  // Pass the class name when it is already known so the profile is fetched only once.
+  const refetchSchedules = async (knownClassName?: string) => {
     if (!user) return;
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("class_name")
-      .eq("user_id", user.id)
-      .maybeSingle();
-    if (!profile?.class_name) { setLoading(false); return; }
-    const classNameRaw = profile.class_name;
+    let classNameRaw = knownClassName || studentClassName;
+    if (!classNameRaw) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("class_name")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (!profile?.class_name) { setLoading(false); return; }
+      classNameRaw = profile.class_name;
+      setStudentClassName(classNameRaw);
+    }
+
 
     // 1. Legacy JSONB schedules (one row per (teacher, class) keyed by subject).
     const { data: legacy } = await supabase
