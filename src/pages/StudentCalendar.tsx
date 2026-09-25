@@ -26,25 +26,24 @@ interface SubjectSchedule {
 const SUBJECT_META: Record<string, { icon: string; time: string; color: string; gradient: string }> = {
   "Mathematics": { icon: "🔢", time: "09:00 – 10:00", color: "#7C3AED", gradient: "from-violet-500 to-purple-600" },
   "Science":     { icon: "🔬", time: "10:00 – 11:00", color: "#059669", gradient: "from-emerald-500 to-teal-600" },
+  "Physics":     { icon: "⚛️", time: "10:00 – 11:00", color: "#0EA5E9", gradient: "from-sky-500 to-blue-600" },
+  "Chemistry":   { icon: "🧪", time: "11:15 – 12:15", color: "#DB2777", gradient: "from-pink-500 to-rose-600" },
+  "Biology":     { icon: "🧬", time: "01:00 – 02:00", color: "#16A34A", gradient: "from-green-500 to-emerald-600" },
   "English":     { icon: "📖", time: "11:15 – 12:15", color: "#2563EB", gradient: "from-blue-500 to-indigo-600" },
   "Social Science": { icon: "🌍", time: "01:00 – 02:00", color: "#F59E0B", gradient: "from-amber-500 to-orange-600" },
   "Hindi":       { icon: "🇮🇳", time: "02:00 – 03:00", color: "#EF4444", gradient: "from-red-500 to-rose-600" },
   "Sanskrit":    { icon: "🕉️", time: "03:00 – 04:00", color: "#06B6D4", gradient: "from-cyan-500 to-teal-600" },
+  "Telugu":      { icon: "🪔", time: "02:00 – 03:00", color: "#CA8A04", gradient: "from-yellow-500 to-amber-600" },
 };
+
+const FALLBACK_META = { icon: "📘", time: "—", color: "#6B7280", gradient: "from-slate-500 to-gray-600" };
+const metaFor = (subject: string) => SUBJECT_META[subject] ?? FALLBACK_META;
 
 const BREAKS = [
   { time: "11:00 – 11:15", subject: "Short Break", icon: "☕", topic: "Refresh & Energize", type: "break" as const },
   { time: "12:15 – 01:00", subject: "Lunch Break", icon: "🍱", topic: "Nutrition & Rest", type: "break" as const },
 ];
 
-const SUBJECTS_LIST = [
-  { id: "Mathematics", label: "Mathematics", icon: "🔢", color: "#7C3AED" },
-  { id: "Science", label: "Science", icon: "🔬", color: "#059669" },
-  { id: "English", label: "English", icon: "📖", color: "#2563EB" },
-  { id: "Social Science", label: "Social Science", icon: "🌍", color: "#F59E0B" },
-  { id: "Hindi", label: "Hindi", icon: "🇮🇳", color: "#EF4444" },
-  { id: "Sanskrit", label: "Sanskrit", icon: "🕉️", color: "#06B6D4" },
-];
 
 const DAY_HEADERS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const toKey = (date: Date) => date.toISOString().split("T")[0];
@@ -57,23 +56,31 @@ const StudentCalendar = () => {
   const [loading, setLoading] = useState(true);
   const [expandedAction, setExpandedAction] = useState<string | null>(null);
   const [quizSubject, setQuizSubject] = useState<string | null>(null);
+  const [studentClassName, setStudentClassName] = useState<string>("");
 
   // Monthly view state
-  const [selectedSubject, setSelectedSubject] = useState("Mathematics");
+  const [selectedSubject, setSelectedSubject] = useState("");
+
   const now = new Date();
   const [monthIndex, setMonthIndex] = useState(now.getMonth());
   const [year, setYear] = useState(now.getFullYear());
 
   // Refetch helper extracted so realtime callbacks can re-run it.
-  const refetchSchedules = async () => {
+  // Pass the class name when it is already known so the profile is fetched only once.
+  const refetchSchedules = async (knownClassName?: string) => {
     if (!user) return;
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("class_name")
-      .eq("user_id", user.id)
-      .maybeSingle();
-    if (!profile?.class_name) { setLoading(false); return; }
-    const classNameRaw = profile.class_name;
+    let classNameRaw = knownClassName || studentClassName;
+    if (!classNameRaw) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("class_name")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (!profile?.class_name) { setLoading(false); return; }
+      classNameRaw = profile.class_name;
+      setStudentClassName(classNameRaw);
+    }
+
 
     // 1. Legacy JSONB schedules (one row per (teacher, class) keyed by subject).
     const { data: legacy } = await supabase
@@ -121,8 +128,6 @@ const StudentCalendar = () => {
   };
 
   useEffect(() => {
-    refetchSchedules();
-
     if (!user) return;
     // Live updates when the teacher changes calendar rows for this student's class.
     let channel: ReturnType<typeof supabase.channel> | null = null;
@@ -132,13 +137,17 @@ const StudentCalendar = () => {
         .select("class_name")
         .eq("user_id", user.id)
         .maybeSingle();
-      if (!profile?.class_name) return;
+      if (!profile?.class_name) { setLoading(false); return; }
+      const cls = profile.class_name;
+      setStudentClassName(cls);
+      await refetchSchedules(cls);
+
       channel = supabase
-        .channel(`calendar-${profile.class_name}`)
+        .channel(`calendar-${cls}`)
         .on(
           "postgres_changes",
-          { event: "*", schema: "public", table: "calendar", filter: `class_name=eq.${profile.class_name}` },
-          () => { refetchSchedules(); }
+          { event: "*", schema: "public", table: "calendar", filter: `class_name=eq.${cls}` },
+          () => { refetchSchedules(cls); }
         )
         .subscribe();
     })();
@@ -149,32 +158,46 @@ const StudentCalendar = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
+  // Subjects the student's class actually has, from the database.
+  const availableSubjects = useMemo(
+    () => subjectSchedules.map(s => s.subject).sort((a, b) => a.localeCompare(b)),
+    [subjectSchedules]
+  );
+
+  // Default to the first subject that actually has data, without fighting user clicks.
+  useEffect(() => {
+    if (availableSubjects.length === 0) return;
+    if (!selectedSubject || !availableSubjects.includes(selectedSubject)) {
+      setSelectedSubject(availableSubjects[0]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [availableSubjects]);
+
+
   const todayKey = now.toISOString().split("T")[0];
 
-  // Build today's full timeline
+  // Build today's timeline from real published entries only — never invented periods.
   const todayTimeline = useMemo(() => {
     const items: { time: string; subject: string; icon: string; topic: string; type: string; color: string; isBreak: boolean }[] = [];
-    const orderedSubjects = Object.keys(SUBJECT_META);
 
-    orderedSubjects.forEach((subjectName) => {
+    availableSubjects.forEach((subjectName) => {
       const subSchedule = subjectSchedules.find((s) => s.subject === subjectName);
-      const meta = SUBJECT_META[subjectName];
       const todayItem = subSchedule?.schedule[todayKey];
+      if (!todayItem) return;
 
-      let topic = "Regular Class";
-      if (todayItem) {
-        const chapterName = todayItem.chapterId ? subSchedule?.chapters.find((c) => c.id === todayItem.chapterId)?.name : undefined;
-        topic = todayItem.title || todayItem.label || "Scheduled";
-        if (chapterName) topic = `${chapterName}: ${topic}`;
-      }
+      const meta = metaFor(subjectName);
+      const chapterName = todayItem.chapterId
+        ? subSchedule?.chapters.find((c) => c.id === todayItem.chapterId)?.name
+        : undefined;
+      let topic = todayItem.title || todayItem.label || "Scheduled";
+      if (chapterName) topic = `${chapterName}: ${topic}`;
 
-      items.push({ time: meta.time, subject: subjectName, icon: meta.icon, topic, type: todayItem?.type || "class", color: meta.color, isBreak: false });
-
-      if (subjectName === "Science") items.push({ time: BREAKS[0].time, subject: BREAKS[0].subject, icon: BREAKS[0].icon, topic: BREAKS[0].topic, type: "break", color: "#9CA3AF", isBreak: true });
-      if (subjectName === "English") items.push({ time: BREAKS[1].time, subject: BREAKS[1].subject, icon: BREAKS[1].icon, topic: BREAKS[1].topic, type: "break", color: "#9CA3AF", isBreak: true });
+      items.push({ time: meta.time, subject: subjectName, icon: meta.icon, topic, type: todayItem.type || "class", color: meta.color, isBreak: false });
     });
+
     return items;
-  }, [subjectSchedules, todayKey]);
+  }, [subjectSchedules, availableSubjects, todayKey]);
+
 
   // Determine "now" class (simplified: based on hour)
   const currentHour = now.getHours();
@@ -242,8 +265,15 @@ const StudentCalendar = () => {
 
             {loading ? (
               <div className="text-center py-16 text-muted-foreground">Loading schedule...</div>
+            ) : todayTimeline.length === 0 ? (
+              <div className="text-center py-16 bg-card rounded-2xl border">
+                <span className="text-4xl block mb-3">🗓️</span>
+                <h3 className="text-lg font-semibold text-foreground mb-2">No classes scheduled for today.</h3>
+                <p className="text-sm text-muted-foreground">Check the Monthly view for the rest of your plan.</p>
+              </div>
             ) : (
               <div className="relative">
+
                 {todayTimeline.map((cls, i) => {
                   const isNow = i === nowIndex;
                   const actionKey = `action-${i}`;
@@ -346,35 +376,43 @@ const StudentCalendar = () => {
         {/* ═══ MONTHLY VIEW ═══ */}
         {view === "monthly" && (
           <div className="space-y-4">
-            {/* Subject filter tabs */}
+            {/* Subject filter tabs — only subjects this class actually has */}
             <div className="flex gap-2 overflow-x-auto pb-2">
-              {SUBJECTS_LIST.map(s => (
-                <button key={s.id} onClick={() => setSelectedSubject(s.id)}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold border-none cursor-pointer whitespace-nowrap transition-all"
-                  style={{
-                    background: selectedSubject === s.id ? s.color : undefined,
-                    color: selectedSubject === s.id ? "white" : undefined,
-                  }}
-                >
-                  {s.icon} {s.label}
-                </button>
-              ))}
+              {availableSubjects.map(subject => {
+                const meta = metaFor(subject);
+                return (
+                  <button key={subject} onClick={() => setSelectedSubject(subject)}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold border-none cursor-pointer whitespace-nowrap transition-all"
+                    style={{
+                      background: selectedSubject === subject ? meta.color : undefined,
+                      color: selectedSubject === subject ? "white" : undefined,
+                    }}
+                  >
+                    {meta.icon} {subject}
+                  </button>
+                );
+              })}
             </div>
 
             {/* Use existing ScheduleCalendar component */}
             {currentSubjectSchedule ? (
               <ScheduleCalendar
                 scheduleData={currentSubjectSchedule.schedule}
-                className="Class 10"
+                className={studentClassName}
                 subject={selectedSubject}
                 chaptersData={currentSubjectSchedule.chapters}
               />
             ) : (
               <div className="text-center py-16 bg-card rounded-2xl border">
-                <span className="text-4xl block mb-3">{SUBJECTS_LIST.find(s => s.id === selectedSubject)?.icon}</span>
+                <span className="text-4xl block mb-3">{metaFor(selectedSubject).icon}</span>
                 <h3 className="text-lg font-semibold text-foreground mb-2">No Schedule Published Yet</h3>
-                <p className="text-sm text-muted-foreground">Your teacher hasn't published the {selectedSubject} schedule yet.</p>
+                <p className="text-sm text-muted-foreground">
+                  {selectedSubject
+                    ? `Your teacher hasn't published the ${selectedSubject} schedule yet.`
+                    : "Your teacher hasn't published a schedule yet."}
+                </p>
               </div>
+
             )}
           </div>
         )}
