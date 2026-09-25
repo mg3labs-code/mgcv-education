@@ -56,9 +56,11 @@ const StudentCalendar = () => {
   const [loading, setLoading] = useState(true);
   const [expandedAction, setExpandedAction] = useState<string | null>(null);
   const [quizSubject, setQuizSubject] = useState<string | null>(null);
+  const [studentClassName, setStudentClassName] = useState<string>("");
 
   // Monthly view state
-  const [selectedSubject, setSelectedSubject] = useState("Mathematics");
+  const [selectedSubject, setSelectedSubject] = useState("");
+
   const now = new Date();
   const [monthIndex, setMonthIndex] = useState(now.getMonth());
   const [year, setYear] = useState(now.getFullYear());
