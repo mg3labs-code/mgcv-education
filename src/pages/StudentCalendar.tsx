@@ -128,8 +128,6 @@ const StudentCalendar = () => {
   };
 
   useEffect(() => {
-    refetchSchedules();
-
     if (!user) return;
     // Live updates when the teacher changes calendar rows for this student's class.
     let channel: ReturnType<typeof supabase.channel> | null = null;
@@ -139,13 +137,17 @@ const StudentCalendar = () => {
         .select("class_name")
         .eq("user_id", user.id)
         .maybeSingle();
-      if (!profile?.class_name) return;
+      if (!profile?.class_name) { setLoading(false); return; }
+      const cls = profile.class_name;
+      setStudentClassName(cls);
+      await refetchSchedules(cls);
+
       channel = supabase
-        .channel(`calendar-${profile.class_name}`)
+        .channel(`calendar-${cls}`)
         .on(
           "postgres_changes",
-          { event: "*", schema: "public", table: "calendar", filter: `class_name=eq.${profile.class_name}` },
-          () => { refetchSchedules(); }
+          { event: "*", schema: "public", table: "calendar", filter: `class_name=eq.${cls}` },
+          () => { refetchSchedules(cls); }
         )
         .subscribe();
     })();
@@ -155,6 +157,22 @@ const StudentCalendar = () => {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
+
+  // Subjects the student's class actually has, from the database.
+  const availableSubjects = useMemo(
+    () => subjectSchedules.map(s => s.subject).sort((a, b) => a.localeCompare(b)),
+    [subjectSchedules]
+  );
+
+  // Default to the first subject that actually has data, without fighting user clicks.
+  useEffect(() => {
+    if (availableSubjects.length === 0) return;
+    if (!selectedSubject || !availableSubjects.includes(selectedSubject)) {
+      setSelectedSubject(availableSubjects[0]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [availableSubjects]);
+
 
   const todayKey = now.toISOString().split("T")[0];
 
