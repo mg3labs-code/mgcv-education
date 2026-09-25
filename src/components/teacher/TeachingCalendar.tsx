@@ -225,24 +225,25 @@ const isSameGeneratedItem = (saved: ScheduleItem, generated?: ScheduleItem) => {
 };
 
 /**
- * Older saved schedules predate `manualOverride`. Infer those overrides by
- * comparing them with the chapter-generated baseline so subsequent bulk
- * actions cannot silently replace a teacher's dated edits.
+ * Older saved schedules predate `manualOverride`. Only entries created by the
+ * date editor (keys starting with `dated_`) are treated as hand-edited; a
+ * baseline diff would wrongly lock every date shifted by earlier bulk edits.
  */
 function restoreManualOverrideMarkers(
   saved: Record<string, ScheduleItem>,
-  chapterDefs: ChapterDef[],
+  _chapterDefs: ChapterDef[],
 ): Record<string, ScheduleItem> {
-  const baseline = generateSchedule(chapterDefs);
+  void isSameGeneratedItem;
   return Object.fromEntries(
     Object.entries(saved).map(([date, item]) => [
       date,
-      item.manualOverride || isSameGeneratedItem(item, baseline[date])
+      item.manualOverride || !(item.key ?? "").startsWith("dated_")
         ? item
         : { ...item, manualOverride: true },
     ]),
   );
 }
+
 
 export function addHolidayToSchedule(
   currentSchedule: Record<string, ScheduleItem>,
