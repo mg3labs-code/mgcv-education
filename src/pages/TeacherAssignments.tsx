@@ -164,7 +164,7 @@ const TeacherAssignments = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("assignments")
-        .select("*, questions:assignment_questions(*)")
+        .select("*, questions:assignment_questions(id, assignment_id, question_number, question_text, max_score, created_at)")
         .eq("teacher_id", user?.id)
         .eq("source", "auto_homework")
         .eq("is_published", false)
@@ -412,7 +412,8 @@ const TeacherAssignments = () => {
                   <div className="mt-4 space-y-3">
                     {a.questions.map((q: any) => {
                       const val = editValue(q);
-                      const layer = (q.rubric && !Array.isArray(q.rubric) ? q.rubric.layer : null) as string | null;
+                      // Layer follows the fixed Q1–Q5 order set by the generator.
+                      const layer = (["Definition", "Mechanism", "Reasoning", "Application", "Assumption Check"][q.question_number - 1] ?? null) as string | null;
                       return (
                         <div key={q.id} className="border border-border rounded-lg p-3 space-y-2">
                           <div className="flex items-center justify-between gap-2">
