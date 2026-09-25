@@ -26,25 +26,24 @@ interface SubjectSchedule {
 const SUBJECT_META: Record<string, { icon: string; time: string; color: string; gradient: string }> = {
   "Mathematics": { icon: "🔢", time: "09:00 – 10:00", color: "#7C3AED", gradient: "from-violet-500 to-purple-600" },
   "Science":     { icon: "🔬", time: "10:00 – 11:00", color: "#059669", gradient: "from-emerald-500 to-teal-600" },
+  "Physics":     { icon: "⚛️", time: "10:00 – 11:00", color: "#0EA5E9", gradient: "from-sky-500 to-blue-600" },
+  "Chemistry":   { icon: "🧪", time: "11:15 – 12:15", color: "#DB2777", gradient: "from-pink-500 to-rose-600" },
+  "Biology":     { icon: "🧬", time: "01:00 – 02:00", color: "#16A34A", gradient: "from-green-500 to-emerald-600" },
   "English":     { icon: "📖", time: "11:15 – 12:15", color: "#2563EB", gradient: "from-blue-500 to-indigo-600" },
   "Social Science": { icon: "🌍", time: "01:00 – 02:00", color: "#F59E0B", gradient: "from-amber-500 to-orange-600" },
   "Hindi":       { icon: "🇮🇳", time: "02:00 – 03:00", color: "#EF4444", gradient: "from-red-500 to-rose-600" },
   "Sanskrit":    { icon: "🕉️", time: "03:00 – 04:00", color: "#06B6D4", gradient: "from-cyan-500 to-teal-600" },
+  "Telugu":      { icon: "🪔", time: "02:00 – 03:00", color: "#CA8A04", gradient: "from-yellow-500 to-amber-600" },
 };
+
+const FALLBACK_META = { icon: "📘", time: "—", color: "#6B7280", gradient: "from-slate-500 to-gray-600" };
+const metaFor = (subject: string) => SUBJECT_META[subject] ?? FALLBACK_META;
 
 const BREAKS = [
   { time: "11:00 – 11:15", subject: "Short Break", icon: "☕", topic: "Refresh & Energize", type: "break" as const },
   { time: "12:15 – 01:00", subject: "Lunch Break", icon: "🍱", topic: "Nutrition & Rest", type: "break" as const },
 ];
 
-const SUBJECTS_LIST = [
-  { id: "Mathematics", label: "Mathematics", icon: "🔢", color: "#7C3AED" },
-  { id: "Science", label: "Science", icon: "🔬", color: "#059669" },
-  { id: "English", label: "English", icon: "📖", color: "#2563EB" },
-  { id: "Social Science", label: "Social Science", icon: "🌍", color: "#F59E0B" },
-  { id: "Hindi", label: "Hindi", icon: "🇮🇳", color: "#EF4444" },
-  { id: "Sanskrit", label: "Sanskrit", icon: "🕉️", color: "#06B6D4" },
-];
 
 const DAY_HEADERS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const toKey = (date: Date) => date.toISOString().split("T")[0];
