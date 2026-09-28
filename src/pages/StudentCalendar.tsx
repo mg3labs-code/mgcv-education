@@ -99,10 +99,21 @@ const StudentCalendar = () => {
 
     // 2. New per-date calendar rows (overrides the JSONB on a per-date basis,
     //    so teacher reschedule / extend / delete actions surface here live).
-    const { data: rows } = await supabase
-      .from("calendar")
-      .select("subject, date, entry_type, chapter_id, chapter_name, chapter_color, topic_key, topic_title, label, is_national_holiday")
-      .eq("class_name", classNameRaw);
+    // Page through all rows — the backend caps each response at 1000 rows,
+    // which silently dropped whole subjects for busy classes.
+    const rows: any[] = [];
+    for (let from = 0; ; from += 1000) {
+      const { data: page, error } = await supabase
+        .from("calendar")
+        .select("subject, date, entry_type, chapter_id, chapter_name, chapter_color, topic_key, topic_title, label, is_national_holiday")
+        .eq("class_name", classNameRaw)
+        .order("date", { ascending: true })
+        .order("id", { ascending: true })
+        .range(from, from + 999);
+      if (error || !page) break;
+      rows.push(...page);
+      if (page.length < 1000) break;
+    }
 
     (rows ?? []).forEach((r: any) => {
       const subj = r.subject as string;
