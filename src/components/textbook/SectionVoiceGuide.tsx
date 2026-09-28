@@ -82,8 +82,18 @@ const SectionVoiceGuide = ({ sectionTitle, sectionType, sectionContent, onWrongA
         setIsPlaying(true);
         await audio.play();
       }
-    } catch {
-      // Silently fail — voice is supplementary
+    } catch (err) {
+      // Premium voice unavailable (e.g. provider billing) — fall back to the device voice
+      console.warn("Premium voice unavailable, using device voice:", err);
+      if (typeof window !== "undefined" && "speechSynthesis" in window) {
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.lang = "en-IN";
+        utter.onend = () => setIsPlaying(false);
+        utter.onerror = () => setIsPlaying(false);
+        window.speechSynthesis.cancel();
+        setIsPlaying(true);
+        window.speechSynthesis.speak(utter);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -91,6 +101,7 @@ const SectionVoiceGuide = ({ sectionTitle, sectionType, sectionContent, onWrongA
 
   const stopPlaying = useCallback(() => {
     if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
+    if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
     setIsPlaying(false);
   }, []);
 
