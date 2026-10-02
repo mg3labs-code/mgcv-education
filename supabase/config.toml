@@ -1,1 +1,3 @@
 project_id = "ikrfcpbkjkvxqhkxdklc"
+[functions.qa-fixture]
+verify_jwt = false
