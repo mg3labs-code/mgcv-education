@@ -54,21 +54,53 @@ serve(async (req) => {
       ? schedule_date
       : new Date().toISOString().split("T")[0];
 
-    // Check if homework already exists for this topic + date + class
-    const { data: existing } = await supabaseAdmin
-      .from("assignments")
-      .select("id")
-      .eq("class_name", class_name)
-      .eq("schedule_date", today)
-      .eq("source", "auto_homework")
-      .eq("schedule_topic_key", topic_key || topic_title)
-      .limit(1);
+    const subjectName = subject || "Mathematics";
+    const topicKey = topic_key || topic_title;
 
-    if (existing && existing.length > 0) {
-      return new Response(JSON.stringify({ skipped: true, message: "Homework already exists for this topic today" }), {
+    // Claim the homework slot FIRST. A unique index on
+    // (teacher, board, class, section, subject, topic key, date) for auto_homework
+    // guarantees only one request wins; the rest reuse the winner's assignment.
+    const findExisting = async () => {
+      let q = supabaseAdmin.from("assignments").select("id, title, is_published")
+        .eq("teacher_id", caller.id).eq("class_name", class_name).eq("subject", subjectName)
+        .eq("schedule_date", today).eq("source", "auto_homework").eq("schedule_topic_key", topicKey);
+      q = board ? q.eq("board", board) : q.is("board", null);
+      q = section ? q.eq("section", section) : q.is("section", null);
+      const { data } = await q.limit(1);
+      return data?.[0] ?? null;
+    };
+    const reuse = (row: { id: string; title: string; is_published: boolean }) =>
+      new Response(JSON.stringify({ skipped: true, reused: true, assignment_id: row.id, title: row.title, is_published: row.is_published, message: "Homework already exists for this topic today" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+
+    const existingRow = await findExisting();
+    if (existingRow) return reuse(existingRow);
+
+    const { data: claimed, error: claimErr } = await supabaseAdmin
+      .from("assignments")
+      .insert({
+        teacher_id: caller.id,
+        title: `${topic_title} — Daily Practice (drafting…)`,
+        class_name,
+        subject: subjectName,
+        board: board || null,
+        section: section || null,
+        source: "auto_homework",
+        schedule_topic_key: topicKey,
+        schedule_date: today,
+        is_published: false,
+      })
+      .select("id")
+      .single();
+    if (claimErr) {
+      if ((claimErr as any).code === "23505") {
+        const winner = await findExisting();
+        if (winner) return reuse(winner);
+      }
+      throw claimErr;
     }
+    claimedId = claimed.id;
 
     // Get student progress context for this class (aggregate)
     const { data: progressData } = await supabaseAdmin
