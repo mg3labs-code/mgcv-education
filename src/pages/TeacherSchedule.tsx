@@ -404,6 +404,7 @@ const TeacherSchedule = () => {
           initialChapters={courseChapters}
           savedSchedule={savedKey === `${user?.id}|${className}|${subject}` ? savedSchedule : null}
           savedChapters={savedKey === `${user?.id}|${className}|${subject}` ? savedChapters : null}
+          board={board}
         />
       </main>
 
