@@ -11,7 +11,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { class_name, subject, board, teacher_id, topic_key, topic_title, chapter_name } = await req.json();
+    const { class_name, subject, board, section, schedule_date, teacher_id, topic_key, topic_title, chapter_name } = await req.json();
 
     if (!class_name || !topic_title || !teacher_id) {
       return new Response(JSON.stringify({ error: "Missing required fields: class_name, topic_title, teacher_id" }), {
@@ -24,7 +24,35 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const today = new Date().toISOString().split("T")[0];
+    // Only a signed-in teacher who covers this class + subject may draft homework.
+    const authHeader = req.headers.get("Authorization") || "";
+    const token = authHeader.replace(/^Bearer\s+/i, "");
+    const { data: { user: caller } } = token
+      ? await supabaseAdmin.auth.getUser(token)
+      : { data: { user: null } };
+    if (!caller || caller.id !== teacher_id) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const gradeNum = parseInt(String(class_name).replace(/\D/g, ""), 10);
+    let coverQuery = supabaseAdmin
+      .from("teacher_teaching_map").select("id")
+      .eq("teacher_id", caller.id).eq("grade", gradeNum)
+      .ilike("subject", subject || "Mathematics");
+    if (board) coverQuery = coverQuery.eq("board", board);
+    if (section) coverQuery = coverQuery.eq("section", section);
+    const { data: covers } = await coverQuery.limit(1);
+    if (!covers || covers.length === 0) {
+      return new Response(JSON.stringify({ error: "You don't teach this class and subject" }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Prefer the teacher's local date (sent by the app) over server UTC.
+    const today = typeof schedule_date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(schedule_date)
+      ? schedule_date
+      : new Date().toISOString().split("T")[0];
 
     // Check if homework already exists for this topic + date + class
     const { data: existing } = await supabaseAdmin
@@ -202,7 +230,8 @@ Generate exactly 5 smart, simple homework questions for this topic, one per laye
         instructions: "Answer each question in your own words. Show your thinking!",
         class_name,
         subject: subjectName,
-         board: board || null,
+        board: board || null,
+        section: section || null,
         source: "auto_homework",
         schedule_topic_key: topic_key || topic_title,
         schedule_date: today,
