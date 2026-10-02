@@ -10,6 +10,17 @@ const corsHeaders = {
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  // Assignment row claimed by this request; removed again if generation fails,
+  // so a failed attempt never leaves an empty draft blocking a retry.
+  let claimedId: string | null = null;
+  let releaseClient: any = null;
+  const release = async () => {
+    if (claimedId && releaseClient) {
+      await releaseClient.from("assignments").delete().eq("id", claimedId);
+      claimedId = null;
+    }
+  };
+
   try {
     const { class_name, subject, board, section, schedule_date, teacher_id, topic_key, topic_title, chapter_name } = await req.json();
 
@@ -121,11 +132,10 @@ serve(async (req) => {
       difficultyHint = "simple application connecting the concept to a real scenario";
     }
 
-    const subjectName = subject || "Mathematics";
-
     // Generate questions via AI
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
+      await release();
       return new Response(JSON.stringify({ error: "AI not configured" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -222,11 +232,13 @@ Generate exactly 5 smart, simple homework questions for this topic, one per laye
       const errText = await aiResponse.text();
       console.error("AI gateway error:", aiResponse.status, errText);
       if (aiResponse.status === 429) {
+        await release();
         return new Response(JSON.stringify({ error: "Rate limited, please try again later" }), {
           status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       if (aiResponse.status === 402) {
+        await release();
         return new Response(JSON.stringify({ error: "AI credits exhausted" }), {
           status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
@@ -251,27 +263,20 @@ Generate exactly 5 smart, simple homework questions for this topic, one per laye
       dueDate.setDate(dueDate.getDate() + 1);
     }
 
-    // Create the assignment
+    // Fill in the claimed assignment (only the winning request reaches here).
     const assignmentTitle = `${emoji} ${topic_title} — Daily Practice`;
     const { data: assignment, error: aErr } = await supabaseAdmin
       .from("assignments")
-      .insert({
-        teacher_id,
+      .update({
         title: assignmentTitle,
         description: `Auto-generated homework for "${topic_title}". Smart practice to reinforce today's learning.`,
         instructions: "Answer each question in your own words. Show your thinking!",
-        class_name,
-        subject: subjectName,
-        board: board || null,
-        section: section || null,
-        source: "auto_homework",
-        schedule_topic_key: topic_key || topic_title,
-        schedule_date: today,
         max_total_score: questions.reduce((s: number, q: any) => s + (q.max_score || 3), 0),
         due_date: dueDate.toISOString(),
         // Drafted for teacher review — never visible to students until she approves it.
         is_published: false,
       })
+      .eq("id", claimedId)
       .select()
       .single();
 
@@ -292,6 +297,7 @@ Generate exactly 5 smart, simple homework questions for this topic, one per laye
       .insert(questionRows);
 
     if (qErr) throw qErr;
+    claimedId = null; // success — keep the row
 
     console.log(`✅ Generated homework: "${assignmentTitle}" for ${class_name} (${questions.length} questions)`);
 
@@ -306,6 +312,7 @@ Generate exactly 5 smart, simple homework questions for this topic, one per laye
 
   } catch (e) {
     console.error("generate-daily-homework error:", e);
+    await release();
     return new Response(
       JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
