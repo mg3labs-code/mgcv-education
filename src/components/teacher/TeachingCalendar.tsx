@@ -131,6 +131,28 @@ const topicColorMap: Record<string, string> = {
   assignment: "bg-amber-500 hover:bg-amber-600",
 };
 
+// ── Plan start date ──
+// The date the chapter plan starts flowing from (YYYY-MM-DD, teacher's local date).
+let planStartKey: string | null = null;
+export const setPlanStartKey = (key: string | null) => { planStartKey = key; };
+export const localTodayKey = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
+/** Earliest date in a saved plan that came from the chapter plan. */
+export const earliestPlanKey = (schedule: Record<string, ScheduleItem>) => {
+  const keys = Object.entries(schedule)
+    .filter(([, it]) => it.chapterId && !it.manualOverride && ["topic", "practice", "test"].includes(it.type))
+    .map(([k]) => k)
+    .sort();
+  return keys[0] ?? null;
+};
+/** Indian academic year (June–May) label for a given month. */
+export const academicYearLabel = (year: number, monthIndex: number) => {
+  const start = monthIndex >= 5 ? year : year - 1;
+  return `${start}–${String((start + 1) % 100).padStart(2, "0")}`;
+};
+
 // ── Schedule generation ──
 function generateSchedule(chapters: ChapterDef[]): Record<string, ScheduleItem> {
   const schedule: Record<string, ScheduleItem> = {};
@@ -154,12 +176,17 @@ function generateSchedule(chapters: ChapterDef[]): Record<string, ScheduleItem> 
     }
   };
 
-  // Anchor to the start of the current academic year (June 1).
-  // If we're already past June, use this calendar year; otherwise the previous one.
-  const _today = new Date();
-  const _ayYear = _today.getUTCMonth() >= 5 ? _today.getUTCFullYear() : _today.getUTCFullYear() - 1;
-  // Use May 31 so the first getNextSlot() lands on the first working day of June.
-  let currentDate = new Date(Date.UTC(_ayYear, 4, 31, 12, 0, 0));
+  // Anchor to the teacher's chosen plan start date (defaults to her local
+  // today). Without one, fall back to the start of the academic year (June 1).
+  let currentDate: Date;
+  if (planStartKey) {
+    currentDate = fromKey(planStartKey);
+    currentDate.setUTCDate(currentDate.getUTCDate() - 1);
+  } else {
+    const _today = new Date();
+    const _ayYear = _today.getUTCMonth() >= 5 ? _today.getUTCFullYear() : _today.getUTCFullYear() - 1;
+    currentDate = new Date(Date.UTC(_ayYear, 4, 31, 12, 0, 0));
+  }
 
   chapters.forEach((chapter) => {
     for (let i = 0; i < chapter.teachingDays; i++) {
