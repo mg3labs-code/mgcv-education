@@ -1,0 +1,1 @@
+- Teaching plan start date = teacher's local today for new plans; saved plans derive it from their earliest chapter-generated date (no stored column), so reloads don't shift lessons.
