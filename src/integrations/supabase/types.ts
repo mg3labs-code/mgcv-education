@@ -2015,6 +2015,19 @@ export type Database = {
       get_my_student_phone: { Args: never; Returns: string }
       get_my_teacher_phone: { Args: never; Returns: string }
       get_student_streak: { Args: { _user_id: string }; Returns: number }
+      get_teacher_assignment_questions: {
+        Args: { _assignment_ids: string[] }
+        Returns: {
+          assignment_id: string
+          created_at: string
+          expected_answer_hints: string
+          id: string
+          max_score: number
+          question_number: number
+          question_text: string
+          rubric: Json
+        }[]
+      }
       get_teacher_explanations: {
         Args: {
           _board: string
@@ -2117,6 +2130,10 @@ export type Database = {
         Returns: string
       }
       recalculate_retention_predictions: { Args: never; Returns: number }
+      recompute_assignment_total: {
+        Args: { _assignment_id: string }
+        Returns: undefined
+      }
       student_context: {
         Args: { _user_id: string }
         Returns: {
