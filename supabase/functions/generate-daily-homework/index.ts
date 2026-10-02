@@ -112,6 +112,7 @@ serve(async (req) => {
       throw claimErr;
     }
     claimedId = claimed.id;
+    releaseClient = supabaseAdmin;
 
     // Get student progress context for this class (aggregate)
     const { data: progressData } = await supabaseAdmin
