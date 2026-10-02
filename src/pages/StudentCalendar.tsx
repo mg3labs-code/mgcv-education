@@ -46,7 +46,8 @@ const BREAKS = [
 
 
 const DAY_HEADERS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-const toKey = (date: Date) => date.toISOString().split("T")[0];
+const toKey = (date: Date) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 
 const StudentCalendar = () => {
   const { user } = useAuth();
@@ -185,7 +186,7 @@ const StudentCalendar = () => {
   }, [availableSubjects]);
 
 
-  const todayKey = now.toISOString().split("T")[0];
+  const todayKey = toKey(now);
 
   // Build today's timeline from real published entries only — never invented periods.
   const todayTimeline = useMemo(() => {

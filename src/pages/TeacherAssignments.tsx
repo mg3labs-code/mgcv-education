@@ -140,8 +140,12 @@ const TeacherAssignments = () => {
       const board = Number.isFinite(grade)
         ? entries.find((entry) => entry.grade === grade && entry.subject === newAssignment.subject)?.board ?? null
         : null;
+      const sections = Array.from(new Set(entries
+        .filter((e) => e.grade === grade && e.subject === newAssignment.subject && e.board === board)
+        .map((e) => e.section)));
+      const section = sections.length === 1 ? sections[0] : null;
       const { data, error } = await supabase.functions.invoke("manage-assignment", {
-        body: { action: "create_assignment", ...newAssignment, board },
+        body: { action: "create_assignment", ...newAssignment, board, section },
       });
       if (error) throw error;
       return data;

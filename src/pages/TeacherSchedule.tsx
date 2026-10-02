@@ -54,6 +54,14 @@ const TeacherSchedule = () => {
     const match = entries.find(e => e.grade === gradeNum && e.subject === subject);
     return match?.board;
   }, [entries, gradeNum, subject]);
+  // Section is only stamped when the teacher covers exactly one section for
+  // this class + subject + board, so rows never claim a section they don't own.
+  const section = useMemo(() => {
+    const secs = Array.from(new Set(entries
+      .filter(e => e.grade === gradeNum && e.subject === subject && e.board === board)
+      .map(e => e.section)));
+    return secs.length === 1 ? secs[0] : null;
+  }, [entries, gradeNum, subject, board]);
   const { data: courseChapters, isFetched: chaptersFetched } = useChaptersForCourse(board, gradeNum, subject);
 
   // Which subjects actually have curriculum loaded for this grade, so the
@@ -156,7 +164,7 @@ const TeacherSchedule = () => {
       class_name: className,
       subject,
       board: board ?? null,
-      section: null as string | null,
+      section: section ?? null,
       chapter_id: c.id,
       chapter_name: c.name,
       chapter_color: c.colorHex,
@@ -194,6 +202,8 @@ const TeacherSchedule = () => {
       label: item.label ?? null,
       notes: item.notes ?? null,
       is_national_holiday: !!item.isNational,
+      board: board ?? null,
+      section: section ?? null,
     }));
 
 
@@ -278,7 +288,9 @@ const TeacherSchedule = () => {
 
       // Auto-generate homework for today's topic if enabled
       if (autoHomework) {
-        const today = new Date().toISOString().split("T")[0];
+        // Local calendar date (not UTC) so IST mornings don't fall on yesterday.
+        const now = new Date();
+        const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
         const todayItem = scheduleData[today];
 
         if (todayItem && todayItem.type === "topic" && todayItem.title) {
@@ -291,7 +303,9 @@ const TeacherSchedule = () => {
                 body: {
                   class_name: className,
                   subject,
-                   board,
+                  board,
+                  section,
+                  schedule_date: today,
                   teacher_id: user.id,
                   topic_key: todayItem.key || todayItem.title,
                   topic_title: todayItem.title,
