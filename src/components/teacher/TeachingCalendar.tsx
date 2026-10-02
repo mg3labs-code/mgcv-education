@@ -318,6 +318,8 @@ interface TeachingCalendarProps {
    */
   savedSchedule?: Record<string, ScheduleItem> | null;
   savedChapters?: ChapterDef[] | null;
+  /** Board code shown in the header (e.g. CBSE). */
+  board?: string | null;
 }
 
 const DEFAULT_CLASSES = [
@@ -327,10 +329,16 @@ const DEFAULT_CLASSES = [
   "Class 12"
 ];
 
-const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, selectedSubject, onSubjectChange, availableClasses, availableSubjects, initialChapters, savedSchedule, savedChapters }: TeachingCalendarProps) => {
+const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, selectedSubject, onSubjectChange, availableClasses, availableSubjects, initialChapters, savedSchedule, savedChapters, board }: TeachingCalendarProps) => {
   const CLASSES = availableClasses && availableClasses.length > 0 ? availableClasses : DEFAULT_CLASSES;
   const SUBJECTS = availableSubjects && availableSubjects.length > 0 ? availableSubjects : [];
 
+
+  // Plan start: a saved plan keeps its own start; a new plan starts today (local date).
+  const [planStart, setPlanStart] = useState<string>(() =>
+    (savedSchedule && Object.keys(savedSchedule).length > 0 && earliestPlanKey(savedSchedule)) || localTodayKey(),
+  );
+  setPlanStartKey(planStart);
 
   const now = new Date();
   const [monthIndex, setMonthIndex] = useState(now.getMonth());
@@ -370,6 +378,9 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
   // a saved schedule finishes loading asynchronously. Saved data wins.
   useEffect(() => {
     if (savedSchedule && Object.keys(savedSchedule).length > 0) {
+      const savedStart = earliestPlanKey(savedSchedule) ?? localTodayKey();
+      setPlanStartKey(savedStart);
+      setPlanStart(savedStart);
       const ch =
         savedChapters && savedChapters.length > 0
           ? savedChapters
@@ -385,6 +396,9 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
       return;
     }
     if (!initialChapters || initialChapters.length === 0) return;
+    const today = localTodayKey();
+    setPlanStartKey(today);
+    setPlanStart(today);
     setChapters(initialChapters);
     setSchedule(generateSchedule(initialChapters));
     setHasUnsavedChanges(false);
@@ -904,7 +918,25 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
                 </Select>
               )}
             </div>
-            <p className="text-xs opacity-80 uppercase tracking-wider font-medium">CBSE • 2025–26</p>
+            <p className="text-xs opacity-80 uppercase tracking-wider font-medium">
+              {board ? `${board} • ` : ""}{academicYearLabel(year, monthIndex)}
+            </p>
+            <label className="flex items-center gap-2 text-xs opacity-90">
+              Plan starts
+              <input
+                type="date"
+                aria-label="Plan start date"
+                value={planStart}
+                onChange={(e) => {
+                  const key = e.target.value;
+                  if (!/^\d{4}-\d{2}-\d{2}$/.test(key) || key === planStart) return;
+                  setPlanStartKey(key);
+                  setPlanStart(key);
+                  applyChange(chapters);
+                }}
+                className="rounded-md bg-white/20 border border-white/30 px-2 py-1 text-white"
+              />
+            </label>
           </div>
 
 
