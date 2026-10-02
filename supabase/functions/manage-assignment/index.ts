@@ -86,7 +86,7 @@ serve(async (req) => {
 
     switch (action) {
       case "create_assignment": {
-        const { title, description, instructions, class_name, subject, board, questions, unlock_date, due_date } = body;
+        const { title, description, instructions, class_name, subject, board, section, questions, unlock_date, due_date } = body;
 
         const { data: assignment, error: aErr } = await supabase
           .from("assignments")
@@ -98,6 +98,7 @@ serve(async (req) => {
             class_name,
             subject: subject || "Mathematics",
             board: board || null,
+            section: section || null,
             max_total_score: questions?.reduce((s: number, q: any) => s + (q.max_score || 10), 0) || 0,
             unlock_date: unlock_date || null,
             due_date: due_date || null,
@@ -147,8 +148,32 @@ serve(async (req) => {
       case "upload_answer": {
         const { assignment_id, question_id, extracted_text } = body;
 
+        // The student's own client must be able to see the assignment (published,
+        // their class/board/section) — RLS enforces that. Writes then go through
+        // the admin client so students have no direct write access to scores.
+        const { data: visible } = await supabase
+          .from("assignments").select("id").eq("id", assignment_id).maybeSingle();
+        const { data: questionRow } = await supabaseAdmin
+          .from("assignment_questions").select("id")
+          .eq("id", question_id).eq("assignment_id", assignment_id).maybeSingle();
+        if (!visible || !questionRow) {
+          return new Response(JSON.stringify({ error: "Assignment not available" }), {
+            status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        const { data: existingSub } = await supabaseAdmin
+          .from("student_submissions").select("id, status")
+          .eq("assignment_id", assignment_id).eq("student_id", userId).maybeSingle();
+        if (existingSub && (existingSub.status === "finalized" || existingSub.status === "submitted")) {
+          return new Response(
+            JSON.stringify({ error: "Submission already finalized" }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
         // Upsert submission
-        const { data: submission, error: subErr } = await supabase
+        const { data: submission, error: subErr } = await supabaseAdmin
           .from("student_submissions")
           .upsert(
             { assignment_id, student_id: userId, status: "in_progress" },
@@ -209,7 +234,7 @@ serve(async (req) => {
         }
         if (detectedFileType) answerData.file_type = detectedFileType;
 
-        const { data: answer, error: ansErr } = await supabase
+        const { data: answer, error: ansErr } = await supabaseAdmin
           .from("student_answers")
           .upsert(answerData, { onConflict: "submission_id,question_id" })
           .select()
@@ -266,7 +291,7 @@ serve(async (req) => {
           });
         }
 
-        const { error } = await supabase
+        const { error } = await supabaseAdmin
           .from("student_submissions")
           .update({ status: "submitted", submitted_at: new Date().toISOString() })
           .eq("id", submission.id)
