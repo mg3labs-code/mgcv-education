@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1790969217336,
+      "tag": "0000_pilot_isolation_fixes",
+      "breakpoints": true
+    }
+  ]
+}
