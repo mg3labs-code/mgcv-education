@@ -225,7 +225,7 @@ function generateSchedule(chapters: ChapterDef[]): Record<string, ScheduleItem> 
   });
 
   const fillStart = new Date("2025-01-01T12:00:00Z");
-  const fillEnd = new Date("2026-12-31T12:00:00Z");
+  const fillEnd = new Date("2027-12-31T12:00:00Z");
   const fillDate = new Date(fillStart);
   while (fillDate <= fillEnd) {
     const key = toKey(fillDate);
@@ -581,7 +581,7 @@ const TeachingCalendar = ({ onSave, isSaving, selectedClass, onClassChange, sele
   const availableHolidayDates = useMemo(() => {
     const dates: { key: string; label: string }[] = [];
     let d = new Date("2025-01-01T12:00:00Z");
-    const end = new Date("2026-12-31T12:00:00Z");
+    const end = new Date("2027-12-31T12:00:00Z");
     while (d <= end) {
       const dow = d.getUTCDay();
       const key = toKey(d);
