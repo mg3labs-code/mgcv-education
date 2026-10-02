@@ -168,17 +168,25 @@ const TeacherAssignments = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("assignments")
-        .select("*, questions:assignment_questions(id, assignment_id, question_number, question_text, max_score, rubric, expected_answer_hints, created_at)")
+        .select("*")
         .eq("teacher_id", user?.id)
         .eq("source", "auto_homework")
         .eq("is_published", false)
         .order("created_at", { ascending: false });
       if (error) throw error;
+      const ids = (data || []).map((a: any) => a.id);
+      // Hints and marking notes are teacher-only; read them through the owner-checked function.
+      let qs: any[] = [];
+      if (ids.length) {
+        const { data: qd, error: qErr } = await supabase.rpc("get_teacher_assignment_questions" as any, { _assignment_ids: ids });
+        if (qErr) throw qErr;
+        qs = (qd as any[]) || [];
+      }
       return (data || []).map((a: any) => ({
         ...a,
-        questions: [...(a.questions || [])].sort(
-          (x: any, y: any) => x.question_number - y.question_number,
-        ),
+        questions: qs
+          .filter((q) => q.assignment_id === a.id)
+          .sort((x: any, y: any) => x.question_number - y.question_number),
       }));
     },
     enabled: !!user,

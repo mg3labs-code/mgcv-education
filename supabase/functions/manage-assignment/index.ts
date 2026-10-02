@@ -133,9 +133,14 @@ serve(async (req) => {
 
       case "publish_assignment": {
         const { assignment_id } = body;
+        // Final integrity check: total marks = sum of the remaining questions.
+        const { data: qs, error: qsErr } = await supabaseAdmin
+          .from("assignment_questions").select("max_score").eq("assignment_id", assignment_id);
+        if (qsErr) throw qsErr;
+        const total = (qs || []).reduce((s: number, q: any) => s + Number(q.max_score || 0), 0);
         const { error } = await supabase
           .from("assignments")
-          .update({ is_published: true })
+          .update({ is_published: true, max_total_score: total })
           .eq("id", assignment_id)
           .eq("teacher_id", userId);
 
