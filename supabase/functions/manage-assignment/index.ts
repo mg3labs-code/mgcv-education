@@ -62,6 +62,12 @@ serve(async (req) => {
       };
       const file = formData.get("file") as File | null;
       if (file) {
+        const allowed = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+        if (file.size === 0 || file.size > 10 * 1024 * 1024 || !allowed.includes(file.type)) {
+          return new Response(JSON.stringify({ error: "File must be a JPG, PNG, WEBP or PDF under 10 MB" }), {
+            status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
         fileData = new Uint8Array(await file.arrayBuffer());
         fileName = file.name;
         fileType = file.type;
@@ -208,19 +214,24 @@ serve(async (req) => {
           );
         }
 
-        // Upload file to storage if provided
+        // Upload file to storage if provided — always a new unique path, never overwrite.
         let fileUrl: string | null = null;
         let detectedFileType: string | null = fileType;
+        let storagePath: string | null = null;
+        const lockedResponse = () => new Response(
+          JSON.stringify({ error: "Submission already finalized" }),
+          { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
 
         if (fileData && fileName) {
-          const ext = fileName.split(".").pop() || "bin";
-          const storagePath = `${userId}/${assignment_id}/${question_id}.${ext}`;
+          const ext = (fileName.split(".").pop() || "bin").toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 8) || "bin";
+          storagePath = `${userId}/${assignment_id}/${question_id}-${crypto.randomUUID()}.${ext}`;
 
           const { error: uploadErr } = await supabaseAdmin.storage
             .from("answer-files")
             .upload(storagePath, fileData, {
               contentType: fileType || "application/octet-stream",
-              upsert: true,
+              upsert: false,
             });
 
           if (uploadErr) {
@@ -228,7 +239,6 @@ serve(async (req) => {
             throw new Error("File upload failed: " + uploadErr.message);
           }
 
-          // Generate a signed URL for OCR (valid 1 hour)
           const { data: signedData } = await supabaseAdmin.storage
             .from("answer-files")
             .createSignedUrl(storagePath, 3600);
@@ -236,7 +246,21 @@ serve(async (req) => {
           fileUrl = signedData?.signedUrl || null;
         }
 
-        // Upsert answer — store raw storage path (not signed URL) for permanent access
+        const removeUnattached = async () => {
+          if (storagePath) {
+            const { error } = await supabaseAdmin.storage.from("answer-files").remove([storagePath]);
+            if (error) console.error("Failed to remove unattached upload:", error);
+          }
+        };
+
+        // Recheck the submission is still editable after the upload finished.
+        const { data: recheck } = await supabaseAdmin
+          .from("student_submissions").select("status").eq("id", submission.id).single();
+        if (!recheck || recheck.status === "finalized" || recheck.status === "submitted") {
+          await removeUnattached();
+          return lockedResponse();
+        }
+
         const answerData: any = {
           submission_id: submission.id,
           question_id,
@@ -245,19 +269,32 @@ serve(async (req) => {
         };
 
         if (extracted_text) answerData.extracted_text = extracted_text;
-        if (fileData && fileName) {
-          const ext = fileName.split(".").pop() || "bin";
-          answerData.file_url = `${userId}/${assignment_id}/${question_id}.${ext}`;
-        }
+        if (storagePath) answerData.file_url = storagePath;
         if (detectedFileType) answerData.file_type = detectedFileType;
 
+        const { data: previous } = await supabaseAdmin
+          .from("student_answers").select("file_url")
+          .eq("submission_id", submission.id).eq("question_id", question_id).maybeSingle();
+
+        // The database trigger refuses file changes once the submission is
+        // submitted/finalized, so a finalize that wins the race leaves the
+        // marked file reference untouched.
         const { data: answer, error: ansErr } = await supabaseAdmin
           .from("student_answers")
           .upsert(answerData, { onConflict: "submission_id,question_id" })
           .select()
           .single();
 
-        if (ansErr) throw ansErr;
+        if (ansErr) {
+          await removeUnattached();
+          if (String(ansErr.message || "").includes("answer_locked")) return lockedResponse();
+          throw ansErr;
+        }
+
+        // Replaced (pre-finalization) file is no longer referenced — clean it up.
+        if (storagePath && previous?.file_url && previous.file_url !== storagePath) {
+          await supabaseAdmin.storage.from("answer-files").remove([previous.file_url]);
+        }
 
         // Trigger async AI evaluation (fire and forget)
         if (extracted_text || fileUrl) {
