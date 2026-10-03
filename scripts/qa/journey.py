@@ -1,6 +1,8 @@
 import sys, time, json, hashlib, threading
 from common import *
 RUN, DATE = sys.argv[1], sys.argv[2]
+FIX = len(sys.argv)>3 and sys.argv[3]=="fix"
+import datetime
 R={}; ok=lambda k,v,d="": (R.__setitem__(k,("PASS" if v else "FAIL")+(" "+d if d else "")), print(k, R[k]), (v or (_ for _ in ()).throw(SystemExit("STOP at "+k))))
 t={w:session(w)["access_token"] for w in ["qa.t1","qa.t2","qa.s1","qa.s2","qa.s3","qa.s4"]}
 T1="584d68ef-c42f-4b53-9ffa-bdce38622355"
@@ -21,6 +23,14 @@ gen_s=round(time.time()-t0,1)
 drafts=rest(t["qa.t1"],f"assignments?select=id,is_published,board,section&teacher_id=eq.{T1}&schedule_date=eq.{DATE}&source=eq.auto_homework").json()
 ok("CP2 3 simultaneous requests -> 1 unpublished CBSE/A draft", len(drafts)==1 and not drafts[0]["is_published"] and drafts[0]["board"]=="CBSE" and drafts[0]["section"]=="A", f"{[r.status_code for r in res]} {gen_s}s")
 A=drafts[0]["id"]; R["assignment"]=A
+g=rest(t["qa.t1"],f"assignments?select=generation_status,due_date&id=eq.{A}").json()[0]
+nh={h["date"] for h in rest(t["qa.t1"],"national_holidays?select=date").json()}
+th={h["date"] for h in rest(t["qa.t1"],f"calendar?select=date&teacher_id=eq.{T1}&entry_type=eq.holiday&class_name=eq.{c['class_name']}").json()}
+d=datetime.date.fromisoformat(DATE)+datetime.timedelta(days=1)
+while d.weekday()>=5 or d.isoformat() in nh or d.isoformat() in th: d+=datetime.timedelta(days=1)
+due_ist=(datetime.datetime.fromisoformat(g["due_date"])+datetime.timedelta(hours=5,minutes=30)).date() if g["due_date"] else None
+ok("CP2 generation complete before review", g["generation_status"]=="complete")
+ok("CP2 due date = next school day", due_ist==d, f"{DATE} -> {due_ist} (expected {d})")
 qs=sorted(requests.post(f"{U}/rest/v1/rpc/get_teacher_assignment_questions",headers={"apikey":K,"Authorization":"Bearer "+t["qa.t1"]},json={"_assignment_ids":[A]}).json(),key=lambda q:q["question_number"])
 layers=[(q.get("rubric") or {}).get("layer") if isinstance(q.get("rubric"),dict) else None for q in qs]
 ok("CP2 five questions with hints for teacher", len(qs)==5 and all(q.get("expected_answer_hints") for q in qs), str(layers))
@@ -35,6 +45,9 @@ r2=rest(t["qa.t1"],f"assignment_questions?id=eq.{qs[2]['id']}","PATCH",{"max_sco
 r3=rest(t["qa.t1"],f"assignment_questions?id=eq.{qs[4]['id']}","DELETE")
 chk=sorted(requests.post(f"{U}/rest/v1/rpc/get_teacher_assignment_questions",headers={"apikey":K,"Authorization":"Bearer "+t["qa.t1"]},json={"_assignment_ids":[A]}).json(),key=lambda q:q["question_number"])
 ok("CP4 edit/marks/delete saved (re-read)", all(x.status_code<300 for x in (r1,r2,r3)) and len(chk)==4 and chk[1]["question_text"].endswith(f"(QA run {RUN} edit)") and float(chk[2]["max_score"])==float(qs[2]["max_score"])+1 and qs[4]["id"] not in [q["id"] for q in chk])
+if FIX:
+  fx=[rest(t["qa.t1"],f"assignment_questions?id=eq.{chk[i]['id']}","PATCH",{"max_score":m}).status_code for i,m in enumerate([2,2,4,3])]
+  ok("CP4 fixture maxima 2,2,4,3 set", all(x<300 for x in fx))
 for i in range(2): pr=fn(t["qa.t1"],"manage-assignment",{"action":"publish_assignment","assignment_id":A})
 ok("CP4 approve (twice) ok", pr.status_code==200)
 asg=rest(t["qa.t1"],f"assignments?select=is_published,max_total_score&id=eq.{A}").json()[0]
@@ -90,6 +103,11 @@ for w in ["qa.s1","qa.s2","qa.t2"]:
   ok(f"CP8 teacher_grade refused for {w}", fn(t[w],"manage-assignment",{"action":"teacher_grade","answer_id":s1a["id"],"teacher_score":0,"teacher_feedback":"x"}).status_code==403)
   ok(f"CP8 teacher_finalize refused for {w}", fn(t[w],"manage-assignment",{"action":"teacher_finalize","submission_id":SID}).status_code==403)
 ok("CP8 over-max mark refused", fn(t["qa.t1"],"manage-assignment",{"action":"teacher_grade","answer_id":s1a["id"],"teacher_score":mx[s1a["question_id"]]+1}).status_code==400)
+if FIX:
+  byq={order[a["question_id"]]:a for a in an}
+  g4=[fn(t["qa.t1"],"manage-assignment",{"action":"teacher_grade","answer_id":byq[i+1]["id"],"teacher_score":v,"teacher_feedback":"QA fixture"}).status_code for i,v in enumerate([2,1,4,3])]
+  ok("CP9 fixture scores 2,1,4,3 saved", all(x==200 for x in g4), str(g4))
+  for a in an: a["ai_score"]={1:2,2:1,3:4,4:3}[order[a["question_id"]]]
 # CP9 override + finalize
 ok("CP9 T1 sets Q1=0 'QA override'", fn(t["qa.t1"],"manage-assignment",{"action":"teacher_grade","answer_id":s1a["id"],"teacher_score":0,"teacher_feedback":"QA override"}).status_code==200)
 fz=fn(t["qa.t1"],"manage-assignment",{"action":"teacher_finalize","submission_id":SID,"total_score":999}).json()
@@ -97,6 +115,9 @@ exp=round(sum(float(a["ai_score"]) for a in an if a["id"]!=s1a["id"]),2)
 fz2=fn(t["qa.t1"],"manage-assignment",{"action":"teacher_finalize","submission_id":SID}).json()
 ok("CP9 server total ignores 999, repeat finalize idempotent", float(fz["total_score"])==exp and fz2.get("already_finalized") and float(fz2["total_score"])==exp, f"total {exp}")
 R["total"]=exp
+if FIX:
+  fz3=fn(t["qa.t1"],"manage-assignment",{"action":"teacher_finalize","submission_id":SID}).json()
+  ok("CP9 controlled total = 8, unchanged after 3 finalizes", exp==8 and float(fz3["total_score"])==8, f"{fz['total_score']}/{fz2['total_score']}/{fz3['total_score']}")
 # CP10 post-final locks + S2 isolation + file integrity
 files=rest(t["qa.s1"],f"student_answers?select=file_url&submission_id=eq.{SID}&file_url=not.is.null").json()
 def dl(w,path): return requests.get(f"{U}/storage/v1/object/authenticated/answer-files/{path}",headers={"apikey":K,"Authorization":"Bearer "+t[w]})
