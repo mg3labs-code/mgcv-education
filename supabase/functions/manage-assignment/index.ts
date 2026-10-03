@@ -12,6 +12,51 @@ const BaseBodySchema = z.object({
   action: ActionSchema,
 }).passthrough();
 
+
+
+type ValidatedFile = { mime: string; extension: string };
+
+function validateUploadedFile(data: Uint8Array): ValidatedFile | null {
+  const ascii = (start: number, end: number) => new TextDecoder("latin1").decode(data.slice(start, end));
+  if (data.length >= 4 && data[0] === 0xff && data[1] === 0xd8 && data[data.length - 2] === 0xff && data[data.length - 1] === 0xd9) {
+    return { mime: "image/jpeg", extension: "jpg" };
+  }
+  const pngSig = [137, 80, 78, 71, 13, 10, 26, 10];
+  if (data.length >= 24 && pngSig.every((value, index) => data[index] === value)) {
+    let offset = 8;
+    let sawHeader = false;
+    while (offset + 12 <= data.length) {
+      const length = ((data[offset] << 24) | (data[offset + 1] << 16) | (data[offset + 2] << 8) | data[offset + 3]) >>> 0;
+      const type = ascii(offset + 4, offset + 8);
+      if (offset + 12 + length > data.length) return null;
+      if (!sawHeader && type !== "IHDR") return null;
+      sawHeader = true;
+      offset += 12 + length;
+      if (type === "IEND") return length === 0 ? { mime: "image/png", extension: "png" } : null;
+    }
+    return null;
+  }
+  if (data.length >= 16 && ascii(0, 4) === "RIFF" && ascii(8, 12) === "WEBP") {
+    const declared = data[4] | (data[5] << 8) | (data[6] << 16) | (data[7] << 24);
+    const chunk = ascii(12, 16);
+    if (["VP8 ", "VP8L", "VP8X"].includes(chunk) && declared + 8 <= data.length) return { mime: "image/webp", extension: "webp" };
+    return null;
+  }
+  if (data.length >= 20 && ascii(0, 5) === "%PDF-") {
+    const tail = ascii(Math.max(0, data.length - 4096), data.length);
+    const body = ascii(0, Math.min(data.length, 1_000_000));
+    if (/%%EOF\s*$/.test(tail.replace(/\0+$/g, "")) && /\/Type\s*\/Pages?\b/.test(body) && /\b(startxref|xref)\b/.test(tail)) {
+      return { mime: "application/pdf", extension: "pdf" };
+    }
+    return null;
+  }
+  return null;
+}
+
+function lockedMessage(status: string) {
+  return status === "submitted" ? "Submission already submitted" : "Submission already finalized";
+}
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -69,8 +114,14 @@ serve(async (req) => {
           });
         }
         fileData = new Uint8Array(await file.arrayBuffer());
+        const validated = validateUploadedFile(fileData);
+        if (!validated || validated.mime !== file.type) {
+          return new Response(JSON.stringify({ error: "The file contents do not match a valid JPG, PNG, WEBP or PDF" }), {
+            status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
         fileName = file.name;
-        fileType = file.type;
+        fileType = validated.mime;
       }
     } else {
       body = await req.json();
@@ -191,8 +242,8 @@ serve(async (req) => {
           .eq("assignment_id", assignment_id).eq("student_id", userId).maybeSingle();
         if (existingSub && (existingSub.status === "finalized" || existingSub.status === "submitted")) {
           return new Response(
-            JSON.stringify({ error: "Submission already finalized" }),
-            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            JSON.stringify({ error: lockedMessage(existingSub.status) }),
+            { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
 
@@ -210,8 +261,8 @@ serve(async (req) => {
 
         if (submission.status === "finalized" || submission.status === "submitted") {
           return new Response(
-            JSON.stringify({ error: "Submission already finalized" }),
-            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            JSON.stringify({ error: lockedMessage(submission.status) }),
+            { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
 
@@ -219,14 +270,15 @@ serve(async (req) => {
         let fileUrl: string | null = null;
         let detectedFileType: string | null = fileType;
         let storagePath: string | null = null;
-        const lockedResponse = () => new Response(
-          JSON.stringify({ error: "Submission already finalized" }),
+        const lockedResponse = (status = "finalized") => new Response(
+          JSON.stringify({ error: lockedMessage(status) }),
           { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
 
         if (fileData && fileName) {
-          const ext = (fileName.split(".").pop() || "bin").toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 8) || "bin";
-          storagePath = `${userId}/${assignment_id}/${question_id}-${crypto.randomUUID()}.${ext}`;
+          const validated = validateUploadedFile(fileData);
+          if (!validated) return jsonErr(400, "The uploaded file is corrupt or disguised");
+          storagePath = `${userId}/${assignment_id}/${question_id}-${crypto.randomUUID()}.${validated.extension}`;
 
           const { error: uploadErr } = await supabaseAdmin.storage
             .from("answer-files")
@@ -259,41 +311,33 @@ serve(async (req) => {
           .from("student_submissions").select("status").eq("id", submission.id).single();
         if (!recheck || recheck.status === "finalized" || recheck.status === "submitted") {
           await removeUnattached();
-          return lockedResponse();
+          return lockedResponse(recheck?.status || "finalized");
         }
-
-        const answerData: any = {
-          submission_id: submission.id,
-          question_id,
-          student_id: userId,
-          processing_status: "pending",
-        };
-
-        if (extracted_text) answerData.extracted_text = extracted_text;
-        if (storagePath) answerData.file_url = storagePath;
-        if (detectedFileType) answerData.file_type = detectedFileType;
 
         const { data: previous } = await supabaseAdmin
           .from("student_answers").select("file_url")
           .eq("submission_id", submission.id).eq("question_id", question_id).maybeSingle();
 
-        // The database trigger refuses file changes once the submission is
-        // submitted/finalized, so a finalize that wins the race leaves the
-        // marked file reference untouched.
         const { data: answer, error: ansErr } = await supabaseAdmin
-          .from("student_answers")
-          .upsert(answerData, { onConflict: "submission_id,question_id" })
-          .select()
+          .rpc("replace_editable_answer", {
+            _submission_id: submission.id,
+            _question_id: question_id,
+            _student_id: userId,
+            _extracted_text: extracted_text || null,
+            _file_url: storagePath,
+            _file_type: detectedFileType,
+          })
           .single();
 
         if (ansErr) {
           await removeUnattached();
-          if (String(ansErr.message || "").includes("answer_locked")) return lockedResponse();
+          const message = String(ansErr.message || "");
+          if (message.includes("submission is submitted")) return lockedResponse("submitted");
+          if (message.includes("submission is finalized") || message.includes("answer_locked")) return lockedResponse("finalized");
           throw ansErr;
         }
 
-        // Replaced (pre-finalization) file is no longer referenced — clean it up.
-        if (storagePath && previous?.file_url && previous.file_url !== storagePath) {
+        if (previous?.file_url && previous.file_url !== storagePath) {
           await supabaseAdmin.storage.from("answer-files").remove([previous.file_url]);
         }
 
@@ -469,6 +513,7 @@ serve(async (req) => {
           return jsonErr(403, "Forbidden");
         }
         if (a.submission?.status === "finalized") return jsonErr(409, "Submission already finalized");
+        if (a.submission?.status === "submitted" && a.student_id === userId) return jsonErr(409, "Submission already submitted");
 
         const evalUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/evaluate-answer`;
         await fetch(evalUrl, {

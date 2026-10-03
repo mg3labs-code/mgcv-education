@@ -1214,7 +1214,10 @@ export type Database = {
           ai_confidence: number | null
           ai_feedback: Json | null
           ai_score: number | null
+          answer_version: number
           created_at: string
+          evaluation_attempt: string | null
+          evaluation_expires_at: string | null
           extracted_text: string | null
           file_type: string | null
           file_url: string | null
@@ -1234,7 +1237,10 @@ export type Database = {
           ai_confidence?: number | null
           ai_feedback?: Json | null
           ai_score?: number | null
+          answer_version?: number
           created_at?: string
+          evaluation_attempt?: string | null
+          evaluation_expires_at?: string | null
           extracted_text?: string | null
           file_type?: string | null
           file_url?: string | null
@@ -1254,7 +1260,10 @@ export type Database = {
           ai_confidence?: number | null
           ai_feedback?: Json | null
           ai_score?: number | null
+          answer_version?: number
           created_at?: string
+          evaluation_attempt?: string | null
+          evaluation_expires_at?: string | null
           extracted_text?: string | null
           file_type?: string | null
           file_url?: string | null
@@ -2009,6 +2018,24 @@ export type Database = {
       }
     }
     Functions: {
+      begin_answer_evaluation: {
+        Args: { _answer_id: string }
+        Returns: {
+          answer_version: number
+          evaluation_attempt: string
+        }[]
+      }
+      complete_answer_evaluation: {
+        Args: {
+          _answer_id: string
+          _answer_version: number
+          _attempt: string
+          _confidence: number
+          _feedback: Json
+          _score: number
+        }
+        Returns: boolean
+      }
       complete_homework_generation: {
         Args: {
           _attempt: string
@@ -2017,6 +2044,16 @@ export type Database = {
           _id: string
           _questions: Json
           _title: string
+        }
+        Returns: boolean
+      }
+      expire_stale_answer_evaluations: { Args: never; Returns: number }
+      fail_answer_evaluation: {
+        Args: {
+          _answer_id: string
+          _answer_version: number
+          _attempt: string
+          _error: string
         }
         Returns: boolean
       }
@@ -2163,6 +2200,54 @@ export type Database = {
       recompute_assignment_total: {
         Args: { _assignment_id: string }
         Returns: undefined
+      }
+      replace_editable_answer: {
+        Args: {
+          _extracted_text: string
+          _file_type: string
+          _file_url: string
+          _question_id: string
+          _student_id: string
+          _submission_id: string
+        }
+        Returns: {
+          ai_confidence: number | null
+          ai_feedback: Json | null
+          ai_score: number | null
+          answer_version: number
+          created_at: string
+          evaluation_attempt: string | null
+          evaluation_expires_at: string | null
+          extracted_text: string | null
+          file_type: string | null
+          file_url: string | null
+          id: string
+          is_teacher_reviewed: boolean
+          processing_error: string | null
+          processing_status: string
+          question_id: string
+          retry_count: number
+          student_id: string
+          submission_id: string
+          teacher_feedback: string | null
+          teacher_score: number | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "student_answers"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      save_answer_extracted_text: {
+        Args: {
+          _answer_id: string
+          _answer_version: number
+          _attempt: string
+          _text: string
+        }
+        Returns: boolean
       }
       student_context: {
         Args: { _user_id: string }

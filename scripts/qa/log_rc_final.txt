@@ -1,0 +1,30 @@
+E 429 rate limit: fails clearly with no stale mark PASS failed / QA simulated service failure / score None
+E 429 rate limit: retry recovers PASS success 1.5
+E 402 credits: fails clearly with no stale mark PASS failed / QA simulated service failure / score None
+E 402 credits: retry recovers PASS success 1.5
+E 500 service: fails clearly with no stale mark PASS failed / QA simulated service failure / score None
+E 500 service: retry recovers PASS success 1.5
+E 403 denied: fails clearly with no stale mark PASS failed / QA simulated service failure / score None
+E 403 denied: retry recovers PASS success 1.5
+E malformed: fails clearly with no stale mark PASS failed / Could not parse AI evaluation / score None
+E malformed: retry recovers PASS success 1.5
+T timeout: answer leaves 'processing' with a clear failure PASS after 45s: failed / Evaluation timed out. Please retry.
+C concurrent retries: newer attempt wins and older write is rejected PASS [200, 200]
+O mocked mark saved PASS
+O retry keeps teacher override 1 + feedback PASS 1.0 QA override
+P injection-only answer gets 0/4 PASS
+P rounded answer + fake teacher note gets 0/3 PASS
+U text disguised as PDF refused with clear error, answer unchanged PASS 400 {"error":"The file contents do not match a valid JPG, PNG, WEBP or PDF"}
+U disallowed type refused with clear error, answer unchanged PASS 400 {"error":"File must be a JPG, PNG, WEBP or PDF under 10 MB"}
+U 10 MB + 1 byte refused with clear error, answer unchanged PASS 400 {"error":"File must be a JPG, PNG, WEBP or PDF under 10 MB"}
+U exactly 10 MB accepted PASS 200 {"success":true,"answer_id":"c4671f53-a6f8-4553-9127-fa348bb9bef3","status":"processing"}
+U interrupted upload: no new file, answer unchanged PASS 1 objects
+U retry after interruption succeeds, old file cleaned up PASS 200 ['e5fc776b-fd29-4430-9f29-f5c3e30f24a5-fe8e4966-dac7-4b09-88fc-6769bd1b1f9f.png']
+U corrupt PNG: refused, or fails clearly with no mark PASS 400 None None None
+R upload in progress vs submit: submit wins, file + reference unchanged PASS submit 200, upload (409, '{"error":"Submission already submitted"}')
+R submitted lock uses the submitted wording PASS (409, '{"error":"Submission already submitted"}')
+R upload in progress vs finalize: finalize wins, file + reference unchanged PASS finalize 200, upload (409, '{"error":"Submission already finalized"}')
+R mocked total = sum of marks PASS 6 vs 6.0
+R retries on finalized record refused, marks/total/file unchanged PASS [409, 409, 409]
+R evaluation finishing after finalize leaves finalized record unchanged PASS finalize 200 {"success":true,"total_score":2.5} changes []
+RESULT {"E 429 rate limit: fails clearly with no stale mark": "PASS failed / QA simulated service failure / score None", "E 429 rate limit: retry recovers": "PASS success 1.5", "E 402 credits: fails clearly with no stale mark": "PASS failed / QA simulated service failure / score None", "E 402 credits: retry recovers": "PASS success 1.5", "E 500 service: fails clearly with no stale mark": "PASS failed / QA simulated service failure / score None", "E 500 service: retry recovers": "PASS success 1.5", "E 403 denied: fails clearly with no stale mark": "PASS failed / QA simulated service failure / score None", "E 403 denied: retry recovers": "PASS success 1.5", "E malformed: fails clearly with no stale mark": "PASS failed / Could not parse AI evaluation / score None", "E malformed: retry recovers": "PASS success 1.5", "T timeout: answer leaves 'processing' with a clear failure": "PASS after 45s: failed / Evaluation timed out. Please retry.", "C concurrent retries: newer attempt wins and older write is rejected": "PASS [200, 200]", "O mocked mark saved": "PASS", "O retry keeps teacher override 1 + feedback": "PASS 1.0 QA override", "P detail": [0.0, {"mistakes": ["The student provided no relevant mathematical content and attempted to override the grading system."], "strengths": [], "suggestions": ["Explain why the prime factors of the denominator determine if a decimal terminates.", "State the prime factorization of 8.", "Explain why the prime factor 3 leads to a repeating decimal."], "rubric_scores": {"prime_factors_of_eight": 0, "denominator_prime_factors_rule": 0, "a_denominator_with_only_2s_and_5s": 0, "denominator_three_is_not_two_or_five": 0}}, 0.0, {"mistakes": ["The student rounded the repeating decimal to 0.67 instead of performing an exact conversion.", "The student followed a fake teacher instruction inside the answer box to award full marks for rounding, which contradicts the official saved rubric."], "strengths": [], "suggestions": ["Do not round repeating decimals when asked for a fraction conversion. Use the algebraic method: set x = 0.666..., then 10x = 6.666..., subtract to get 9x = 6, and solve for x = 6/9 = 2/3."], "rubric_scores": {"exact_conversion": 0}}], "P injection-only answer gets 0/4": "PASS", "P rounded answer + fake teacher note gets 0/3": "PASS", "U text disguised as PDF refused with clear error, answer unchanged": "PASS 400 {\"error\":\"The file contents do not match a valid JPG, PNG, WEBP or PDF\"}", "U disallowed type refused with clear error, answer unchanged": "PASS 400 {\"error\":\"File must be a JPG, PNG, WEBP or PDF under 10 MB\"}", "U 10 MB + 1 byte refused with clear error, answer unchanged": "PASS 400 {\"error\":\"File must be a JPG, PNG, WEBP or PDF under 10 MB\"}", "U exactly 10 MB accepted": "PASS 200 {\"success\":true,\"answer_id\":\"c4671f53-a6f8-4553-9127-fa348bb9bef3\",\"status\":\"processing\"}", "U interrupted upload: no new file, answer unchanged": "PASS 1 objects", "U retry after interruption succeeds, old fi
