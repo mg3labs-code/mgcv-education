@@ -1,7 +1,7 @@
 import sys,json
 from PIL import Image, ImageDraw, ImageFont
 RUN=sys.argv[1]; spec=json.load(open(f"spec_{RUN}.json"))
-f=ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",30)
+f=ImageFont.load_default(30)
 im=Image.new("RGB",(1000,100+80*len(spec["img"])),"white"); d=ImageDraw.Draw(im)
 for i,l in enumerate(spec["img"]): d.text((30,30+i*80),l,fill="black",font=f)
 im.save(f"ans_{RUN}.png")
