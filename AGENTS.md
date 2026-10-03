@@ -1,1 +1,2 @@
 - Teaching plan start date = teacher's local today for new plans; saved plans derive it from their earliest chapter-generated date (no stored column), so reloads don't shift lessons.
+- QA data resets go only through the admin-only `qa-reset` server step (allowlisted QA account IDs, QA-teacher homework, app_config qa_reset_enabled flag, dry run by default) so cleanup is repeatable without broad file-delete rights.
