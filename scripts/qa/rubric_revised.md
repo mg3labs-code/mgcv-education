@@ -1,4 +1,4 @@
-# Revised Golden Journey — proposed rubric and exact expected marks (PENDING USER APPROVAL)
+# Revised Golden Journey — approved rubric and exact expected marks
 
 Question set: the actual Run 3 questions (CBSE 9A Maths, Real Numbers). Each revised run generates a fresh draft;
 in teacher review the teacher replaces the wording with this approved set (exercising the edit path), maxima 2,2,4,3.
