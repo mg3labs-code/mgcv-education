@@ -1,0 +1,58 @@
+RESET dry {"dry_run": true, "plan": {"submissions": 2, "answers": 8, "files": ["e7367856-41e7-47eb-9fdf-4ef8a814c350/f3984f10-54f1-4bec-a73a-a96b5814e30e/d46c6f14-386c-4325-aeef-5ed95e17db74-a99f8e6b-706a-4022-a133-2ce16469be3c.pdf", "e7367856-41e7-47eb-9fdf-4ef8a814c350/f3984f10-54f1-4bec-a73a-a96b5814e30e/75d0d74d-156c-4803-9d0d-3fd13f8a6864-21632131-f927-4df4-9875-86d646f33c75.png"], "list_failures": []}, "guard": {"assignments": 27, "assignment_questions": 89, "calendar": 2247, "user_roles": 35, "other_submissions": 2}}
+RESET real {"dry_run": false, "report": {"files_removed": 2, "answers_deleted": 8, "submissions_deleted": 2}, "guard_before": {"assignments": 27, "assignment_questions": 89, "calendar": 2247, "user_roles": 35, "other_submissions": 2}, "guard_after": {"assignments": 27, "assignment_questions": 89, "calendar": 2247, "user_roles": 35, "other_submissions": 2}, "unrelated_unchanged": true}
+RESET generation-test drafts untouched: True 9
+Skipping host requirements validation logic because `PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS` env variable is set.
+cells 1
+toasts []
+errors []
+CP1 published schedule visible to 9A only PASS {"qa.s1": [{"notes": "QA run r3"}], "qa.s2": [{"notes": "QA run r3"}], "qa.s3": [], "qa.s4": []}
+CP2 generate refused for qa.s1 PASS
+CP2 generate refused for qa.t2 PASS
+CP2 generate refused unauthenticated PASS
+CP2 3 simultaneous requests -> 1 unpublished CBSE/A draft PASS [200, 409, 409] 5.4s
+CP2 generation complete before review PASS
+CP2 due date = next school day PASS 2026-10-19 -> 2026-10-21 (expected 2026-10-21)
+CP2 five questions with hints for teacher PASS ['Definition', 'Mechanism', 'Reasoning', 'Application', 'Assumption Check']
+CP3 draft hidden from qa.s1 PASS
+CP3 draft hidden from qa.s2 PASS
+CP3 draft hidden from qa.s3 PASS
+CP3 draft hidden from qa.s4 PASS
+CP3 T2 cannot read T1 draft questions PASS
+CP4 edit/marks/delete saved (re-read) PASS
+CP4 fixture maxima 2,2,4,3 set PASS
+CP4 teacher sets approved questions + rubrics PASS
+CP4 approve (twice) ok PASS
+CP4 published, 4 qs, total = sum PASS total 11.0
+CP4 still one homework for slot PASS
+CP5 qa.s1 sees 4 questions PASS q=4
+CP5 qa.s2 sees 4 questions PASS q=4
+CP5 qa.s3 sees 0 questions PASS q=0
+CP5 qa.s4 sees 0 questions PASS q=0
+CP5 student cannot read hints PASS 403
+PHASE A DONE 352d1c46-7d1e-445d-a841-d858b03a8cd6
+CP6 S3 (9B) upload refused PASS
+CP6 4 answers accepted PASS [200, 200, 200, 200]
+CP6 submit PASS
+CP6 one submission, submitted PASS
+CP6 S2 answers + submit PASS
+CP7 all 4 evaluated, valid scores + feedback PASS [(1, 'success', 2.0, 2.0, 15), (2, 'success', 2.0, 2.0, 25), (3, 'success', 4.0, 4.0, 30), (4, 'success', 2.0, 3.0, 15)]
+QUALITY [["s1", 1, "correct", 2.0, 2.0, [1.0, 1.0], true], ["s1", 2, "correct", 2.0, 2.0, [1.0, 1.0], true], ["s1", 4, "partial", 2.0, 3.0, [0.6666666666666666, 0.6666666666666666], true], ["s1", 3, "correct", 4.0, 4.0, [1.0, 1.0], true], ["s2", 1, "incorrect", 0.0, 2.0, [0.0, 0.0], true], ["s2", 2, "incorrect", 0.0, 2.0, [0.0, 0.0], true], ["s2", 4, "incorrect", 0.0, 3.0, [0.0, 0.0], true], ["s2", 3, "incorrect", 0.0, 4.0, [0.0, 0.0], true]]
+CP7 Q4 feedback names the missing divide-by-9 / 2/3 step PASS {"mistakes": ["failed to provide the final fraction (p/q form).", "did not simplify the result to 2/3."], "strengths": ["correctly identified the variable and set up the repeating decimal.", "correctly multiplied by 10 to shift the decimal.", "correctly performed the subtraction to isolate the integ
+CP7 marking within expected ranges (correct/partial/incorrect) PASS []
+CP8 S1 direct total/status change saves nothing PASS
+CP8 S1 direct mark change saves nothing PASS
+CP8 teacher_grade refused for qa.s1 PASS
+CP8 teacher_finalize refused for qa.s1 PASS
+CP8 teacher_grade refused for qa.s2 PASS
+CP8 teacher_finalize refused for qa.s2 PASS
+CP8 teacher_grade refused for qa.t2 PASS
+CP8 teacher_finalize refused for qa.t2 PASS
+CP8 over-max mark refused PASS
+CP9 T1 sets Q1=0 'QA override' PASS
+CP9 server total ignores 999, repeat finalize idempotent PASS total 8.0
+TOTAL controlled S2 2,1,4,3 then Q1->0 = 8, stable over 3 finalizes PASS [8, 8, 8]
+CP10 S1 app replace refused PASS
+CP10 direct storage overwrite/delete/add refused, bytes unchanged PASS 400/400/400
+CP10 S2 cannot read S1 rows or files PASS
+CP10 S1 reads finalized total PASS {'status': 'finalized', 'total_score': 8.0}
+RESULT {"CP1 published schedule visible to 9A only": "PASS {\"qa.s1\": [{\"notes\": \"QA run r3\"}], \"qa.s2\": [{\"notes\": \"QA run r3\"}], \"qa.s3\": [], \"qa.s4\": []}", "CP2 generate refused for qa.s1": "PASS", "CP2 generate refused for qa.t2": "PASS", "CP2 generate refused unauthenticated": "PASS", "CP2 3 simultaneous requests -> 1 unpublished CBSE/A draft": "PASS [200, 409, 409] 5.4s", "assignment": "352d1c46-7d1e-445d-a841-d858b03a8cd6", "CP2 generation complete before review": "PASS", "CP2 due date = next school day": "PASS 2026-10-19 -> 2026-10-21 (expected 2026-10-21)", "CP2 five questions with hints for teacher": "PASS ['Definition', 'Mechanism', 'Reasoning', 'Application', 'Assumption Check']", "CP3 draft hidden from qa.s1": "PASS", "CP3 draft hidden from qa.s2": "PASS", "CP3 draft hidden from qa.s3": "PASS", "CP3 draft hidden from qa.s4": "PASS", "CP3 T2 cannot read T1 draft questions": "PASS", "CP4 edit/marks/delete saved (re-read)": "PASS", "CP4 fixture maxima 2,2,4,3 set": "PASS", "CP4 teacher sets approved questions + rubrics": "PASS", "CP4 approve (twice) ok": "PASS", "CP4 published, 4 qs, total = sum": "PASS total 11.0", "CP4 still one homework for slot": "PASS", "CP5 qa.s1 sees 4 questions": "PASS q=4", "CP5 qa.s2 sees 4 questions": "PASS q=4", "CP5 qa.s3 sees 0 questions": "PASS q=0", "CP5 qa.s4 sees 0 questions": "PASS q=0", "CP5 student cannot read hints": "PASS 403", "CP6 S3 (9B) upload refused": "PASS", "CP6 4 answers accepted": "PASS [200, 200, 200, 200]", "CP6 submit": "PASS", "CP6 one submission, submitted": "PASS", "CP6 S2 answers + submit": "PASS", "CP7 all 4 evaluated, valid scores + feedback": "PASS [(1, 'success', 2.0, 2.0, 15), (2, 'success', 2.0, 2.0, 25), (3, 'success', 4.0, 4.0, 30), (4, 'success', 2.0, 3.0, 15)]", "eval": [[1, "success", 2.0, 2.0, 15], [2, "success", 2.0, 2.0, 25], [3, "success", 4.0, 4.0, 30], [4, "success", 2.0, 3.0, 15]], "q4_feedback": {"mistakes": ["Failed to provide the final fraction (p/q form).", "Did not simplify the result to 2/3."], "strengths": ["Correctly identified the variable and set up the repeating decimal.", "Correctly multiplied by 10 to shift the decimal.", "Correctly performed the subtraction to isolate the integer."], "suggestions": ["Your setup and subtraction are correct. Finish by dividing by 9 and simplifying: x = 6/9 = 2/3.", "Always ensure you answer the final part of the prompt, which asked for the p/q form for the carpenter."], "rubric_scores": {}}, "CP7 Q4 feedback names the missing divide-by-9 / 2/3 step": "PASS {\"mistakes\": [\"failed to provide the final fraction (p/q form).\", \"did not simplify the result to 2/3.\"], \"strengths\": [\"correctly identified the variable and set up the repeating decimal.\", \"correctly multiplied by 10 to shift the decimal.\", \"correctly performed the subtraction to isolate the integ", "CP7 marking within expected ranges (correct/partial/incorrect)": "PASS []", "CP8 S1 direct total/status change saves nothing": "PASS", "CP8 S1 direct mark change saves nothing": "PASS", "CP8 teacher_grade refused for qa.s1": "PASS", "CP8 teacher_finalize refused for qa.s1": "PASS", "CP8 teacher_grade refused for qa.s2": "PASS", "CP8 teacher_finalize refused for qa.s2": "PASS", "CP8 teacher_grade refused for qa.t2": "PASS", "CP8 teacher_finalize refused for qa.t2": "PASS", "CP8 over-max mark refused": "PASS", "CP9 T1 sets Q1=0 'QA override'": "PASS", "CP9 server total ignores 999, repeat finalize idempotent": "PASS total 8.0", "total": 8.0, "TOTAL controlled S2 2,1,4,3 then Q1->0 = 8, stable over 3 finalizes": "PASS [8, 8, 8]", "CP10 S1 app replace refused": "PASS", "CP10 direct storage overwrite/delete/add refused, bytes unchanged": "PASS 400/400/400", "CP10 S2 cannot read S1 rows or files": "PASS", "CP10 S1 reads finalized total": "PASS {'status': 'finalized', 'total_score': 8.0}"}

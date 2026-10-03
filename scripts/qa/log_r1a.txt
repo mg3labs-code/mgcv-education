@@ -1,0 +1,32 @@
+RESET dry {"dry_run": true, "plan": {"submissions": 2, "answers": 8, "files": ["e7367856-41e7-47eb-9fdf-4ef8a814c350/019dac50-8f3e-44dd-b600-37ec6164f8f0/d8a8bb01-f889-4eee-9c1c-acba773b7fd0-b24aef16-d98a-4018-ad0d-be5464d1ef0d.pdf", "e7367856-41e7-47eb-9fdf-4ef8a814c350/019dac50-8f3e-44dd-b600-37ec6164f8f0/f1e42289-d278-4047-a71f-5aaa3564fe7d-23c5d2e7-dbcd-4b9c-b40b-821b085c77b0.png"], "list_failures": []}, "guard": {"assignments": 25, "assignment_questions": 81, "calendar": 2247, "user_roles": 35, "other_submissions": 2}}
+RESET real {"dry_run": false, "report": {"files_removed": 2, "answers_deleted": 8, "submissions_deleted": 2}, "guard_before": {"assignments": 25, "assignment_questions": 81, "calendar": 2247, "user_roles": 35, "other_submissions": 2}, "guard_after": {"assignments": 25, "assignment_questions": 81, "calendar": 2247, "user_roles": 35, "other_submissions": 2}, "unrelated_unchanged": true}
+RESET generation-test drafts untouched: True 9
+Skipping host requirements validation logic because `PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS` env variable is set.
+cells 1
+toasts ['Schedule Published! 🎉\nStudents in Class 9 (Mathematics) now see the updated schedule live.']
+errors []
+CP1 published schedule visible to 9A only PASS {"qa.s1": [{"notes": "QA run r1"}], "qa.s2": [{"notes": "QA run r1"}], "qa.s3": [], "qa.s4": []}
+CP2 generate refused for qa.s1 PASS
+CP2 generate refused for qa.t2 PASS
+CP2 generate refused unauthenticated PASS
+CP2 3 simultaneous requests -> 1 unpublished CBSE/A draft PASS [200, 409, 200] 5.1s
+CP2 generation complete before review PASS
+CP2 due date = next school day PASS 2026-10-15 -> 2026-10-16 (expected 2026-10-16)
+CP2 five questions with hints for teacher PASS ['Definition', 'Mechanism', 'Reasoning', 'Application', 'Assumption Check']
+CP3 draft hidden from qa.s1 PASS
+CP3 draft hidden from qa.s2 PASS
+CP3 draft hidden from qa.s3 PASS
+CP3 draft hidden from qa.s4 PASS
+CP3 T2 cannot read T1 draft questions PASS
+CP4 edit/marks/delete saved (re-read) PASS
+CP4 fixture maxima 2,2,4,3 set PASS
+CP4 teacher sets approved questions + rubrics PASS
+CP4 approve (twice) ok PASS
+CP4 published, 4 qs, total = sum PASS total 11.0
+CP4 still one homework for slot PASS
+CP5 qa.s1 sees 4 questions PASS q=4
+CP5 qa.s2 sees 4 questions PASS q=4
+CP5 qa.s3 sees 0 questions PASS q=0
+CP5 qa.s4 sees 0 questions PASS q=0
+CP5 student cannot read hints PASS 403
+PHASE A DONE f0f34c2a-6338-4982-82e4-ba0c8de034f6

@@ -50,6 +50,9 @@ for who,rows in [("s1",an),("s2",an2)]:
     n=order[a["question_id"]]; lo,hi=F[who][n-1]["range"]; frac=float(a["ai_score"] or 0)/mx[a["question_id"]]
     qual.append((who,n,F[who][n-1]["kind"],a["ai_score"],mx[a["question_id"]],[lo,hi], lo<=frac<=hi and a["processing_status"]=="success"))
 print("QUALITY", json.dumps(qual))
+q4=[a for a in an if order[a["question_id"]]==4][0]; fb=json.dumps(q4["ai_feedback"]).lower()
+R["q4_feedback"]=q4["ai_feedback"]
+ok("CP7 Q4 feedback names the missing divide-by-9 / 2/3 step", ("9" in fb and "2/3" in fb), fb[:300])
 ok("CP7 marking within expected ranges (correct/partial/incorrect)", all(q[-1] for q in qual), str([(q[0],q[1],q[2],q[3],q[4]) for q in qual if not q[-1]]))
 # CP8 forbidden writes before grading
 s1a=[a for a in an if order[a["question_id"]]==1][0]

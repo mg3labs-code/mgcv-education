@@ -48,6 +48,9 @@ ok("CP4 edit/marks/delete saved (re-read)", all(x.status_code<300 for x in (r1,r
 if FIX:
   fx=[rest(t["qa.t1"],f"assignment_questions?id=eq.{chk[i]['id']}","PATCH",{"max_score":m}).status_code for i,m in enumerate([2,2,4,3])]
   ok("CP4 fixture maxima 2,2,4,3 set", all(x<300 for x in fx))
+  PQ=json.load(open("pinned_questions.json"))
+  px=[rest(t["qa.t1"],f"assignment_questions?id=eq.{chk[i]['id']}","PATCH",{"question_text":q["text"],"max_score":q["max"],"expected_answer_hints":q["hints"]}).status_code for i,q in enumerate(PQ)]
+  ok("CP4 teacher sets approved questions + rubrics", all(x<300 for x in px))
 for i in range(2): pr=fn(t["qa.t1"],"manage-assignment",{"action":"publish_assignment","assignment_id":A})
 ok("CP4 approve (twice) ok", pr.status_code==200)
 asg=rest(t["qa.t1"],f"assignments?select=is_published,max_total_score&id=eq.{A}").json()[0]
