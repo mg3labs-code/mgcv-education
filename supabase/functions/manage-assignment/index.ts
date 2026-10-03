@@ -310,16 +310,30 @@ serve(async (req) => {
 
       case "teacher_grade": {
         const { answer_id, teacher_feedback, teacher_score } = body;
+        if (typeof answer_id !== "string") return jsonErr(400, "answer_id required");
+
+        const { data: ans } = await supabaseAdmin
+          .from("student_answers")
+          .select(`id, submission:student_submissions!submission_id ( status, assignment:assignments!assignment_id ( teacher_id ) ), question:assignment_questions!question_id ( max_score )`)
+          .eq("id", answer_id).maybeSingle();
+        const ownerTeacher = (ans as any)?.submission?.assignment?.teacher_id;
+        if (!ans || ownerTeacher !== userId || !(await isTeacher(userId))) return jsonErr(403, "Forbidden");
+        if ((ans as any).submission?.status === "finalized") return jsonErr(409, "Submission already finalized");
+
+        const maxScore = Number((ans as any).question?.max_score ?? 0);
+        const score = Number(teacher_score);
+        if (teacher_score === null || teacher_score === undefined || teacher_score === "" ||
+            !Number.isFinite(score) || score < 0 || score > maxScore) {
+          return jsonErr(400, `Score must be a number between 0 and ${maxScore}`);
+        }
+        if (teacher_feedback != null && (typeof teacher_feedback !== "string" || teacher_feedback.length > 5000)) {
+          return jsonErr(400, "Invalid feedback");
+        }
 
         const { error } = await supabaseAdmin
           .from("student_answers")
-          .update({
-            teacher_feedback,
-            teacher_score,
-            is_teacher_reviewed: true,
-          })
+          .update({ teacher_feedback: teacher_feedback ?? null, teacher_score: score, is_teacher_reviewed: true })
           .eq("id", answer_id);
-
         if (error) throw error;
         return new Response(JSON.stringify({ success: true }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -327,27 +341,84 @@ serve(async (req) => {
       }
 
       case "teacher_finalize": {
-        const { submission_id, total_score, teacher_remarks } = body;
+        // total_score from the client is ignored — computed server-side.
+        const { submission_id, teacher_remarks } = body;
+        if (typeof submission_id !== "string") return jsonErr(400, "submission_id required");
 
-        const { error } = await supabaseAdmin
+        const { data: sub } = await supabaseAdmin
+          .from("student_submissions")
+          .select("id, status, assignment:assignments!assignment_id ( teacher_id )")
+          .eq("id", submission_id).maybeSingle();
+        if (!sub || (sub as any).assignment?.teacher_id !== userId || !(await isTeacher(userId))) {
+          return jsonErr(403, "Forbidden");
+        }
+        if (teacher_remarks != null && (typeof teacher_remarks !== "string" || teacher_remarks.length > 5000)) {
+          return jsonErr(400, "Invalid remarks");
+        }
+
+        const { data: answers, error: aErr } = await supabaseAdmin
+          .from("student_answers")
+          .select("id, ai_score, teacher_score, is_teacher_reviewed, processing_status")
+          .eq("submission_id", submission_id);
+        if (aErr) throw aErr;
+        if (!answers || answers.length === 0) return jsonErr(400, "No answers to finalize");
+
+        let total = 0;
+        const unscored: string[] = [];
+        for (const a of answers as any[]) {
+          if (a.is_teacher_reviewed && a.teacher_score != null && Number.isFinite(Number(a.teacher_score))) {
+            total += Number(a.teacher_score);
+          } else if (a.processing_status === "success" && a.ai_score != null && Number.isFinite(Number(a.ai_score))) {
+            total += Number(a.ai_score);
+          } else {
+            unscored.push(a.id);
+          }
+        }
+        if (unscored.length > 0) {
+          return jsonErr(400, `${unscored.length} answer(s) still need a score before finalizing`);
+        }
+        total = Math.round(total * 100) / 100;
+
+        if ((sub as any).status === "finalized") {
+          // Idempotent: repeat finalize returns the stored result without rewriting it.
+          const { data: cur } = await supabaseAdmin.from("student_submissions")
+            .select("total_score").eq("id", submission_id).single();
+          return new Response(JSON.stringify({ success: true, total_score: cur?.total_score, already_finalized: true }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        // Single-row update guarded on status = atomic transition.
+        const { data: updated, error } = await supabaseAdmin
           .from("student_submissions")
           .update({
             status: "finalized",
             finalized_at: new Date().toISOString(),
             finalized_by: userId,
-            total_score,
-            teacher_remarks,
+            total_score: total,
+            teacher_remarks: teacher_remarks ?? null,
           })
-          .eq("id", submission_id);
-
+          .eq("id", submission_id)
+          .neq("status", "finalized")
+          .select("total_score");
         if (error) throw error;
-        return new Response(JSON.stringify({ success: true }), {
+        return new Response(JSON.stringify({ success: true, total_score: updated?.[0]?.total_score ?? total }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
       case "retry_evaluation": {
         const { answer_id } = body;
+        if (typeof answer_id !== "string") return jsonErr(400, "answer_id required");
+        const { data: ans } = await supabaseAdmin
+          .from("student_answers")
+          .select("id, student_id, submission:student_submissions!submission_id ( status, assignment:assignments!assignment_id ( teacher_id ) )")
+          .eq("id", answer_id).maybeSingle();
+        const a: any = ans;
+        if (!a || (a.student_id !== userId && a.submission?.assignment?.teacher_id !== userId)) {
+          return jsonErr(403, "Forbidden");
+        }
+        if (a.submission?.status === "finalized") return jsonErr(409, "Submission already finalized");
 
         const evalUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/evaluate-answer`;
         await fetch(evalUrl, {
