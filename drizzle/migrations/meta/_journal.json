@@ -57,6 +57,13 @@
       "when": 1791005627431,
       "tag": "0007_homework_generation_states",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791013415314,
+      "tag": "0008_atomic_answer_evaluation_versions",
+      "breakpoints": true
     }
   ]
 }

@@ -1,0 +1,6 @@
+E 429 rate limit: fails clearly with no stale mark PASS failed / QA simulated service failure / score None
+E 429 rate limit: retry recovers PASS success 1.5
+E 402 credits: fails clearly with no stale mark PASS failed / QA simulated service failure / score None
+E 402 credits: retry recovers FAIL failed None
+STOP section E at E 402 credits: retry recovers
+RESULT {"E 429 rate limit: fails clearly with no stale mark": "PASS failed / QA simulated service failure / score None", "E 429 rate limit: retry recovers": "PASS success 1.5", "E 402 credits: fails clearly with no stale mark": "PASS failed / QA simulated service failure / score None", "E 402 credits: retry recovers": "FAIL failed None"}

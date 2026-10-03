@@ -65,12 +65,14 @@ PNG = open("ans_3.png", "rb").read()
 
 # E — AI marking failures + retry (mocked AI), on S1 Q1
 def E():
-    for label, d, expect_msg in [("500 service", {"mode": "status", "status": 500}, "failed"), ("403 denied", {"mode": "status", "status": 403}, "failed"),
+    for label, d, expect_msg in [("429 rate limit", {"mode": "status", "status": 429}, "service failure"),
+                                 ("402 credits", {"mode": "status", "status": 402}, "service failure"),
+                                 ("500 service", {"mode": "status", "status": 500}, "service failure"),
+                                 ("403 denied", {"mode": "status", "status": 403}, "service failure"),
                                  ("malformed", {"mode": "malformed"}, "parse")]:
-        a0 = ans("qa.s1", 1); rc = (a0 or {}).get("retry_count") or 0
-        r = up_text("qa.s1", 1, mock(**d, fail_until=rc + 1, score=1.5))
+        r = up_text("qa.s1", 1, mock(**d, fail_until=1, score=1.5))
         a = wait("qa.s1", 1)
-        ok(f"E {label}: fails clearly (stale earlier mark not re-checked)", r.status_code == 200 and a["processing_status"] == "failed" and expect_msg in (a["processing_error"] or "").lower() ,
+        ok(f"E {label}: fails clearly with no stale mark", r.status_code == 200 and a["processing_status"] == "failed" and expect_msg in (a["processing_error"] or "").lower() and a["ai_score"] is None and a["ai_feedback"] is None,
            f"{a['processing_status']} / {a['processing_error']} / score {a['ai_score']}")
         rr = ma("qa.s1", {"action": "retry_evaluation", "answer_id": a["id"]}); a = wait("qa.s1", 1)
         ok(f"E {label}: retry recovers", rr.status_code == 200 and a["processing_status"] == "success" and float(a["ai_score"]) == 1.5, f"{a['processing_status']} {a['ai_score']}")
@@ -82,6 +84,17 @@ def T():
     a = wait("qa.s1", 1, 45)
     ok("T timeout: answer leaves 'processing' with a clear failure", a["processing_status"] == "failed" and a["processing_error"], f"after 45s: {a['processing_status']} / {a['processing_error']}")
 section("T", T)
+
+# C — concurrent retries: the older worker must not overwrite the newer attempt
+def C():
+    up_text("qa.s1", 1, mock(score=1.5, score_delay_ms=15000)); a = ans("qa.s1", 1)
+    calls = []
+    def retry(): calls.append(ma("qa.t1", {"action": "retry_evaluation", "answer_id": a["id"]}))
+    one = threading.Thread(target=retry); two = threading.Thread(target=retry)
+    one.start(); time.sleep(2); two.start(); one.join(); two.join()
+    final = wait("qa.s1", 1, 60)
+    ok("C concurrent retries: newer attempt wins and older write is rejected", final["processing_status"] == "success" and float(final["ai_score"]) == 1.5 and final["evaluation_attempt"] is None and all(r.status_code == 200 for r in calls), [r.status_code for r in calls])
+section("C", C)
 
 # O — retry preserves a teacher override, S1 Q2
 def O():
@@ -131,9 +144,10 @@ def R_():
     for n, s in [(2, 1), (3, 3), (4, 2)]: up_text("qa.s2", n, mock(score=s))
     for n in (2, 3, 4): wait("qa.s2", n)
     a1 = ans("qa.s2", 1); h0 = sha(a1["file_url"]); objs0 = objects("qa.s2")
-    res, fin = slow_upload("qa.s2", 1, "late.png", PNG[::-1][:5000] + PNG, "image/png", lambda: ma("qa.s2", {"action": "finalize_submission", "assignment_id": A}))
+    res, fin = slow_upload("qa.s2", 1, "late.png", PNG, "image/png", lambda: ma("qa.s2", {"action": "finalize_submission", "assignment_id": A}))
     time.sleep(3); b1 = ans("qa.s2", 1)
     ok("R upload in progress vs submit: submit wins, file + reference unchanged", fin.status_code == 200 and res[0] in (400, 409) and b1["file_url"] == a1["file_url"] and sha(b1["file_url"]) == h0 and objects("qa.s2") == objs0, f"submit {fin.status_code}, upload {res}")
+    ok("R submitted lock uses the submitted wording", res[0] == 409 and "already submitted" in res[1].lower(), res)
     S = sub("qa.s2")[0]
     for n in (1, 2, 3, 4): wait("qa.s2", n, 120)
     exp = round(sum(float(ans("qa.s2", n)["ai_score"]) for n in (1, 2, 3, 4)), 2)
