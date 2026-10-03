@@ -172,6 +172,7 @@ const TeacherAssignments = () => {
         .eq("teacher_id", user?.id)
         .eq("source", "auto_homework")
         .eq("is_published", false)
+        .eq("generation_status", "complete")
         .order("created_at", { ascending: false });
       if (error) throw error;
       const ids = (data || []).map((a: any) => a.id);
