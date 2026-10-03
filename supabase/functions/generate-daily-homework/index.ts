@@ -22,7 +22,7 @@ serve(async (req) => {
   };
 
   try {
-    const { class_name, subject, board, section, schedule_date, teacher_id, topic_key, topic_title, chapter_name } = await req.json();
+    const { class_name, subject, board, section, schedule_date, teacher_id, topic_key, topic_title, chapter_name, qa_fault } = await req.json();
 
     if (!class_name || !topic_title || !teacher_id) {
       return new Response(JSON.stringify({ error: "Missing required fields: class_name, topic_title, teacher_id" }), {
@@ -142,7 +142,24 @@ serve(async (req) => {
       });
     }
 
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    // QA-only fault injection: allowlisted QA teachers + app_config flag. Never active otherwise.
+    const QA_TEACHERS = ["584d68ef-c42f-4b53-9ffa-bdce38622355", "74accab5-d420-46a6-97ac-de6a5fdae9d8"];
+    let qaFault: string | null = null;
+    if (typeof qa_fault === "string" && QA_TEACHERS.includes(caller.id)) {
+      const { data: flag } = await supabaseAdmin.from("app_config").select("value").eq("key", "qa_fault_injection_enabled").maybeSingle();
+      if (flag?.value === "true") qaFault = qa_fault;
+    }
+    const fakeTool = (args: unknown) => new Response(JSON.stringify({ choices: [{ message: { tool_calls: [{ function: { arguments: typeof args === "string" ? args : JSON.stringify(args) } }] } }] }), { status: 200 });
+    const L = ["Definition", "Mechanism", "Reasoning", "Application", "Assumption Check"];
+    const qs = (n: number, f: (i: number) => any = () => ({})) => Array.from({ length: n }, (_, i) => ({ question_text: `QA fault Q${i + 1}`, max_score: 2, layer: L[i % 5], type: "recall", ...f(i) }));
+    const aiResponse = qaFault === "timeout" ? (await new Promise<Response>((r) => setTimeout(() => r(new Response("{}", { status: 504 })), 400_000)))
+      : qaFault === "rate_limit" ? new Response("rate limited", { status: 429 })
+      : qaFault === "credits" ? new Response("no credits", { status: 402 })
+      : qaFault === "malformed_json" ? fakeTool("{not json")
+      : qaFault === "wrong_count" ? fakeTool({ questions: qs(3) })
+      : qaFault === "missing_layers" ? fakeTool({ questions: qs(5, () => ({ layer: undefined })) })
+      : qaFault === "invalid_marks" ? fakeTool({ questions: qs(5, (i) => ({ max_score: i === 0 ? -2 : i === 1 ? 0 : 2 })) })
+      : await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${LOVABLE_API_KEY}`,
