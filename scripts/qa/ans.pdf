@@ -6,11 +6,11 @@ endobj
 <</Type/Pages/Kids[3 0 R]/Count 1>>
 endobj
 3 0 obj
-<</Type/Page/Parent 2 0 R/MediaBox[0 0 600 200]/Contents 4 0 R/Resources<</Font<</F1 5 0 R>>>>>>
+<</Type/Page/Parent 2 0 R/MediaBox[0 0 600 300]/Contents 4 0 R/Resources<</Font<</F1 5 0 R>>>>>>
 endobj
 4 0 obj
-<</Length 101>>stream
-BT /F1 14 Tf 20 100 Td (sqrt2 x sqrt2 = 2, rational; so product of irrationals can be rational) Tj ET
+<</Length 156>>stream
+BT /F1 16 Tf 30 250 Td 22 TL (Q3 answer:) Tj T* (1/8 = 1/(2^3) = 2^(-3)) Tj T* (So 2^x = 2^(-3), same base, so exponents are equal.) Tj T* (x = -3) Tj T* ET
 endstream
 endobj
 5 0 obj
@@ -23,8 +23,8 @@ xref
 0000000054 00000 n 
 0000000105 00000 n 
 0000000217 00000 n 
-0000000366 00000 n 
+0000000421 00000 n 
 trailer<</Size 6/Root 1 0 R>>
 startxref
-429
+484
 %%EOF
