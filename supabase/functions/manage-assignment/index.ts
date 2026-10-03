@@ -62,6 +62,12 @@ serve(async (req) => {
       };
       const file = formData.get("file") as File | null;
       if (file) {
+        const allowed = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+        if (file.size === 0 || file.size > 10 * 1024 * 1024 || !allowed.includes(file.type)) {
+          return new Response(JSON.stringify({ error: "File must be a JPG, PNG, WEBP or PDF under 10 MB" }), {
+            status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
         fileData = new Uint8Array(await file.arrayBuffer());
         fileName = file.name;
         fileType = file.type;
