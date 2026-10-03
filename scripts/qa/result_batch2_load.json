@@ -1,0 +1,212 @@
+{
+  "mocked_limited_load": {
+    "cohort": {
+      "requested": 40,
+      "eligible_allowlisted": 2,
+      "accounts": [
+        "qa.s1",
+        "qa.s2"
+      ]
+    },
+    "uploads": [
+      {
+        "label": "qa.s1-q1",
+        "status": 200,
+        "seconds": 3.978,
+        "body": "{\"success\":true,\"answer_id\":\"11ddb43d-9880-410c-949a-316f5af70794\",\"status\":\"processing\"}"
+      },
+      {
+        "label": "qa.s1-q2",
+        "status": 200,
+        "seconds": 3.937,
+        "body": "{\"success\":true,\"answer_id\":\"2619362c-2e45-4c46-8446-532adaa545e3\",\"status\":\"processing\"}"
+      },
+      {
+        "label": "qa.s1-q3",
+        "status": 200,
+        "seconds": 2.944,
+        "body": "{\"success\":true,\"answer_id\":\"65a7d89a-ceda-4415-af56-1e9360eac5d6\",\"status\":\"processing\"}"
+      },
+      {
+        "label": "qa.s1-q4",
+        "status": 200,
+        "seconds": 3.404,
+        "body": "{\"success\":true,\"answer_id\":\"4c27794d-6e7e-46a7-a84f-e249849bfbc0\",\"status\":\"processing\"}"
+      },
+      {
+        "label": "qa.s2-q1",
+        "status": 200,
+        "seconds": 3.921,
+        "body": "{\"success\":true,\"answer_id\":\"53a7a20d-ccd2-4e99-81cd-d2eb8357f501\",\"status\":\"processing\"}"
+      },
+      {
+        "label": "qa.s2-q2",
+        "status": 200,
+        "seconds": 3.611,
+        "body": "{\"success\":true,\"answer_id\":\"34d942b3-53f0-48fd-a510-6cf451ad79a7\",\"status\":\"processing\"}"
+      },
+      {
+        "label": "qa.s2-q3",
+        "status": 200,
+        "seconds": 2.343,
+        "body": "{\"success\":true,\"answer_id\":\"51a1cfd2-3f80-42e7-9793-20e74454e399\",\"status\":\"processing\"}"
+      },
+      {
+        "label": "qa.s2-q4",
+        "status": 200,
+        "seconds": 3.9,
+        "body": "{\"success\":true,\"answer_id\":\"744086ae-e7ea-4edb-9ef8-9b4728ba6906\",\"status\":\"processing\"}"
+      }
+    ],
+    "submissions": [
+      {
+        "label": "qa.s1-submit",
+        "status": 200,
+        "seconds": 1.406,
+        "body": "{\"success\":true}"
+      },
+      {
+        "label": "qa.s2-submit",
+        "status": 200,
+        "seconds": 0.694,
+        "body": "{\"success\":true}"
+      }
+    ],
+    "elapsed_seconds": 8.513,
+    "settle_seconds": 3.125,
+    "latency_seconds": {
+      "min": 2.343,
+      "median": 3.756,
+      "max": 3.978
+    },
+    "stored": {
+      "submissions": 2,
+      "answers": 8,
+      "successful": 8,
+      "failed": 0,
+      "processing": 0,
+      "duplicate_student_question_pairs": 0
+    },
+    "pass": true,
+    "reset_before": {
+      "dry_run": false,
+      "report": {
+        "files_removed": 2,
+        "answers_deleted": 8,
+        "submissions_deleted": 2
+      },
+      "guard_before": {
+        "assignments": 29,
+        "assignment_questions": 97,
+        "calendar": 2247,
+        "user_roles": 35,
+        "other_submissions": 4
+      },
+      "guard_after": {
+        "assignments": 29,
+        "assignment_questions": 97,
+        "calendar": 2247,
+        "user_roles": 35,
+        "other_submissions": 4
+      },
+      "unrelated_unchanged": true
+    },
+    "reset_after": {
+      "dry_run": false,
+      "report": {
+        "files_removed": 0,
+        "answers_deleted": 8,
+        "submissions_deleted": 2
+      },
+      "guard_before": {
+        "assignments": 29,
+        "assignment_questions": 97,
+        "calendar": 2247,
+        "user_roles": 35,
+        "other_submissions": 4
+      },
+      "guard_after": {
+        "assignments": 29,
+        "assignment_questions": 97,
+        "calendar": 2247,
+        "user_roles": 35,
+        "other_submissions": 4
+      },
+      "unrelated_unchanged": true
+    }
+  },
+  "real_ai_sample": {
+    "sample_students": 1,
+    "answers": 4,
+    "uploads": [
+      {
+        "label": "qa.s1-real-q1",
+        "status": 200,
+        "seconds": 2.116,
+        "body": "{\"success\":true,\"answer_id\":\"a90a17a4-0b5e-44a7-b3eb-d015b4b58bb8\",\"status\":\"processing\"}"
+      },
+      {
+        "label": "qa.s1-real-q2",
+        "status": 200,
+        "seconds": 1.554,
+        "body": "{\"success\":true,\"answer_id\":\"96f5a3b6-148b-4b8c-87ab-442c52d3857a\",\"status\":\"processing\"}"
+      },
+      {
+        "label": "qa.s1-real-q3",
+        "status": 200,
+        "seconds": 1.326,
+        "body": "{\"success\":true,\"answer_id\":\"656d853d-24c6-445a-9c07-e03f606a4048\",\"status\":\"processing\"}"
+      },
+      {
+        "label": "qa.s1-real-q4",
+        "status": 200,
+        "seconds": 1.662,
+        "body": "{\"success\":true,\"answer_id\":\"374d1ce1-8f1f-4b9c-b4e3-5c8100bf4667\",\"status\":\"processing\"}"
+      }
+    ],
+    "submission": {
+      "label": "qa.s1-submit",
+      "status": 200,
+      "seconds": 0.632,
+      "body": "{\"success\":true}"
+    },
+    "elapsed_seconds": 5.135,
+    "settle_seconds": 2.384,
+    "stored_scores": [
+      2.0,
+      2.0,
+      3.0,
+      2.0
+    ],
+    "stored_statuses": [
+      "success",
+      "success",
+      "success",
+      "success"
+    ],
+    "pass": true,
+    "reset_after": {
+      "dry_run": false,
+      "report": {
+        "files_removed": 0,
+        "answers_deleted": 4,
+        "submissions_deleted": 1
+      },
+      "guard_before": {
+        "assignments": 29,
+        "assignment_questions": 97,
+        "calendar": 2247,
+        "user_roles": 35,
+        "other_submissions": 4
+      },
+      "guard_after": {
+        "assignments": 29,
+        "assignment_questions": 97,
+        "calendar": 2247,
+        "user_roles": 35,
+        "other_submissions": 4
+      },
+      "unrelated_unchanged": true
+    }
+  }
+}
