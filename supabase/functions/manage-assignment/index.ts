@@ -84,6 +84,15 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
+    const jsonErr = (status: number, error: string) =>
+      new Response(JSON.stringify({ error }), {
+        status, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    const isTeacher = async (uid: string) => {
+      const { data } = await supabaseAdmin.rpc("has_role", { _user_id: uid, _role: "teacher" });
+      return data === true;
+    };
+
     switch (action) {
       case "create_assignment": {
         const { title, description, instructions, class_name, subject, board, section, questions, unlock_date, due_date } = body;
@@ -133,6 +142,9 @@ serve(async (req) => {
 
       case "publish_assignment": {
         const { assignment_id } = body;
+        const { data: own } = await supabaseAdmin
+          .from("assignments").select("teacher_id").eq("id", assignment_id).maybeSingle();
+        if (!own || own.teacher_id !== userId || !(await isTeacher(userId))) return jsonErr(403, "Forbidden");
         // Final integrity check: total marks = sum of the remaining questions.
         const { data: qs, error: qsErr } = await supabaseAdmin
           .from("assignment_questions").select("max_score").eq("assignment_id", assignment_id);
