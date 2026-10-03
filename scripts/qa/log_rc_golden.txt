@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/dev-server/scripts/qa/journey_b.py", line 5, in <module>
+    F=json.load(open(f"fixture_{RUN}.json"))
+                ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'fixture_rc.json'
