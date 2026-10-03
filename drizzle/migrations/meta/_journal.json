@@ -29,6 +29,13 @@
       "when": 1790972194164,
       "tag": "0003_hide_question_hints_and_recompute_totals",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790996942037,
+      "tag": "0004_lock_grading_to_server",
+      "breakpoints": true
     }
   ]
 }
