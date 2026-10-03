@@ -1,0 +1,70 @@
+{
+ "s1": [
+  {
+   "kind": "correct",
+   "range": [
+    0.7,
+    1
+   ],
+   "text": "(a) is correct: a^m x a^n = a^(m+n). When the bases are the same and we multiply, we add the powers, because a^m x a^n means m a's times n a's, which is m+n a's in total. Multiplying the powers (b) is wrong; that rule is for a power of a power, (a^m)^n."
+  },
+  {
+   "kind": "correct",
+   "range": [
+    0.7,
+    1
+   ],
+   "file": "ans.png"
+  },
+  {
+   "kind": "correct",
+   "range": [
+    0.7,
+    1
+   ],
+   "file": "ans.pdf"
+  },
+  {
+   "kind": "partial",
+   "range": [
+    0.2,
+    0.8
+   ],
+   "text": "After 3 hours there will be 2^13 bacteria."
+  }
+ ],
+ "s2": [
+  {
+   "kind": "incorrect",
+   "range": [
+    0,
+    0.3
+   ],
+   "text": "(b) is correct, a^m x a^n = a^(m x n), because we multiply the powers when we multiply."
+  },
+  {
+   "kind": "incorrect",
+   "range": [
+    0,
+    0.3
+   ],
+   "text": "(5^2)^3 = 5^5 because we add 2 and 3."
+  },
+  {
+   "kind": "incorrect",
+   "range": [
+    0,
+    0.3
+   ],
+   "text": "x = 3 because 8 = 2^3."
+  },
+  {
+   "kind": "incorrect",
+   "range": [
+    0,
+    0.3
+   ],
+   "text": "2^30 times more, because 10 x 3 = 30."
+  }
+ ]
+}

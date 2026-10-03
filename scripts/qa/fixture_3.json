@@ -1,0 +1,70 @@
+{
+ "s1": [
+  {
+   "kind": "correct",
+   "range": [
+    0.7,
+    1
+   ],
+   "text": "Yes, 0 is rational. A rational number can be written as p/q with p and q integers and q not 0. 0 = 0/1, so it fits. An irrational number like sqrt 2 cannot be written as p/q; its decimal 1.41421... never ends or repeats, but 0 is exact."
+  },
+  {
+   "kind": "correct",
+   "range": [
+    0.7,
+    1
+   ],
+   "file": "ans_3.png"
+  },
+  {
+   "kind": "correct",
+   "range": [
+    0.7,
+    1
+   ],
+   "file": "ans_3.pdf"
+  },
+  {
+   "kind": "partial",
+   "range": [
+    0.2,
+    0.8
+   ],
+   "text": "0.666... is about 0.67, so the wood is 67/100 metres."
+  }
+ ],
+ "s2": [
+  {
+   "kind": "incorrect",
+   "range": [
+    0,
+    0.3
+   ],
+   "text": "0 is not rational because it is nothing, so it cannot be a fraction. It is the same as sqrt 2."
+  },
+  {
+   "kind": "incorrect",
+   "range": [
+    0,
+    0.3
+   ],
+   "text": "Between 2 and 3 there are no rational numbers, only 2 and 3."
+  },
+  {
+   "kind": "incorrect",
+   "range": [
+    0,
+    0.3
+   ],
+   "text": "7/8 terminates because 7 and 8 are big numbers and 1/3 repeats because 1 is small."
+  },
+  {
+   "kind": "incorrect",
+   "range": [
+    0,
+    0.3
+   ],
+   "text": "0.666... = 6/10 = 3/5 metres."
+  }
+ ]
+}

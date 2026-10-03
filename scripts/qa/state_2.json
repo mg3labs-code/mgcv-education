@@ -1,0 +1,78 @@
+{
+ "A": "832e23bd-6577-4dd4-99a7-7caa55d2a8a3",
+ "R": {
+  "CP1 published schedule visible to 9A only": "PASS {\"qa.s1\": [{\"notes\": \"QA run 2\"}], \"qa.s2\": [{\"notes\": \"QA run 2\"}], \"qa.s3\": [], \"qa.s4\": []}",
+  "CP2 generate refused for qa.s1": "PASS",
+  "CP2 generate refused for qa.t2": "PASS",
+  "CP2 generate refused unauthenticated": "PASS",
+  "CP2 3 simultaneous requests -> 1 unpublished CBSE/A draft": "PASS [409, 409, 200] 4.9s",
+  "assignment": "832e23bd-6577-4dd4-99a7-7caa55d2a8a3",
+  "CP2 generation complete before review": "PASS",
+  "CP2 due date = next school day": "PASS 2026-10-13 -> 2026-10-14 (expected 2026-10-14)",
+  "CP2 five questions with hints for teacher": "PASS ['Definition', 'Mechanism', 'Reasoning', 'Application', 'Assumption Check']",
+  "CP3 draft hidden from qa.s1": "PASS",
+  "CP3 draft hidden from qa.s2": "PASS",
+  "CP3 draft hidden from qa.s3": "PASS",
+  "CP3 draft hidden from qa.s4": "PASS",
+  "CP3 T2 cannot read T1 draft questions": "PASS",
+  "CP4 edit/marks/delete saved (re-read)": "PASS",
+  "CP4 approve (twice) ok": "PASS",
+  "CP4 published, 4 qs, total = sum": "PASS total 11.0",
+  "CP4 still one homework for slot": "PASS",
+  "CP5 qa.s1 sees 4 questions": "PASS q=4",
+  "CP5 qa.s2 sees 4 questions": "PASS q=4",
+  "CP5 qa.s3 sees 0 questions": "PASS q=0",
+  "CP5 qa.s4 sees 0 questions": "PASS q=0",
+  "CP5 student cannot read hints": "PASS 403"
+ },
+ "qs": [
+  {
+   "id": "1f65d4d5-823a-443d-a47f-d58014971a23",
+   "assignment_id": "832e23bd-6577-4dd4-99a7-7caa55d2a8a3",
+   "question_number": 1,
+   "question_text": "What is the main difference between a Rational number and an Irrational number when written in decimal form? Is 0.333... (repeating) irrational?",
+   "max_score": 2.0,
+   "rubric": {
+    "layer": "Definition"
+   },
+   "expected_answer_hints": "Think about whether the decimal ends or keeps repeating a pattern.",
+   "created_at": "2026-10-03T05:55:17.454961+00:00"
+  },
+  {
+   "id": "2cc234b9-09f2-4ce7-a50a-17b344c7d659",
+   "assignment_id": "832e23bd-6577-4dd4-99a7-7caa55d2a8a3",
+   "question_number": 2,
+   "question_text": "Show the steps to convert the repeating decimal 0.666... into the form p/q, where p and q are integers. (QA run 2 edit)",
+   "max_score": 2.0,
+   "rubric": {
+    "layer": "Mechanism"
+   },
+   "expected_answer_hints": "Multiply both sides by 10 to shift the decimal point.",
+   "created_at": "2026-10-03T05:55:17.454961+00:00"
+  },
+  {
+   "id": "3b7c61c1-4610-4b3a-b3cc-60fce1fb3db9",
+   "assignment_id": "832e23bd-6577-4dd4-99a7-7caa55d2a8a3",
+   "question_number": 3,
+   "question_text": "Identify one irrational number between 2 and 3. Explain how you know your chosen number is irrational and not rational.",
+   "max_score": 4.0,
+   "rubric": {
+    "layer": "Reasoning"
+   },
+   "expected_answer_hints": "Between any two numbers, you can always find a number that never ends and never repeats.",
+   "created_at": "2026-10-03T05:55:17.454961+00:00"
+  },
+  {
+   "id": "48fc96d5-e6a6-44ea-bc56-85832952c67b",
+   "assignment_id": "832e23bd-6577-4dd4-99a7-7caa55d2a8a3",
+   "question_number": 4,
+   "question_text": "A square garden has a side length of 1 unit. The diagonal path across it is \u221a2 units long. If a worker walks across the diagonal 5 times, will the total distance covered be a rational or irrational number? Calculate the approximate distance.",
+   "max_score": 3.0,
+   "rubric": {
+    "layer": "Application"
+   },
+   "expected_answer_hints": "Use the value of \u221a2 (approx 1.414) to find the total length.",
+   "created_at": "2026-10-03T05:55:17.454961+00:00"
+  }
+ ]
+}
