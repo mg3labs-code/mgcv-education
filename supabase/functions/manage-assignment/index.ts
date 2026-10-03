@@ -149,8 +149,9 @@ serve(async (req) => {
       case "publish_assignment": {
         const { assignment_id } = body;
         const { data: own } = await supabaseAdmin
-          .from("assignments").select("teacher_id").eq("id", assignment_id).maybeSingle();
+          .from("assignments").select("teacher_id, generation_status").eq("id", assignment_id).maybeSingle();
         if (!own || own.teacher_id !== userId || !(await isTeacher(userId))) return jsonErr(403, "Forbidden");
+        if (own.generation_status !== "complete") return jsonErr(409, "This homework isn't fully generated yet and can't be published");
         // Final integrity check: total marks = sum of the remaining questions.
         const { data: qs, error: qsErr } = await supabaseAdmin
           .from("assignment_questions").select("max_score").eq("assignment_id", assignment_id);

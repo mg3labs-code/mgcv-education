@@ -113,6 +113,9 @@ export type Database = {
           created_at: string
           description: string | null
           due_date: string | null
+          generation_attempt: string | null
+          generation_expires_at: string | null
+          generation_status: string
           id: string
           instructions: string | null
           is_published: boolean
@@ -133,6 +136,9 @@ export type Database = {
           created_at?: string
           description?: string | null
           due_date?: string | null
+          generation_attempt?: string | null
+          generation_expires_at?: string | null
+          generation_status?: string
           id?: string
           instructions?: string | null
           is_published?: boolean
@@ -153,6 +159,9 @@ export type Database = {
           created_at?: string
           description?: string | null
           due_date?: string | null
+          generation_attempt?: string | null
+          generation_expires_at?: string | null
+          generation_status?: string
           id?: string
           instructions?: string | null
           is_published?: boolean
@@ -2000,6 +2009,17 @@ export type Database = {
       }
     }
     Functions: {
+      complete_homework_generation: {
+        Args: {
+          _attempt: string
+          _description: string
+          _due: string
+          _id: string
+          _questions: Json
+          _title: string
+        }
+        Returns: boolean
+      }
       get_class_averages: {
         Args: { _class_name: string }
         Returns: {
@@ -2126,6 +2146,16 @@ export type Database = {
           p_section: string
           p_subject: string
           p_teacher: string
+        }
+        Returns: string
+      }
+      next_school_day: {
+        Args: {
+          _board: string
+          _class: string
+          _from: string
+          _section: string
+          _teacher: string
         }
         Returns: string
       }

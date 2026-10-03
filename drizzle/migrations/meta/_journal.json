@@ -50,6 +50,13 @@
       "when": 1790997615930,
       "tag": "0006_lock_answer_text_after_submit",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1791005627431,
+      "tag": "0007_homework_generation_states",
+      "breakpoints": true
     }
   ]
 }

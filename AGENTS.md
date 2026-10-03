@@ -1,2 +1,4 @@
 - Teaching plan start date = teacher's local today for new plans; saved plans derive it from their earliest chapter-generated date (no stored column), so reloads don't shift lessons.
 - QA data resets go only through the admin-only `qa-reset` server step (allowlisted QA account IDs, QA-teacher homework, app_config qa_reset_enabled flag, dry run by default) so cleanup is repeatable without broad file-delete rights.
+- Auto-homework rows carry generation_status/attempt/expiry; only the attempt holding the reservation may commit (via complete_homework_generation RPC) and a DB trigger blocks publishing anything not `complete` — so stale or failed AI runs can never surface or overwrite newer work.
+- Homework due dates come from the `next_school_day` DB function (weekends, national holidays, teacher holidays) relative to the homework's own date — never request time.

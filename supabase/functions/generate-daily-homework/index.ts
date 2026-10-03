@@ -12,17 +12,22 @@ serve(async (req) => {
 
   // Assignment row claimed by this request; removed again if generation fails,
   // so a failed attempt never leaves an empty draft blocking a retry.
+  // On failure the reservation is marked "failed" — but only if this attempt
+  // still owns it, so a stale attempt can never touch a newer attempt's work.
   let claimedId: string | null = null;
+  let attempt: string | null = null;
   let releaseClient: any = null;
   const release = async () => {
-    if (claimedId && releaseClient) {
-      await releaseClient.from("assignments").delete().eq("id", claimedId);
+    if (claimedId && attempt && releaseClient) {
+      await releaseClient.from("assignments")
+        .update({ generation_status: "failed", generation_expires_at: null })
+        .eq("id", claimedId).eq("generation_attempt", attempt).eq("generation_status", "generating");
       claimedId = null;
     }
   };
 
   try {
-    const { class_name, subject, board, section, schedule_date, teacher_id, topic_key, topic_title, chapter_name, qa_fault } = await req.json();
+    const { class_name, subject, board, section, schedule_date, teacher_id, topic_key, topic_title, chapter_name, qa_fault, qa_delay_ms, qa_reservation_seconds } = await req.json();
 
     if (!class_name || !topic_title || !teacher_id) {
       return new Response(JSON.stringify({ error: "Missing required fields: class_name, topic_title, teacher_id" }), {
@@ -67,12 +72,28 @@ serve(async (req) => {
 
     const subjectName = subject || "Mathematics";
     const topicKey = topic_key || topic_title;
+    const json = (status: number, body: unknown) => new Response(JSON.stringify(body), {
+      status, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
 
-    // Claim the homework slot FIRST. A unique index on
-    // (teacher, board, class, section, subject, topic key, date) for auto_homework
-    // guarantees only one request wins; the rest reuse the winner's assignment.
+    // QA-only controls: allowlisted QA teachers + app_config flag. Never active otherwise.
+    const QA_TEACHERS = ["584d68ef-c42f-4b53-9ffa-bdce38622355", "74accab5-d420-46a6-97ac-de6a5fdae9d8"];
+    let qaOn = false;
+    if (QA_TEACHERS.includes(caller.id) && (qa_fault || qa_delay_ms || qa_reservation_seconds)) {
+      const { data: flag } = await supabaseAdmin.from("app_config").select("value").eq("key", "qa_fault_injection_enabled").maybeSingle();
+      qaOn = flag?.value === "true";
+    }
+    const qaFault: string | null = qaOn && typeof qa_fault === "string" ? qa_fault : null;
+    const qaDelay = qaOn ? Math.min(Number(qa_delay_ms) || 0, 120_000) : 0;
+
+    const AI_TIMEOUT_MS = 45_000;
+    // Reservation lifetime must outlast the AI timeout so a live attempt is never stolen.
+    const RESERVATION_S = qaOn && Number(qa_reservation_seconds) > 0 ? Number(qa_reservation_seconds) : 90;
+
+    // One row per (teacher, board, class, section, subject, topic, date) — enforced by a unique index.
     const findExisting = async () => {
-      let q = supabaseAdmin.from("assignments").select("id, title, is_published")
+      let q = supabaseAdmin.from("assignments")
+        .select("id, title, is_published, generation_status, generation_attempt, generation_expires_at")
         .eq("teacher_id", caller.id).eq("class_name", class_name).eq("subject", subjectName)
         .eq("schedule_date", today).eq("source", "auto_homework").eq("schedule_topic_key", topicKey);
       q = board ? q.eq("board", board) : q.is("board", null);
@@ -80,38 +101,42 @@ serve(async (req) => {
       const { data } = await q.limit(1);
       return data?.[0] ?? null;
     };
-    const reuse = (row: { id: string; title: string; is_published: boolean }) =>
-      new Response(JSON.stringify({ skipped: true, reused: true, assignment_id: row.id, title: row.title, is_published: row.is_published, message: "Homework already exists for this topic today" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    const reuse = (row: any) => json(200, { skipped: true, reused: true, assignment_id: row.id, title: row.title, is_published: row.is_published, message: "Homework already exists for this topic today" });
+    const inProgress = (row: any) => json(409, { error: "Homework is still being generated — try again shortly", retryable: true, assignment_id: row.id, generation_status: "generating" });
 
-    const existingRow = await findExisting();
-    if (existingRow) return reuse(existingRow);
-
-    const { data: claimed, error: claimErr } = await supabaseAdmin
-      .from("assignments")
-      .insert({
-        teacher_id: caller.id,
-        title: `${topic_title} — Daily Practice (drafting…)`,
-        class_name,
-        subject: subjectName,
-        board: board || null,
-        section: section || null,
-        source: "auto_homework",
-        schedule_topic_key: topicKey,
-        schedule_date: today,
-        is_published: false,
-      })
-      .select("id")
-      .single();
-    if (claimErr) {
-      if ((claimErr as any).code === "23505") {
-        const winner = await findExisting();
-        if (winner) return reuse(winner);
-      }
-      throw claimErr;
+    const myAttempt = crypto.randomUUID();
+    const expiresAt = () => new Date(Date.now() + RESERVATION_S * 1000).toISOString();
+    let existing = await findExisting();
+    if (!existing) {
+      const { data: ins, error: insErr } = await supabaseAdmin.from("assignments").insert({
+        teacher_id: caller.id, title: `${topic_title} — Daily Practice (drafting…)`, class_name,
+        subject: subjectName, board: board || null, section: section || null, source: "auto_homework",
+        schedule_topic_key: topicKey, schedule_date: today, is_published: false,
+        generation_status: "generating", generation_attempt: myAttempt, generation_expires_at: expiresAt(),
+      }).select("id").single();
+      if (!insErr) { claimedId = ins.id; }
+      else if ((insErr as any).code === "23505") existing = await findExisting();
+      else throw insErr;
     }
-    claimedId = claimed.id;
+    if (!claimedId) {
+      if (!existing) throw new Error("Could not reserve homework slot");
+      if (existing.generation_status === "complete") return reuse(existing);
+      const expired = existing.generation_status === "failed" ||
+        !existing.generation_expires_at || new Date(existing.generation_expires_at).getTime() < Date.now();
+      if (!expired) return inProgress(existing);
+      // Atomic takeover: only succeeds if nobody else took it since we read it.
+      let take = supabaseAdmin.from("assignments")
+        .update({ generation_status: "generating", generation_attempt: myAttempt, generation_expires_at: expiresAt(), is_published: false })
+        .eq("id", existing.id).neq("generation_status", "complete");
+      take = existing.generation_attempt ? take.eq("generation_attempt", existing.generation_attempt) : take.is("generation_attempt", null);
+      const { data: took } = await take.select("id");
+      if (!took || took.length === 0) {
+        const now = await findExisting();
+        return now?.generation_status === "complete" ? reuse(now) : inProgress(now ?? existing);
+      }
+      claimedId = existing.id;
+    }
+    attempt = myAttempt;
     releaseClient = supabaseAdmin;
 
     // Get student progress context for this class (aggregate)
@@ -133,34 +158,35 @@ serve(async (req) => {
       difficultyHint = "simple application connecting the concept to a real scenario";
     }
 
-    // Generate questions via AI
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       await release();
-      return new Response(JSON.stringify({ error: "AI not configured" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return json(500, { error: "AI not configured" });
     }
 
-    // QA-only fault injection: allowlisted QA teachers + app_config flag. Never active otherwise.
-    const QA_TEACHERS = ["584d68ef-c42f-4b53-9ffa-bdce38622355", "74accab5-d420-46a6-97ac-de6a5fdae9d8"];
-    let qaFault: string | null = null;
-    if (typeof qa_fault === "string" && QA_TEACHERS.includes(caller.id)) {
-      const { data: flag } = await supabaseAdmin.from("app_config").select("value").eq("key", "qa_fault_injection_enabled").maybeSingle();
-      if (flag?.value === "true") qaFault = qa_fault;
-    }
     const fakeTool = (args: unknown) => new Response(JSON.stringify({ choices: [{ message: { tool_calls: [{ function: { arguments: typeof args === "string" ? args : JSON.stringify(args) } }] } }] }), { status: 200 });
     const L = ["Definition", "Mechanism", "Reasoning", "Application", "Assumption Check"];
-    const qs = (n: number, f: (i: number) => any = () => ({})) => Array.from({ length: n }, (_, i) => ({ question_text: `QA fault Q${i + 1}`, max_score: 2, layer: L[i % 5], type: "recall", ...f(i) }));
-    const aiResponse = qaFault === "timeout" ? (await new Promise<Response>((r) => setTimeout(() => r(new Response("{}", { status: 504 })), 400_000)))
-      : qaFault === "rate_limit" ? new Response("rate limited", { status: 429 })
-      : qaFault === "credits" ? new Response("no credits", { status: 402 })
-      : qaFault === "malformed_json" ? fakeTool("{not json")
-      : qaFault === "wrong_count" ? fakeTool({ questions: qs(3) })
-      : qaFault === "missing_layers" ? fakeTool({ questions: qs(5, () => ({ layer: undefined })) })
-      : qaFault === "invalid_marks" ? fakeTool({ questions: qs(5, (i) => ({ max_score: i === 0 ? -2 : i === 1 ? 0 : 2 })) })
-      : await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const qs = (n: number, f: (i: number) => any = () => ({})) => Array.from({ length: n }, (_, i) => ({ question_text: `QA Q${i + 1} (${L[i % 5]})`, max_score: 2, layer: L[i % 5], type: "recall", hint: "QA hint", ...f(i) }));
+    const sleep = (ms: number, signal: AbortSignal) => new Promise<void>((res, rej) => {
+      const t = setTimeout(res, ms);
+      signal.addEventListener("abort", () => { clearTimeout(t); rej(new DOMException("timeout", "TimeoutError")); });
+    });
+
+    const signal = AbortSignal.timeout(AI_TIMEOUT_MS);
+    let aiResponse: Response;
+    try {
+      if (qaDelay) await sleep(qaDelay, signal);
+      aiResponse = qaFault === "timeout" ? (await sleep(AI_TIMEOUT_MS + 60_000, signal), new Response("{}"))
+        : qaFault === "rate_limit" ? new Response("rate limited", { status: 429 })
+        : qaFault === "credits" ? new Response("no credits", { status: 402 })
+        : qaFault === "malformed_json" ? fakeTool("{not json")
+        : qaFault === "wrong_count" ? fakeTool({ questions: qs(3) })
+        : qaFault === "missing_layers" ? fakeTool({ questions: qs(5, () => ({ layer: undefined })) })
+        : qaFault === "invalid_marks" ? fakeTool({ questions: qs(5, (i) => ({ max_score: i === 0 ? -2 : i === 1 ? 0 : 2.5 })) })
+        : qaFault === "valid" ? fakeTool({ questions: qs(5), title_emoji: "🧪" })
+        : await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
+      signal,
       headers: {
         Authorization: `Bearer ${LOVABLE_API_KEY}`,
         "Content-Type": "application/json",
@@ -245,88 +271,70 @@ Generate exactly 5 smart, simple homework questions for this topic, one per laye
         tool_choice: { type: "function", function: { name: "generate_homework" } },
       }),
     });
+    } catch (err) {
+      if ((err as any)?.name === "TimeoutError" || (err as any)?.name === "AbortError") {
+        await release();
+        return json(504, { error: "The AI took too long to write this homework. Please try again.", retryable: true });
+      }
+      throw err;
+    }
 
     if (!aiResponse.ok) {
       const errText = await aiResponse.text();
       console.error("AI gateway error:", aiResponse.status, errText);
-      if (aiResponse.status === 429) {
-        await release();
-        return new Response(JSON.stringify({ error: "Rate limited, please try again later" }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (aiResponse.status === 402) {
-        await release();
-        return new Response(JSON.stringify({ error: "AI credits exhausted" }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      throw new Error(`AI error: ${aiResponse.status}`);
+      await release();
+      if (aiResponse.status === 429) return json(429, { error: "Rate limited, please try again later", retryable: true });
+      if (aiResponse.status === 402) return json(402, { error: "AI credits exhausted", retryable: false });
+      return json(502, { error: `AI service error (${aiResponse.status}). Please try again.`, retryable: aiResponse.status >= 500 });
     }
 
-    const aiResult = await aiResponse.json();
-    const toolCall = aiResult.choices?.[0]?.message?.tool_calls?.[0];
-    if (!toolCall) throw new Error("No tool call in AI response");
-
-    const parsed = JSON.parse(toolCall.function.arguments);
-    const questions = parsed.questions || [];
-    const emoji = parsed.title_emoji || "📝";
-
-    if (questions.length === 0) throw new Error("AI generated no questions");
-
-    // Calculate next school day for due date (skip weekends)
-    const dueDate = new Date();
-    dueDate.setDate(dueDate.getDate() + 1);
-    while (dueDate.getDay() === 0 || dueDate.getDay() === 6) {
-      dueDate.setDate(dueDate.getDate() + 1);
+    // Validate before anything is saved. No defaults are filled in for generated questions.
+    const invalid = async (reason: string) => {
+      console.error("Invalid AI homework:", reason);
+      await release();
+      return json(502, { error: `The AI returned unusable homework (${reason}). Please try again.`, retryable: true });
+    };
+    let parsed: any;
+    try {
+      const aiResult = await aiResponse.json();
+      const toolCall = aiResult.choices?.[0]?.message?.tool_calls?.[0];
+      if (!toolCall) return await invalid("no structured answer");
+      parsed = JSON.parse(toolCall.function.arguments);
+    } catch { return await invalid("malformed output"); }
+    const questions = Array.isArray(parsed?.questions) ? parsed.questions : null;
+    if (!questions || questions.length !== 5) return await invalid(`expected 5 questions, got ${questions?.length ?? 0}`);
+    for (let i = 0; i < 5; i++) {
+      const q = questions[i];
+      if (!q || typeof q.question_text !== "string" || !q.question_text.trim()) return await invalid(`Q${i + 1} has no wording`);
+      if (q.layer !== L[i]) return await invalid(`Q${i + 1} layer should be ${L[i]}`);
+      if (!Number.isInteger(q.max_score) || q.max_score < 1 || q.max_score > 5) return await invalid(`Q${i + 1} marks must be a whole number 1-5`);
     }
+    const emoji = typeof parsed.title_emoji === "string" && parsed.title_emoji ? parsed.title_emoji : "📝";
 
-    // Fill in the claimed assignment (only the winning request reaches here).
-    const assignmentTitle = `${emoji} ${topic_title} — Daily Practice`;
-    const { data: assignment, error: aErr } = await supabaseAdmin
-      .from("assignments")
-      .update({
-        title: assignmentTitle,
-        description: `Auto-generated homework for "${topic_title}". Smart practice to reinforce today's learning.`,
-        instructions: "Answer each question in your own words. Show your thinking!",
-        max_total_score: questions.reduce((s: number, q: any) => s + (q.max_score || 3), 0),
-        due_date: dueDate.toISOString(),
-        // Drafted for teacher review — never visible to students until she approves it.
-        is_published: false,
-      })
-      .eq("id", claimedId)
-      .select()
-      .single();
-
-    if (aErr) throw aErr;
-
-    // Insert questions
-    const questionRows = questions.map((q: any, i: number) => ({
-      assignment_id: assignment.id,
-      question_number: i + 1,
-      question_text: q.question_text,
-      max_score: q.max_score || 3,
-      rubric: { layer: q.layer || null },
-      expected_answer_hints: q.hint || null,
-    }));
-
-    const { error: qErr } = await supabaseAdmin
-      .from("assignment_questions")
-      .insert(questionRows);
-
-    if (qErr) throw qErr;
-    claimedId = null; // success — keep the row
-
-    console.log(`✅ Generated homework: "${assignmentTitle}" for ${class_name} (${questions.length} questions)`);
-
-    return new Response(JSON.stringify({
-      success: true,
-      assignment_id: assignment.id,
-      title: assignmentTitle,
-      question_count: questions.length,
-    }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    // Due date: next school day after the homework's own date, per the school calendar.
+    const { data: due, error: dueErr } = await supabaseAdmin.rpc("next_school_day", {
+      _teacher: caller.id, _class: class_name, _board: board || null, _section: section || null, _from: today,
     });
+    if (dueErr || !due) throw dueErr ?? new Error("Could not work out due date");
+    const dueIso = `${due}T23:59:00+05:30`;
+
+    const assignmentTitle = `${emoji} ${topic_title} — Daily Practice`;
+    const { data: committed, error: cErr } = await supabaseAdmin.rpc("complete_homework_generation", {
+      _id: claimedId, _attempt: attempt, _title: assignmentTitle,
+      _description: `Auto-generated homework for "${topic_title}". Smart practice to reinforce today's learning.`,
+      _due: dueIso,
+      _questions: questions.map((q: any, i: number) => ({ n: i + 1, text: q.question_text.trim(), marks: q.max_score, layer: q.layer, hint: typeof q.hint === "string" ? q.hint : "" })),
+    });
+    if (cErr) throw cErr;
+    const id = claimedId;
+    claimedId = null;
+    if (!committed) {
+      // A newer attempt took over this slot; leave its work untouched.
+      return json(409, { error: "A newer attempt replaced this one", stale: true, assignment_id: id });
+    }
+
+    console.log(`✅ Generated homework: "${assignmentTitle}" for ${class_name}`);
+    return json(200, { success: true, assignment_id: id, title: assignmentTitle, question_count: 5, due_date: due });
 
   } catch (e) {
     console.error("generate-daily-homework error:", e);
