@@ -1,0 +1,97 @@
+{
+ "CP1 published schedule visible to 9A only": "PASS {\"qa.s1\": [{\"notes\": \"QA run r1\"}], \"qa.s2\": [{\"notes\": \"QA run r1\"}], \"qa.s3\": [], \"qa.s4\": []}",
+ "CP2 generate refused for qa.s1": "PASS",
+ "CP2 generate refused for qa.t2": "PASS",
+ "CP2 generate refused unauthenticated": "PASS",
+ "CP2 3 simultaneous requests -> 1 unpublished CBSE/A draft": "PASS [200, 409, 200] 5.1s",
+ "assignment": "f0f34c2a-6338-4982-82e4-ba0c8de034f6",
+ "CP2 generation complete before review": "PASS",
+ "CP2 due date = next school day": "PASS 2026-10-15 -> 2026-10-16 (expected 2026-10-16)",
+ "CP2 five questions with hints for teacher": "PASS ['Definition', 'Mechanism', 'Reasoning', 'Application', 'Assumption Check']",
+ "CP3 draft hidden from qa.s1": "PASS",
+ "CP3 draft hidden from qa.s2": "PASS",
+ "CP3 draft hidden from qa.s3": "PASS",
+ "CP3 draft hidden from qa.s4": "PASS",
+ "CP3 T2 cannot read T1 draft questions": "PASS",
+ "CP4 edit/marks/delete saved (re-read)": "PASS",
+ "CP4 fixture maxima 2,2,4,3 set": "PASS",
+ "CP4 teacher sets approved questions + rubrics": "PASS",
+ "CP4 approve (twice) ok": "PASS",
+ "CP4 published, 4 qs, total = sum": "PASS total 11.0",
+ "CP4 still one homework for slot": "PASS",
+ "CP5 qa.s1 sees 4 questions": "PASS q=4",
+ "CP5 qa.s2 sees 4 questions": "PASS q=4",
+ "CP5 qa.s3 sees 0 questions": "PASS q=0",
+ "CP5 qa.s4 sees 0 questions": "PASS q=0",
+ "CP5 student cannot read hints": "PASS 403",
+ "CP6 S3 (9B) upload refused": "PASS",
+ "CP6 4 answers accepted": "PASS [200, 200, 200, 200]",
+ "CP6 submit": "PASS",
+ "CP6 one submission, submitted": "PASS",
+ "CP6 S2 answers + submit": "PASS",
+ "CP7 all 4 evaluated, valid scores + feedback": "PASS [(1, 'success', 2.0, 2.0, 18), (2, 'success', 2.0, 2.0, 23), (3, 'success', 4.0, 4.0, 23), (4, 'success', 2.0, 3.0, 18)]",
+ "eval": [
+  [
+   1,
+   "success",
+   2.0,
+   2.0,
+   18
+  ],
+  [
+   2,
+   "success",
+   2.0,
+   2.0,
+   23
+  ],
+  [
+   3,
+   "success",
+   4.0,
+   4.0,
+   23
+  ],
+  [
+   4,
+   "success",
+   2.0,
+   3.0,
+   18
+  ]
+ ],
+ "q4_feedback": {
+  "mistakes": [
+   "The student failed to provide the final fraction (p/q form) as requested by the prompt.",
+   "The student did not simplify the result to 2/3."
+  ],
+  "strengths": [
+   "Correctly set up the algebraic representation (x and 10x).",
+   "Correctly performed the subtraction to reach 9x = 6."
+  ],
+  "suggestions": [
+   "Always ensure you provide the final answer requested by the question (the fraction).",
+   "Finish the calculation by dividing by the coefficient of x and simplifying the resulting fraction to its lowest terms."
+  ],
+  "rubric_scores": {}
+ },
+ "CP7 Q4 feedback names the missing divide-by-9 / 2/3 step": "PASS {\"mistakes\": [\"the student failed to provide the final fraction (p/q form) as requested by the prompt.\", \"the student did not simplify the result to 2/3.\"], \"strengths\": [\"correctly set up the algebraic representation (x and 10x).\", \"correctly performed the subtraction to reach 9x = 6.\"], \"suggestio",
+ "CP7 marking within expected ranges (correct/partial/incorrect)": "PASS []",
+ "CP8 S1 direct total/status change saves nothing": "PASS",
+ "CP8 S1 direct mark change saves nothing": "PASS",
+ "CP8 teacher_grade refused for qa.s1": "PASS",
+ "CP8 teacher_finalize refused for qa.s1": "PASS",
+ "CP8 teacher_grade refused for qa.s2": "PASS",
+ "CP8 teacher_finalize refused for qa.s2": "PASS",
+ "CP8 teacher_grade refused for qa.t2": "PASS",
+ "CP8 teacher_finalize refused for qa.t2": "PASS",
+ "CP8 over-max mark refused": "PASS",
+ "CP9 T1 sets Q1=0 'QA override'": "PASS",
+ "CP9 server total ignores 999, repeat finalize idempotent": "PASS total 8.0",
+ "total": 8.0,
+ "TOTAL controlled S2 2,1,4,3 then Q1->0 = 8, stable over 3 finalizes": "PASS [8, 8, 8]",
+ "CP10 S1 app replace refused": "PASS",
+ "CP10 direct storage overwrite/delete/add refused, bytes unchanged": "PASS 400/400/400",
+ "CP10 S2 cannot read S1 rows or files": "PASS",
+ "CP10 S1 reads finalized total": "PASS {'status': 'finalized', 'total_score': 8.0}"
+}

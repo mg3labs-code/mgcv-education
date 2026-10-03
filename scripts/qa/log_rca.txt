@@ -1,0 +1,29 @@
+Skipping host requirements validation logic because `PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS` env variable is set.
+cells 1
+toasts ['Schedule Published! 🎉\nStudents in Class 9 (Mathematics) now see the updated schedule live.']
+errors []
+CP1 published schedule visible to 9A only PASS {"qa.s1": [{"notes": "QA run rc"}], "qa.s2": [{"notes": "QA run rc"}], "qa.s3": [], "qa.s4": []}
+CP2 generate refused for qa.s1 PASS
+CP2 generate refused for qa.t2 PASS
+CP2 generate refused unauthenticated PASS
+CP2 3 simultaneous requests -> 1 unpublished CBSE/A draft PASS [409, 200, 409] 5.9s
+CP2 generation complete before review PASS
+CP2 due date = next school day PASS 2026-10-22 -> 2026-10-23 (expected 2026-10-23)
+CP2 five questions with hints for teacher PASS ['Definition', 'Mechanism', 'Reasoning', 'Application', 'Assumption Check']
+CP3 draft hidden from qa.s1 PASS
+CP3 draft hidden from qa.s2 PASS
+CP3 draft hidden from qa.s3 PASS
+CP3 draft hidden from qa.s4 PASS
+CP3 T2 cannot read T1 draft questions PASS
+CP4 edit/marks/delete saved (re-read) PASS
+CP4 fixture maxima 2,2,4,3 set PASS
+CP4 teacher sets approved questions + rubrics PASS
+CP4 approve (twice) ok PASS
+CP4 published, 4 qs, total = sum PASS total 11.0
+CP4 still one homework for slot PASS
+CP5 qa.s1 sees 4 questions PASS q=4
+CP5 qa.s2 sees 4 questions PASS q=4
+CP5 qa.s3 sees 0 questions PASS q=0
+CP5 qa.s4 sees 0 questions PASS q=0
+CP5 student cannot read hints PASS 403
+PHASE A DONE 24152a90-64f8-4d0c-9f02-53ef58c04542

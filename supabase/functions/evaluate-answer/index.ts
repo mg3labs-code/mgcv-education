@@ -212,7 +212,33 @@ ${studentText.substring(0, 4000)}
 
 Respond using the suggest_evaluation tool with your evaluation.`;
 
-    const evalResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    // QA-only mocked AI: allowlisted QA students + app_config flags. Never active otherwise.
+    const QA_STUDENTS = ["e7367856-41e7-47eb-9fdf-4ef8a814c350", "1f2cd957-7a8f-49d2-90a7-cd38673c5bb7"];
+    let qaMode: any = null;
+    if (QA_STUDENTS.includes(ownerStudentId ?? "")) {
+      const { data: cfg } = await supabaseAdmin.from("app_config").select("key, value")
+        .in("key", ["qa_fault_injection_enabled", "qa_eval_fault"]);
+      const m = Object.fromEntries((cfg ?? []).map((r: any) => [r.key, r.value]));
+      // Directive lives in the QA answer text: "QAMOCK {json}". Faults apply while
+      // retry_count < fail_until, then the mocked score is returned.
+      if (m.qa_fault_injection_enabled === "true" && m.qa_eval_fault === "by_text" && studentText.startsWith("QAMOCK ")) {
+        try {
+          const d = JSON.parse(studentText.slice(7));
+          qaMode = (answer.retry_count || 0) < Number(d.fail_until || 0) ? d : { score: d.score, delay_ms: d.score_delay_ms };
+        } catch { qaMode = null; }
+      }
+    }
+    const mockResponse = async (): Promise<Response> => {
+      if (qaMode.delay_ms) await new Promise((r) => setTimeout(r, Math.min(Number(qaMode.delay_ms), 60_000)));
+      if (qaMode.mode === "timeout") throw new Error("QA simulated AI timeout");
+      if (qaMode.mode === "status") return new Response("{}", { status: Number(qaMode.status) });
+      if (qaMode.mode === "malformed") return new Response(JSON.stringify({ choices: [{ message: { content: "not json" } }] }), { status: 200 });
+      return new Response(JSON.stringify({ choices: [{ message: { tool_calls: [{ function: { arguments: JSON.stringify({
+        score: Number(qaMode.score), confidence: 90, strengths: ["QA mock"], mistakes: [], suggestions: [],
+      }) } }] } }] }), { status: 200 });
+    };
+
+    const evalResponse = qaMode ? await mockResponse() : await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${LOVABLE_API_KEY}`,
