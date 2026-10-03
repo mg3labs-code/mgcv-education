@@ -11,3 +11,9 @@
 - [x] Verify the six-fix cleanup commit reached Lovable's synchronized main branch
 - [x] Reproduce and fix hand-edited dates reverting during Add Holiday and every bulk schedule action
 - [ ] Verify the pending work reaches the connected GitHub repository and report its exact SHA
+
+- [x] Golden Journey repeatability: PASS 3/3 (several steps via API requests; mobile = browser viewports only)
+- [ ] Due date: derive from intended assignment date, validate server-side
+- [ ] Total check: scores 2,1,4,3, override Q1 to 0 -> total 8, incl. repeated finalize
+- [ ] Homework-generation failure batch: FAIL at timeout (stuck empty draft); 6 cases not yet run
+- [ ] Then: evaluation failures, uploads, upload/finalize race (NOT TESTED), 40-student load, IST midnight, real phones
