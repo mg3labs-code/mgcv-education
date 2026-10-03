@@ -57,6 +57,7 @@ serve(async (req) => {
       .select(`
         id, file_url, file_type, extracted_text, retry_count, student_id,
         submission:student_submissions!submission_id (
+          status,
           assignment:assignments!assignment_id ( teacher_id )
         ),
         question:assignment_questions!question_id (
@@ -78,6 +79,14 @@ serve(async (req) => {
     const ownerTeacherId = (answer as any).submission?.assignment?.teacher_id as string | undefined;
     const isOwner = isInternalServiceCall || caller?.id === ownerStudentId || caller?.id === ownerTeacherId;
     if (!isOwner) return unauthorized("Forbidden");
+
+    // Never re-evaluate once the teacher has finalised the result.
+    if ((answer as any).submission?.status === "finalized") {
+      return new Response(JSON.stringify({ error: "Submission already finalized" }), {
+        status: 409,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     // Mark as processing
     await supabaseAdmin
