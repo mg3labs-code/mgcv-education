@@ -1,12 +1,12 @@
 http {'qa.s1': [200, 200, 200, 200, 200, 200], 'qa.s2': [200, 200, 200, 200, 200, 200]}
-qa.s1 1 success exp 1 got 1.0 PASS
-qa.s1 2 success exp 2 got 0.0 FAIL
+qa.s1 1 success exp 2 got 2.0 PASS
+qa.s1 2 success exp 1 got 1.0 PASS
 qa.s1 3 success exp 3 got 3.0 PASS
-qa.s1 4 success exp 1 got 0.0 FAIL
-qa.s1 5 success exp 3 got 2.0 FAIL
+qa.s1 4 success exp 3 got 3.0 PASS
+qa.s1 5 success exp 4 got 4.0 PASS
 qa.s2 1 success exp 0 got 0.0 PASS
 qa.s2 2 success exp 0 got 0.0 PASS
 qa.s2 3 success exp 0 got 0.0 PASS
 qa.s2 4 success exp 0 got 0.0 PASS
 qa.s2 5 success exp 0 got 0.0 PASS
-pass 7 / 10 elapsed 4.8
+pass 10 / 10 elapsed 4.0
