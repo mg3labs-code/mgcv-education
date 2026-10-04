@@ -19,9 +19,10 @@
 - [x] Homework-generation failure and recovery checks
 - [x] Batch 1 recovery: five defects fixed; focused suite and one real-AI regression passed
 - [x] Batch 2 available checks: limited allowlisted load, IST midnight/both Saturday configurations, varied-question marking, monitoring/recovery, launch controls
-  - [ ] 40-student gate — NOT TESTED unless an isolated QA database is provided
-  - [ ] Physical Android Chrome and iPhone Safari journey — requires real devices
-  - [ ] School Saturday policy — unconfirmed
+  - [ ] 40-student gate — plan written (40_student_load_test_plan.md); needs a separate app copy with its own database
+  - [x] Physical phone journey — waived by user (uploads work)
+  - [x] School Saturday policy — Saturday is a school day; teachers adjust plans for holidays
 - [x] Provide safe QA test usernames and password-reset guidance without revealing stored passwords
 - [x] Batch 3: subject audit (report only), JPG/PDF upload regression PASS, checkpoint 9 isolation PASS — scripts/qa/report_batch3.md
-  - [ ] Subject data fixes (Chemistry scope/plan, Sanskrit, orphan Biology/Hindi/SST, duplicate 9A Maths teacher, stale Physics/English) — need school/teacher decisions
+  - [x] Decision: CBSE official subjects only; Chemistry is part of Science for CBSE Class 9
+  - [ ] Subject data cleanup (Sanskrit, orphan Biology/Hindi/SST, duplicate 9A Maths teacher, stale Physics/English) — awaiting go-ahead
