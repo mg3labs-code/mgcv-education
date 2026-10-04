@@ -1,0 +1,20 @@
+assignment 668eabe7-d826-4d71-8622-622e1d30c656
+PASS teacher publishes regression homework 
+PASS refused: program renamed as photo 400 {"error":"The file contents do not match a valid JPG, PNG, WEBP or PDF"}
+PASS refused: text labelled as PDF 400 {"error":"The file contents do not match a valid JPG, PNG, WEBP or PDF"}
+PASS refused: corrupt JPG (header then junk) 400 {"error":"The file contents do not match a valid JPG, PNG, WEBP or PDF"}
+PASS refused: truncated PDF 400 {"error":"The file contents do not match a valid JPG, PNG, WEBP or PDF"}
+PASS refused: PDF bytes labelled as JPG 400 {"error":"The file contents do not match a valid JPG, PNG, WEBP or PDF"}
+PASS refused uploads stored no answers []
+PASS phone motion-photo JPG accepted 200 {"success":true,"answer_id":"260dbc8c-4159-43c1-a016-e16a7c57ddf5","status":"processing"}
+PASS compressed (object-stream) PDF accepted 200 {"success":true,"answer_id":"6483bd75-6b0c-4f82-997b-ef5bb7a8e28b","status":"processing"}
+PASS JPG stored bytes identical image/jpeg
+PASS JPG real-AI evaluation = 3/3 success 3.0 None {"mistakes": [], "strengths": ["The student correctly substituted the values into the equation.", "The student accurately calculated the LHS and compared it to the RHS.", "The student provided the cor
+PASS PDF stored bytes identical application/pdf
+PASS PDF real-AI evaluation = 3/3 success 3.0 None {"mistakes": [], "strengths": ["The student clearly defined the variables x and y.", "The student correctly identified the cost components 5x and 10y.", "The student correctly formulated the final lin
+PASS student submits 
+PASS teacher reviews JPG answer {"success":true}
+PASS teacher finalizes, total 6 {"success":true,"total_score":6}
+PASS student sees finalized 6 [{'status': 'finalized', 'total_score': 6.0}]
+PASS finalized answer locked against new photo 
+18 / 18
