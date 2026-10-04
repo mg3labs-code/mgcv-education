@@ -18,7 +18,7 @@
 - [x] Total check: scores 2,1,4,3, override Q1 to 0 -> total 8, incl. repeated finalize
 - [x] Homework-generation failure and recovery checks
 - [x] Batch 1 recovery: five defects fixed; focused suite and one real-AI regression passed
-- [ ] Batch 2: limited allowlisted load, IST midnight/Saturday configurations, varied-question marking, monitoring/recovery, launch controls
+- [x] Batch 2 available checks: limited allowlisted load, IST midnight/both Saturday configurations, varied-question marking, monitoring/recovery, launch controls
   - [ ] 40-student gate — NOT TESTED unless an isolated QA database is provided
   - [ ] Physical Android Chrome and iPhone Safari journey — requires real devices
   - [ ] School Saturday policy — unconfirmed
