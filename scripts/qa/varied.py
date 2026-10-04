@@ -1,24 +1,25 @@
 """Batch 2 varied-question marking (real AI). QA students on a fresh QA-teacher homework set."""
 import time, json
 from common import session, fn, rest
-A = 'a18d21e2-c627-426e-b90a-83e7903cad2e'
+A = '7a2df959-46fa-477b-acbb-3d9a1b6a1d2d'
 t = {w: session(w)['access_token'] for w in ['qa.t1', 'qa.s1', 'qa.s2']}
 qs = sorted(rest(t['qa.t1'], f'assignment_questions?select=id,question_number,max_score&assignment_id=eq.{A}').json(), key=lambda q: q['question_number'])
-# Teacher-approved expectations (max 1,2,3,3,3): S1 fully correct, S2 wrong. S1 Q4 is partial (equation only).
+# Expected marks set from the actual generated questions before testing.
+# Maxima are 2,2,3,3,4. S1 is correct except Q2 partial; S2 is wrong.
 ANS = {
  'qa.s1': [
-  'Option c: 3x - 4y = 10. It has x and y, each with power 1. Option a has only one variable, and option b has x squared.',
-  'Put x=2 and y=1: 2(2)+5(1)=4+5=9, which equals the right side, so (2,1) is a solution.',
-  'Infinitely many. For every real x, y = 5 - x gives a matching y, e.g. (1,4), (2.5,2.5), (-1,6). Since x can be any real number there are infinitely many pairs.',
-  'Let x be the cost of a pen and y the cost of a notebook: 2x + 3y = 120.',
-  'Rahul is wrong. x = 5 can be written as 1x + 0y - 5 = 0, so it is a linear equation in two variables with the y coefficient zero.'],
+  'Option b, 3x - 4y = 10, because it contains two variables x and y, both to power one. Option a is linear but has only one variable x, so it is not in two variables.',
+  'Substitute x=2: 2(2)+y=7, so 4+y=7.',
+  'Yes. Substitute x=1 and y=2: the left side is 1+2=3, equal to the right side, so (1,2) is a solution.',
+  'Let x be the number of apples and y the number of oranges. Their costs give 5x + 10y = 50.',
+  'The claim is wrong. (2,3) works, but so do (0,5), (1,4), (5,0), and infinitely many real pairs. For every real x, y=5-x, so there is not only one solution.'],
  'qa.s2': [
   'Option a because it has numbers.',
-  '2 plus 1 is 3, so no.',
-  'Only five solutions because the answer is 5.',
-  '2+3=5 so each item costs 24 rupees.',
-  'Rahul is correct because y is missing.']}
-EXPECT = {'qa.s1': [1, 2, 3, 1, 3], 'qa.s2': [0, 0, 0, 0, 0]}
+  'y is 7 because that is the answer.',
+  'No, because one and two are different numbers.',
+  'x + y = 50.',
+  'The claim is correct because two plus three is five.']}
+EXPECT = {'qa.s1': [2, 1, 3, 3, 4], 'qa.s2': [0, 0, 0, 0, 0]}
 log = {}
 for w in ANS:
     log[w] = [fn(t[w], 'manage-assignment', {'action': 'upload_answer', 'assignment_id': A, 'question_id': q['id'], 'extracted_text': a}).status_code for q, a in zip(qs, ANS[w])]
