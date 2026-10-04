@@ -23,3 +23,5 @@
   - [ ] Physical Android Chrome and iPhone Safari journey — requires real devices
   - [ ] School Saturday policy — unconfirmed
 - [x] Provide safe QA test usernames and password-reset guidance without revealing stored passwords
+- [x] Batch 3: subject audit (report only), JPG/PDF upload regression PASS, checkpoint 9 isolation PASS — scripts/qa/report_batch3.md
+  - [ ] Subject data fixes (Chemistry scope/plan, Sanskrit, orphan Biology/Hindi/SST, duplicate 9A Maths teacher, stale Physics/English) — need school/teacher decisions

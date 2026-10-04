@@ -1,0 +1,95 @@
+{
+  "assignment_id": "668eabe7-d826-4d71-8622-622e1d30c656",
+  "checks": [
+    {
+      "check": "teacher publishes regression homework",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "refused: program renamed as photo",
+      "pass": true,
+      "detail": "400 {\"error\":\"The file contents do not match a valid JPG, PNG, WEBP or PDF\"}"
+    },
+    {
+      "check": "refused: text labelled as PDF",
+      "pass": true,
+      "detail": "400 {\"error\":\"The file contents do not match a valid JPG, PNG, WEBP or PDF\"}"
+    },
+    {
+      "check": "refused: corrupt JPG (header then junk)",
+      "pass": true,
+      "detail": "400 {\"error\":\"The file contents do not match a valid JPG, PNG, WEBP or PDF\"}"
+    },
+    {
+      "check": "refused: truncated PDF",
+      "pass": true,
+      "detail": "400 {\"error\":\"The file contents do not match a valid JPG, PNG, WEBP or PDF\"}"
+    },
+    {
+      "check": "refused: PDF bytes labelled as JPG",
+      "pass": true,
+      "detail": "400 {\"error\":\"The file contents do not match a valid JPG, PNG, WEBP or PDF\"}"
+    },
+    {
+      "check": "refused uploads stored no answers",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "check": "phone motion-photo JPG accepted",
+      "pass": true,
+      "detail": "200 {\"success\":true,\"answer_id\":\"260dbc8c-4159-43c1-a016-e16a7c57ddf5\",\"status\":\"processing\"}"
+    },
+    {
+      "check": "compressed (object-stream) PDF accepted",
+      "pass": true,
+      "detail": "200 {\"success\":true,\"answer_id\":\"6483bd75-6b0c-4f82-997b-ef5bb7a8e28b\",\"status\":\"processing\"}"
+    },
+    {
+      "check": "JPG stored bytes identical",
+      "pass": true,
+      "detail": "image/jpeg"
+    },
+    {
+      "check": "JPG real-AI evaluation = 3/3",
+      "pass": true,
+      "detail": "success 3.0 None {\"mistakes\": [], \"strengths\": [\"The student correctly substituted the values into the equation.\", \"The student accurately calculated the LHS and compared it to the RHS.\", \"The student provided the cor"
+    },
+    {
+      "check": "PDF stored bytes identical",
+      "pass": true,
+      "detail": "application/pdf"
+    },
+    {
+      "check": "PDF real-AI evaluation = 3/3",
+      "pass": true,
+      "detail": "success 3.0 None {\"mistakes\": [], \"strengths\": [\"The student clearly defined the variables x and y.\", \"The student correctly identified the cost components 5x and 10y.\", \"The student correctly formulated the final lin"
+    },
+    {
+      "check": "student submits",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "teacher reviews JPG answer",
+      "pass": true,
+      "detail": "{\"success\":true}"
+    },
+    {
+      "check": "teacher finalizes, total 6",
+      "pass": true,
+      "detail": "{\"success\":true,\"total_score\":6}"
+    },
+    {
+      "check": "student sees finalized 6",
+      "pass": true,
+      "detail": "[{'status': 'finalized', 'total_score': 6.0}]"
+    },
+    {
+      "check": "finalized answer locked against new photo",
+      "pass": true,
+      "detail": ""
+    }
+  ]
+}

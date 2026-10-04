@@ -1,0 +1,10 @@
+PASS student saves Day-2 explanation 201
+PASS T1 (9A Maths) sees it 
+PASS T2 (9B) asking for 9A gets nothing []
+PASS T2 own 9B list excludes it 
+PASS T1 with another board gets nothing []
+PASS classmate student gets nothing []
+PASS signed-out request gets nothing 200
+PASS classmate cannot read the row directly []
+cleanup 204
+8 / 8
