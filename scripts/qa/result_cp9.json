@@ -1,0 +1,42 @@
+[
+  {
+    "check": "student saves Day-2 explanation",
+    "pass": true,
+    "detail": "201"
+  },
+  {
+    "check": "T1 (9A Maths) sees it",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "check": "T2 (9B) asking for 9A gets nothing",
+    "pass": true,
+    "detail": "[]"
+  },
+  {
+    "check": "T2 own 9B list excludes it",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "check": "T1 with another board gets nothing",
+    "pass": true,
+    "detail": "[]"
+  },
+  {
+    "check": "classmate student gets nothing",
+    "pass": true,
+    "detail": "[]"
+  },
+  {
+    "check": "signed-out request gets nothing",
+    "pass": true,
+    "detail": "200"
+  },
+  {
+    "check": "classmate cannot read the row directly",
+    "pass": true,
+    "detail": "[]"
+  }
+]
