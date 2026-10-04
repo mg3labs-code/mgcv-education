@@ -1,5 +1,5 @@
 {
-  "elapsed_s": 4.8,
+  "elapsed_s": 4.0,
   "http": {
     "qa.s1": [
       200,
@@ -18,31 +18,27 @@
       200
     ]
   },
-  "pass_count": 7,
+  "pass_count": 10,
   "total": 10,
   "rows": [
     {
       "student": "qa.s1",
       "q": 1,
       "status": "success",
-      "expected": 1,
-      "got": 1.0,
+      "expected": 2,
+      "got": 2.0,
       "pass": true,
       "feedback": {
-        "mistakes": [
-          "The student misidentified the option labels (calling 'B' option 'c', and 'C' option 'b').",
-          "The student changed the constants in the equation for option B (3x - 4y = 10 instead of 3x + 4y = 12)."
-        ],
+        "mistakes": [],
         "strengths": [
-          "The student correctly identified that the linear equation must have two variables (x and y) each with a power of 1.",
-          "The student correctly identified why the other types of equations (one variable, squared variable) were incorrect."
+          "Correctly identifies (b) as the linear equation in two variables.",
+          "Correctly explains that (a) is not in two variables because it only contains x.",
+          "Correctly identifies that the variables must be to the power of one."
         ],
-        "suggestions": [
-          "Pay closer attention to the labels (A, B, C) provided in the question.",
-          "Ensure the equations are transcribed correctly from the prompt."
-        ],
+        "suggestions": [],
         "rubric_scores": {
-          "Logic": 1
+          "ax_by_c_form": 1,
+          "power_of_variables": 1
         }
       }
     },
@@ -50,20 +46,24 @@
       "student": "qa.s1",
       "q": 2,
       "status": "success",
-      "expected": 2,
-      "got": 0.0,
-      "pass": false,
+      "expected": 1,
+      "got": 1.0,
+      "pass": true,
       "feedback": {
         "mistakes": [
-          "The student substituted incorrect values (y=1 instead of y=3) into an incorrect equation (2x+5y=k instead of 2x+3y=k).",
-          "The student failed to solve the problem for the point (2, 3) and the equation 2x + 3y = k."
+          "The student did not provide the final answer as an ordered pair (x, y) as requested.",
+          "The student did not complete the final step of solving for y (y = 3)."
         ],
-        "strengths": [],
+        "strengths": [
+          "The student correctly substituted x = 2 into the equation.",
+          "The student correctly simplified the first step of the calculation (4 + y = 7)."
+        ],
         "suggestions": [
-          "Read the question carefully to identify the correct point and equation to use."
+          "Complete the calculation to find the specific value of y.",
+          "Ensure the final answer is written in the requested format, which is an ordered pair (x, y)."
         ],
         "rubric_scores": {
-          "Replacexwith2andywith3intheequation2x3yk": 0
+          "Replace_x_with_2_in_the_equation_and_solve_for_y": 1
         }
       }
     },
@@ -77,13 +77,13 @@
       "feedback": {
         "mistakes": [],
         "strengths": [
-          "The student correctly explained why there are infinitely many solutions by showing the relationship between x and y (y = 5 - x).",
-          "The student provided three distinct and correct pairs of (x, y) that satisfy the equation."
+          "The student correctly identifies the values to substitute (x=1, y=2).",
+          "The student correctly performs the arithmetic (1+2=3).",
+          "The student correctly concludes that the LHS equals the RHS and confirms it is a solution."
         ],
         "suggestions": [],
         "rubric_scores": {
-          "Pairs": 1.5,
-          "Explain": 1.5
+          "Substitute": 3
         }
       }
     },
@@ -91,46 +91,41 @@
       "student": "qa.s1",
       "q": 4,
       "status": "success",
-      "expected": 1,
-      "got": 0.0,
-      "pass": false,
+      "expected": 3,
+      "got": 3.0,
+      "pass": true,
       "feedback": {
-        "mistakes": [
-          "The student provided an incorrect equation (2x + 3y = 120) that does not reflect the relationship stated in the question.",
-          "The student did not solve for the cost of the notebook given the cost of the pen."
-        ],
+        "mistakes": [],
         "strengths": [
-          "The student correctly identified the need to assign variables (x and y) to the items."
+          "The student correctly identified the variables.",
+          "The student accurately represented the relationship between variables and costs.",
+          "The resulting linear equation is correct."
         ],
-        "suggestions": [
-          "Review the relationship described: 'cost of a notebook is twice the cost of a pen' should be written as y = 2x or x = 2y depending on the assignment.",
-          "Use the given value (pen = 15) to calculate the final answer."
-        ],
-        "rubric_scores": {}
+        "suggestions": [],
+        "rubric_scores": {
+          "Equation": 1,
+          "Variables": 1,
+          "Explanation": 1
+        }
       }
     },
     {
       "student": "qa.s1",
       "q": 5,
       "status": "success",
-      "expected": 3,
-      "got": 2.0,
-      "pass": false,
+      "expected": 4,
+      "got": 4.0,
+      "pass": true,
       "feedback": {
-        "mistakes": [
-          "The student used the example x=5 instead of the requested x=4.",
-          "The student did not explicitly explain why this line doesn't cross both axes (i.e., that it is parallel to the y-axis)."
-        ],
+        "mistakes": [],
         "strengths": [
-          "Correctly identifies that Rahul is wrong.",
-          "Correctly identifies that a zero coefficient for y makes it a vertical line."
+          "The student correctly identifies that the claim is wrong.",
+          "The student provides multiple counter-examples to disprove the claim.",
+          "The student explains the general relationship (y = 5 - x) to show that there are infinitely many solutions."
         ],
-        "suggestions": [
-          "Explicitly state that the line x=4 is parallel to the y-axis and therefore never crosses it.",
-          "Ensure you use the specific equation (x=4) provided in the prompt."
-        ],
+        "suggestions": [],
         "rubric_scores": {
-          "Does_every_line_have_to_cross_both_the_horizontal_x_and_vertical_y_paths": 2
+          "Explain": 4
         }
       }
     },
@@ -143,17 +138,20 @@
       "pass": true,
       "feedback": {
         "mistakes": [
-          "The student identified Option A, which is a linear equation in one variable, not two.",
-          "The student failed to identify the correct answer (Option B).",
-          "The explanation 'because it has numbers' is mathematically irrelevant to the definition of a linear equation in two variables."
+          "The student incorrectly identified the linear equation in two variables.",
+          "The student failed to provide a valid mathematical explanation based on the number of variables or their powers.",
+          "The student did not explain why the other option was incorrect."
         ],
         "strengths": [],
         "suggestions": [
-          "Identify that Option B is the correct answer because it contains two variables (x and y) both to the power of 1.",
-          "Explain that Option A only has one variable (x).",
-          "Explain that Option C is not linear because the variable x is squared (power of 2)."
+          "Identify that a linear equation in two variables must contain two distinct variables (usually x and y).",
+          "Recognize that in option (a), there is only one variable (x).",
+          "Explain that 'linear' refers to the power of the variables being 1."
         ],
-        "rubric_scores": {}
+        "rubric_scores": {
+          "ax_plus_by_plus_c": 0,
+          "power_of_variables": 0
+        }
       }
     },
     {
@@ -165,16 +163,18 @@
       "pass": true,
       "feedback": {
         "mistakes": [
-          "The student did not substitute the coordinates into the equation.",
-          "The student provided an irrelevant calculation (2 + 1 = 3).",
-          "The student failed to find the value of k."
+          "The student did not substitute the value of x into the equation.",
+          "The student provided an incorrect value for y.",
+          "The student did not provide the answer in the requested ordered pair format."
         ],
         "strengths": [],
         "suggestions": [
-          "Substitute the given x and y values into the equation (2*2 + 3*3 = k) and solve for k."
+          "Substitute the given value of x (which is 2) into the equation: 2(2) + y = 7.",
+          "Solve for y by subtracting 4 from both sides: y = 7 - 4 = 3.",
+          "Write the final result as an ordered pair: (2, 3)."
         ],
         "rubric_scores": {
-          "Replacexwith2andywith3intheequation2xplus3yequalsk": 0
+          "Replace_x_with_2_in_the_equation_and_solve_for_y": 0
         }
       }
     },
@@ -187,17 +187,17 @@
       "pass": true,
       "feedback": {
         "mistakes": [
-          "The student incorrectly claims there are only five solutions based on the result of the equation.",
-          "The student failed to provide three pairs of (x, y) coordinates.",
-          "The student failed to explain why there are infinitely many solutions."
+          "The student failed to substitute the values into the equation.",
+          "The student reached the incorrect conclusion (stating 'No').",
+          "The reasoning provided is irrelevant to the mathematical check of the equation."
         ],
         "strengths": [],
         "suggestions": [
-          "Try choosing a specific value for x, such as x=1, and solving for y.",
-          "Recognize that x can be any number (including decimals, negatives, or numbers larger than 5), which leads to infinitely many possibilities for y."
+          "Substitute x=1 and y=2 into the equation x + y = 3 to see if it holds true.",
+          "Calculate 1 + 2 and compare the result to 3."
         ],
         "rubric_scores": {
-          "Try_picking_different_values": 0
+          "Substituteatihg_and_checking": 0
         }
       }
     },
@@ -210,15 +210,14 @@
       "pass": true,
       "feedback": {
         "mistakes": [
-          "The student failed to provide the linear equation required by the question.",
-          "The student performed an irrelevant calculation (2+3=5) that does not relate to the problem.",
-          "The student provided an incorrect cost for the items (24 rupees) and did not follow the prompt's given values (pen = \u20b915)."
+          "The student failed to include the cost of each item (coefficients) in the equation.",
+          "The equation represents the sum of the quantities being 50, rather than the total cost."
         ],
-        "strengths": [],
+        "strengths": [
+          "The student correctly identified that there are two variables and their sum relates to the total."
+        ],
         "suggestions": [
-          "Identify the variables for the cost of a notebook and a pen.",
-          "Express the relationship 'cost of a notebook is twice the cost of a pen' as an equation, e.g., x = 2y.",
-          "Substitute the given value for the pen into your equation to solve for the notebook's cost."
+          "Ensure you multiply the number of items by their respective prices to represent the total cost."
         ],
         "rubric_scores": {}
       }
@@ -232,17 +231,20 @@
       "pass": true,
       "feedback": {
         "mistakes": [
-          "The student incorrectly agrees with Rahul's claim.",
-          "The student fails to recognize that x = 4 is a vertical line that never crosses the y-axis.",
-          "The explanation provided ('y is missing') does not justify why the line would cross both axes; in fact, it is the reason it only crosses one."
+          "The student incorrectly agrees with the claim that there is only one solution.",
+          "The student fails to identify that there are infinitely many solutions (e.g., 1+4, 0+5, 2.5+2.5).",
+          "The student does not explain what is wrong with the original reasoning."
         ],
-        "strengths": [],
+        "strengths": [
+          "The student correctly identifies that 2 + 3 = 5."
+        ],
         "suggestions": [
-          "Analyze the graph of x=4 to see that it is parallel to the y-axis.",
-          "Explain that for a line to cross the y-axis, there must be a point where x=0, which is impossible for the equation x=4."
+          "Explain that while 2 and 3 do add up to 5, there are other pairs of numbers that also add up to 5.",
+          "Provide examples of other solutions such as (1, 4), (0, 5), or decimals like (2.5, 2.5).",
+          "Clarify that a single linear equation with two variables typically has infinitely many solutions."
         ],
         "rubric_scores": {
-          "Horizontal_and_Vertical_Intersections": 0
+          "Think": 0
         }
       }
     }
