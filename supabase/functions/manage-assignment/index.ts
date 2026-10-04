@@ -14,44 +14,7 @@ const BaseBodySchema = z.object({
 
 
 
-type ValidatedFile = { mime: string; extension: string };
-
-function validateUploadedFile(data: Uint8Array): ValidatedFile | null {
-  const ascii = (start: number, end: number) => new TextDecoder("latin1").decode(data.slice(start, end));
-  if (data.length >= 4 && data[0] === 0xff && data[1] === 0xd8 && data[data.length - 2] === 0xff && data[data.length - 1] === 0xd9) {
-    return { mime: "image/jpeg", extension: "jpg" };
-  }
-  const pngSig = [137, 80, 78, 71, 13, 10, 26, 10];
-  if (data.length >= 24 && pngSig.every((value, index) => data[index] === value)) {
-    let offset = 8;
-    let sawHeader = false;
-    while (offset + 12 <= data.length) {
-      const length = ((data[offset] << 24) | (data[offset + 1] << 16) | (data[offset + 2] << 8) | data[offset + 3]) >>> 0;
-      const type = ascii(offset + 4, offset + 8);
-      if (offset + 12 + length > data.length) return null;
-      if (!sawHeader && type !== "IHDR") return null;
-      sawHeader = true;
-      offset += 12 + length;
-      if (type === "IEND") return length === 0 ? { mime: "image/png", extension: "png" } : null;
-    }
-    return null;
-  }
-  if (data.length >= 16 && ascii(0, 4) === "RIFF" && ascii(8, 12) === "WEBP") {
-    const declared = data[4] | (data[5] << 8) | (data[6] << 16) | (data[7] << 24);
-    const chunk = ascii(12, 16);
-    if (["VP8 ", "VP8L", "VP8X"].includes(chunk) && declared + 8 <= data.length) return { mime: "image/webp", extension: "webp" };
-    return null;
-  }
-  if (data.length >= 20 && ascii(0, 5) === "%PDF-") {
-    const tail = ascii(Math.max(0, data.length - 4096), data.length);
-    const body = ascii(0, Math.min(data.length, 1_000_000));
-    if (/%%EOF\s*$/.test(tail.replace(/\0+$/g, "")) && /\/Type\s*\/Pages?\b/.test(body) && /\b(startxref|xref)\b/.test(tail)) {
-      return { mime: "application/pdf", extension: "pdf" };
-    }
-    return null;
-  }
-  return null;
-}
+import { validateUploadedFile } from "./validate-upload.ts";
 
 function lockedMessage(status: string) {
   return status === "submitted" ? "Submission already submitted" : "Submission already finalized";
