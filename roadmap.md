@@ -22,4 +22,4 @@
   - [ ] 40-student gate — NOT TESTED unless an isolated QA database is provided
   - [ ] Physical Android Chrome and iPhone Safari journey — requires real devices
   - [ ] School Saturday policy — unconfirmed
-- [ ] Provide safe QA test usernames and password-reset guidance without revealing stored passwords
+- [x] Provide safe QA test usernames and password-reset guidance without revealing stored passwords
