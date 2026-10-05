@@ -3,7 +3,7 @@ U="https://ikrfcpbkjkvxqhkxdklc.supabase.co"
 K=re.search(r'VITE_SUPABASE_PUBLISHABLE_KEY="([^"]+)"',open("/dev-server/.env").read()).group(1)
 SK="sb-ikrfcpbkjkvxqhkxdklc-auth-token"
 def session(who):
-    r=requests.post(f"{U}/auth/v1/token?grant_type=password",headers={"apikey":K},json={"email":f"{who}@mgcv-pilot.test","password":"PilotQa#2026x"}); r.raise_for_status(); return r.json()
+    r=requests.post(f"{U}/auth/v1/token?grant_type=password",headers={"apikey":K},json={"email":f"{who}@mgcv-pilot.test","password":"Mgcv@2026"}); r.raise_for_status(); return r.json()
 async def login(context, page, who, path, w=1280, h=1800):
     s=session(who)
     await page.goto("http://localhost:8080/", wait_until="domcontentloaded")
