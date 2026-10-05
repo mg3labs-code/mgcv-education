@@ -593,7 +593,7 @@ const Index = () => {
 
       {/* Login Modal — Unified with Role Picker */}
       {modalType === "login" && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-xl z-[2000] flex justify-center items-center p-4" onClick={(e) => e.target === e.currentTarget && closeModal()}>
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-xl z-[2000] flex justify-center items-center p-4">
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
