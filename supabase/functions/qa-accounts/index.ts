@@ -10,7 +10,7 @@ const json = (s: number, b: unknown) =>
   new Response(JSON.stringify(b), { status: s, headers: { ...cors, "Content-Type": "application/json" } });
 
 const DOMAIN = "@mgcv-pilot.test";
-const PASSWORD = "12345678";
+const PASSWORD = "Mgcv@2026";
 const SUBJECT_TEACHERS: Array<[string, string, string]> = [
   ["qa.science", "QA Science Teacher", "Science"],
   ["qa.physics", "QA Physics Teacher", "Physics"],
