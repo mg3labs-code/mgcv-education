@@ -1,4 +1,6 @@
 - [x] Fix teacher Dashboard navigation
+- [ ] Create a HUMAIN-inspired no-login whole-product MGCV demo with labelled fictional data
+- [ ] Produce a matching MGCV video using generated scenes and accurate product walkthroughs
 - [x] Fix Schedule V2 calendar creation error
 - [x] Capture current teacher screens
 - [x] Create saveable previous-vs-now teacher comparison pictures
